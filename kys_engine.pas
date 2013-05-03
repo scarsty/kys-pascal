@@ -2961,6 +2961,7 @@ begin
             //当该值并非透明色值时, 表示需要遮挡数据
             //游戏中的遮挡实际上可由绘图顺序决定, 即绘图顺序靠后的应有最大遮挡值
             //绘图顺序比较的优先级为: x, y的最小值; 坐标差绝对值; y较小(或x较大)
+            //保存遮挡需要一个数组, 但是如果利用Surface可能会更快
             if ((getpixel(CurSurface, i1, i2) and CurSurface.format.AMask) <> 0)
               and (x1 + i1 >= 0) and (x1 + i1 < width) and (y1 + i2 >= 0) and (y1 + i2 < height) then
             begin
@@ -3105,6 +3106,7 @@ begin
     menustring[1] := ' 確認';
     if commonmenu(CENTER_X * 2 - 50, 2, 45, 1, menustring) = 1 then
       Quit;
+    redraw(1);
     SDL_BlitSurface(tempscr, nil, Screen, nil);
     SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
     sdl_freesurface(tempscr);

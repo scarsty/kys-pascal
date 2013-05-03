@@ -60,13 +60,6 @@ type
 
   TPInt1 = procedure(i: integer);
 
-  {TPNGTile = record
-    Tile_Surface: PSDL_Surface;
-    x, y, Loaded, UseGRP, FrameIndex, Frame: smallint;
-  end;
-
-  TPNGTileArray = array of TPNGTile;}
-
   PPSDL_Surface = ^PSDL_Surface;
 
   TPNGIndex = record
