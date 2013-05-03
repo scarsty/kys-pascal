@@ -2300,7 +2300,7 @@ begin
     Result := (RMagic[mnum].HurtMP[level - 1] * 3) div 2;
 end;
 
-//0: red. 1: purple, 2: green
+//0: red. 1: purple, 2: green, 3
 //选择颜色
 
 procedure SelectModeColor(mode: integer; var color1, color2: uint32; var str: string; trans: integer = 0);
@@ -2339,7 +2339,6 @@ begin
       str := '-%d';
     end;
   end;
-
   if trans = 1 then
   begin
     tempcolor := (TSDL_Color(color1));
