@@ -37,9 +37,6 @@ procedure display_bmp(file_name: PChar; x, y: integer);
 procedure display_img(file_name: PChar; x, y: integer);
 function ColColor(num: byte): Uint32;
 
-function LoadSurfaceFromFile(filename: string): PSDL_Surface;
-function LoadSurfaceFromZIPFile(zipFile: unzFile; filename: string): PSDL_Surface;
-
 //画RLE8图片的子程
 function JudgeInScreen(px, py, w, h, xs, ys: integer): boolean; overload;
 function JudgeInScreen(px, py, w, h, xs, ys, xx, yy, xw, yh: integer): boolean; overload;
@@ -110,7 +107,7 @@ procedure LoadBFieldPart2(x, y, alpha: integer);
 procedure DrawBFieldWithCursor(step: integer);
 procedure DrawBFieldWithEft(Epicnum: integer); overload;
 procedure DrawBFieldWithEft(Epicnum, beginpic, endpic, bnum: integer; MixColor: Uint32); overload;
-procedure DrawBFieldWithEft(Epicnum, beginpic, endpic, curlevel, bnum: integer; MixColor: Uint32); overload;
+procedure DrawBFieldWithEft(Epicnum, beginpic, endpic, curlevel, bnum, forteam, flash: integer; MixColor: Uint32); overload;
 procedure DrawBFieldWithAction(bnum, Apicnum: integer);
 
 procedure DrawClouds;
@@ -662,27 +659,6 @@ begin
 
 end;
 
-function LoadSurfaceFromFile(filename: string): PSDL_Surface;
-var
-  tempscr: PSDL_Surface;
-begin
-  Result := nil;
-  if fileexistsUTF8(filename) then
-  begin
-    tempscr := IMG_Load(PChar(filename));
-    Result := SDL_DisplayFormatAlpha(tempscr);
-    SDL_FreeSurface(tempscr);
-  end;
-end;
-
-function LoadSurfaceFromZIPFile(zipFile: unzFile; filename: string): PSDL_Surface;
-var
-  archiver: unzFile;
-  info: unz_file_info;
-  buffer: pchar;
-begin
-
-end;
 
 //判断像素是否在屏幕内
 
@@ -923,7 +899,7 @@ var
   BufferIdx: array[0..100] of integer;
   BufferPic: array[0..20000] of byte;
 begin
-  if PNG_TILE = 1 then
+  if PNG_TILE > 0 then
   begin
     DrawPngTile(TitlePNGIndex[imgnum], 0, screen, px, py);
   end;
@@ -960,7 +936,7 @@ begin
   if (num >= 0) and (num < MPicAmount) then
   begin
     NeedGRP := 0;
-    if (PNG_Tile <> 0) then
+    if (PNG_Tile > 0) then
     begin
       if MPNGIndex[num].UseGRP = 0 then
       begin
@@ -1003,7 +979,7 @@ begin
       num := 0;
       py := py - 50;
     end;
-    if PNG_Tile = 1 then
+    if PNG_Tile > 0 then
       DrawPngTile(SPNGIndex[num], 0, screen, px, py)
     else
     begin
@@ -1029,7 +1005,7 @@ begin
       num := 0;
       py := py - 50;
     end;
-    if PNG_Tile = 1 then
+    if PNG_Tile > 0 then
       DrawPngTile(SPNGIndex[num], 0, screen, px, py, shadow, alpha, mixColor, mixAlpha,
         depth, @BlockImg[0], 2304, 1402, sizeof(BlockImg[0, 0]), BlockScreen.x, BlockScreen.y)
     else
@@ -1080,10 +1056,10 @@ begin
   end;
 
   if (num >= 0) and (num < SPicAmount) then
-    if (PNG_TILE = 1) then
+    if (PNG_TILE > 0) then
     begin
       if temp <> 1 then
-        LoadOnePNGTile('resource/smap/', num, SPNGIndex[num], @SPNGTile[0]);
+        LoadOnePNGTile('resource/smap/', nil,num, SPNGIndex[num], @SPNGTile[0]);
       DrawPNGTile(SPNGIndex[num], sdl_getticks div 300, pImg, px, py);
       if needBlock <> 0 then
       begin
@@ -1193,7 +1169,7 @@ var
 begin
   if (num > 0) and (num < BPicAmount) then
   begin
-    if PNG_TILE = 1 then
+    if PNG_TILE > 0 then
     begin
       //LoadOnePNGTile('resource/wmap/', num, BPNGIndex[num], @BPNGTile[0]);
       DrawPNGTile(BPNGIndex[num], 0, screen, px, py, shadow, alpha, mixColor, mixAlpha,
@@ -1220,7 +1196,7 @@ var
 begin
   if (num > 0) and (num < BPicAmount) then
   begin
-    if PNG_TILE = 1 then
+    if PNG_TILE > 0 then
     begin
       //LoadOnePNGTile('resource/wmap/', num, BPNGIndex[num], @BPNGTile[0]);
       DrawPNGTile(BPNGIndex[num], 0, screen, px, py);
@@ -1252,9 +1228,9 @@ var
 begin
   if (num > 0) and (num < BPicAmount) then
   begin
-    if PNG_TILE = 1 then
+    if PNG_TILE > 0 then
     begin
-      LoadOnePNGTile('resource/wmap/', num, BPNGIndex[num], @BPNGTile[0]);
+      LoadOnePNGTile('resource/wmap/', nil,num, BPNGIndex[num], @BPNGTile[0]);
       if needBlock <> 0 then
       begin
         SetPNGTileBlock(BPNGIndex[num], px, py, depth, @BlockImg[0], 2304, 1402, sizeof(BlockImg[0, 0]));
@@ -1291,7 +1267,7 @@ procedure DrawEPic(num, px, py, shadow, alpha, depth: integer; mixColor: Uint32;
 var
   Area: TRect;
 begin
-  if PNG_TILE = 1 then
+  if PNG_TILE > 0 then
   begin
     DrawPNGTile(EPNGIndex[num], 0, screen, px, py, shadow, alpha, mixColor, mixAlpha,
       0, nil, 0, 0, 0, 0, 0);
@@ -1322,7 +1298,7 @@ var
   Area: TRect;
 begin
   case PNG_TILE of
-    1:
+    1, 2:
       begin
         if (index >= 0) and (index < BRoleAmount) then
           if (num >= Low(FPNGIndex[index])) and (num <= High(FPNGIndex[index])) then
@@ -1347,7 +1323,7 @@ procedure DrawCPic(num, px, py, shadow, alpha: integer; mixColor: Uint32; mixAlp
 var
   Area: TRect;
 begin
-  if PNG_TILE = 1 then
+  if PNG_TILE > 0 then
   begin
     DrawPngTile(CPNGIndex[num], 0, screen, px, py, shadow, alpha, mixColor, MixAlpha);
   end;
@@ -1955,7 +1931,7 @@ end;}
 
 procedure DrawMMap;
 var
-  i1, i2, i, sum, x, y, k, c, widthregion, sumregion: integer;
+  i1, i2, i, sum, x, y, k, c, widthregion, sumregion, num: integer;
   temp: array[0..479, 0..479] of smallint;
   Width, Height, yoffset: smallint;
   pos: TPosition;
@@ -2016,13 +1992,29 @@ begin
             temp[i1, i2] := 3715 + MFace * 4 + (MStep + 1) div 2;
           temp[i1, i2] := temp[i1, i2] * 2;
         end;
-        if (temp[i1, i2] > 0) then
+        num := temp[i1, i2] div 2;
+        if (num > 0) and (num < MPicAmount) then
         begin
           BuildingList[k].x := i1;
           BuildingList[k].y := i2;
-          Width := smallint(Mpic[MIdx[temp[i1, i2] div 2 - 1]]);
-          Height := smallint(Mpic[MIdx[temp[i1, i2] div 2 - 1] + 2]);
-          yoffset := smallint(Mpic[MIdx[temp[i1, i2] div 2 - 1] + 6]);
+          if PNG_TILE > 0 then
+          begin
+            if MPNGIndex[num].CurPointer <> nil then
+            begin
+              if MPNGIndex[num].CurPointer^ <> nil then
+              begin
+                width := MPNGIndex[num].CurPointer^.w;
+                height := MPNGIndex[num].CurPointer^.h;
+                yoffset := MPNGIndex[num].y;
+              end;
+            end;
+          end
+          else
+          begin
+            Width := smallint(Mpic[MIdx[num - 1]]);
+            Height := smallint(Mpic[MIdx[num - 1] + 2]);
+            yoffset := smallint(Mpic[MIdx[num - 1] + 6]);
+          end;
           //根据图片的宽度计算图的中点的坐标和作为排序依据
           CenterList[k] := (i1 + i2) - (Width + 35) div 36 - (yoffset - Height + 1) div 9;
           if (i1 = Mx) and (i2 = My) then
@@ -2054,7 +2046,6 @@ begin
     Pos := GetPositionOnScreen(x, y, Mx, My);
     DrawMPic(temp[x, y] div 2, pos.x, pos.y);
   end;
-
   DrawClouds;
 
 end;
@@ -2272,8 +2263,8 @@ begin
     begin
       for i := DData[CurScence, SData[CurScence, 3, i1, i2], 7] div 2
         to DData[CurScence, SData[CurScence, 3, i1, i2], 6] div 2 do
-        if (temp = 0) and (PNG_TILE = 1) then
-          LoadOnePNGTile('resource/smap/', i, SPNGIndex[i], @SPNGTile[0]);
+        if (temp = 0) and (PNG_TILE > 0) then
+          LoadOnePNGTile('resource/smap/', nil, i, SPNGIndex[i], @SPNGTile[0]);
       if SCENCEAMI = 2 then
         InitialSPic(num, x, y - SData[CurScence, 4, i1, i2], x1, y1, w, h, 1, depth, temp);
     end;
@@ -2691,7 +2682,7 @@ begin
 
 end;
 
-procedure DrawBFieldWithEft(Epicnum, beginpic, endpic, curlevel, bnum: integer; MixColor: Uint32); overload;
+procedure DrawBFieldWithEft(Epicnum, beginpic, endpic, curlevel, bnum, forteam, flash: integer; MixColor: Uint32); overload;
 var
   k, i1, i2: integer;
   pos: TPosition;
@@ -2705,10 +2696,21 @@ begin
       k := Bfield[2, i1, i2];
       if (k >= 0) and (Brole[k].Dead = 0) then
       begin
-        if (Bfield[4, Brole[k].X, Brole[k].Y] > 0) and (Brole[bnum].Team <> Brole[k].Team) then
-          DrawRoleOnBField(i1, i2, MixColor, random(50))
-        else
-          DrawRoleOnBField(i1, i2);
+        flash := 0;
+        if (Bfield[4, Brole[k].X, Brole[k].Y] > 0) then
+        begin
+          if forteam = 0 then
+          begin
+            if (Brole[bnum].Team <> Brole[k].Team) then
+              flash := 1;
+          end
+          else
+          begin
+            if (Brole[bnum].Team = Brole[k].Team) then
+              flash := 1;
+          end;
+        end;
+        DrawRoleOnBField(i1, i2, MixColor, flash * (10 + random(40)));
       end;
       if Bfield[4, i1, i2] > 0 then
       begin
@@ -2716,7 +2718,6 @@ begin
         if (k >= beginpic) and (k <= endpic) then
         begin
           DrawEPic(k, pos.x, pos.y, 0, 25, 0, 0, 0);
-          //writeln(k, ' ',curlevel, ' ', beginpic, ' ' ,endpic);
         end;
       end;
     end;
@@ -2831,7 +2832,7 @@ var
 begin
   with PNGIndex do
   begin
-    if (CurPointer <> nil) and (Loaded = 1) then
+    if (CurPointer <> nil) and (Loaded = 1) and (Frame > 0) then
     begin
       if frame > 1 then
         inc(CurPointer, FrameNum mod Frame);

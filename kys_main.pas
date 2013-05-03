@@ -71,6 +71,9 @@ type
 
   TSurfaceArray = array of PSDL_Surface;
 
+  TIntArray = array of integer;
+  TByteArray = array of byte;
+
   {TRole = TRoleRedFace;
   TItem = TItemRedFace;
   TMagic = TMagicRedFace;
@@ -83,9 +86,13 @@ procedure Quit;
 procedure SetModVersion;
 procedure ReadFiles;
 procedure ReadTiles;
-function LoadIdxGrp(stridx, strgrp: string; PIdx, PGrp: pchar): integer;
+function ReadFiletoBuffer(p: pchar; filename: string; size, malloc: integer): pchar;
+function LoadIdxGrp(stridx, strgrp: string; var idxarray: TIntArray; var grparray: TByteArray): integer;
 function LoadPNGTiles(path: string; var PNGIndexArray: TPNGIndexArray; var SurfaceArray: TSurfaceArray; LoadPic: integer = 1): integer;
-procedure LoadOnePNGTile(path: string; filenum: integer; var PNGIndex: TPNGIndex; SurfacePointer: PPSDL_Surface; forceLoad: integer = 0);
+procedure LoadOnePNGTile(path: string; p:pchar; filenum: integer; var PNGIndex: TPNGIndex; SurfacePointer: PPSDL_Surface; forceLoad: integer = 0);
+function LoadSurfaceFromFile(filename: string): PSDL_Surface;
+function LoadSurfaceFromMem(p: pchar; len: integer): PSDL_Surface;
+function LoadSurfaceFromZIPFile(zipFile: unzFile; filename: string): PSDL_Surface;
 
 //游戏开始画面, 行走等
 procedure Start;
@@ -223,14 +230,6 @@ var
   MAX_HEAD_NUM: integer = 189; //有专有头像的最大人物编号, 仅用于对话指令
   BEGIN_WALKPIC: integer = 2500; //起始的行走贴图(并未使用)
 
-  MPic, SPic, WPic, EPic: array[0..10000000] of byte;
-  MIdx, SIdx, WIdx, EIdx: array[0..10000] of integer;
-  FPic: array[0..1000000] of byte;
-  FIdx: array[0..300] of integer;
-  HPic: array[0..2000000] of byte;
-  HIdx: array[0..500] of integer;
-  //贴图内容与索引, 当贴图文件很大时可能需要修改
-
   Earth, Surface, Building, BuildX, BuildY, Entrance: array[0..479, 0..479] of smallint;
   //主地图数据
   ACol: array[0..768] of byte;
@@ -339,14 +338,12 @@ var
   //场景和战场的遮挡信息, 前者不会记录地板数据, 将需要遮挡的部分的像素记录为该像素隶属物品位置的深度
   //(定义为 depth =  x + y), 该值是决定遮挡的关键部分. 后者仅记录当前屏幕的遮挡深度
 
-  CPic: array[0..100000] of byte;
-  CIdx: array[0..20] of integer;
+
+  MPic, SPic, WPic, EPic, FPic, HPic, CPic, KDef, TDef: TByteArray;
+  MIdx, SIdx, WIdx, EIdx, Fidx, HIdx, CIdx, KIdx, TIdx: TIntArray;
+  //贴图内容与索引, 当贴图文件很大时可能需要修改
   //云的贴图内容及索引
-  KDef: array[0..1000000] of byte;
-  KIdx: array[0..10000] of integer;
   //事件的内容及索引
-  TDef: array[0..10000000] of byte;
-  Tidx: array[0..50000] of integer;
   //对话的内容及索引
 
   CLOUD_AMOUNT: integer = 60; //云的数量
@@ -358,7 +355,8 @@ var
 
   MPicAmount, SPicAmount, BPicAmount, CPicAmount: integer;
 
-  GLHR: integer = 1; //是否使用OPENGL绘图
+  HARDWARE_BLIT: integer; //是否使用硬件绘图
+  GLHR: integer = 1; //是否使用OPENGL拉伸
   SMOOTH: integer = 1; //平滑设置 0-完全不平滑, 1-仅标准分辨率不平滑, 2-任何时候都使用平滑
 
   ScreenFlag: Uint32;
@@ -472,7 +470,7 @@ begin
 
   SDL_WM_SetIcon(IMG_Load(PChar(AppPath + 'resource/icon.png')), 0);
 
-  ScreenFlag := SDL_HWSURFACE or SDL_RESIZABLE or SDL_HWACCEL{or SDL_ANYFORMAT or SDL_ASYNCBLIT{or SDL_FULLSCREEN};
+  ScreenFlag := SDL_SWSURFACE or SDL_RESIZABLE {SDL_HWSURFACE or SDL_HWACCEL or SDL_ANYFORMAT or SDL_ASYNCBLIT or SDL_FULLSCREEN};
   if GLHR = 1 then
   begin
     ScreenFlag := SDL_OPENGL or SDL_RESIZABLE or SDL_HWACCEL;
@@ -482,6 +480,9 @@ begin
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
   end;
+
+  if HARDWARE_BLIT = 1 then
+    ScreenFlag := ScreenFlag or SDL_HWSURFACE or SDL_HWACCEL;
 
   RealScreen := SDL_SetVideoMode(RESOLUTIONX, RESOLUTIONY, 32, ScreenFlag);
 
@@ -697,6 +698,7 @@ begin
 
     WALK_SPEED := Kys_ini.ReadInteger('system', 'WALK_SPEED', 10);
     WALK_SPEED2 := Kys_ini.ReadInteger('system', 'WALK_SPEED2', WALK_SPEED);
+    HARDWARE_BLIT := Kys_ini.ReadInteger('system', 'HARDWARE_BLIT', 1);
     SMOOTH := Kys_ini.ReadInteger('system', 'SMOOTH', 1);
     GLHR := Kys_ini.ReadInteger('system', 'GLHR', 1);
     CENTER_X := Kys_ini.ReadInteger('system', 'CENTER_X', 320);
@@ -719,7 +721,7 @@ begin
     TRY_FIND_GRP := Kys_ini.ReadInteger('system', 'TRY_FIND_GRP', 0);
 
     if (not fileexists(AppPath + 'resource/mmap/index.ka'))
-      and (not fileexists(AppPath + 'resource/resource.zip')) then
+      and (not fileexists(AppPath + 'resource/mmap.imz')) then
       PNG_TILE := 0;
 
     for i := 43 to 58 do
@@ -734,46 +736,25 @@ begin
     Kys_ini.Free;
   end;
 
-  //showmessage(booltostr(fileexists(filename)));
-  //showmessage(inttostr(max_level));
 
-  col := fileopen(AppPath + 'resource/mmap.col', fmopenread);
-  fileread(col, ACol[0], 768);
-  fileclose(col);
+  ReadFileToBuffer(@ACol[0], AppPath + 'resource/mmap.col', 768, 0);
   move(ACol[0], ACol1[0], 768);
   move(ACol[0], ACol2[0], 768);
 
-  col := fileopen(AppPath + 'resource/earth.002', fmopenread);
-  fileread(col, Earth[0, 0], 480 * 480 * 2);
-  fileclose(col);
-  col := fileopen(AppPath + 'p', fmopenwrite);
-  earth[0, 1] := -1;
-  filewrite(col, Earth[0, 0], 480 * 480 * 2);
-  fileclose(col);
-  col := fileopen(AppPath + 'resource/surface.002', fmopenread);
-  fileread(col, surface[0, 0], 480 * 480 * 2);
-  fileclose(col);
-  col := fileopen(AppPath + 'resource/building.002', fmopenread);
-  fileread(col, Building[0, 0], 480 * 480 * 2);
-  fileclose(col);
-  col := fileopen(AppPath + 'resource/buildx.002', fmopenread);
-  fileread(col, Buildx[0, 0], 480 * 480 * 2);
-  fileclose(col);
-  col := fileopen(AppPath + 'resource/buildy.002', fmopenread);
-  fileread(col, Buildy[0, 0], 480 * 480 * 2);
-  fileclose(col);
-  col := fileopen(AppPath + 'list/leave.bin', fmopenread);
-  fileread(col, leavelist[0], 200);
-  fileclose(col);
-  col := fileopen(AppPath + 'list/effect.bin', fmopenread);
-  fileread(col, effectlist[0], 200);
-  fileclose(col);
-  col := fileopen(AppPath + 'list/levelup.bin', fmopenread);
-  fileread(col, leveluplist[0], 200);
-  fileclose(col);
-  col := fileopen(AppPath + 'list/match.bin', fmopenread);
-  fileread(col, matchlist[0], MAX_WEAPON_MATCH * 3 * 2);
-  fileclose(col);
+  ReadFileToBuffer(@Earth[0, 0], AppPath + 'resource/earth.002', 480 * 480 * 2, 0);
+  ReadFileToBuffer(@surface[0, 0], AppPath + 'resource/surface.002', 480 * 480 * 2, 0);
+  ReadFileToBuffer(@Building[0, 0], AppPath + 'resource/building.002', 480 * 480 * 2, 0);
+  ReadFileToBuffer(@Buildx[0, 0], AppPath + 'resource/Buildx.002', 480 * 480 * 2, 0);
+  ReadFileToBuffer(@Buildy[0, 0], AppPath + 'resource/Buildy.002', 480 * 480 * 2, 0);
+
+  ReadFileToBuffer(@leavelist[0], AppPath + 'list/leave.bin', 200, 0);
+  ReadFileToBuffer(@effectlist[0], AppPath + 'list/effect.bin', 200, 0);
+  ReadFileToBuffer(@leveluplist[0], AppPath + 'list/levelup.bin', 200, 0);
+
+  ReadFileToBuffer(@matchlist[0], AppPath + 'list/mach.bin', MAX_WEAPON_MATCH * 3 * 2, 0);
+
+  LoadIdxGrp('resource/kdef.idx', 'resource/kdef.grp', KIdx, KDef);
+  LoadIdxGrp('resource/talk.idx', 'resource/talk.grp', TIdx, TDef);
 
 end;
 
@@ -781,9 +762,9 @@ procedure ReadTiles;
 var
   i: integer;
 begin
-  if PNG_Tile <> 0 then
+  if PNG_Tile > 0 then
   begin
-    LoadPNGTiles('resource/title/', TitlePNGIndex, TitlePNGTile, 1);
+    LoadPNGTiles('resource/title', TitlePNGIndex, TitlePNGTile, 1);
   end;
 
   where := 3;
@@ -791,35 +772,34 @@ begin
   DrawTitlePic(8, TitlePosition.x, TitlePosition.y + 20);
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
 
-  MPicAmount := LoadIdxGrp('resource/mmap.idx', 'resource/mmap.grp', @MIdx[0], @MPic[0]);
-  SPicAmount := LoadIdxGrp('resource/sdx', 'resource/smp', @SIdx[0], @SPic[0]);
-  BPicAmount := LoadIdxGrp('resource/wdx', 'resource/wmp', @WIdx[0], @WPic[0]);
-  LoadIdxGrp('resource/eft.idx', 'resource/eft.grp', @EIdx[0], @EPic[0]);
-  LoadIdxGrp('resource/hdgrp.idx', 'resource/hdgrp.grp', @HIdx[0], @HPic[0]);
-  CPicAmount := LoadIdxGrp('resource/cloud.idx', 'resource/cloud.grp', @CIdx[0], @CPic[0]);
-
-  LoadIdxGrp('resource/kdef.idx', 'resource/kdef.grp', @KIdx[0], @KDef[0]);
-  LoadIdxGrp('resource/talk.idx', 'resource/talk.grp', @TIdx[0], @TDef[0]);
-
-  if PNG_Tile <> 0 then
+  if PNG_TILE = 0 then
   begin
-    MPicAmount := LoadPNGTiles('resource/mmap/', MPNGIndex, MPNGTile, 1);
-    SPicAmount := LoadPNGTiles('resource/smap/', SPNGIndex, SPNGTile, 0);
-    for i := BeginScenceRolePic to BeginScenceRolePic + 27 do
-      LoadOnePNGTile('resource/smap/', i, SPNGIndex[i], @SPNGTile[0]);
-    for i := 3410 to 4102 do
-      LoadOnePNGTile('resource/smap/', i, SPNGIndex[i], @SPNGTile[0]);
-    BPicAmount := LoadPNGTiles('resource/wmap/', BPNGIndex, BPNGTile, 0);
-    LoadPNGTiles('resource/eft/', EPNGIndex, EPNGTile, 1);
-    CPicAmount := LoadPNGTiles('resource/cloud/', CPNGIndex, CPNGTile, 1);
-    {for i := Low(TitlePNGIndex) to High(TitlePNGIndex) do
-    begin
-      SDL_FreeSurface(TitlePNGIndex[i].CurPointer^);
-      TitlePNGIndex[i].CurPointer := nil;
-    end;}
+    if IsConsole then
+      writeln('Reading idx and grp files...');
+    MPicAmount := LoadIdxGrp('resource/mmap.idx', 'resource/mmap.grp', MIdx, MPic);
+    SPicAmount := LoadIdxGrp('resource/sdx', 'resource/smp', SIdx, SPic);
+    BPicAmount := LoadIdxGrp('resource/wdx', 'resource/wmp', WIdx, WPic);
+    LoadIdxGrp('resource/eft.idx', 'resource/eft.grp', EIdx, EPic);
+    //LoadIdxGrp('resource/hdgrp.idx', 'resource/hdgrp.grp', HIdx, HPic);
+    CPicAmount := LoadIdxGrp('resource/cloud.idx', 'resource/cloud.grp', CIdx, CPic);
   end;
 
-  if BIG_PNG_Tile <> 0 then
+  LoadIdxGrp('resource/hdgrp.idx', 'resource/hdgrp.grp', HIdx, HPic);
+
+  if PNG_Tile > 0 then
+  begin
+    MPicAmount := LoadPNGTiles('resource/mmap', MPNGIndex, MPNGTile, 1);
+    SPicAmount := LoadPNGTiles('resource/smap', SPNGIndex, SPNGTile, 1);
+    {for i := BeginScenceRolePic to BeginScenceRolePic + 27 do
+      LoadOnePNGTile('resource/smap', nil,i, SPNGIndex[i], @SPNGTile[0]);
+    for i := 3410 to 4102 do
+      LoadOnePNGTile('resource/smap', nil,i, SPNGIndex[i], @SPNGTile[0]);}
+    BPicAmount := LoadPNGTiles('resource/wmap', BPNGIndex, BPNGTile, 1);
+    LoadPNGTiles('resource/eft', EPNGIndex, EPNGTile, 1);
+    CPicAmount := LoadPNGTiles('resource/cloud', CPNGIndex, CPNGTile, 1);
+  end;
+
+  if BIG_PNG_Tile > 0 then
   begin
     {MMapSurface :=  LoadSurfaceFromFile(AppPath + 'resource/bigpng/mmap.png');
     if MMapSurface <> nil then
@@ -827,132 +807,176 @@ begin
   end;
 end;
 
-function LoadIdxGrp(stridx, strgrp: string; PIdx, PGrp: pchar): integer;
+//读入文件到缓冲区
+//当读入的位置并非变长数据时, 务必设置 malloc = 0!
+//size小于0时, 则读整个文件.
+
+function ReadFiletoBuffer(p: pchar; filename: string; size, malloc: integer): pchar;
+var
+  i: integer;
+begin
+  i := fileopen(filename, fmopenread);
+  if i > 0 then
+  begin
+    if size < 0 then
+      size := fileseek(i, 0, 2);
+    if malloc = 1 then
+    begin
+      GetMem(result, size + 4);
+      p := result;
+    end;
+    fileseek(i, 0, 0);
+    fileread(i, p^, size);
+    fileclose(i);
+  end
+  else
+    if malloc = 1 then
+      result := nil;
+end;
+
+function LoadIdxGrp(stridx, strgrp: string; var idxarray: TIntArray; var grparray: TByteArray): integer;
 var
   idx, grp, len, tnum: integer;
 begin
-  idx := fileopen(AppPath + stridx, fmopenread);
   grp := fileopen(AppPath + strgrp, fmopenread);
   len := fileseek(grp, 0, 2);
+  setlength(grparray, len + 4);
   fileseek(grp, 0, 0);
-  fileread(grp, PGrp^, len);
-  tnum := fileseek(idx, 0, 2) div 4;
-  fileseek(idx, 0, 0);
-  fileread(idx, PIdx^, tnum * 4);
+  fileread(grp, grparray[0], len);
   fileclose(grp);
+
+  idx := fileopen(AppPath + stridx, fmopenread);
+  tnum := fileseek(idx, 0, 2) div 4;
+  setlength(idxarray, tnum + 1);
+  fileseek(idx, 0, 0);
+  fileread(idx, idxarray[0], tnum * 4);
   fileclose(idx);
+
   result := tnum;
 
 end;
 
-//为了提高启动的速度, M之外的贴图均仅读入偏移, 需要时才实际载入图, 并且游戏过程中不再释放资源
+//为了提高启动的速度, M之外的贴图均仅读入基本信息, 需要时才实际载入图, 并且游戏过程中通常不再释放资源
 
 function LoadPNGTiles(path: string; var PNGIndexArray: TPNGIndexArray; var SurfaceArray: TSurfaceArray; LoadPic: integer = 1): integer;
 var
-  idx, i, j, k, state, size, count: integer;
+  filehandle, i, j, k, state, size, count, pngoff: integer;
   zipFile: unzFile;
   info: unz_file_info;
   offset: array of smallint;
-  pindex: pchar;
+  p: pchar;
 begin
   //载入偏移值文件, 计算贴图的最大数量
   size := 0;
-  idx := fileopen(AppPath + path + 'index.ka', fmopenread);
-  if idx > 0 then
-  begin
-    size := fileseek(idx, 0, 2);
-    setlength(offset, size div 2);
-    fileseek(idx, 0, 0);
-    fileread(idx, offset[0], size);
-  end;
-  fileclose(idx);
+  result := 0;
+  p := nil;
 
-  {zipFile := nil;
-  if idx = -1 then
+  if PNG_TILE = 2 then
   begin
-    zipFile := unzOpen(pchar(AppPath + path + '.zip'));
-    if zipFile <> nil then
+    if IsConsole then
+      writeln('Searching imz file... ',  path);
+    p := ReadFileToBuffer(p, AppPath + path + '.imz', -1, 1);
+    if p <> nil then
     begin
-      writeln(size);
-      if unzLocateFile(zipFile, pchar('index.ka'), 0) = UNZ_OK then
+    result := pint(p)^;
+    //最大的有帧数的数量作为贴图的最大编号
+    for i := result - 1 downto 0 do
+    begin
+      if pint(p + pint(p + 4 + i * 4)^ + 4)^ > 0 then
       begin
-        unzGetCurrentFileInfo(zipFile, @info, nil, 0, nil, 0, nil, 0);
-        size := info.uncompressed_size;
-        setlength(offset, size div 2);
-        GetMem(pindex, size + 16384);
-        unzOpenCurrentFile(zipFile);
-        state := -1;
-        poffset := 0;
-        while (state <> UNZ_OK) do
-        begin
-          state := unzReadCurrentFile(zipFile, pindex + poffset, 16384);
-          poffset := poffset + state;
-        end;
-        unzCloseCurrentFile(zipFile);
-        freemem(pindex);
-        move(pindex^, offset[0], size);
+        result := i + 1;
+        break;
       end;
     end;
-  end;}
 
-  //贴图的数量是有文件存在的最大数量
-  result := 0;
-  for i := size div 4 downto 0 do
-  begin
-    if fileexists(AppPath + path + inttostr(i) + '.png')
-      or fileexists(AppPath + path + inttostr(i) + '_0.png') then
+    //初始化贴图索引, 并计算全部帧数和
+    setlength(PNGIndexArray, result);
+    count := 0;
+    for i := 0 to result - 1 do
     begin
-      result := i + 1;
-      break;
-    end;
-  end;
-  setlength(PNGIndexArray, result);
-
-  //计算合法贴图文件的总数, 同时指定每个图的索引数据
-  count := 0;
-  for i := 0 to result - 1 do
-  begin
-    with PNGIndexArray[i] do
-    begin
-      Num := -1;
-      Frame := 0;
-      CurPointer := nil;
-      if fileexists(AppPath + path + inttostr(i) + '.png') then
+      pngoff := pint(p + 4 + i * 4)^;
+      with PNGIndexArray[i] do
       begin
         Num := count;
-        Frame := 1;
-        count := count + 1;
-      end
-      else
-      begin
-        k := 0;
-        while fileexists(AppPath + path + inttostr(i) + '_' + inttostr(k) + '.png') do
-        begin
-          k := k + 1;
-          if k = 1 then
-            Num := count;
-          count := count + 1;
-        end;
-        Frame := k;
+        x := psmallint(p + pngoff)^;
+        y := psmallint(p + pngoff + 2)^;
+        Frame := pint(p + pngoff + 4)^;
+        count := count + frame;
+        CurPointer := nil;
+        Loaded := 0;
       end;
-      x := offset[i * 2];
-      y := offset[i * 2 + 1];
-      Loaded := 0;
-      UseGRP := 0;
-      {if (i >= 154) and (i <= 335)
-        or (i >= 500) and (i <= 511)
-        or (i >= 873) and (i <= 894)
-        or (i = 1377) or (i = 1378) or (i = 1379) or (i = 1388)
-        or (i = 1391) or (i = 1397) or (i = 1404)
-        or (i = 1415) or (i = 1417) or (i = 1423) or (i = 1367) then
-        UseGRP := 1;}
+    end;
+    end
+    else
+    if IsConsole then
+    writeln('Can''t find imz file.');
+  end;
+
+
+  if (PNG_TILE = 1) or (p = nil) then
+  begin
+    if IsConsole then
+      writeln('Searching index of png files... ', path + '/index.ka');
+    path := path + '/';
+    filehandle := fileopen(AppPath + path + '/index.ka', fmopenread);
+    if filehandle > 0 then
+    begin
+      size := fileseek(filehandle, 0, 2);
+      setlength(offset, size div 2);
+      fileseek(filehandle, 0, 0);
+      fileread(filehandle, offset[0], size);
+    end;
+    fileclose(filehandle);
+    for i := size div 4 downto 0 do
+    begin
+      if fileexists(AppPath + path + inttostr(i) + '.png')
+        or fileexists(AppPath + path + inttostr(i) + '_0.png') then
+      begin
+        result := i + 1;
+        break;
+      end;
+    end;
+    //贴图的数量是有文件存在的最大数量
+    setlength(PNGIndexArray, result);
+    //计算合法贴图文件的总数, 同时指定每个图的索引数据
+    count := 0;
+    for i := 0 to result - 1 do
+    begin
+      with PNGIndexArray[i] do
+      begin
+        Num := -1;
+        Frame := 0;
+        CurPointer := nil;
+        if fileexists(AppPath + path + inttostr(i) + '.png') then
+        begin
+          Num := count;
+          Frame := 1;
+          count := count + 1;
+        end
+        else
+        begin
+          k := 0;
+          while fileexists(AppPath + path + inttostr(i) + '_' + inttostr(k) + '.png') do
+          begin
+            k := k + 1;
+            if k = 1 then
+              Num := count;
+              count := count + 1;
+          end;
+          Frame := k;
+        end;
+        x := offset[i * 2];
+        y := offset[i * 2 + 1];
+        Loaded := 0;
+        UseGRP := 0;
+      end;
     end;
   end;
 
   if IsConsole then
-    writeln('Estimated the pic num is ', result, ', found ', count, ' real titles.');
+    writeln(result, ' index, ', count, ' real titles. Now loading...');
+
   setlength(SurfaceArray, count);
-  //writeln(sizeof(Bfield[3]));
   for i := 0 to count - 1 do
     SurfaceArray[i] := nil;
 
@@ -960,45 +984,101 @@ begin
   begin
     for i := 0 to result - 1 do
     begin
-      LoadOnePNGTile(path, i, PNGIndexArray[i], @SurfaceArray[0], 1);
+      LoadOnePNGTile(path, p, i, PNGIndexArray[i], @SurfaceArray[0], 1);
     end;
   end;
-  {if zipFile <> nil then
-    unzClose(zipFile);}
+  if p <> nil then FreeMem(p);
 
 end;
 
-procedure LoadOnePNGTile(path: string; filenum: integer; var PNGIndex: TPNGIndex; SurfacePointer: PPSDL_Surface; forceLoad: integer = 0);
+procedure LoadOnePNGTile(path: string; p:pchar; filenum: integer; var PNGIndex: TPNGIndex; SurfacePointer: PPSDL_Surface; forceLoad: integer = 0);
 var
-  j, k: integer;
+  j, k, index, len, off: integer;
   tempscr: PSDL_Surface;
+  frommem: boolean;
 begin
   SDL_PollEvent(@event);
   CheckBasicEvent;
+
+  frommem := ((PNG_TILE = 2) and (p <> nil));
   with PNGIndex do
   begin
-    if ((Loaded = 0) or (forceLoad = 1)) and (Num >= 0) then
+    if ((Loaded = 0) or (forceLoad = 1)) and (Num >= 0) and (Frame > 0) then
     begin
       Loaded := 1;
       inc(SurfacePointer, Num);
       CurPointer := SurfacePointer;
       if Frame = 1 then
       begin
-        SurfacePointer^ := LoadSurfaceFromFile(AppPath + path + inttostr(filenum) + '.png');
+        if frommem then
+        begin
+          off := pint(p + 4 + filenum * 4)^ + 8;
+          index := pint(p + off)^;
+          len := pint(p + off + 4)^;
+          SurfacePointer^ := LoadSurfaceFromMem(p + index, len);
+        end
+        else
+          SurfacePointer^ := LoadSurfaceFromFile(AppPath + path + inttostr(filenum) + '.png');
       end;
       if Frame > 1 then
       begin
         for j := 0 to Frame - 1 do
         begin
-          SurfacePointer^ := LoadSurfaceFromFile(AppPath + path + inttostr(filenum) + '_' + inttostr(j) + '.png');
+          if frommem then
+          begin
+            off := pint(p + 4 + filenum * 4)^ + 8;
+            index := pint(p + off + j * 8)^;
+            len := pint(p + off + j * 8 + 4)^;
+            //writeln(index, ' ', len, ' ',num);
+            SurfacePointer^ := LoadSurfaceFromMem(p + index, len);
+          end
+          else
+            SurfacePointer^ := LoadSurfaceFromFile(AppPath + path + inttostr(filenum) + '_' + inttostr(j) + '.png');
           inc(SurfacePointer, 1);
-          //if IsConsole then
-            //writeln('Found more than 1 frame: ', filenum, '_', j, '.png');
         end;
       end;
     end;
   end;
+
 end;
+
+function LoadSurfaceFromFile(filename: string): PSDL_Surface;
+var
+  tempscr: PSDL_Surface;
+begin
+  Result := nil;
+  if fileexistsUTF8(filename) then
+  begin
+    tempscr := IMG_Load(PChar(filename));
+    Result := SDL_DisplayFormatAlpha(tempscr);
+    SDL_FreeSurface(tempscr);
+  end;
+end;
+
+function LoadSurfaceFromMem(p: pchar; len: integer): PSDL_Surface;
+var
+  tempscr: PSDL_Surface;
+  tempRWops: PSDL_RWops;
+begin
+  Result := nil;
+  tempRWops := SDL_RWFromMem(p, len);
+  tempscr := IMG_LoadPNG_RW(tempRWops);
+  Result := SDL_DisplayFormatAlpha(tempscr);
+  SDL_FreeSurface(tempscr);
+  SDL_FreeRW(tempRWops);
+
+end;
+
+function LoadSurfaceFromZIPFile(zipFile: unzFile; filename: string): PSDL_Surface;
+var
+  archiver: unzFile;
+  info: unz_file_info;
+  buffer: pchar;
+begin
+
+end;
+
+
 
 //Main game.
 //显示开头画面
