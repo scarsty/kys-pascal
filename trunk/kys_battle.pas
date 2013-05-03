@@ -158,7 +158,7 @@ begin
     end;
   end;
 
-  if PNG_TILE = 1 then
+  if PNG_TILE > 0 then
   begin
     setlength(FPNGIndex, BRoleAmount);
     setlength(FPNGTile, BRoleAmount);
@@ -169,7 +169,7 @@ begin
       for j := 0 to 3 do
       begin
         num := BEGIN_BATTLE_ROLE_PIC + Rrole[Brole[i].rnum].HeadNum * 4 + j;
-        LoadOnePNGTile('resource/wmap/', num, BPNGIndex[num], @BPNGTile[0]);
+        LoadOnePNGTile('resource/wmap/', nil, num, BPNGIndex[num], @BPNGTile[0]);
       end;
       BRole[i].BHead := i;
     end;
@@ -2121,7 +2121,7 @@ begin
   while (SDL_PollEvent(@event) >= 0) do
   begin
     CheckBasicEvent;
-    DrawBFieldWithEft(i, beginpic, endpic, min, bnum, color1);
+    DrawBFieldWithEft(i, beginpic, endpic, min, bnum, forteam, 1, $FFFFFFFF);
     SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
     sdl_delay(20);
     i := i + 1;
@@ -2300,8 +2300,9 @@ begin
     Result := (RMagic[mnum].HurtMP[level - 1] * 3) div 2;
 end;
 
-//0: red. 1: purple, 2: green, 3
+
 //选择颜色
+//0红色, 2绿色, 4蓝色, 3黄色, 1紫色
 
 procedure SelectModeColor(mode: integer; var color1, color2: uint32; var str: string; trans: integer = 0);
 var
@@ -2927,7 +2928,7 @@ begin
       endpic := 0;
     end;
     filename := formatfloat('fight/fight000', rrole[rnum].HeadNum);
-    LoadIdxGrp(filename + '.idx', filename + '.grp', @FIdx[0], @FPic[0]);
+    LoadIdxGrp(filename + '.idx', filename + '.grp', FIdx, FPic);
     //if PNG_TILE = 1 then
       //LoadPNGTiles('resource/' + filename + '/', FPNGIndex, FPNGTile, 1);
 
