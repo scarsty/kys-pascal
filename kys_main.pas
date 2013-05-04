@@ -87,6 +87,7 @@ procedure SetModVersion;
 procedure ReadFiles;
 procedure ReadTiles;
 function ReadFiletoBuffer(p: pchar; filename: string; size, malloc: integer): pchar;
+procedure FreeFileBuffer(var p: pchar);
 function LoadIdxGrp(stridx, strgrp: string; var idxarray: TIntArray; var grparray: TByteArray): integer;
 function LoadPNGTiles(path: string; var PNGIndexArray: TPNGIndexArray; var SurfaceArray: TSurfaceArray; LoadPic: integer = 1): integer;
 procedure LoadOnePNGTile(path: string; p:pchar; filenum: integer; var PNGIndex: TPNGIndex; SurfacePointer: PPSDL_Surface; forceLoad: integer = 0);
@@ -822,8 +823,10 @@ begin
       size := fileseek(i, 0, 2);
     if malloc = 1 then
     begin
-      GetMem(result, size + 4);
+      //GetMem(result, size + 4);
+      result := StrAlloc(size + 4);
       p := result;
+      //writeln(StrBufSize(p));
     end;
     fileseek(i, 0, 0);
     fileread(i, p^, size);
@@ -832,6 +835,13 @@ begin
   else
     if malloc = 1 then
       result := nil;
+end;
+
+procedure FreeFileBuffer(var p: pchar);
+begin
+  if p <> nil then
+    StrDispose(p);
+  p := nil;
 end;
 
 function LoadIdxGrp(stridx, strgrp: string; var idxarray: TIntArray; var grparray: TByteArray): integer;
@@ -875,7 +885,7 @@ begin
   begin
     if IsConsole then
       writeln('Searching imz file... ',  path);
-    p := ReadFileToBuffer(p, AppPath + path + '.imz', -1, 1);
+    p := ReadFileToBuffer(nil, AppPath + path + '.imz', -1, 1);
     if p <> nil then
     begin
     result := pint(p)^;
@@ -987,7 +997,7 @@ begin
       LoadOnePNGTile(path, p, i, PNGIndexArray[i], @SurfaceArray[0], 1);
     end;
   end;
-  if p <> nil then FreeMem(p);
+  FreeFileBuffer(p);
 
 end;
 
