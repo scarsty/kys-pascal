@@ -1599,18 +1599,24 @@ begin
               bigtran := tran * $01010101;
               Mask := tempscr.format.AMask;
               tempscrfront := SDL_DisplayFormatAlpha(CurSurface);
-              //tempscrback := SDL_DisplayFormatAlpha(CurSurface);
               SDL_FillRect(tempscrfront, nil, (MixColor and (not Mask)) or (bigtran and Mask));
-              //SDL_SetAlpha(tempscrfront, SDL_SRCALPHA, MixAlpha * 255 div 100);
-              //SDL_FillRect(tempscrback, nil, MixColor);
-              //SDL_SetAlpha(tempscrback, SDL_SRCALPHA, 255);
-              //SDL_BlitSurface(CurSurface, nil, tempscrback, nil);
               SDL_BlitSurface(tempscrfront, nil, tempscr, nil);
-              //SDL_SetColorKey(tempscrback, SDL_SRCCOLORKEY, MixColor);
               if (BlockImgR = nil) then
               begin
-                //SDL_SetAlpha(tempscrback, SDL_SRCALPHA, 255 - alpha * 255 div 100);
-                SDL_BlitSurface(tempscr, nil, scr, @dest);
+                if alpha > 0 then
+                begin
+                  tempscrback := SDL_DisplayFormat(CurSurface);
+                  SDL_FillRect(tempscrback, nil, 1);
+                  SDL_SetColorKey(tempscrback, SDL_SRCCOLORKEY, 1);
+                  SDL_SetAlpha(tempscrback, SDL_SRCALPHA, 255 - alpha * 255 div 100);
+                  SDL_BlitSurface(tempscr, nil, tempscrback, nil);
+                  SDL_BlitSurface(tempscrback, nil, scr, @dest);
+                  SDL_FreeSurface(tempscrback);
+                end
+                else
+                begin
+                  SDL_BlitSurface(tempscr, nil, scr, @dest);
+                end;
               end
               else
               begin
@@ -1618,7 +1624,6 @@ begin
                 //SDL_BlitSurface(tempscrback, nil, tempscr, nil);
               end;
               SDL_FreeSurface(tempscrfront);
-              //SDL_FreeSurface(tempscrback);
             end;
             if (BlockImgR <> nil) then
             begin

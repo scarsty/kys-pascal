@@ -6051,7 +6051,7 @@ begin
     begin
       Picnum := random(CPicAmount);
       Shadow := 0;
-      Alpha := random(50) + 10;
+      Alpha := random(50) + 25;
       MixColor := random(256) + random(256) shl 8 + random(256) shl 16 + random(256) shl 24;
       mixAlpha := random(50);
       Positionx := 0;
