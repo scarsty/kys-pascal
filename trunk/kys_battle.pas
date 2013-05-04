@@ -485,16 +485,20 @@ begin
     ClearDeadRolePic; //清除阵亡角色
 
     //是否已行动, 显示数字清空
-
     for i := 0 to broleamount - 1 do
     begin
       Brole[i].Acted := 0;
       Brole[i].ShowNumber := 0;
     end;
+    //效果层清空
+    FillChar(BField[4, 0, 0], sizeof(BField[4]), 0);
 
     if SEMIREAL = 1 then
     begin
-      redraw(1);
+      //将不含进度条的图形画入快速重载入屏幕
+      DrawWholeBField(0);
+      WriteFreshScreen(0, 0, screen.w, screen.h);
+      DrawProgress;
       act := 0;
       while SDL_PollEvent(@event) >= 0 do
       begin
@@ -1061,7 +1065,6 @@ begin
       Inc(a);
       Dec(Brole[bnum].Step);
       Redraw;
-      //showprogress;
       SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
       sdl_delay(30);
     end;
