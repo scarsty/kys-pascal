@@ -47,6 +47,8 @@ procedure drawscreenpixel(x, y: integer; color: Uint32);
 procedure display_bmp(file_name: PChar; x, y: integer);
 procedure display_img(file_name: PChar; x, y: integer);
 function ColColor(num: byte): Uint32;
+procedure DrawRectangle(sur: PSDL_Surface; x, y, w, h: integer; colorin, colorframe: Uint32; alpha: integer);
+procedure DrawRectangleWithoutFrame(sur: PSDL_Surface; x, y, w, h: integer; colorin: Uint32; alpha: integer);
 
 //画RLE8图片的子程
 function JudgeInScreen(px, py, w, h, xs, ys: integer): boolean; overload;
@@ -72,8 +74,7 @@ procedure DrawEngShadowText(sur: PSDL_Surface; word: PUint16; x_pos, y_pos: inte
 procedure DrawBig5Text(sur: PSDL_Surface; str: PChar; x_pos, y_pos: integer; color: Uint32);
 procedure DrawBig5ShadowText(sur: PSDL_Surface; word: PChar; x_pos, y_pos: integer; color1, color2: Uint32);
 procedure DrawTextWithRect(sur: PSDL_Surface; word: puint16; x, y, w: integer; color1, color2: uint32);
-procedure DrawRectangle(sur: PSDL_Surface; x, y, w, h: integer; colorin, colorframe: Uint32; alpha: integer);
-procedure DrawRectangleWithoutFrame(sur: PSDL_Surface; x, y, w, h: integer; colorin: Uint32; alpha: integer);
+
 
 //PNG贴图相关的子程
 procedure DrawPngTile(PNGIndex: TPNGIndex; FrameNum: integer; scr: PSDL_Surface; px, py: integer); overload;
