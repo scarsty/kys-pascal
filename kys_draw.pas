@@ -53,7 +53,7 @@ procedure InitialScence(Visible: integer); overload;
 procedure InitialScenceOnePosition(i1, i2, x1, y1, w, h, depth, temp: integer);
 procedure UpdateScence(xs, ys: integer);
 procedure LoadScencePart(x, y: integer);
-procedure DrawWholeBField;
+procedure DrawWholeBField(needProgress: integer = 1);
 procedure DrawBfieldWithoutRole(x, y: integer);
 procedure DrawRoleOnBfield(x, y: integer; MixColor: Uint32 = 0; MixAlpha: integer = 0);
 procedure InitialWholeBField;
@@ -1227,7 +1227,7 @@ end;
 
 //画战场
 
-procedure DrawWholeBField;
+procedure DrawWholeBField(needProgress: integer = 1);
 var
   i, i1, i2: integer;
 begin
@@ -1248,7 +1248,8 @@ begin
         DrawRoleOnBfield(i1, i2);
     end;
 
-  //DrawProgress;
+  if needProgress = 1 then
+    DrawProgress;
   //BfieldDrawn := 1;
   {if (SDL_MustLock(screen)) then
   begin
@@ -1482,6 +1483,7 @@ begin
 
       end;
     end;
+  DrawProgress;
 
 end;
 
@@ -1632,6 +1634,7 @@ var
   i, j, x, y, curHead, temp: integer;
   dest: TSDL_Rect;
   range, p: array of integer;
+  tempscr: PSDL_Surface;
 begin
   if SEMIREAL = 1 then
   begin
@@ -1669,7 +1672,14 @@ begin
           //p := Brole[range[i]].RealProgress * 500 div 10000;
           dest.x := p[i] + x;
           if BHead[Brole[range[i]].BHead] <> nil then
-            SDL_BlitSurface(BHead[Brole[range[i]].BHead], nil, screen, @dest);
+          begin
+            tempscr := BHead[Brole[range[i]].BHead];
+            SDL_BlitSurface(tempscr, nil, screen, @dest);
+            {if (BField[4, Brole[range[i]].X, Brole[range[i]].Y] > 0)
+              and (Brole[BField[2, Bx, By]].Team <> Brole[range[i]].Team) then
+              DrawRectangleWithoutFrame(screen, dest.x, dest.y, tempscr.w, tempscr.h,
+                SDL_MapRGB(screen.format, 200, 2, 0), 40);}
+          end;
         end;
     end;
   end;
