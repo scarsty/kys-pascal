@@ -1451,7 +1451,8 @@ begin
       sdl_delay(20);
     end;
     i := i - 1;
-    if i < 440 - 794 then break;
+    if i < 440 - 794 then
+      break;
   end;
   waitanykey;
 
@@ -2416,7 +2417,6 @@ begin
   end;
   (ap + n)^ := char($0);
   (ap + n + 1)^ := char(0);
-
 
   if alen = 4 then
   begin
