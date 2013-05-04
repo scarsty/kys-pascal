@@ -163,7 +163,7 @@ begin
     setlength(FPNGTile, BRoleAmount);
     for i := 0 to broleamount - 1 do
     begin
-      path := formatfloat('resource/fight/fight000/', Rrole[Brole[i].rnum].HeadNum);
+      path := formatfloat('resource/fight/fight000', Rrole[Brole[i].rnum].HeadNum);
       LoadPNGTiles(path, FPNGIndex[i], FPNGTile[i], 1);
       for j := 0 to 3 do
       begin
@@ -249,6 +249,7 @@ begin
   fileread(sta, warsta, sizeof(TWarData));
   fileclose(sta);
   fieldnum := warsta.BFieldNum;
+
   if fieldnum = 0 then
     offset := 0
   else
@@ -262,6 +263,7 @@ begin
   fileseek(grp, offset, 0);
   fileread(grp, Bfield[0, 0, 0], 2 * 64 * 64 * 2);
   fileclose(grp);
+
   for i1 := 0 to 63 do
     for i2 := 0 to 63 do
       Bfield[2, i1, i2] := -1;

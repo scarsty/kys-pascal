@@ -548,7 +548,7 @@ end;
 
 function LoadPNGTiles(path: string; var PNGIndexArray: TPNGIndexArray; var SurfaceArray: TSurfaceArray; LoadPic: integer = 1): integer;
 var
-  filehandle, i, j, k, state, size, count, pngoff: integer;
+  i, j, k, state, size, count, pngoff: integer;
   zipFile: unzFile;
   info: unz_file_info;
   offset: array of smallint;
@@ -606,15 +606,13 @@ begin
     if IsConsole then
       writeln('Searching index of png files... ', path + '/index.ka');
     path := path + '/';
-    filehandle := fileopen(AppPath + path + '/index.ka', fmopenread);
-    if filehandle > 0 then
-    begin
-      size := fileseek(filehandle, 0, 2);
-      setlength(offset, size div 2);
-      fileseek(filehandle, 0, 0);
-      fileread(filehandle, offset[0], size);
-    end;
-    fileclose(filehandle);
+    p := ReadFileToBuffer(nil, AppPath + path + '/index.ka', -1, 1);
+    size := StrBufSize(p);
+    writeln(size);
+    setlength(offset, size div 2 + 2);
+    move(p^, offset[0], size);
+    FreeFileBuffer(p);
+
     for i := size div 4 downto 0 do
     begin
       if fileexists(AppPath + path + inttostr(i) + '.png')
