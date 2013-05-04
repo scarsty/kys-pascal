@@ -922,7 +922,7 @@ begin
   if (CurEvent < 0) then
   begin
     DrawScenceWithoutRole(Sx, Sy);
-    CurScenceRolePic := BeginScenceRolePic + SFace * 7 + SStep;
+    CurScenceRolePic := BEGIN_WALKPIC + SFace * 7 + SStep;
     DrawRoleOnScence(Sx, Sy);
   end
   else
