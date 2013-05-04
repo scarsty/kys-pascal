@@ -155,6 +155,8 @@ function SelectOneTeamMemberScript(L: Plua_state): integer; cdecl;
 
 implementation
 
+uses kys_draw;
+
 procedure InitialScript;
 begin
   //LoadLua;

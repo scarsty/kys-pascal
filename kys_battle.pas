@@ -35,7 +35,6 @@ procedure ReArrangeBRole;
 function BattleStatus: integer;
 function BattleMenu(bnum: integer): integer;
 procedure ShowBMenu(MenuStatus, menu, max: integer);
-procedure DrawProgress;
 procedure MoveRole(bnum: integer);
 procedure MoveAmination(bnum: integer);
 function SelectAim(bnum, step: integer; AreaType: integer = 0; AreaRange: integer = 0): boolean;
@@ -97,7 +96,7 @@ var
 
 implementation
 
-uses kys_event, kys_engine;
+uses kys_event, kys_engine, kys_draw;
 
 //Battle.
 //战斗, 返回值为是否胜利
@@ -907,56 +906,6 @@ begin
 
 end;
 
-//显示半即时进度
-
-procedure DrawProgress;
-var
-  i, j, x, y, curHead, temp: integer;
-  dest: TSDL_Rect;
-  range, p: array of integer;
-begin
-  if SEMIREAL = 1 then
-  begin
-    x := 50;
-    y := Center_Y * 2 - 80;
-    dest.y := y;
-    DrawRectangleWithoutFrame(screen, 0, CENTER_Y * 2 - 50, CENTER_X * 2, 50, 0, 50);
-    if length(BHead) = BRoleAmount then
-    begin
-      setlength(range, BroleAmount);
-      setlength(p, BroleAmount);
-      curHead := 0;
-      for i := 0 to BRoleAmount - 1 do
-      begin
-        range[i] := i;
-        p[i] := BRole[i].RealProgress * 500 div 10000;
-      end;
-      for i := 0 to BRoleAmount - 2 do
-        for j := i + 1 to BRoleAmount - 1 do
-        begin
-          if p[i] <= p[j] then
-          begin
-            temp := p[i];
-            p[i] := p[j];
-            p[j] := temp;
-            temp := range[i];
-            range[i] := range[j];
-            range[j] := temp;
-          end;
-        end;
-
-      for i := 0 to BRoleAmount - 1 do
-        if Brole[range[i]].Dead = 0 then
-        begin
-          //p := Brole[range[i]].RealProgress * 500 div 10000;
-          dest.x := p[i] + x;
-          if BHead[Brole[range[i]].BHead] <> nil then
-            SDL_BlitSurface(BHead[Brole[range[i]].BHead], nil, screen, @dest);
-        end;
-    end;
-  end;
-
-end;
 
 //移动
 
