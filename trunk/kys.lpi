@@ -40,7 +40,7 @@
         <PackageName Value="LCL"/>
       </Item1>
     </RequiredPackages>
-    <Units Count="8">
+    <Units Count="9">
       <Unit0>
         <Filename Value="kys.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -80,6 +80,11 @@
         <IsPartOfProject Value="True"/>
         <UnitName Value="kys_type"/>
       </Unit7>
+      <Unit8>
+        <Filename Value="kys_draw.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="kys_draw"/>
+      </Unit8>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

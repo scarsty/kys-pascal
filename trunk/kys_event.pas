@@ -100,7 +100,7 @@ procedure NewTalk(headnum, talknum, namenum, place, showhead, color, frame: inte
 
 implementation
 
-uses kys_script, kys_engine, kys_battle;
+uses kys_script, kys_engine, kys_battle, kys_draw;
 
 //事件系统
 //事件指令含义请参阅其他相关文献
