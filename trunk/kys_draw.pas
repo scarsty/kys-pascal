@@ -81,8 +81,8 @@ procedure DrawTitlePic(imgnum, px, py: integer);
 var
   len, grp, idx: integer;
   Area: TRect;
-  BufferIdx: array[0..100] of integer;
-  BufferPic: array[0..20000] of byte;
+  BufferIdx: TIntArray;
+  BufferPic: TByteArray;
 begin
   if PNG_TILE > 0 then
   begin
@@ -90,24 +90,13 @@ begin
   end;
   if PNG_TILE = 0 then
   begin
-    grp := fileopen(AppPath + 'resource/title.grp', fmopenread);
-    idx := fileopen(AppPath + 'resource/title.idx', fmopenread);
-
-    len := fileseek(idx, 0, 2);
-    fileseek(idx, 0, 0);
-    fileread(idx, BufferIdx[0], len);
-    len := fileseek(grp, 0, 2);
-    fileseek(grp, 0, 0);
-    fileread(grp, BufferPic[0], len);
-
-    fileclose(grp);
-    fileclose(idx);
-
+    len := LoadIdxGrp('resource/title.idx', 'resource/title.grp', BufferIdx, BufferPic);
     Area.x := 0;
     Area.y := 0;
     Area.w := screen.w;
     Area.h := screen.h;
-    DrawRLE8Pic(@ACol[0], imgnum, px, py, @BufferIdx[0], @BufferPic[0], @Area, nil, 0, 0, 0, 0);
+    if imgnum < len then
+      DrawRLE8Pic(@ACol[0], imgnum, px, py, @BufferIdx[0], @BufferPic[0], @Area, nil, 0, 0, 0, 0);
   end;
 end;
 
