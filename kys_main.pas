@@ -79,7 +79,6 @@ type
   TMagic = TMagicRedFace;
   TWarData = TWarDataRedFace;}
 
-
 //程序重要子程
 procedure Run;
 procedure Quit;
@@ -160,7 +159,6 @@ procedure CloudCreateOnSide(num: integer);
 
 function IsCave(snum: integer): boolean;
 
-
 var
 
   MODVersion: integer = 0;
@@ -205,7 +203,6 @@ var
   MAX_ITEM_AMOUNT: integer = 200; //最大物品数量
   MAX_HP: integer = 999; //最大生命
   MAX_MP: integer = 999; //最大内功
-
 
   MaxProList: array[43..58] of integer = (100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
     100, 100, 100, 100, 100, 1);
@@ -330,7 +327,6 @@ var
   //场景和战场的遮挡信息, 前者不会记录地板数据, 将需要遮挡的部分的像素记录为该像素隶属物品位置的深度
   //(定义为 depth =  x + y), 该值是决定遮挡的关键部分. 后者仅记录当前屏幕的遮挡深度
 
-
   MPic, SPic, WPic, EPic, FPic, HPic, CPic, KDef, TDef: TByteArray;
   MIdx, SIdx, WIdx, EIdx, Fidx, HIdx, CIdx, KIdx, TIdx: TIntArray;
   //贴图内容与索引, 当贴图文件很大时可能需要修改
@@ -388,7 +384,7 @@ var
   EXIT_GAME: integer = 0; //退出时的提问方式
 
   PNG_TILE: integer = 1; //使用PNG贴图
-  TRY_FIND_GRP: integer = 1;  //当找不到PNG贴图时, 会试图寻找GRP中的图
+  TRY_FIND_GRP: integer = 1; //当找不到PNG贴图时, 会试图寻找GRP中的图
   BIG_PNG_TILE: integer = 0;
 
   MPNGTile: TSurfaceArray;
@@ -685,7 +681,8 @@ begin
     POISON_HURT := Kys_ini.ReadInteger('constant', 'POISON_HURT', 10);
     MED_LIFE := Kys_ini.ReadInteger('constant', 'MED_LIFE', 4);
     NOVEL_BOOK := Kys_ini.ReadInteger('constant', 'NOVEL_BOOK', 144);
-    MAX_ADD_PRO := Kys_ini.ReadInteger('constant', 'MAX_ADD_PRO', 0); ;
+    MAX_ADD_PRO := Kys_ini.ReadInteger('constant', 'MAX_ADD_PRO', 0);
+    ;
 
     WALK_SPEED := Kys_ini.ReadInteger('system', 'WALK_SPEED', 10);
     WALK_SPEED2 := Kys_ini.ReadInteger('system', 'WALK_SPEED2', WALK_SPEED);
@@ -720,13 +717,14 @@ begin
       MaxProList[i] := Kys_ini.ReadInteger('constant', 'MaxProList' + IntToStr(i), 100);
     end;
 
-    if LIFE_HURT = 0 then LIFE_HURT := 1;
-    if POISON_HURT = 0 then POISON_HURT := 1;
+    if LIFE_HURT = 0 then
+      LIFE_HURT := 1;
+    if POISON_HURT = 0 then
+      POISON_HURT := 1;
 
   finally
     Kys_ini.Free;
   end;
-
 
   ReadFileToBuffer(@ACol[0], AppPath + 'resource/mmap.col', 768, 0);
   move(ACol[0], ACol1[0], 768);
@@ -749,8 +747,6 @@ begin
 
 end;
 
-
-
 //Main game.
 //显示开头画面
 
@@ -771,7 +767,6 @@ begin
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
 
   ReadTiles;
-
 
   begin_time := random(1440);
   now_time := begin_time;
@@ -956,7 +951,6 @@ begin
 
 end;
 
-
 //初始化主角属性
 
 function InitialRole: boolean;
@@ -1025,7 +1019,6 @@ begin
     end;
 
     redraw;
-
 
     str := (' 資質');
     repeat
@@ -1949,7 +1942,6 @@ begin
   event.button.button := 0;
 end;
 
-
 //于主地图行走
 
 procedure Walk;
@@ -2327,7 +2319,6 @@ begin
   //result:=canentrance;
 
 end;
-
 
 procedure UpdateScenceAmi;
 var
@@ -4262,7 +4253,6 @@ begin
   words3[11] := (' 暗器');
   words3[12] := (' 資質');
 
-
   if MODVersion = 22 then
   begin
     words2[7] := (' 武力');
@@ -6045,7 +6035,6 @@ begin
 
 end;
 
-
 procedure CloudCreate(num: integer);
 begin
   CloudCreateOnSide(num);
@@ -6077,6 +6066,5 @@ function IsCave(snum: integer): boolean;
 begin
   Result := snum in [5, 7, 10, 41, 42, 46, 65, 66, 67, 72, 79];
 end;
-
 
 end.
