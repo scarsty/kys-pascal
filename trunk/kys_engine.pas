@@ -1219,6 +1219,7 @@ var
   word2: WideString;
   p1: pbyte;
   p2: pbyte;
+  Text: PSDL_Surface;
 begin
 {$IFDEF fpc}
   //widestring在fpc中的默认赋值动作是将utf8码每字节间插入一个00.
@@ -1314,6 +1315,7 @@ var
   dest: TSDL_Rect;
   a: Uint8;
   tempcolor: TSDL_Color;
+  Text: PSDL_Surface;
 begin
   //{$IFDEF darwin}
     {tempcolor := TSDL_Color(color shr 8);

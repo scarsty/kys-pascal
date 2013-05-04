@@ -793,7 +793,7 @@ begin
       SStep := SStep + 1;
       if SStep >= 7 then
         SStep := 1;
-      CurScenceRolePic := BeginScenceRolePic + SFace * 7 + SStep;
+      CurScenceRolePic := BEGIN_WALKPIC + SFace * 7 + SStep;
       DrawRoleOnScence(Sx, Sy);
       SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
       Sy := Sy + s;
@@ -815,7 +815,7 @@ begin
       SStep := SStep + 1;
       if SStep >= 7 then
         SStep := 1;
-      CurScenceRolePic := BeginScenceRolePic + SFace * 7 + SStep;
+      CurScenceRolePic := BEGIN_WALKPIC + SFace * 7 + SStep;
       DrawRoleOnScence(Sx, Sy);
       SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
       Sx := Sx + s;
