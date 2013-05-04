@@ -429,17 +429,7 @@ var
 begin
   x := CENTER_X - 105;
   y := 150;
-  //{$IFDEF DARWIN}
-  RegionRect.x := x + 30;
-  RegionRect.y := y;
-  RegionRect.w := 151;
-  RegionRect.h := max * 22 + 29;
-  //{$ENDIF}
   redraw;
-  //{$IFDEF DARWIN}
-  RegionRect.w := 0;
-  RegionRect.h := 0;
-  //{$ENDIF}
   str := (' 選擇參與戰鬥之人物');
   str1 := (' 參戰');
   //Drawtextwithrect(@str[1],x + 5, y-35, 200 , colcolor($23), colcolor($21));
@@ -2401,15 +2391,7 @@ begin
   strs[1] := (' 生命');
   strs[2] := (' 內力');
   strs[3] := (' 體力');
-  //{$IFDEF DARWIN}
-  RegionRect.x := x;
-  RegionRect.y := y;
-  RegionRect.w := 146;
-  RegionRect.h := 174;
-  //redraw;
-  RegionRect.w := 0;
-  RegionRect.h := 0;
-  //{$ENDIF}
+
   DrawRectangle(screen, x, y, 145, 173, 0, colcolor(255), 30);
   drawheadpic(Rrole[rnum].HeadNum, x + 50, y + 63);
   str := big5tounicode(@rrole[rnum].Name);
@@ -3325,17 +3307,9 @@ begin
     end;
   end;
   h := amount * 22 + 32;
-  //{$IFDEF DARWIN}
-  RegionRect.x := x;
-  RegionRect.y := y;
-  RegionRect.w := w + 1;
-  RegionRect.h := h + 1;
-  //{$ENDIF}
+
   redraw;
-  //{$IFDEF DARWIN}
-  RegionRect.w := 0;
-  RegionRect.h := 0;
-  //{$ENDIF}
+
   DrawRectangle(screen, x, y, w, h, 0, colcolor(255), 30);
   for i := 0 to amount - 1 do
   begin
