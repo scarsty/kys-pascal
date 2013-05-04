@@ -352,11 +352,10 @@ begin
             //选中人物则反转对应bit
             if menu > 0 then
               Result := Result xor (1 shl (menu - 1))
+            else if Result < round(power(2, (max - 1)) - 1) then
+              Result := round(power(2, (max - 1)) - 1)
             else
-              if Result < round(power(2, (max - 1)) - 1) then
-                Result := round(power(2, (max - 1)) - 1)
-              else
-                Result := 0;
+              Result := 0;
             ShowMultiMenu(max, menu, Result, menustring);
           end;
           if ((event.key.keysym.sym = sdlk_return) or (event.key.keysym.sym = sdlk_space)) and (menu = max) then
@@ -390,11 +389,10 @@ begin
             begin
               if menu > 0 then
                 Result := Result xor (1 shl (menu - 1))
+              else if Result < round(power(2, (max - 1)) - 1) then
+                Result := round(power(2, (max - 1)) - 1)
               else
-                if Result < round(power(2, (max - 1)) - 1) then
-                  Result := round(power(2, (max - 1)) - 1)
-                else
-                  Result := 0;
+                Result := 0;
               ShowMultiMenu(max, menu, Result, menustring);
             end;
             if (event.button.button = sdl_button_left) and (menu = max) then
@@ -461,7 +459,6 @@ begin
     end;
   SDL_UpdateRect2(screen, x + 30, y, 151, max * 22 + 28 + 1);
 end;
-
 
 //战斗主控制
 
@@ -908,7 +905,6 @@ begin
 
 end;
 
-
 //移动
 
 procedure MoveRole(bnum: integer);
@@ -1076,7 +1072,6 @@ begin
   end;
 
 end;
-
 
 //选择目标
 
@@ -1266,7 +1261,6 @@ begin
   event.button.button := 0;
 end;}
 
-
 //选择方向
 
 function SelectDirector(bnum, step: integer): boolean;
@@ -1370,7 +1364,6 @@ begin
   end;
 
 end;
-
 
 //计算可以被选中的位置
 //利用递归确定
@@ -1590,7 +1583,6 @@ begin
 
 end;
 
-
 {procedure CalCanSelect(bnum, mode: integer);
 var
   i, i1, i2: integer;
@@ -1708,7 +1700,6 @@ begin
       end;
 
 end;
-
 
 //攻击
 
@@ -2082,7 +2073,6 @@ begin
 
 end;
 
-
 //判断是否有非行动方角色在攻击范围之内
 
 procedure CalHurtRole(bnum, mnum, level: integer);
@@ -2251,7 +2241,6 @@ begin
     Result := (RMagic[mnum].HurtMP[level - 1] * 3) div 2;
 end;
 
-
 //选择颜色
 //0红色, 2绿色, 4蓝色, 3黄色, 1紫色
 
@@ -2260,36 +2249,36 @@ var
   tempcolor: TSDL_Color;
 begin
   case mode of
-  0:
-    begin
-      color1 := colcolor($10);
-      color2 := colcolor($14);
-      str := '-%d';
-    end;
-  1:
-    begin
-      color1 := colcolor($50);
-      color2 := colcolor($53);
-      str := '-%d';
-    end;
-  2:
-    begin
-      color1 := colcolor($30);
-      color2 := colcolor($32);
-      str := '+%d';
-    end;
-  3:
-    begin
-      color1 := colcolor($7);
-      color2 := colcolor($5);
-      str := '+%d';
-    end;
-  4:
-    begin
-      color1 := colcolor($91);
-      color2 := colcolor($93);
-      str := '-%d';
-    end;
+    0:
+      begin
+        color1 := colcolor($10);
+        color2 := colcolor($14);
+        str := '-%d';
+      end;
+    1:
+      begin
+        color1 := colcolor($50);
+        color2 := colcolor($53);
+        str := '-%d';
+      end;
+    2:
+      begin
+        color1 := colcolor($30);
+        color2 := colcolor($32);
+        str := '+%d';
+      end;
+    3:
+      begin
+        color1 := colcolor($7);
+        color2 := colcolor($5);
+        str := '+%d';
+      end;
+    4:
+      begin
+        color1 := colcolor($91);
+        color2 := colcolor($93);
+        str := '-%d';
+      end;
   end;
   if trans = 1 then
   begin
@@ -2478,17 +2467,16 @@ begin
     color1 := colcolor($50);
     color2 := colcolor($4E);
   end
+  else if rrole[rnum].MPType = 1 then
+  begin
+    color1 := colcolor($7);
+    color2 := colcolor($5);
+  end
   else
-    if rrole[rnum].MPType = 1 then
-    begin
-      color1 := colcolor($7);
-      color2 := colcolor($5);
-    end
-    else
-    begin
-      color1 := colcolor($66);
-      color2 := colcolor($63);
-    end;
+  begin
+    color1 := colcolor($66);
+    color2 := colcolor($63);
+  end;
   str := format('%4d/%4d', [RRole[rnum].CurrentMP, RRole[rnum].MaxMP]);
   drawengshadowtext(screen, @str[1], x + 50, y + 128, color1, color2);
   str := format('%9d', [rrole[rnum].PhyPower]);
@@ -3176,7 +3164,6 @@ begin
 
 end;
 
-
 function TeamModeMenu: boolean;
 var
   menup, x, y, w, menu, i, amount: integer;
@@ -3564,7 +3551,6 @@ begin
     end;
   end;
 
-
   {//在敌方选择一个人物
   eneamount := Calrnum(1 - Brole[bnum].Team);
   aim := random(eneamount) + 1;
@@ -3719,7 +3705,6 @@ begin
   end;
 end;}
 
-
 //If all other actions fail, try to move closest to the nearest enemy and rest.
 //如果上面行动全部失败, 尽量靠近最近的敌人, 休息
   if Brole[bnum].Acted = 0 then
@@ -3729,7 +3714,6 @@ end;}
     MoveAmination(bnum);
     rest(bnum);
   end;
-
 
   //检查是否有esc被按下
   if SDL_PollEvent(@event) >= 0 then
@@ -3797,7 +3781,6 @@ begin
   end;
 
 end;
-
 
 procedure trymoveattack(var Mx1, My1, Ax1, Ay1, tempmaxhurt: integer; bnum, mnum, level: integer);
 var
@@ -3889,7 +3872,6 @@ begin
 
 end;
 
-
 //目标系点十菱，原地系菱
 
 procedure calpoint(var Mx1, My1, Ax1, Ay1, tempmaxhurt: integer; curX, curY, bnum, mnum, level: integer);
@@ -3932,7 +3914,6 @@ begin
     end;
   end;
 end;
-
 
 //线型攻击的情况，分四个方向考虑，分别计算伤血量
 
@@ -4017,7 +3998,6 @@ begin
     Ay1 := curY + 1;
   end;
 end;
-
 
 //原地系十叉米
 
