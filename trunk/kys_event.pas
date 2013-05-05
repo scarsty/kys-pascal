@@ -2292,7 +2292,7 @@ var
   np3, np, np1, np2, tp, p1, ap: PChar;
   actorarray, talkarray, namearray, name1, name2: array of byte;
   pword: array[0..1] of Uint16;
-  {wd,}str: string;
+  {wd,} str: string;
   temp2: WideString;
   wd: string;
 begin
