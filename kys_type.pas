@@ -1,6 +1,6 @@
 unit kys_type;
 
-{$mode delphi}
+{$MODE delphi}
 
 interface
 type
@@ -100,8 +100,8 @@ type
       Element: (Warnum: smallint;
         Name: array[0..9] of char;
         BFieldNum, ExpGot, MusicNum: smallint;
-        TeamMate, AutoTeamMate, TeamY, TeamX: array [0..5] of smallint;
-        Enemy, EnemyY, EnemyX: array [0..19] of smallint);
+        TeamMate, AutoTeamMate, TeamY, TeamX: array[0..5] of smallint;
+        Enemy, EnemyY, EnemyX: array[0..19] of smallint);
       Address: (Data: array[0..$5C] of smallint);
   end;
 
@@ -162,13 +162,12 @@ type
         BFieldNum, ExpGot, MusicNum: smallint;
         //TeamMate, TeamY, TeamX: array [0..11] of smallint;
         //AutoTeamMate, AutoTeamY, AutoTeamX: array [0..29] of smallint;
-        AutoTeamMate, AutoTeamY, AutoTeamX: array [0..11] of smallint;
-        TeamMate, TeamY, TeamX: array [0..29] of smallint;
-        Enemy, EnemyY, EnemyX: array [0..99] of smallint);
+        AutoTeamMate, AutoTeamY, AutoTeamX: array[0..11] of smallint;
+        TeamMate, TeamY, TeamX: array[0..29] of smallint;
+        Enemy, EnemyY, EnemyX: array[0..99] of smallint);
       Address: (Data: array[0..$5D] of smallint);
   end;
 
 implementation
 
 end.
-

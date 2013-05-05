@@ -22,6 +22,8 @@ uses
   kys_battle in 'kys_battle.pas',
   kys_engine in 'kys_engine.pas',
   kys_script in 'kys_script.pas',
+  kys_draw in 'kys_draw.pas',
+  kys_type in 'kys_type.pas',
   lua52 in 'lua52.pas';
 
 {$R *.res}

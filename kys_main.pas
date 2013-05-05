@@ -286,7 +286,7 @@ var
   BlockScreen: TPosition;
   //场景和战场的遮挡信息, 前者不会记录地板数据, 该值实际由绘图顺序决定
 
-  MPicAmount, SPicAmount, BPicAmount, CPicAmount: integer;
+  MPicAmount, SPicAmount, BPicAmount, EPicAmount, CPicAmount: integer;
 
   //以下是各类贴图内容与索引
   //云的贴图内容及索引
@@ -387,7 +387,7 @@ var
   nowstep: integer;
   Fway: array[0..479, 0..479] of integer;
 
-  ItemList: array[0..500] of smallint;  //物品显示使用的列表
+  ItemList: array[0..500] of smallint; //物品显示使用的列表
 
   //RegionRect: TSDL_Rect; //全局重画范围, 无用
 
