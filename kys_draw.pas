@@ -489,7 +489,7 @@ begin
         Area.w := screen.w;
         Area.h := screen.h;
         DrawRLE8Pic(@ACol[0], num, px, py, @FIdx[0], @FPic[0], @Area, nil, 0, 0, 0, shadow, alpha,
-          @BlockImg[0], @BlockScreen, screen.w, screen.h, sizeof(BlockImg[0, 0]), depth, mixColor, mixAlpha);
+          @BlockImg[0], @BlockScreen, 2304, 1402, sizeof(BlockImg[0, 0]), depth, mixColor, mixAlpha);
       end;
   end;
 end;
@@ -1596,7 +1596,6 @@ var
   pos: TPosition;
 begin
   DrawBfieldWithoutRole(Bx, By);
-
   for i1 := 0 to 63 do
     for i2 := 0 to 63 do
     begin
@@ -1607,7 +1606,7 @@ begin
       if (Bfield[2, i1, i2] = bnum) then
       begin
         pos := GetPositionOnScreen(i1, i2, Bx, By);
-        DrawFPic(apicnum, pos.x, pos.y, Brole[bnum].Bhead, 0, 75, Bx + By, 0, 0);
+        DrawFPic(apicnum, pos.x, pos.y, Brole[bnum].Bhead, 0, 75, 128 * min(Bx, By) + abs(Bx - By), 0, 0);
       end;
     end;
   DrawProgress;

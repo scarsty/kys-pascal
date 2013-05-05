@@ -475,7 +475,7 @@ begin
     for i := 3410 to 4102 do
       LoadOnePNGTile('resource/smap', nil,i, SPNGIndex[i], @SPNGTile[0]);}
     BPicAmount := LoadPNGTiles('resource/wmap', BPNGIndex, BPNGTile, 1);
-    LoadPNGTiles('resource/eft', EPNGIndex, EPNGTile, 1);
+    EPicAmount := LoadPNGTiles('resource/eft', EPNGIndex, EPNGTile, 1);
     CPicAmount := LoadPNGTiles('resource/cloud', CPNGIndex, CPNGTile, 1);
   end;
 
@@ -1016,7 +1016,11 @@ begin
   pixdepth := 0;
   //if (num >= 1916) and (num <= 1941) then h := h - 50;
   lenInt := sizeof(integer);
-
+  if (BlockPosition <> nil) then
+  begin
+    blockx := pint(BlockPosition)^;
+    blocky := pint(BlockPosition + 4)^;
+  end;
   if ((w > 1) or (h > 1)) and (px - xs + w >= pint(RectArea)^) and (px - xs < pint(RectArea)^
     + pint(RectArea + lenInt * 2)^) and (py - ys + h >= pint(RectArea + lenInt)^) and
     (py - ys < pint(RectArea + lenInt)^ + pint(RectArea + lenInt * 3)^) then
@@ -1066,8 +1070,6 @@ begin
                 end
                 else
                 begin
-                  blockx := pint(BlockPosition)^;
-                  blocky := pint(BlockPosition + 4)^;
                   if (x < blockx + screen.w) and (y < blocky + screen.h) then
                   begin
                     pixdepth := pint(BlockImageW + ((x + blockx) * heightW + y + blocky) * sizeW)^;
