@@ -233,7 +233,7 @@ begin
     if (PNG_TILE > 0) then
     begin
       if temp <> 1 then
-        LoadOnePNGTile('resource/smap/', nil,num, SPNGIndex[num], @SPNGTile[0]);
+        LoadOnePNGTile('resource/smap/', nil, num, SPNGIndex[num], @SPNGTile[0]);
       DrawPNGTile(SPNGIndex[num], sdl_getticks div 300, pImg, px, py);
       if needBlock <> 0 then
       begin
@@ -404,7 +404,7 @@ begin
   begin
     if PNG_TILE > 0 then
     begin
-      LoadOnePNGTile('resource/wmap/', nil,num, BPNGIndex[num], @BPNGTile[0]);
+      LoadOnePNGTile('resource/wmap/', nil, num, BPNGIndex[num], @BPNGTile[0]);
       if needBlock <> 0 then
       begin
         SetPNGTileBlock(BPNGIndex[num], px, py, depth, @BlockImg[0], 2304, 1402, sizeof(BlockImg[0, 0]));
@@ -441,19 +441,22 @@ procedure DrawEPic(num, px, py, shadow, alpha, depth: integer; mixColor: Uint32;
 var
   Area: TRect;
 begin
-  if PNG_TILE > 0 then
+  if (num >= 0) and (num < EPicAmount) then
   begin
-    DrawPNGTile(EPNGIndex[num], 0, screen, px, py, shadow, alpha, mixColor, mixAlpha,
-      0, nil, 0, 0, 0, 0, 0);
-  end;
-  if PNG_TILE = 0 then
-  begin
-    Area.x := 0;
-    Area.y := 0;
-    Area.w := screen.w;
-    Area.h := screen.h;
-    DrawRLE8Pic(@ACol[0], num, px, py, @EIdx[0], @EPic[0], @Area, nil, 0, 0, 0, shadow, alpha,
-      nil, nil, 0, 0, 0, depth, mixColor, mixAlpha);
+    if PNG_TILE > 0 then
+    begin
+      DrawPNGTile(EPNGIndex[num], 0, screen, px, py, shadow, alpha, mixColor, mixAlpha,
+        0, nil, 0, 0, 0, 0, 0);
+    end;
+    if PNG_TILE = 0 then
+    begin
+      Area.x := 0;
+      Area.y := 0;
+      Area.w := screen.w;
+      Area.h := screen.h;
+      DrawRLE8Pic(@ACol[0], num, px, py, @EIdx[0], @EPic[0], @Area, nil, 0, 0, 0, shadow, alpha,
+        nil, nil, 0, 0, 0, depth, mixColor, mixAlpha);
+    end;
   end;
 end;
 
@@ -1451,7 +1454,7 @@ begin
       if Bfield[0, i1, i2] > 0 then
       begin
         pos := GetpositionOnScreen(i1, i2, Bx, By);
-        if {(i1 = Ax) and (i2 = Ay)} Bfield[4, i1, i2] > 0 then
+        if {(i1 = Ax) and (i2 = Ay)}  Bfield[4, i1, i2] > 0 then
           //DrawBPic(Bfield[0, i1, i2] div 2, pos.x, pos.y, 0, 0, 0, $FFFFFFFF, 20)
           DrawBPic(Bfield[0, i1, i2] div 2, pos.x, pos.y, 1)
         else if (BField[3, i1, i2] >= 0) and (abs(i1 - Bx) + abs(i2 - By) <= step) then
@@ -1687,4 +1690,3 @@ begin
 end;
 
 end.
-

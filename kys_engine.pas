@@ -35,7 +35,7 @@ function ReadFiletoBuffer(p: pchar; filename: string; size, malloc: integer): pc
 procedure FreeFileBuffer(var p: pchar);
 function LoadIdxGrp(stridx, strgrp: string; var idxarray: TIntArray; var grparray: TByteArray): integer;
 function LoadPNGTiles(path: string; var PNGIndexArray: TPNGIndexArray; var SurfaceArray: TSurfaceArray; LoadPic: integer = 1): integer;
-procedure LoadOnePNGTile(path: string; p:pchar; filenum: integer; var PNGIndex: TPNGIndex; SurfacePointer: PPSDL_Surface; forceLoad: integer = 0);
+procedure LoadOnePNGTile(path: string; p: pchar; filenum: integer; var PNGIndex: TPNGIndex; SurfacePointer: PPSDL_Surface; forceLoad: integer = 0);
 function LoadSurfaceFromFile(filename: string): PSDL_Surface;
 function LoadSurfaceFromMem(p: pchar; len: integer): PSDL_Surface;
 function LoadSurfaceFromZIPFile(zipFile: unzFile; filename: string): PSDL_Surface;
@@ -459,7 +459,7 @@ begin
     MPicAmount := LoadIdxGrp('resource/mmap.idx', 'resource/mmap.grp', MIdx, MPic);
     SPicAmount := LoadIdxGrp('resource/sdx', 'resource/smp', SIdx, SPic);
     BPicAmount := LoadIdxGrp('resource/wdx', 'resource/wmp', WIdx, WPic);
-    LoadIdxGrp('resource/eft.idx', 'resource/eft.grp', EIdx, EPic);
+    EPicAmount := LoadIdxGrp('resource/eft.idx', 'resource/eft.grp', EIdx, EPic);
     //LoadIdxGrp('resource/hdgrp.idx', 'resource/hdgrp.grp', HIdx, HPic);
     CPicAmount := LoadIdxGrp('resource/cloud.idx', 'resource/cloud.grp', CIdx, CPic);
   end;
@@ -563,42 +563,42 @@ begin
   if PNG_TILE = 2 then
   begin
     if IsConsole then
-      writeln('Searching imz file... ',  path);
+      writeln('Searching imz file... ', path);
     p := ReadFileToBuffer(nil, AppPath + path + '.imz', -1, 1);
     if p <> nil then
     begin
-    result := pint(p)^;
-    //最大的有帧数的数量作为贴图的最大编号
-    for i := result - 1 downto 0 do
-    begin
-      if pint(p + pint(p + 4 + i * 4)^ + 4)^ > 0 then
+      result := pint(p)^;
+      //最大的有帧数的数量作为贴图的最大编号
+      for i := result - 1 downto 0 do
       begin
-        result := i + 1;
-        break;
+        if pint(p + pint(p + 4 + i * 4)^ + 4)^ > 0 then
+        begin
+          result := i + 1;
+          break;
+        end;
       end;
-    end;
 
-    //初始化贴图索引, 并计算全部帧数和
-    setlength(PNGIndexArray, result);
-    count := 0;
-    for i := 0 to result - 1 do
-    begin
-      pngoff := pint(p + 4 + i * 4)^;
-      with PNGIndexArray[i] do
+      //初始化贴图索引, 并计算全部帧数和
+      setlength(PNGIndexArray, result);
+      count := 0;
+      for i := 0 to result - 1 do
       begin
-        Num := count;
-        x := psmallint(p + pngoff)^;
-        y := psmallint(p + pngoff + 2)^;
-        Frame := pint(p + pngoff + 4)^;
-        count := count + frame;
-        CurPointer := nil;
-        Loaded := 0;
+        pngoff := pint(p + 4 + i * 4)^;
+        with PNGIndexArray[i] do
+        begin
+          Num := count;
+          x := psmallint(p + pngoff)^;
+          y := psmallint(p + pngoff + 2)^;
+          Frame := pint(p + pngoff + 4)^;
+          count := count + frame;
+          CurPointer := nil;
+          Loaded := 0;
+        end;
       end;
-    end;
     end
     else
-    if IsConsole then
-    writeln('Can''t find imz file.');
+      if IsConsole then
+        writeln('Can''t find imz file.');
   end;
 
 
@@ -648,7 +648,7 @@ begin
             k := k + 1;
             if k = 1 then
               Num := count;
-              count := count + 1;
+            count := count + 1;
           end;
           Frame := k;
         end;
@@ -678,7 +678,7 @@ begin
 
 end;
 
-procedure LoadOnePNGTile(path: string; p:pchar; filenum: integer; var PNGIndex: TPNGIndex; SurfacePointer: PPSDL_Surface; forceLoad: integer = 0);
+procedure LoadOnePNGTile(path: string; p: pchar; filenum: integer; var PNGIndex: TPNGIndex; SurfacePointer: PPSDL_Surface; forceLoad: integer = 0);
 var
   j, k, index, len, off: integer;
   tempscr: PSDL_Surface;
@@ -811,46 +811,31 @@ var
   bpp: integer;
   p: PInteger;
 begin
+  bpp := surface_.format.BytesPerPixel;
+  // Here p is the address to the pixel we want to set
+  p := Pointer(Uint32(surface_.pixels) + y * surface_.pitch + x * bpp);
 
-  {regionx1 := 0;
-  regionx2 := surface_.w;
-  regiony1 := 0;
-  regiony2 := surface_.h;}
-
-  //{$IFDEF DARWIN}
-  {if (RegionRect.w > 0) then
-  begin
-    regionx1 := RegionRect.x;
-    regionx2 := RegionRect.x + RegionRect.w;
-    regiony1 := RegionRect.y;
-    regiony2 := RegionRect.y + RegionRect.h;
-  end;}
-  //{$ENDIF}
-    bpp := surface_.format.BytesPerPixel;
-    // Here p is the address to the pixel we want to set
-    p := Pointer(Uint32(surface_.pixels) + y * surface_.pitch + x * bpp);
-
-    case bpp of
-      1:
-        longword(p^) := pixel;
-      2:
-        PUint16(p)^ := pixel;
-      3:
-        if (SDL_BYTEORDER = SDL_BIG_ENDIAN) then
-        begin
-          PByteArray(p)[0] := (pixel shr 16) and $FF;
-          PByteArray(p)[1] := (pixel shr 8) and $FF;
-          PByteArray(p)[2] := pixel and $FF;
-        end
-        else
-        begin
-          PByteArray(p)[0] := pixel and $FF;
-          PByteArray(p)[1] := (pixel shr 8) and $FF;
-          PByteArray(p)[2] := (pixel shr 16) and $FF;
-        end;
-      4:
-        PUint32(p)^ := pixel;
-    end;
+  case bpp of
+    1:
+      longword(p^) := pixel;
+    2:
+      PUint16(p)^ := pixel;
+    3:
+      if (SDL_BYTEORDER = SDL_BIG_ENDIAN) then
+      begin
+        PByteArray(p)[0] := (pixel shr 16) and $FF;
+        PByteArray(p)[1] := (pixel shr 8) and $FF;
+        PByteArray(p)[2] := pixel and $FF;
+      end
+      else
+      begin
+        PByteArray(p)[0] := pixel and $FF;
+        PByteArray(p)[1] := (pixel shr 8) and $FF;
+        PByteArray(p)[2] := (pixel shr 16) and $FF;
+      end;
+    4:
+      PUint32(p)^ := pixel;
+  end;
 
 end;
 
@@ -1637,7 +1622,7 @@ begin
               Mask := tempscr.format.AMask;
               for i1 := 0 to tempscr.w - 1 do
               begin
-                for i2 := 0 to tempscr.h - 1  do
+                for i2 := 0 to tempscr.h - 1 do
                 begin
                   pixdepth := pint(BlockImgR + ((dest.x + leftupx + i1) * height + dest.y + leftupy + i2) * size)^;
                   //writeln(depth, pixdepth);
@@ -1882,4 +1867,3 @@ end;}
 {$ENDIF}
 
 end.
-
