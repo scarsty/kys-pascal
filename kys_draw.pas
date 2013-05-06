@@ -81,23 +81,18 @@ uses kys_engine;
 procedure DrawTitlePic(imgnum, px, py: integer);
 var
   len, grp, idx: integer;
-  Area: TSDL_Rect;
   BufferIdx: TIntArray;
   BufferPic: TByteArray;
 begin
-  Area.x := 0;
-  Area.y := 0;
-  Area.w := screen.w;
-  Area.h := screen.h;
   if PNG_TILE > 0 then
   begin
-    DrawPngTile(TitlePNGIndex[imgnum], 0, @Area, screen, px, py);
+    DrawPngTile(TitlePNGIndex[imgnum], 0, nil, screen, px, py);
   end;
   if PNG_TILE = 0 then
   begin
     len := LoadIdxGrp('resource/title.idx', 'resource/title.grp', BufferIdx, BufferPic);
     if imgnum < len then
-      DrawRLE8Pic(@ACol[0], imgnum, px, py, @BufferIdx[0], @BufferPic[0], @Area, nil, 0, 0, 0, 0);
+      DrawRLE8Pic(@ACol[0], imgnum, px, py, @BufferIdx[0], @BufferPic[0], nil, nil, 0, 0, 0, 0);
   end;
 end;
 
@@ -105,7 +100,6 @@ end;
 
 procedure DrawMPic(num, px, py: integer);
 var
-  Area: TSDL_Rect;
   NeedGRP, Framenum: integer;
 begin
   if (num >= 0) and (num < MPicAmount) then
@@ -127,11 +121,7 @@ begin
     end;
     if (PNG_Tile = 0) or (NeedGRP = 1) then
     begin
-      Area.x := 0;
-      Area.y := 0;
-      Area.w := screen.w;
-      Area.h := screen.h;
-      DrawRLE8Pic(@ACol[0], num, px, py, @Midx[0], @Mpic[0], @Area, nil, 0, 0, 0, 0);
+      DrawRLE8Pic(@ACol[0], num, px, py, @Midx[0], @Mpic[0], nil, nil, 0, 0, 0, 0);
     end;
   end;
 end;
@@ -170,8 +160,6 @@ end;
 //画考虑遮挡的内场景
 
 procedure DrawSPic(num, px, py, shadow, alpha, depth: integer; mixColor: Uint32; mixAlpha: integer); overload;
-var
-  Area: TSDL_Rect;
 begin
   if (num >= 0) and (num < SPicAmount) then
   begin
@@ -180,16 +168,12 @@ begin
       num := 0;
       py := py - 50;
     end;
-    Area.x := 0;
-    Area.y := 0;
-    Area.w := screen.w;
-    Area.h := screen.h;
     if PNG_Tile > 0 then
-      DrawPngTile(SPNGIndex[num], 0, @Area, screen, px, py, shadow, alpha, mixColor, mixAlpha,
+      DrawPngTile(SPNGIndex[num], 0, nil, screen, px, py, shadow, alpha, mixColor, mixAlpha,
         depth, @BlockImg[0], 2304, 1402, sizeof(BlockImg[0, 0]), BlockScreen.x, BlockScreen.y)
     else
     begin
-      DrawRLE8Pic(@ACol[0], num, px, py, @SIdx[0], @SPic[0], @Area, nil, 0, 0, 0, shadow, alpha,
+      DrawRLE8Pic(@ACol[0], num, px, py, @SIdx[0], @SPic[0], nil, nil, 0, 0, 0, shadow, alpha,
         @BlockImg[0], @BlockScreen, 2304, 1402, sizeof(BlockImg[0, 0]), depth, mixColor, mixAlpha);
     end;
   end;
@@ -212,8 +196,7 @@ begin
 
 end;
 
-procedure InitialSPic(num, px, py, x, y, w, h, needBlock, depth, temp: integer);
-  overload;
+procedure InitialSPic(num, px, py, x, y, w, h, needBlock, depth, temp: integer);  overload;
 var
   Area: TSDL_Rect;
   pImg: PSDL_Surface;
@@ -229,7 +212,6 @@ begin
     pImg := ImgScenceBack;
     pBlock := @BlockImg2[0];
   end;
-
   if (num >= 0) and (num < SPicAmount) then
   begin
     if x + w > 2303 then
@@ -312,7 +294,6 @@ end;
 procedure DrawHeadPic(num, px, py, shadow, alpha, depth: integer; mixColor: Uint32; mixAlpha: integer); overload;
 var
   len, grp, idx: integer;
-  Area: TSDL_Rect;
   str: string;
 begin
   str := AppPath + 'head/' + IntToStr(num) + '.png';
@@ -320,11 +301,7 @@ begin
     display_img(@str[1], px, py - 60)
   else
   begin
-    Area.x := 0;
-    Area.y := 0;
-    Area.w := screen.w;
-    Area.h := screen.h;
-    DrawRLE8Pic(@ACol1[0], num, px, py, @HIdx[0], @HPic[0], @Area, nil, 0, 0, 0, shadow, alpha,
+    DrawRLE8Pic(@ACol1[0], num, px, py, @HIdx[0], @HPic[0], nil, nil, 0, 0, 0, shadow, alpha,
       nil, nil, 0, 0, 0, depth, mixColor, mixAlpha);
   end;
 
@@ -341,24 +318,18 @@ end;
 //用于画带透明度和遮挡的战场图
 
 procedure DrawBPic(num, px, py, shadow, alpha, depth: integer; mixColor: Uint32; mixAlpha: integer); overload;
-var
-  Area: TSDL_Rect;
 begin
   if (num > 0) and (num < BPicAmount) then
   begin
     if PNG_TILE > 0 then
     begin
       //LoadOnePNGTile('resource/wmap/', num, BPNGIndex[num], @BPNGTile[0]);
-      DrawPNGTile(BPNGIndex[num], 0, @Area, screen, px, py, shadow, alpha, mixColor, mixAlpha,
+      DrawPNGTile(BPNGIndex[num], 0, nil, screen, px, py, shadow, alpha, mixColor, mixAlpha,
         depth, @BlockImg[0], 2304, 1402, sizeof(BlockImg[0, 0]), BlockScreen.x, BlockScreen.y);
     end
     else
     begin
-      Area.x := 0;
-      Area.y := 0;
-      Area.w := screen.w;
-      Area.h := screen.h;
-      DrawRLE8Pic(@ACol[0], num, px, py, @WIdx[0], @WPic[0], @Area, nil, 0, 0, 0, shadow, alpha,
+      DrawRLE8Pic(@ACol[0], num, px, py, @WIdx[0], @WPic[0], nil, nil, 0, 0, 0, shadow, alpha,
         @BlockImg[0], @BlockScreen, 2304, 1402, sizeof(BlockImg[0, 0]), depth, mixColor, mixAlpha);
     end;
   end;
@@ -384,7 +355,6 @@ begin
     end
     else
     begin
-
       DrawRLE8Pic(@ACol[0], num, px, py, @WIdx[0], @WPic[0], @Area, nil, 0, 0, 0, shadow);
     end;
   end;
@@ -401,15 +371,10 @@ end;
 
 procedure InitialBPic(num, px, py, needBlock, depth: integer); overload;
 var
-  Area: TSDL_Rect;
   pImg: PSDL_Surface;
 begin
   if (num > 0) and (num < BPicAmount) then
   begin
-    Area.x := 0;
-    Area.y := 0;
-    Area.w := 2304;
-    Area.h := 1402;
     if PNG_TILE > 0 then
     begin
       LoadOnePNGTile('resource/wmap/', nil, num, BPNGIndex[num], @BPNGTile[0]);
@@ -420,15 +385,15 @@ begin
       end
       else
         pImg := ImgBfield;
-      DrawPNGTile(BPNGIndex[num], 0, @Area, pImg, px, py);
+      DrawPNGTile(BPNGIndex[num], 0, nil, pImg, px, py);
     end
     else
     begin
       if needBlock <> 0 then
-        DrawRLE8Pic(@ACol[0], num, px, py, @WIdx[0], @WPic[0], @Area, ImgBBuild, 2304, 1402,
+        DrawRLE8Pic(@ACol[0], num, px, py, @WIdx[0], @WPic[0], nil, ImgBBuild, 2304, 1402,
           sizeof(BlockImg[0, 0]), 0, 0, @BlockImg[0], nil, 0, 0, 0, depth, 0, 0)
       else
-        DrawRLE8Pic(@ACol[0], num, px, py, @WIdx[0], @WPic[0], @Area, ImgBfield, 2304, 1402, sizeof(BlockImg[0, 0]), 0);
+        DrawRLE8Pic(@ACol[0], num, px, py, @WIdx[0], @WPic[0], nil, ImgBfield, 2304, 1402, sizeof(BlockImg[0, 0]), 0);
     end;
   end;
 end;
@@ -442,8 +407,6 @@ begin
 end;
 
 procedure DrawEPic(num, px, py, shadow, alpha, depth: integer; mixColor: Uint32; mixAlpha: integer); overload;
-var
-  Area: TSDL_Rect;
 begin
   if (num >= 0) and (num < EPicAmount) then
   begin
@@ -454,11 +417,7 @@ begin
     end;
     if PNG_TILE = 0 then
     begin
-      Area.x := 0;
-      Area.y := 0;
-      Area.w := screen.w;
-      Area.h := screen.h;
-      DrawRLE8Pic(@ACol[0], num, px, py, @EIdx[0], @EPic[0], @Area, nil, 0, 0, 0, shadow, alpha,
+      DrawRLE8Pic(@ACol[0], num, px, py, @EIdx[0], @EPic[0], nil, nil, 0, 0, 0, shadow, alpha,
         nil, nil, 0, 0, 0, depth, mixColor, mixAlpha);
     end;
   end;
@@ -475,8 +434,6 @@ end;
 //用于画带透明度和遮挡的人物动作图片
 
 procedure DrawFPic(num, px, py, index, shadow, alpha, depth: integer; mixColor: Uint32; mixAlpha: integer); overload;
-var
-  Area: TSDL_Rect;
 begin
   case PNG_TILE of
     1, 2:
@@ -488,11 +445,7 @@ begin
       end;
     0:
       begin
-        Area.x := 0;
-        Area.y := 0;
-        Area.w := screen.w;
-        Area.h := screen.h;
-        DrawRLE8Pic(@ACol[0], num, px, py, @FIdx[0], @FPic[0], @Area, nil, 0, 0, 0, shadow, alpha,
+        DrawRLE8Pic(@ACol[0], num, px, py, @FIdx[0], @FPic[0], nil, nil, 0, 0, 0, shadow, alpha,
           @BlockImg[0], @BlockScreen, 2304, 1402, sizeof(BlockImg[0, 0]), depth, mixColor, mixAlpha);
       end;
   end;
@@ -501,8 +454,6 @@ end;
 //主地图上画云
 
 procedure DrawCPic(num, px, py, shadow, alpha: integer; mixColor: Uint32; mixAlpha: integer);
-var
-  Area: TSDL_Rect;
 begin
   if PNG_TILE > 0 then
   begin
@@ -510,11 +461,7 @@ begin
   end;
   if PNG_TILE = 0 then
   begin
-    Area.x := 0;
-    Area.y := 0;
-    Area.w := screen.w;
-    Area.h := screen.h;
-    DrawRLE8Pic(@ACol1[0], num, px, py, @CIdx[0], @CPic[0], @Area, nil, 0, 0, 0, shadow, alpha,
+    DrawRLE8Pic(@ACol1[0], num, px, py, @CIdx[0], @CPic[0], nil, nil, 0, 0, 0, shadow, alpha,
       nil, nil, 0, 0, 0, 0, mixColor, mixAlpha);
   end;
 end;
