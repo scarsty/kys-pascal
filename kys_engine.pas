@@ -609,7 +609,6 @@ begin
     path := path + '/';
     p := ReadFileToBuffer(nil, AppPath + path + '/index.ka', -1, 1);
     size := StrBufSize(p);
-    writeln(size);
     setlength(offset, size div 2 + 2);
     move(p^, offset[0], size);
     FreeFileBuffer(p);
