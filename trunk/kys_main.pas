@@ -50,10 +50,6 @@ type
     x, y: integer;
   end;
 
-  TRect = record
-    x, y, w, h: integer;
-  end;
-
   TItemList = record
     Number, Amount: smallint;
   end;
