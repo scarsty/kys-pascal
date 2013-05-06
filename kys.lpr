@@ -16,6 +16,11 @@ program kys;
 //{$APPTYPE CONSOLE}
 
 uses
+  SysUtils,
+  LCLIntf,
+  LCLType,
+  LMessages,
+  Dialogs,
   Forms,
   Interfaces,
   kys_type in 'kys_type.pas',

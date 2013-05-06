@@ -85,17 +85,17 @@ var
   BufferIdx: TIntArray;
   BufferPic: TByteArray;
 begin
+  Area.x := 0;
+  Area.y := 0;
+  Area.w := screen.w;
+  Area.h := screen.h;
   if PNG_TILE > 0 then
   begin
-    DrawPngTile(TitlePNGIndex[imgnum], 0, screen, px, py);
+    DrawPngTile(TitlePNGIndex[imgnum], 0, @Area, screen, px, py);
   end;
   if PNG_TILE = 0 then
   begin
     len := LoadIdxGrp('resource/title.idx', 'resource/title.grp', BufferIdx, BufferPic);
-    Area.x := 0;
-    Area.y := 0;
-    Area.w := screen.w;
-    Area.h := screen.h;
     if imgnum < len then
       DrawRLE8Pic(@ACol[0], imgnum, px, py, @BufferIdx[0], @BufferPic[0], @Area, nil, 0, 0, 0, 0);
   end;
@@ -120,7 +120,7 @@ begin
           or (num = 1404) or (num = 1417) then
           Framenum := sdl_getticks div 200;
         //瀑布场景的闪烁需要
-        DrawPNGTile(MPNGIndex[num], Framenum, screen, px, py)
+        DrawPNGTile(MPNGIndex[num], Framenum, nil, screen, px, py)
       end
       else
         NeedGRP := 1;
@@ -149,19 +149,19 @@ var
 begin
   if (num >= 0) and (num < SPicAmount) then
   begin
+    Area.x := x;
+    Area.y := y;
+    Area.w := w;
+    Area.h := h;
     if num = 1941 then
     begin
       num := 0;
       py := py - 50;
     end;
     if PNG_Tile > 0 then
-      DrawPngTile(SPNGIndex[num], 0, screen, px, py)
+      DrawPngTile(SPNGIndex[num], 0, @Area, screen, px, py)
     else
     begin
-      Area.x := x;
-      Area.y := y;
-      Area.w := w;
-      Area.h := h;
       DrawRLE8Pic(@ACol[0], num, px, py, @SIdx[0], @SPic[0], @Area, nil, 0, 0, 0, 0);
     end;
   end;
@@ -180,15 +180,15 @@ begin
       num := 0;
       py := py - 50;
     end;
+    Area.x := 0;
+    Area.y := 0;
+    Area.w := screen.w;
+    Area.h := screen.h;
     if PNG_Tile > 0 then
-      DrawPngTile(SPNGIndex[num], 0, screen, px, py, shadow, alpha, mixColor, mixAlpha,
+      DrawPngTile(SPNGIndex[num], 0, @Area, screen, px, py, shadow, alpha, mixColor, mixAlpha,
         depth, @BlockImg[0], 2304, 1402, sizeof(BlockImg[0, 0]), BlockScreen.x, BlockScreen.y)
     else
     begin
-      Area.x := 0;
-      Area.y := 0;
-      Area.w := screen.w;
-      Area.h := screen.h;
       DrawRLE8Pic(@ACol[0], num, px, py, @SIdx[0], @SPic[0], @Area, nil, 0, 0, 0, shadow, alpha,
         @BlockImg[0], @BlockScreen, 2304, 1402, sizeof(BlockImg[0, 0]), depth, mixColor, mixAlpha);
     end;
@@ -231,11 +231,25 @@ begin
   end;
 
   if (num >= 0) and (num < SPicAmount) then
+  begin
+    if x + w > 2303 then
+      w := 2303 - x;
+    if y + h > 1401 then
+      h := 1401 - y;
+    Area.x := x;
+    Area.y := y;
+    Area.w := w;
+    Area.h := h;
+    if num = 1941 then
+    begin
+      num := 0;
+      py := py - 50;
+    end;
     if (PNG_TILE > 0) then
     begin
       if temp <> 1 then
         LoadOnePNGTile('resource/smap/', nil, num, SPNGIndex[num], @SPNGTile[0]);
-      DrawPNGTile(SPNGIndex[num], sdl_getticks div 300, pImg, px, py);
+      DrawPNGTile(SPNGIndex[num], sdl_getticks div 300, @Area, pImg, px, py);
       if needBlock <> 0 then
       begin
         SetPNGTileBlock(SPNGIndex[num], px, py, depth, pBlock, 2304, 1402, sizeof(BlockImg[0, 0]));
@@ -243,19 +257,6 @@ begin
     end
     else
     begin
-      if x + w > 2303 then
-        w := 2303 - x;
-      if y + h > 1401 then
-        h := 1401 - y;
-      Area.x := x;
-      Area.y := y;
-      Area.w := w;
-      Area.h := h;
-      if num = 1941 then
-      begin
-        num := 0;
-        py := py - 50;
-      end;
       if needBlock <> 0 then
       begin
         DrawRLE8Pic(@ACol[0], num, px, py, @SIdx[0], @SPic[0], @Area, pImg, 2304, 1402,
@@ -264,6 +265,7 @@ begin
       else
         DrawRLE8Pic(@ACol[0], num, px, py, @SIdx[0], @SPic[0], @Area, pImg, 2304, 1402, sizeof(BlockImg[0, 0]), 0);
     end;
+  end;
 end;
 
 //显示头像, 优先考虑'.head/'目录下的png图片
@@ -347,7 +349,7 @@ begin
     if PNG_TILE > 0 then
     begin
       //LoadOnePNGTile('resource/wmap/', num, BPNGIndex[num], @BPNGTile[0]);
-      DrawPNGTile(BPNGIndex[num], 0, screen, px, py, shadow, alpha, mixColor, mixAlpha,
+      DrawPNGTile(BPNGIndex[num], 0, @Area, screen, px, py, shadow, alpha, mixColor, mixAlpha,
         depth, @BlockImg[0], 2304, 1402, sizeof(BlockImg[0, 0]), BlockScreen.x, BlockScreen.y);
     end
     else
@@ -371,17 +373,18 @@ var
 begin
   if (num > 0) and (num < BPicAmount) then
   begin
+    Area.x := x;
+    Area.y := y;
+    Area.w := w;
+    Area.h := h;
     if PNG_TILE > 0 then
     begin
       //LoadOnePNGTile('resource/wmap/', num, BPNGIndex[num], @BPNGTile[0]);
-      DrawPNGTile(BPNGIndex[num], 0, screen, px, py);
+      DrawPNGTile(BPNGIndex[num], 0, @Area, screen, px, py);
     end
     else
     begin
-      Area.x := x;
-      Area.y := y;
-      Area.w := w;
-      Area.h := h;
+
       DrawRLE8Pic(@ACol[0], num, px, py, @WIdx[0], @WPic[0], @Area, nil, 0, 0, 0, shadow);
     end;
   end;
@@ -403,6 +406,10 @@ var
 begin
   if (num > 0) and (num < BPicAmount) then
   begin
+    Area.x := 0;
+    Area.y := 0;
+    Area.w := 2304;
+    Area.h := 1402;
     if PNG_TILE > 0 then
     begin
       LoadOnePNGTile('resource/wmap/', nil, num, BPNGIndex[num], @BPNGTile[0]);
@@ -413,14 +420,10 @@ begin
       end
       else
         pImg := ImgBfield;
-      DrawPNGTile(BPNGIndex[num], 0, pImg, px, py);
+      DrawPNGTile(BPNGIndex[num], 0, @Area, pImg, px, py);
     end
     else
     begin
-      Area.x := 0;
-      Area.y := 0;
-      Area.w := 2304;
-      Area.h := 1402;
       if needBlock <> 0 then
         DrawRLE8Pic(@ACol[0], num, px, py, @WIdx[0], @WPic[0], @Area, ImgBBuild, 2304, 1402,
           sizeof(BlockImg[0, 0]), 0, 0, @BlockImg[0], nil, 0, 0, 0, depth, 0, 0)
@@ -446,7 +449,7 @@ begin
   begin
     if PNG_TILE > 0 then
     begin
-      DrawPNGTile(EPNGIndex[num], 0, screen, px, py, shadow, alpha, mixColor, mixAlpha,
+      DrawPNGTile(EPNGIndex[num], 0, nil, screen, px, py, shadow, alpha, mixColor, mixAlpha,
         0, nil, 0, 0, 0, 0, 0);
     end;
     if PNG_TILE = 0 then
@@ -480,7 +483,7 @@ begin
       begin
         if (index >= 0) and (index < BRoleAmount) then
           if (num >= Low(FPNGIndex[index])) and (num <= High(FPNGIndex[index])) then
-            DrawPngTile(FPNGIndex[index][num], 0, screen, px, py, shadow, alpha, mixColor, mixAlpha,
+            DrawPngTile(FPNGIndex[index][num], 0, nil, screen, px, py, shadow, alpha, mixColor, mixAlpha,
               depth, @BlockImg[0], 2304, 1402, sizeof(BlockImg[0, 0]), BlockScreen.x, BlockScreen.y);
       end;
     0:
@@ -503,7 +506,7 @@ var
 begin
   if PNG_TILE > 0 then
   begin
-    DrawPngTile(CPNGIndex[num], 0, screen, px, py, shadow, alpha, mixColor, MixAlpha);
+    DrawPngTile(CPNGIndex[num], 0, nil, screen, px, py, shadow, alpha, mixColor, MixAlpha);
   end;
   if PNG_TILE = 0 then
   begin
@@ -1024,12 +1027,6 @@ begin
   end;
   w := screen.w;
   h := screen.h;
-  {if (x1 >= 0) and (x1 < 2304 - w) and (y1 >= 0) and (y1 < 1152 - h) then
-    for i1 := x1 to x1 + w - 1 do
-      for i2 := y1 to y1 + h - 1 do
-      begin
-        BlockImg[i1, i2] := 0;
-      end;}
 
   if Visible = 0 then
   begin
@@ -1037,13 +1034,6 @@ begin
     y1 := 0;
     w := 2304;
     h := 1402;
-    //temp := sdl_getticks;
-    {for i1 := x1 to x1 + w - 1 do
-      for i2 := y1 to y1 + h - 1 do
-      begin
-        putpixel(Img, i1, i2, 0);
-      end;}
-    //InitialSPic(SData[CurScence, 0, 31, 31], 0, 0, x1, y1, w, h, 0, 0, 0);
     SDL_FillRect(ImgScence, nil, 0);
     SDL_FillRect(ImgScenceBack, nil, 1);
   end;
@@ -1094,9 +1084,9 @@ end;
 
 function CalBlock(x, y: integer): integer;
 begin
-  Result := 128 * min(x, y) + abs(x - y);
+  //Result := 128 * min(x, y) + abs(x - y);
   //Result := 8192 - (x - 64) * (x - 64) - (y - 64) * (y - 64);
-  //Result := 128 * (x + y) + x;
+  Result := 128 * (x + y) + y;
 end;
 
 //上面函数的子程
