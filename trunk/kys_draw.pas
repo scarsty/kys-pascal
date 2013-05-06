@@ -196,7 +196,7 @@ begin
 
 end;
 
-procedure InitialSPic(num, px, py, x, y, w, h, needBlock, depth, temp: integer);  overload;
+procedure InitialSPic(num, px, py, x, y, w, h, needBlock, depth, temp: integer); overload;
 var
   Area: TSDL_Rect;
   pImg: PSDL_Surface;
