@@ -438,7 +438,7 @@ begin
   ScreenFlag := SDL_SWSURFACE or SDL_RESIZABLE {SDL_HWSURFACE or SDL_HWACCEL or SDL_ANYFORMAT or SDL_ASYNCBLIT or SDL_FULLSCREEN};
   if GLHR = 1 then
   begin
-    ScreenFlag := SDL_OPENGL or SDL_RESIZABLE or SDL_HWACCEL;
+    ScreenFlag := SDL_OPENGL or SDL_RESIZABLE;
     SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
