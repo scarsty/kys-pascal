@@ -995,6 +995,7 @@ var
   l, l1, ix, iy, pixdepth, curdepth: integer;
   pix, colorin: Uint32;
   pix1, pix2, pix3, pix4, color1, color2, color3, color4: byte;
+  area: TSDL_Rect;
 begin
   if num = 0 then
     offset := 0
@@ -1015,15 +1016,14 @@ begin
   Inc(Ppic, 2);
   pixdepth := 0;
   //if (num >= 1916) and (num <= 1941) then h := h - 50;
-  lenInt := sizeof(integer);
+  area := PSDL_Rect(RectArea)^;
   if (BlockPosition <> nil) then
   begin
     blockx := pint(BlockPosition)^;
     blocky := pint(BlockPosition + 4)^;
   end;
-  if ((w > 1) or (h > 1)) and (px - xs + w >= pint(RectArea)^) and (px - xs < pint(RectArea)^
-    + pint(RectArea + lenInt * 2)^) and (py - ys + h >= pint(RectArea + lenInt)^) and
-    (py - ys < pint(RectArea + lenInt)^ + pint(RectArea + lenInt * 3)^) then
+  if ((w > 1) or (h > 1)) and (px - xs + w >= area.x) and (px - xs < area.x + area.w)
+    and (py - ys + h >= area.y) and (py - ys < area.y + area.h) then
   begin
     for iy := 1 to h do
     begin
@@ -1049,9 +1049,8 @@ begin
           p := p - 1;
           x := w - xs + px;
           y := iy - ys + py;
-          if (x >= pint(RectArea)^) and (y >= pint(RectArea + lenInt)^) and
-            (x < pint(RectArea)^ + pint(RectArea + lenInt * 2)^) and (y < pint(RectArea + lenInt)^
-            + pint(RectArea + lenInt * 3)^) then
+          if (x >= area.x) and (y >= area.y) and
+            (x < area.x + area.w) and (y < area.y + area.h) then
           begin
             pix1 := puint8(colorPanel + l1 * 3)^ * (4 + shadow);
             pix2 := puint8(colorPanel + l1 * 3 + 1)^ * (4 + shadow);
@@ -1529,7 +1528,7 @@ end;
 procedure DrawPngTile(PNGIndex: TPNGIndex; FrameNum: integer; RectArea: PChar; scr: PSDL_Surface; px, py: integer; shadow, alpha: integer; MixColor: Uint32; MixAlpha: integer;
   depth: integer; BlockImgR: pchar; width, height, size, leftupx, leftupy: integer); overload;
 var
-  dest: TSDL_Rect;
+  dest, area: TSDL_Rect;
   tempscr, tempscrfront, tempscrback, CurSurface: PSDL_Surface;
   pixdepth, i1, i2: integer;
   tran: byte;
@@ -1548,11 +1547,11 @@ begin
       begin
         if RectArea <> nil then
         begin
-          lenint := sizeof(integer);
-          x1 := pint(RectArea)^;
-          y1 := pint(RectArea + lenint)^;
-          x2 := x1 + pint(RectArea + lenint * 2)^;
-          y2 := y1 + pint(RectArea + lenint * 3)^;
+          area := PSDL_Rect(RectArea)^;
+          x1 := area.x;
+          y1 := area.y;
+          x2 := x1 + area.w;
+          y2 := y1 + area.h;
         end
         else
         begin
