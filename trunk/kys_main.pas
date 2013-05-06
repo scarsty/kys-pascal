@@ -2312,7 +2312,7 @@ begin
     now := sdl_getticks;
     if now > next_time then
     begin
-      if where = 1 then
+      if (where = 1) and (CurEvent = -1) then
       begin
         initialscence(2);
       end;
