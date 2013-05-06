@@ -1016,7 +1016,20 @@ begin
   Inc(Ppic, 2);
   pixdepth := 0;
   //if (num >= 1916) and (num <= 1941) then h := h - 50;
-  area := PSDL_Rect(RectArea)^;
+  if Image = nil then
+  Image := screen;
+
+  if RectArea <> nil then
+        begin
+          area := PSDL_Rect(RectArea)^;
+        end
+        else
+        begin
+          area.x := 0;
+          area.y := 0;
+          area.w := Image.w;
+          area.h := Image.h;
+        end;
   if (BlockPosition <> nil) then
   begin
     blockx := pint(BlockPosition)^;
@@ -1057,7 +1070,7 @@ begin
             pix3 := puint8(colorPanel + l1 * 3 + 2)^ * (4 + shadow);
             pix4 := 0;
             //pix := sdl_maprgba(screen.format, pix1, pix2, pix3, pix4);
-            if image = nil then
+            if image = screen then
             begin
               //pix := sdl_maprgb(screen.format, puint8(colorPanel + l1 * 3)^ * (4 + shadow),
               //puint8(colorPanel + l1 * 3 + 1)^ * (4 + shadow), puint8(colorPanel + l1 * 3 + 2)^ * (4 + shadow));
