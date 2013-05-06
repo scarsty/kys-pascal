@@ -77,9 +77,9 @@ procedure DrawTextWithRect(sur: PSDL_Surface; word: puint16; x, y, w: integer; c
 
 
 //PNG贴图相关的子程
-procedure DrawPngTile(PNGIndex: TPNGIndex; FrameNum: integer; scr: PSDL_Surface; px, py: integer); overload;
-procedure DrawPngTile(PNGIndex: TPNGIndex; FrameNum: integer; scr: PSDL_Surface; px, py: integer; shadow, alpha: integer; MixColor: Uint32; MixAlpha: integer); overload;
-procedure DrawPngTile(PNGIndex: TPNGIndex; FrameNum: integer; scr: PSDL_Surface; px, py: integer; shadow, alpha: integer; MixColor: Uint32; MixAlpha: integer;
+procedure DrawPngTile(PNGIndex: TPNGIndex; FrameNum: integer; RectArea: PChar; scr: PSDL_Surface; px, py: integer); overload;
+procedure DrawPngTile(PNGIndex: TPNGIndex; FrameNum: integer; RectArea: PChar; scr: PSDL_Surface; px, py: integer; shadow, alpha: integer; MixColor: Uint32; MixAlpha: integer); overload;
+procedure DrawPngTile(PNGIndex: TPNGIndex; FrameNum: integer; RectArea: PChar; scr: PSDL_Surface; px, py: integer; shadow, alpha: integer; MixColor: Uint32; MixAlpha: integer;
   depth: integer; BlockImgR: pchar; width, height, size, leftupx, leftupy: integer); overload;
 procedure SetPngTileBlock(PNGIndex: TPNGIndex; px, py, depth: integer; BlockImageW: pchar; width, height, size: integer);
 
@@ -1515,18 +1515,18 @@ begin
 
 end;
 
-procedure DrawPngTile(PNGIndex: TPNGIndex; FrameNum: integer; scr: PSDL_Surface; px, py: integer); overload;
+procedure DrawPngTile(PNGIndex: TPNGIndex; FrameNum: integer; RectArea: PChar; scr: PSDL_Surface; px, py: integer); overload;
 begin
-  DrawPngTile(PNGIndex, FrameNum, scr, px, py, 0, 0, 0, 0);
+  DrawPngTile(PNGIndex, FrameNum, RectArea, scr, px, py, 0, 0, 0, 0);
 end;
 
-procedure DrawPngTile(PNGIndex: TPNGIndex; FrameNum: integer; scr: PSDL_Surface; px, py: integer; shadow, alpha: integer; MixColor: Uint32; MixAlpha: integer); overload;
+procedure DrawPngTile(PNGIndex: TPNGIndex; FrameNum: integer; RectArea: PChar; scr: PSDL_Surface; px, py: integer; shadow, alpha: integer; MixColor: Uint32; MixAlpha: integer); overload;
 begin
-  DrawPngTile(PNGIndex, FrameNum, scr, px, py, shadow, alpha, MixColor, MixAlpha, 0, nil, 0, 0, 0, 0, 0);
+  DrawPngTile(PNGIndex, FrameNum, RectArea, scr, px, py, shadow, alpha, MixColor, MixAlpha, 0, nil, 0, 0, 0, 0, 0);
 
 end;
 
-procedure DrawPngTile(PNGIndex: TPNGIndex; FrameNum: integer; scr: PSDL_Surface; px, py: integer; shadow, alpha: integer; MixColor: Uint32; MixAlpha: integer;
+procedure DrawPngTile(PNGIndex: TPNGIndex; FrameNum: integer; RectArea: PChar; scr: PSDL_Surface; px, py: integer; shadow, alpha: integer; MixColor: Uint32; MixAlpha: integer;
   depth: integer; BlockImgR: pchar; width, height, size, leftupx, leftupy: integer); overload;
 var
   dest: TSDL_Rect;
@@ -1534,6 +1534,8 @@ var
   pixdepth, i1, i2: integer;
   tran: byte;
   bigtran, pixel, Mask, AlphaValue: uint32;
+  x1, x2, y1, y2: integer;
+  lenint: integer;
 begin
   with PNGIndex do
   begin
@@ -1544,12 +1546,27 @@ begin
       CurSurface := CurPointer^;
       if CurSurface <> nil then
       begin
+        if RectArea <> nil then
+        begin
+          lenint := sizeof(integer);
+          x1 := pint(RectArea)^;
+          y1 := pint(RectArea + lenint)^;
+          x2 := x1 + pint(RectArea + lenint * 2)^;
+          y2 := y1 + pint(RectArea + lenint * 3)^;
+        end
+        else
+        begin
+          x1 := 0;
+          y1 := 0;
+          x2 := scr.w;
+          y2 := scr.h;
+        end;
         dest.x := px - x + 1;
         dest.y := py - y + 1;
         dest.w := CurSurface.w;
         dest.h := CurSurface.h;
-        if (dest.x + CurSurface.w > 0) and (dest.y + CurSurface.h > 0)
-          and (dest.x < scr.w) and (dest.y < scr.h) then
+        if (dest.x + CurSurface.w >= x1) and (dest.y + CurSurface.h >= y1)
+          and (dest.x < x2) and (dest.y < y2) then
         begin
           if shadow > 0 then
           begin
