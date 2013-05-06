@@ -81,7 +81,7 @@ uses kys_engine;
 procedure DrawTitlePic(imgnum, px, py: integer);
 var
   len, grp, idx: integer;
-  Area: TRect;
+  Area: TSDL_Rect;
   BufferIdx: TIntArray;
   BufferPic: TByteArray;
 begin
@@ -105,7 +105,7 @@ end;
 
 procedure DrawMPic(num, px, py: integer);
 var
-  Area: Trect;
+  Area: TSDL_Rect;
   NeedGRP, Framenum: integer;
 begin
   if (num >= 0) and (num < MPicAmount) then
@@ -145,7 +145,7 @@ end;
 
 procedure DrawSPic(num, px, py, x, y, w, h: integer); overload;
 var
-  Area: TRect;
+  Area: TSDL_Rect;
 begin
   if (num >= 0) and (num < SPicAmount) then
   begin
@@ -171,7 +171,7 @@ end;
 
 procedure DrawSPic(num, px, py, shadow, alpha, depth: integer; mixColor: Uint32; mixAlpha: integer); overload;
 var
-  Area: TRect;
+  Area: TSDL_Rect;
 begin
   if (num >= 0) and (num < SPicAmount) then
   begin
@@ -215,7 +215,7 @@ end;
 procedure InitialSPic(num, px, py, x, y, w, h, needBlock, depth, temp: integer);
   overload;
 var
-  Area: TRect;
+  Area: TSDL_Rect;
   pImg: PSDL_Surface;
   pBlock: PChar;
 begin
@@ -280,7 +280,7 @@ var
   image: PSDL_Surface;
   dest: TSDL_Rect;
   str: string;
-  Area: TRect;
+  Area: TSDL_Rect;
   offset: integer;
   y: smallint;
 begin
@@ -312,7 +312,7 @@ end;
 procedure DrawHeadPic(num, px, py, shadow, alpha, depth: integer; mixColor: Uint32; mixAlpha: integer); overload;
 var
   len, grp, idx: integer;
-  Area: TRect;
+  Area: TSDL_Rect;
   str: string;
 begin
   str := AppPath + 'head/' + IntToStr(num) + '.png';
@@ -342,7 +342,7 @@ end;
 
 procedure DrawBPic(num, px, py, shadow, alpha, depth: integer; mixColor: Uint32; mixAlpha: integer); overload;
 var
-  Area: TRect;
+  Area: TSDL_Rect;
 begin
   if (num > 0) and (num < BPicAmount) then
   begin
@@ -369,7 +369,7 @@ end;
 
 procedure DrawBPicInRect(num, px, py, shadow, x, y, w, h: integer);
 var
-  Area: TRect;
+  Area: TSDL_Rect;
 begin
   if (num > 0) and (num < BPicAmount) then
   begin
@@ -401,7 +401,7 @@ end;
 
 procedure InitialBPic(num, px, py, needBlock, depth: integer); overload;
 var
-  Area: TRect;
+  Area: TSDL_Rect;
   pImg: PSDL_Surface;
 begin
   if (num > 0) and (num < BPicAmount) then
@@ -443,7 +443,7 @@ end;
 
 procedure DrawEPic(num, px, py, shadow, alpha, depth: integer; mixColor: Uint32; mixAlpha: integer); overload;
 var
-  Area: TRect;
+  Area: TSDL_Rect;
 begin
   if (num >= 0) and (num < EPicAmount) then
   begin
@@ -476,7 +476,7 @@ end;
 
 procedure DrawFPic(num, px, py, index, shadow, alpha, depth: integer; mixColor: Uint32; mixAlpha: integer); overload;
 var
-  Area: TRect;
+  Area: TSDL_Rect;
 begin
   case PNG_TILE of
     1, 2:
@@ -502,7 +502,7 @@ end;
 
 procedure DrawCPic(num, px, py, shadow, alpha: integer; mixColor: Uint32; mixAlpha: integer);
 var
-  Area: TRect;
+  Area: TSDL_Rect;
 begin
   if PNG_TILE > 0 then
   begin
@@ -1011,22 +1011,10 @@ procedure InitialScence(Visible: integer); overload;
 var
   i1, i2, x, y, x1, y1, w, h: integer;
   pos: TPosition;
-  mini, maxi, num, temp: integer;
+  mini, maxi, num, onback: integer;
   dest: TSDL_Rect;
 begin
   SDL_LockMutex(mutex);
-  if CurEvent >= 0 then
-  begin
-    x1 := -Cx * 18 + Cy * 18 + 1151 - CENTER_X;
-    y1 := Cx * 9 + Cy * 9 + 9 - CENTER_Y + 250;
-  end
-  else
-  begin
-    x1 := -Sx * 18 + Sy * 18 + 1151 - CENTER_X;
-    y1 := Sx * 9 + Sy * 9 + 9 - CENTER_Y + 250;
-  end;
-  w := screen.w;
-  h := screen.h;
 
   if Visible = 0 then
   begin
@@ -1036,12 +1024,27 @@ begin
     h := 1402;
     SDL_FillRect(ImgScence, nil, 0);
     SDL_FillRect(ImgScenceBack, nil, 1);
+  end
+  else
+  begin
+    if CurEvent >= 0 then
+    begin
+      x1 := -Cx * 18 + Cy * 18 + 1151 - CENTER_X;
+      y1 := Cx * 9 + Cy * 9 + 9 - CENTER_Y + 250;
+    end
+    else
+    begin
+      x1 := -Sx * 18 + Sy * 18 + 1151 - CENTER_X;
+      y1 := Sx * 9 + Sy * 9 + 9 - CENTER_Y + 250;
+    end;
+    w := screen.w;
+    h := screen.h;
   end;
 
-
-  temp := 0;
   if (Visible = 2) and (where = 1) then
-    temp := 1;
+    onback := 1
+  else
+    onback := 0;
 
   for i1 := 0 to 63 do
     for i2 := 0 to 63 do
@@ -1051,25 +1054,19 @@ begin
       if SData[CurScence, 4, i1, i2] <= 0 then
       begin
         num := SData[CurScence, 0, i1, i2] div 2;
-        InitialSPic(num, x, y, x1, y1, w, h, 1, 0, temp);
+        InitialSPic(num, x, y, x1, y1, w, h, 1, 0, onback);
       end;
     end;
   for mini := 0 to 63 do
   begin
-    InitialScenceOnePosition(mini, mini, x1, y1, w, h, CalBlock(mini, mini), temp);
+    InitialScenceOnePosition(mini, mini, x1, y1, w, h, CalBlock(mini, mini), onback);
     for maxi := mini + 1 to 63 do
     begin
-      InitialScenceOnePosition(maxi, mini, x1, y1, w, h, CalBlock(maxi, mini), temp);
-      InitialScenceOnePosition(mini, maxi, x1, y1, w, h, CalBlock(mini, maxi), temp);
+      InitialScenceOnePosition(maxi, mini, x1, y1, w, h, CalBlock(maxi, mini), onback);
+      InitialScenceOnePosition(mini, maxi, x1, y1, w, h, CalBlock(mini, maxi), onback);
     end;
   end;
-  {if Visible = 0 then
-  begin
-    i := filecreate(inttostr(CurScence)+'.bin');
-    filewrite(i, BLockImg[0, 0], 2304 * 1402 * 4);
-    fileclose(i);
-    writeln('Write block infomation.');
-  end;}
+
   if (Visible = 2) and (where = 1) and (x1 >= 0) and (x1 < 2304 - w) and (y1 >= 0) and (y1 < 1402 - h) then
   begin
     Move(BlockImg2[x1, 0], BlockImg[x1, 0], w * sizeof(BlockImg[x1]));

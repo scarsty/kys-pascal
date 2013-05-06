@@ -1,6 +1,6 @@
 unit kys_type;
 
-{$MODE delphi}
+//{$MODE delphi}
 
 interface
 type
