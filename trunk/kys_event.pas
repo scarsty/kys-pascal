@@ -331,10 +331,9 @@ begin
 
   if DData[CurScence, CurEvent, 5] <> curPic then
   begin
-    //InitialScence(1);
+    InitialScence(1);
     //redraw;
     //SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-    writeln(2);
   end;
   if (list[0] = CurScence) and (preEventPic <> DData[list[0], list[1], 5]) then
   begin
