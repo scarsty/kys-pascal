@@ -1623,7 +1623,7 @@ begin
               Mask := tempscr.format.AMask;
               for i1 := 0 to tempscr.w - 1 do
               begin
-                for i2 := tempscr.h - 1 downto 0 do
+                for i2 := 0 to tempscr.h - 1 do
                 begin
                   pixdepth := pint(BlockImgR + ((dest.x + leftupx + i1) * height + dest.y + leftupy + i2) * size)^;
                   pixel := getpixel(tempscr, i1, i2);
@@ -1665,7 +1665,7 @@ begin
         y1 := py - y + 1;
         for i1 := 0 to CurSurface.w - 1 do
         begin
-          for i2 := CurSurface.h - 1 downto 0 do
+          for i2 := 0 to CurSurface.h - 1 do
           begin
             //当该值并非透明色值时, 表示需要遮挡数据
             //游戏中的遮挡实际上可由绘图顺序决定, 即绘图顺序靠后的应有最大遮挡值

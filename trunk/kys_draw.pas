@@ -1095,6 +1095,8 @@ end;
 function CalBlock(x, y: integer): integer;
 begin
   Result := 128 * min(x, y) + abs(x - y);
+  //Result := 8192 - (x - 64) * (x - 64) - (y - 64) * (y - 64);
+  //Result := 128 * (x + y) + x;
 end;
 
 //上面函数的子程

@@ -5178,7 +5178,7 @@ begin
       //Redraw;
       //ShowScenceName(CurScence);
     end;
-    Redraw;
+    Redraw(1);
     if nowwhere = 1 then
       ShowScenceName(CurScence);
     SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
