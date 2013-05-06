@@ -50,6 +50,7 @@ procedure DrawScenceWithoutRole(x, y: integer);
 procedure DrawRoleOnScence(x, y: integer);
 procedure InitialScence(); overload;
 procedure InitialScence(Visible: integer); overload;
+function CalBlock(x, y: integer): integer;
 procedure InitialScenceOnePosition(i1, i2, x1, y1, w, h, depth, temp: integer);
 procedure UpdateScence(xs, ys: integer);
 procedure LoadScencePart(x, y: integer);
@@ -988,8 +989,7 @@ var
   pos: TPosition;
 begin
   pos := getpositiononscreen(Sx, Sy, x, y);
-  depth := 128 * min(Sx, Sy) + abs(Sx - Sy);
-  DrawSPic(CurScenceRolePic, pos.x, pos.y - SData[CurScence, 4, Sx, Sy], 0, 100, depth, 0, 0);
+  DrawSPic(CurScenceRolePic, pos.x, pos.y - SData[CurScence, 4, Sx, Sy], 0, 100, CalBlock(Sx, Sy), 0, 0);
 
 end;
 
@@ -1008,7 +1008,7 @@ procedure InitialScence(Visible: integer); overload;
 var
   i1, i2, x, y, x1, y1, w, h: integer;
   pos: TPosition;
-  mini, maxi, num, depth, temp: integer;
+  mini, maxi, num, temp: integer;
   dest: TSDL_Rect;
 begin
   SDL_LockMutex(mutex);
@@ -1066,13 +1066,11 @@ begin
     end;
   for mini := 0 to 63 do
   begin
-    depth := 128 * mini;
-    InitialScenceOnePosition(mini, mini, x1, y1, w, h, depth, temp);
+    InitialScenceOnePosition(mini, mini, x1, y1, w, h, CalBlock(mini, mini), temp);
     for maxi := mini + 1 to 63 do
     begin
-      depth := 128 * mini + maxi - mini;
-      InitialScenceOnePosition(maxi, mini, x1, y1, w, h, depth, temp);
-      InitialScenceOnePosition(mini, maxi, x1, y1, w, h, depth, temp);
+      InitialScenceOnePosition(maxi, mini, x1, y1, w, h, CalBlock(maxi, mini), temp);
+      InitialScenceOnePosition(mini, maxi, x1, y1, w, h, CalBlock(mini, maxi), temp);
     end;
   end;
   {if Visible = 0 then
@@ -1092,6 +1090,11 @@ begin
     SDL_BlitSurface(ImgScenceBack, @dest, ImgScence, @dest);
   end;
   SDL_UnLockMutex(mutex);
+end;
+
+function CalBlock(x, y: integer): integer;
+begin
+  Result := 128 * min(x, y) + abs(x - y);
 end;
 
 //上面函数的子程
@@ -1300,7 +1303,7 @@ begin
   //if BRole[Bfield[2, x, y]].ShowNumber < 0 then
   //DrawBPic2(Rrole[Brole[Bfield[2, x, y]].rnum].HeadNum * 4 + Brole[Bfield[2, x, y]].Face + BEGIN_BATTLE_ROLE_PIC, pos.x, pos.y, 0, 75, x + y, $00FF0000, 50)
   //else
-  depth := 128 * min(x, y) + abs(x - y);
+  depth := CalBlock(x, y);
   if MODVersion = 62 then
   begin
     DrawBPic(Rrole[Brole[Bfield[2, x, y]].rnum].ListNum * 4 + Brole[Bfield[2, x, y]].Face + BEGIN_BATTLE_ROLE_PIC,
@@ -1324,7 +1327,7 @@ end;
 
 procedure InitialWholeBField;
 var
-  mini, maxi, depth: integer;
+  mini, maxi: integer;
 begin
   FillChar(BlockImg[0, 0], sizeof(BlockImg), -1);
   SDL_FillRect(ImgBField, nil, 0);
@@ -1332,13 +1335,11 @@ begin
 
   for mini := 0 to 63 do
   begin
-    depth := 128 * mini;
-    InitialBFieldPosition(mini, mini, depth);
+    InitialBFieldPosition(mini, mini, CalBlock(mini, mini));
     for maxi := mini + 1 to 63 do
     begin
-      depth := 128 * mini + maxi - mini;
-      InitialBFieldPosition(maxi, mini, depth);
-      InitialBFieldPosition(mini, maxi, depth);
+      InitialBFieldPosition(maxi, mini, CalBlock(maxi, mini));
+      InitialBFieldPosition(mini, maxi, CalBlock(mini, maxi));
     end;
   end;
 
@@ -1471,18 +1472,15 @@ begin
     for i2 := 0 to 63 do
     begin
       pos := getpositiononScreen(i1, i2, Bx, By);
-      depth := 128 * min(i1, i2) + abs(i1 - i2);
-      {if Bfield[1, i1, i2] > 0 then
-        DrawBPic(Bfield[1, i1, i2] div 2, pos.x, pos.y, 0);}
       bnum := Bfield[2, i1, i2];
       if (bnum >= 0) and (Brole[bnum].Dead = 0) then
       begin
         if (Brole[bnum].Team <> Brole[Bfield[2, Bx, By]].Team) and (Bfield[4, i1, i2] > 0) then
           DrawBPic(Rrole[Brole[bnum].rnum].HeadNum * 4 + Brole[bnum].Face + BEGIN_BATTLE_ROLE_PIC,
-            pos.x, pos.y, 0, 75, depth, $FFFFFFFF, 20)
+            pos.x, pos.y, 0, 75, CalBlock(i1, i2), $FFFFFFFF, 20)
         else
           DrawBPic(Rrole[Brole[bnum].rnum].HeadNum * 4 + Brole[bnum].Face + BEGIN_BATTLE_ROLE_PIC,
-            pos.x, pos.y, 0, 75, depth, 0, 0);
+            pos.x, pos.y, 0, 75, CalBlock(i1, i2), 0, 0);
 
       end;
     end;
@@ -1606,7 +1604,7 @@ begin
       if (Bfield[2, i1, i2] = bnum) then
       begin
         pos := GetPositionOnScreen(i1, i2, Bx, By);
-        DrawFPic(apicnum, pos.x, pos.y, Brole[bnum].Bhead, 0, 75, 128 * min(Bx, By) + abs(Bx - By), 0, 0);
+        DrawFPic(apicnum, pos.x, pos.y, Brole[bnum].Bhead, 0, 75, CalBlock(i1, i2), 0, 0);
       end;
     end;
   DrawProgress;
