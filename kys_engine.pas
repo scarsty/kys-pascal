@@ -687,6 +687,8 @@ begin
   CheckBasicEvent;
 
   frommem := ((PNG_TILE = 2) and (p <> nil));
+  if not frommem then
+    path := path + '/';
   with PNGIndex do
   begin
     if ((Loaded = 0) or (forceLoad = 1)) and (Num >= 0) and (Frame > 0) then
@@ -710,14 +712,13 @@ begin
       end;
       if Frame > 1 then
       begin
+        off := pint(p + 4 + filenum * 4)^ + 8;
         for j := 0 to Frame - 1 do
         begin
           if frommem then
           begin
-            off := pint(p + 4 + filenum * 4)^ + 8;
             index := pint(p + off + j * 8)^;
             len := pint(p + off + j * 8 + 4)^;
-            //writeln(index, ' ', len, ' ',num);
             SurfacePointer^ := LoadSurfaceFromMem(p + index, len);
           end
           else
