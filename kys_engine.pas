@@ -1016,19 +1016,19 @@ begin
   pixdepth := 0;
   //if (num >= 1916) and (num <= 1941) then h := h - 50;
   if Image = nil then
-    Image := screen;
+  Image := screen;
 
   if RectArea <> nil then
-  begin
-    area := PSDL_Rect(RectArea)^;
-  end
-  else
-  begin
-    area.x := 0;
-    area.y := 0;
-    area.w := Image.w;
-    area.h := Image.h;
-  end;
+        begin
+          area := PSDL_Rect(RectArea)^;
+        end
+        else
+        begin
+          area.x := 0;
+          area.y := 0;
+          area.w := Image.w;
+          area.h := Image.h;
+        end;
   if (BlockPosition <> nil) then
   begin
     blockx := pint(BlockPosition)^;
@@ -1633,6 +1633,7 @@ begin
                 end
                 else
                 begin
+                  //SDL_BlitSurface(tempscrfront, nil, scr, nil);
                   SDL_BlitSurface(tempscr, nil, scr, @dest);
                 end;
               end
