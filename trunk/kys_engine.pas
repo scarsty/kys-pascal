@@ -1590,7 +1590,7 @@ begin
           else if shadow < 0 then
           begin
             MixColor := 0;
-            MixAlpha := shadow * 25;
+            MixAlpha := -shadow * 25;
           end;
           if (MixAlpha = 0) and (BlockImgR = nil) then
           begin
