@@ -438,7 +438,7 @@ begin
   ScreenFlag := SDL_SWSURFACE or SDL_RESIZABLE {SDL_HWSURFACE or SDL_HWACCEL or SDL_ANYFORMAT or SDL_ASYNCBLIT or SDL_FULLSCREEN};
   if GLHR = 1 then
   begin
-    ScreenFlag := SDL_OPENGL or SDL_RESIZABLE or SDL_HWACCEL;
+    ScreenFlag := SDL_OPENGL or SDL_RESIZABLE;
     SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
@@ -731,6 +731,8 @@ var
   menu, menup, i, col, i1, i2, x, y, k: integer;
   Selected: boolean;
 begin
+  PlayMp3(StartMusic, -1);
+
   where := 3;
   Redraw;
 
@@ -738,7 +740,6 @@ begin
   begin
     LoadPNGTiles('resource/title', TitlePNGIndex, TitlePNGTile, 1);
   end;
-
   DrawTitlePic(8, TitlePosition.x, TitlePosition.y + 20);
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
 
@@ -753,11 +754,8 @@ begin
 
   SDL_EnableKeyRepeat(0, 10);
   MStep := 0;
-
   fullscreen := 0;
-
   menu := 0;
-
   SetLength(Cloud, CLOUD_AMOUNT);
   for i := 0 to CLOUD_AMOUNT - 1 do
   begin
@@ -769,10 +767,7 @@ begin
   Redraw;
   drawtitlepic(0, x, y);
   drawtitlepic(menu + 1, x, y + menu * 20);
-
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-
-  PlayMp3(StartMusic, -1);
 
   //事件等待
   Selected := False;
@@ -6024,9 +6019,9 @@ begin
     begin
       Picnum := random(CPicAmount);
       Shadow := 0;
-      Alpha := 25 + random(50);
+      Alpha := random(50) + 25;
       MixColor := random(256) + random(256) shl 8 + random(256) shl 16 + random(256) shl 24;
-      mixAlpha := 10 + random(40);
+      mixAlpha := random(50);
       Positionx := 0;
       Positiony := random(8640);
       Speedx := 1 + random(3);
