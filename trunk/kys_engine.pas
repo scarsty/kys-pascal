@@ -705,6 +705,8 @@ begin
         end
         else
           SurfacePointer^ := LoadSurfaceFromFile(AppPath + path + inttostr(filenum) + '.png');
+          if SurfacePointer^ = nil then
+            SurfacePointer^ := LoadSurfaceFromFile(AppPath + path + inttostr(filenum) + '_0.png');
       end;
       if Frame > 1 then
       begin
