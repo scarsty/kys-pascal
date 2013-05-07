@@ -86,7 +86,8 @@ var
 begin
   if PNG_TILE > 0 then
   begin
-    DrawPngTile(TitlePNGIndex[imgnum], 0, nil, screen, px, py);
+    if imgnum <= high(TitlePNGIndex) then
+      DrawPngTile(TitlePNGIndex[imgnum], 0, nil, screen, px, py);
   end;
   if PNG_TILE = 0 then
   begin
