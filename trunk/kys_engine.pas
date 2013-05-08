@@ -712,11 +712,11 @@ begin
       end;
       if Frame > 1 then
       begin
-        off := pint(p + 4 + filenum * 4)^ + 8;
         for j := 0 to Frame - 1 do
         begin
           if frommem then
           begin
+            off := pint(p + 4 + filenum * 4)^ + 8;
             index := pint(p + off + j * 8)^;
             len := pint(p + off + j * 8 + 4)^;
             SurfacePointer^ := LoadSurfaceFromMem(p + index, len);
@@ -1627,10 +1627,9 @@ begin
                 if alpha > 0 then
                 begin
                   tempscrback := SDL_DisplayFormat(CurSurface);
-                  SDL_FillRect(tempscrback, nil, 1);
-                  SDL_SetColorKey(tempscrback, SDL_SRCCOLORKEY, 1);
-                  SDL_SetAlpha(tempscrback, SDL_SRCALPHA, 255 - alpha * 255 div 100);
+                  SDL_BlitSurface(scr, @dest, tempscrback, nil);
                   SDL_BlitSurface(tempscr, nil, tempscrback, nil);
+                  SDL_SetAlpha(tempscrback, SDL_SRCALPHA, 255 - alpha * 255 div 100);
                   SDL_BlitSurface(tempscrback, nil, scr, @dest);
                   SDL_FreeSurface(tempscrback);
                 end
