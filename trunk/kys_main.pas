@@ -41,7 +41,7 @@ uses
   SDL_TTF, SDL_image, SDL,
   lua52,
   iniFiles,
-  gl,
+  gl, glext,
   bass,
   zlib, ziputils, unzip;
 
@@ -61,6 +61,7 @@ type
   TPNGIndex = record
     Num, Frame, x, y, Loaded, UseGRP: smallint;
     CurPointer: PPSDL_Surface;
+    CurTexture: GLUint;
   end;
 
   TPNGIndexArray = array of TPNGIndex;
@@ -271,6 +272,7 @@ var
   HARDWARE_BLIT: integer; //是否使用硬件绘图
   GLHR: integer = 1; //是否使用OPENGL拉伸
   SMOOTH: integer = 1; //平滑设置 0-完全不平滑, 1-仅标准分辨率不平滑, 2-任何时候都使用平滑
+  GL_TEXTURE: integer = 0; //全部使用gl纹理, 仅在使用png贴图时有效
 
   ScreenFlag: Uint32;
   screen, prescreen, freshscreen, RealScreen: PSDL_Surface;
@@ -2888,7 +2890,7 @@ begin
   if snum >= 0 then
   begin
     scencename := big5tounicode(@rscence[snum].Name);
-    drawtextwithrect(screen, @scencename[1], 320 - length(PChar(@rscence[snum].Name)) * 5 + 7, 100,
+    drawtextwithrect(screen, @scencename[1], CENTER_X - length(PChar(@rscence[snum].Name)) * 5 + 7, 100,
       length(PChar(@rscence[snum].Name)) * 10 + 6, colcolor(7), colcolor(5));
 
     //改变音乐

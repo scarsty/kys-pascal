@@ -1015,8 +1015,10 @@ begin
     end;
   end;
 
-  if (Visible = 2) and (where = 1) and (x1 >= 0) and (x1 < 2304 - w) and (y1 >= 0) and (y1 < 1402 - h) then
+  if (Visible = 2) and (where = 1) and (x1 >= 0) and (y1 >= 0) {and (x1 < 2304 - w) and (y1 < 1402 - h)} then
   begin
+    if x1 + w >= 2304 then
+      w := 2303 - x1;
     Move(BlockImg2[x1, 0], BlockImg[x1, 0], w * sizeof(BlockImg[x1]));
     dest.x := x1;
     dest.y := y1;
@@ -1587,7 +1589,7 @@ begin
       for i := 0 to BRoleAmount - 1 do
       begin
         range[i] := i;
-        p[i] := BRole[i].RealProgress * 500 div 10000;
+        p[i] := BRole[i].RealProgress * 500 {* CENTER_X div 320} div 10000;
       end;
       for i := 0 to BRoleAmount - 2 do
         for j := i + 1 to BRoleAmount - 1 do

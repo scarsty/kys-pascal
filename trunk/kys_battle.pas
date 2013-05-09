@@ -765,7 +765,7 @@ begin
   end;
 
   ReDraw;
-  ShowSimpleStatus(brole[bnum].rnum, 350, 50);
+  ShowSimpleStatus(brole[bnum].rnum, CENTER_X+100, 50);
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
   menu := 0;
 
@@ -1148,7 +1148,7 @@ begin
     SetAminationPosition(AreaType, step, AreaRange);
     DrawBFieldWithCursor(step);
     if Bfield[2, Ax, Ay] >= 0 then
-      ShowSimpleStatus(Brole[Bfield[2, Ax, Ay]].rnum, 350, 50);
+      ShowSimpleStatus(Brole[Bfield[2, Ax, Ay]].rnum, CENTER_X+100, 50);
     SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
   end;
 
@@ -3347,7 +3347,7 @@ var
   str: WideString;
 begin
   rnum := brole[bnum].rnum;
-  showsimplestatus(rnum, 350, 50);
+  showsimplestatus(rnum, CENTER_X+100, 50);
   sdl_delay(450);
 
   //CalCanSelect(bnum, 0, Brole[bnum].step);
