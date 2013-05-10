@@ -2202,7 +2202,7 @@ begin
         Redraw;
         SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
       end;
-      SDL_Delay(WALK_SPEED); //静止时只需刷新率与最频繁的动态效果相同即可
+      SDL_Delay(40); //静止时只需刷新率与最频繁的动态效果相同即可
     end
     else
       SDL_Delay(WALK_SPEED);
