@@ -352,6 +352,7 @@ var
   AskingQuit: boolean = False; //是否正在提问退出
   begin_time: integer; //游戏开始时间, 单位为分钟, 0~1439
   now_time: real;
+  LoadingScence: boolean = false; //是否正在载入场景
 
   //游戏开场时的设置
   TitlePosition: TPosition;
@@ -496,6 +497,7 @@ end;
 
 procedure Quit;
 begin
+  FreeAllSurface;
   DestroyScript;
   TTF_CloseFont(font);
   TTF_CloseFont(engfont);
@@ -2305,7 +2307,7 @@ begin
     now := sdl_getticks;
     if now > next_time then
     begin
-      if (where = 1) and (CurEvent = -1) then
+      if (where = 1) and (CurEvent = -1) and (not LoadingScence) then
       begin
         initialscence(2);
       end;
@@ -4043,7 +4045,7 @@ begin
                   y := 0;
                 if (y >= row) then
                 begin
-                  if (ItemList[atlu + col * 5] >= 0) then
+                  if (ItemList[atlu + col * row] >= 0) then
                     atlu := atlu + col;
                   y := row - 1;
                 end;
@@ -4400,7 +4402,7 @@ var
   menustring: array of WideString;
 begin
   CurItem := inum;
-
+  redraw;
   case RItem[inum].ItemType of
     0: //剧情物品
       begin

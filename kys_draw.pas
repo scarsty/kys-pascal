@@ -963,7 +963,7 @@ var
   dest: TSDL_Rect;
 begin
   SDL_LockMutex(mutex);
-
+  LoadingScence := true;
   if Visible = 0 then
   begin
     x1 := 0;
@@ -989,7 +989,7 @@ begin
     h := screen.h;
   end;
 
-  if (Visible = 2) and (where = 1) then
+  if (Visible > 0) and (where = 1) then
     onback := 1
   else
     onback := 0;
@@ -1015,7 +1015,7 @@ begin
     end;
   end;
 
-  if (Visible = 2) and (where = 1) and (x1 >= 0) and (y1 >= 0) {and (x1 < 2304 - w) and (y1 < 1402 - h)} then
+  if (Visible > 0) and (where = 1) and (x1 >= 0) and (y1 >= 0) {and (x1 < 2304 - w) and (y1 < 1402 - h)} then
   begin
     if x1 + w >= 2304 then
       w := 2303 - x1;
@@ -1026,6 +1026,7 @@ begin
     dest.h := h;
     SDL_BlitSurface(ImgScenceBack, @dest, ImgScence, @dest);
   end;
+  LoadingScence := false;
   SDL_UnLockMutex(mutex);
 end;
 
