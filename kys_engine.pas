@@ -39,6 +39,7 @@ procedure LoadOnePNGTile(path: string; p: pchar; filenum: integer; var PNGIndex:
 function LoadSurfaceFromFile(filename: string): PSDL_Surface;
 function LoadSurfaceFromMem(p: pchar; len: integer): PSDL_Surface;
 function LoadSurfaceFromZIPFile(zipFile: unzFile; filename: string): PSDL_Surface;
+procedure FreeAllSurface;
 
 //基本绘图子程
 function getpixel(surface: PSDL_Surface; x: integer; y: integer): Uint32;
@@ -707,8 +708,8 @@ begin
         end
         else
           SurfacePointer^ := LoadSurfaceFromFile(AppPath + path + inttostr(filenum) + '.png');
-          if SurfacePointer^ = nil then
-            SurfacePointer^ := LoadSurfaceFromFile(AppPath + path + inttostr(filenum) + '_0.png');
+        if SurfacePointer^ = nil then
+          SurfacePointer^ := LoadSurfaceFromFile(AppPath + path + inttostr(filenum) + '_0.png');
       end;
       if Frame > 1 then
       begin
@@ -767,7 +768,32 @@ begin
 
 end;
 
-
+procedure FreeAllSurface;
+var
+  i, j: integer;
+begin
+  for i:= 0 to high(MPNGTile) do
+    SDL_FreeSurface(MPNGTile[i]);
+  for i:= 0 to high(SPNGTile) do
+    SDL_FreeSurface(SPNGTile[i]);
+  for i:= 0 to high(BPNGTile) do
+    SDL_FreeSurface(BPNGTile[i]);
+  for i:= 0 to high(EPNGTile) do
+    SDL_FreeSurface(EPNGTile[i]);
+  for i:= 0 to high(CPNGTile) do
+    SDL_FreeSurface(CPNGTile[i]);
+  for i:= 0 to high(TitlePNGTile) do
+    SDL_FreeSurface(TitlePNGTile[i]);
+  for i:= 0 to high(FPNGTile) do
+    for j := 0 to high(FPNGTile[i]) do
+      SDL_FreeSurface(FPNGTile[i, j]);
+  SDL_FreeSurface(screen);
+  SDL_FreeSurface(prescreen);
+  SDL_FreeSurface(ImgScence);
+  SDL_FreeSurface(ImgScenceBack);
+  SDL_FreeSurface(ImgBField);
+  SDL_FreeSurface(ImgBBuild);
+end;
 
 //获取某像素信息
 

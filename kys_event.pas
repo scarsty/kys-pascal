@@ -332,7 +332,7 @@ begin
   if DData[CurScence, CurEvent, 5] <> curPic then
   begin
     InitialScence(1);
-    //redraw;
+    redraw;
     //SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
   end;
   if (list[0] = CurScence) and (preEventPic <> DData[list[0], list[1], 5]) then
@@ -2564,8 +2564,8 @@ begin
         continue;
       end;
       setlength(wd, length(wd) + 1);
-      wd[length(wd) - 1] := char($A0 + (smallint(str[i]) - 32));
-      wd[length(wd) - 2] := char($A3);
+      wd[length(wd) - 1] := str[i];
+      wd[length(wd) - 2] := ' ';
     end;
     Inc(i);
   end;
