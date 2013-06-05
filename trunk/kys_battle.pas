@@ -153,6 +153,13 @@ begin
     for i := 0 to broleamount - 1 do
     begin
       BHead[i] := LoadSurfaceFromFile(AppPath + 'head/' + inttostr(Rrole[Brole[i].rnum].HeadNum) + '.png');
+      if BHead[i] = nil then
+      begin
+        BHead[i] := SDL_CreateRGBSurface(screen.flags, 56, 71, 32, 0, 0, 0, 0);
+        SDL_FillRect(BHead[i], nil, 1);
+        SDL_SetColorKey(BHead[i], SDL_SRCCOLORKEY, 1);
+        DrawHeadPic(Rrole[Brole[i].rnum].HeadNum, 0, 0, BHead[i]);
+      end;
       BRole[i].BHead := i;
     end;
   end;
