@@ -1503,6 +1503,7 @@ begin
   dest.y := y;
   SDL_BlitSurface(tempscr, nil, sur, @dest);
   SDL_FreeSurface(tempscr);
+  //boxRGBA(sur, x, y, x+w-1, y+h-1, 0,0,0,alpha * 255 div 100);
   {if (SDL_MustLock(screen)) then
   begin
     SDL_UnlockSurface(screen);
