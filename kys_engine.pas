@@ -31,13 +31,15 @@ procedure PlaySoundA(SoundNum, times: integer);
 
 //用于读取的子程
 procedure ReadTiles;
-function ReadFiletoBuffer(p: pchar; filename: string; size, malloc: integer): pchar;
-procedure FreeFileBuffer(var p: pchar);
+function ReadFiletoBuffer(p: PChar; filename: string; size, malloc: integer): PChar;
+procedure FreeFileBuffer(var p: PChar);
 function LoadIdxGrp(stridx, strgrp: string; var idxarray: TIntArray; var grparray: TByteArray): integer;
-function LoadPNGTiles(path: string; var PNGIndexArray: TPNGIndexArray; var SurfaceArray: TSurfaceArray; LoadPic: integer = 1): integer;
-procedure LoadOnePNGTile(path: string; p: pchar; filenum: integer; var PNGIndex: TPNGIndex; SurfacePointer: PPSDL_Surface; forceLoad: integer = 0);
+function LoadPNGTiles(path: string; var PNGIndexArray: TPNGIndexArray; var SurfaceArray: TSurfaceArray;
+  LoadPic: integer = 1): integer;
+procedure LoadOnePNGTile(path: string; p: PChar; filenum: integer; var PNGIndex: TPNGIndex;
+  SurfacePointer: PPSDL_Surface; forceLoad: integer = 0);
 function LoadSurfaceFromFile(filename: string): PSDL_Surface;
-function LoadSurfaceFromMem(p: pchar; len: integer): PSDL_Surface;
+function LoadSurfaceFromMem(p: PChar; len: integer): PSDL_Surface;
 function LoadSurfaceFromZIPFile(zipFile: unzFile; filename: string): PSDL_Surface;
 procedure FreeAllSurface;
 
@@ -78,11 +80,15 @@ procedure DrawTextWithRect(sur: PSDL_Surface; word: puint16; x, y, w: integer; c
 
 
 //PNG贴图相关的子程
-procedure DrawPngTile(PNGIndex: TPNGIndex; FrameNum: integer; RectArea: PChar; scr: PSDL_Surface; px, py: integer); overload;
-procedure DrawPngTile(PNGIndex: TPNGIndex; FrameNum: integer; RectArea: PChar; scr: PSDL_Surface; px, py: integer; shadow, alpha: integer; MixColor: Uint32; MixAlpha: integer); overload;
-procedure DrawPngTile(PNGIndex: TPNGIndex; FrameNum: integer; RectArea: PChar; scr: PSDL_Surface; px, py: integer; shadow, alpha: integer; MixColor: Uint32; MixAlpha: integer;
-  depth: integer; BlockImgR: pchar; width, height, size, leftupx, leftupy: integer); overload;
-procedure SetPngTileBlock(PNGIndex: TPNGIndex; px, py, depth: integer; BlockImageW: pchar; width, height, size: integer);
+procedure DrawPngTile(PNGIndex: TPNGIndex; FrameNum: integer; RectArea: PChar; scr: PSDL_Surface;
+  px, py: integer); overload;
+procedure DrawPngTile(PNGIndex: TPNGIndex; FrameNum: integer; RectArea: PChar; scr: PSDL_Surface;
+  px, py: integer; shadow, alpha: integer; MixColor: Uint32; MixAlpha: integer); overload;
+procedure DrawPngTile(PNGIndex: TPNGIndex; FrameNum: integer; RectArea: PChar; scr: PSDL_Surface;
+  px, py: integer; shadow, alpha: integer; MixColor: Uint32; MixAlpha: integer; depth: integer;
+  BlockImgR: PChar; Width, Height, size, leftupx, leftupy: integer); overload;
+procedure SetPngTileBlock(PNGIndex: TPNGIndex; px, py, depth: integer; BlockImageW: PChar;
+  Width, Height, size: integer);
 
 //用于系统响应的子程
 procedure ChangeCol;
@@ -492,7 +498,7 @@ end;
 //当读入的位置并非变长数据时, 务必设置 malloc = 0!
 //size小于0时, 则读整个文件.
 
-function ReadFiletoBuffer(p: pchar; filename: string; size, malloc: integer): pchar;
+function ReadFiletoBuffer(p: PChar; filename: string; size, malloc: integer): PChar;
 var
   i: integer;
 begin
@@ -504,8 +510,8 @@ begin
     if malloc = 1 then
     begin
       //GetMem(result, size + 4);
-      result := StrAlloc(size + 4);
-      p := result;
+      Result := StrAlloc(size + 4);
+      p := Result;
       //writeln(StrBufSize(p));
     end;
     fileseek(i, 0, 0);
@@ -513,11 +519,11 @@ begin
     fileclose(i);
   end
   else
-    if malloc = 1 then
-      result := nil;
+  if malloc = 1 then
+    Result := nil;
 end;
 
-procedure FreeFileBuffer(var p: pchar);
+procedure FreeFileBuffer(var p: PChar);
 begin
   if p <> nil then
     StrDispose(p);
@@ -542,23 +548,24 @@ begin
   fileread(idx, idxarray[0], tnum * 4);
   fileclose(idx);
 
-  result := tnum;
+  Result := tnum;
 
 end;
 
 //为了提高启动的速度, M之外的贴图均仅读入基本信息, 需要时才实际载入图, 并且游戏过程中通常不再释放资源
 
-function LoadPNGTiles(path: string; var PNGIndexArray: TPNGIndexArray; var SurfaceArray: TSurfaceArray; LoadPic: integer = 1): integer;
+function LoadPNGTiles(path: string; var PNGIndexArray: TPNGIndexArray; var SurfaceArray: TSurfaceArray;
+  LoadPic: integer = 1): integer;
 var
-  i, j, k, state, size, count, pngoff: integer;
+  i, j, k, state, size, Count, pngoff: integer;
   zipFile: unzFile;
   info: unz_file_info;
   offset: array of smallint;
-  p: pchar;
+  p: PChar;
 begin
   //载入偏移值文件, 计算贴图的最大数量
   size := 0;
-  result := 0;
+  Result := 0;
   p := nil;
 
   if PNG_TILE = 2 then
@@ -568,38 +575,38 @@ begin
     p := ReadFileToBuffer(nil, AppPath + path + '.imz', -1, 1);
     if p <> nil then
     begin
-      result := pint(p)^;
+      Result := pint(p)^;
       //最大的有帧数的数量作为贴图的最大编号
-      for i := result - 1 downto 0 do
+      for i := Result - 1 downto 0 do
       begin
         if pint(p + pint(p + 4 + i * 4)^ + 4)^ > 0 then
         begin
-          result := i + 1;
+          Result := i + 1;
           break;
         end;
       end;
 
       //初始化贴图索引, 并计算全部帧数和
-      setlength(PNGIndexArray, result);
-      count := 0;
-      for i := 0 to result - 1 do
+      setlength(PNGIndexArray, Result);
+      Count := 0;
+      for i := 0 to Result - 1 do
       begin
         pngoff := pint(p + 4 + i * 4)^;
         with PNGIndexArray[i] do
         begin
-          Num := count;
+          Num := Count;
           x := psmallint(p + pngoff)^;
           y := psmallint(p + pngoff + 2)^;
           Frame := pint(p + pngoff + 4)^;
-          count := count + frame;
+          Count := Count + frame;
           CurPointer := nil;
           Loaded := 0;
         end;
       end;
     end
     else
-      if IsConsole then
-        writeln('Can''t find imz file.');
+    if IsConsole then
+      writeln('Can''t find imz file.');
   end;
 
 
@@ -616,39 +623,39 @@ begin
 
     for i := size div 4 downto 0 do
     begin
-      if fileexists(AppPath + path + inttostr(i) + '.png')
-        or fileexists(AppPath + path + inttostr(i) + '_0.png') then
+      if fileexists(AppPath + path + IntToStr(i) + '.png') or fileexists(AppPath +
+        path + IntToStr(i) + '_0.png') then
       begin
-        result := i + 1;
+        Result := i + 1;
         break;
       end;
     end;
     //贴图的数量是有文件存在的最大数量
-    setlength(PNGIndexArray, result);
+    setlength(PNGIndexArray, Result);
     //计算合法贴图文件的总数, 同时指定每个图的索引数据
-    count := 0;
-    for i := 0 to result - 1 do
+    Count := 0;
+    for i := 0 to Result - 1 do
     begin
       with PNGIndexArray[i] do
       begin
         Num := -1;
         Frame := 0;
         CurPointer := nil;
-        if fileexists(AppPath + path + inttostr(i) + '.png') then
+        if fileexists(AppPath + path + IntToStr(i) + '.png') then
         begin
-          Num := count;
+          Num := Count;
           Frame := 1;
-          count := count + 1;
+          Count := Count + 1;
         end
         else
         begin
           k := 0;
-          while fileexists(AppPath + path + inttostr(i) + '_' + inttostr(k) + '.png') do
+          while fileexists(AppPath + path + IntToStr(i) + '_' + IntToStr(k) + '.png') do
           begin
             k := k + 1;
             if k = 1 then
-              Num := count;
-            count := count + 1;
+              Num := Count;
+            Count := Count + 1;
           end;
           Frame := k;
         end;
@@ -661,15 +668,15 @@ begin
   end;
 
   if IsConsole then
-    writeln(result, ' index, ', count, ' real titles. Now loading...');
+    writeln(Result, ' index, ', Count, ' real titles. Now loading...');
 
-  setlength(SurfaceArray, count);
-  for i := 0 to count - 1 do
+  setlength(SurfaceArray, Count);
+  for i := 0 to Count - 1 do
     SurfaceArray[i] := nil;
 
   if LoadPic = 1 then
   begin
-    for i := 0 to result - 1 do
+    for i := 0 to Result - 1 do
     begin
       LoadOnePNGTile(path, p, i, PNGIndexArray[i], @SurfaceArray[0], 1);
     end;
@@ -678,7 +685,8 @@ begin
 
 end;
 
-procedure LoadOnePNGTile(path: string; p: pchar; filenum: integer; var PNGIndex: TPNGIndex; SurfacePointer: PPSDL_Surface; forceLoad: integer = 0);
+procedure LoadOnePNGTile(path: string; p: PChar; filenum: integer; var PNGIndex: TPNGIndex;
+  SurfacePointer: PPSDL_Surface; forceLoad: integer = 0);
 var
   j, k, index, len, off: integer;
   tempscr: PSDL_Surface;
@@ -695,7 +703,7 @@ begin
     if ((Loaded = 0) or (forceLoad = 1)) and (Num >= 0) and (Frame > 0) then
     begin
       Loaded := 1;
-      inc(SurfacePointer, Num);
+      Inc(SurfacePointer, Num);
       CurPointer := SurfacePointer;
       if Frame = 1 then
       begin
@@ -707,9 +715,9 @@ begin
           SurfacePointer^ := LoadSurfaceFromMem(p + index, len);
         end
         else
-          SurfacePointer^ := LoadSurfaceFromFile(AppPath + path + inttostr(filenum) + '.png');
+          SurfacePointer^ := LoadSurfaceFromFile(AppPath + path + IntToStr(filenum) + '.png');
         if SurfacePointer^ = nil then
-          SurfacePointer^ := LoadSurfaceFromFile(AppPath + path + inttostr(filenum) + '_0.png');
+          SurfacePointer^ := LoadSurfaceFromFile(AppPath + path + IntToStr(filenum) + '_0.png');
       end;
       if Frame > 1 then
       begin
@@ -723,8 +731,8 @@ begin
             SurfacePointer^ := LoadSurfaceFromMem(p + index, len);
           end
           else
-            SurfacePointer^ := LoadSurfaceFromFile(AppPath + path + inttostr(filenum) + '_' + inttostr(j) + '.png');
-          inc(SurfacePointer, 1);
+            SurfacePointer^ := LoadSurfaceFromFile(AppPath + path + IntToStr(filenum) + '_' + IntToStr(j) + '.png');
+          Inc(SurfacePointer, 1);
         end;
       end;
     end;
@@ -745,7 +753,7 @@ begin
   end;
 end;
 
-function LoadSurfaceFromMem(p: pchar; len: integer): PSDL_Surface;
+function LoadSurfaceFromMem(p: PChar; len: integer): PSDL_Surface;
 var
   tempscr: PSDL_Surface;
   tempRWops: PSDL_RWops;
@@ -763,7 +771,7 @@ function LoadSurfaceFromZIPFile(zipFile: unzFile; filename: string): PSDL_Surfac
 var
   archiver: unzFile;
   info: unz_file_info;
-  buffer: pchar;
+  buffer: PChar;
 begin
 
 end;
@@ -772,19 +780,19 @@ procedure FreeAllSurface;
 var
   i, j: integer;
 begin
-  for i:= 0 to high(MPNGTile) do
+  for i := 0 to high(MPNGTile) do
     SDL_FreeSurface(MPNGTile[i]);
-  for i:= 0 to high(SPNGTile) do
+  for i := 0 to high(SPNGTile) do
     SDL_FreeSurface(SPNGTile[i]);
-  for i:= 0 to high(BPNGTile) do
+  for i := 0 to high(BPNGTile) do
     SDL_FreeSurface(BPNGTile[i]);
-  for i:= 0 to high(EPNGTile) do
+  for i := 0 to high(EPNGTile) do
     SDL_FreeSurface(EPNGTile[i]);
-  for i:= 0 to high(CPNGTile) do
+  for i := 0 to high(CPNGTile) do
     SDL_FreeSurface(CPNGTile[i]);
-  for i:= 0 to high(TitlePNGTile) do
+  for i := 0 to high(TitlePNGTile) do
     SDL_FreeSurface(TitlePNGTile[i]);
-  for i:= 0 to high(FPNGTile) do
+  for i := 0 to high(FPNGTile) do
     for j := 0 to high(FPNGTile[i]) do
       SDL_FreeSurface(FPNGTile[i, j]);
   SDL_FreeSurface(screen);
@@ -822,8 +830,8 @@ begin
           Result := PByteArray(p)[0] or PByteArray(p)[1] shl 8 or PByteArray(p)[2] shl 16;
       4:
         Result := PUint32(p)^;
-    else
-      Result := 0; // shouldn't happen, but avoids warnings
+      else
+        Result := 0; // shouldn't happen, but avoids warnings
     end;
   end;
 
@@ -949,7 +957,7 @@ begin
   //colcolor := SDL_mapRGB(screen.format, Acol[num * 3 + 0] * 4, Acol[num * 3 + 1] * 4, Acol[num * 3 + 2] * 4);
   //{$ELSE}
   if (num >= 0) and (num <= 255) then
-    Result := SDL_mapRGB(screen.format, Acol[num * 3 + 2] * 4, Acol[num * 3 + 1] * 4, Acol[num * 3 + 0] * 4)
+    Result := SDL_mapRGB(screen.format, Acol[num * 3] * 4, Acol[num * 3 + 1] * 4, Acol[num * 3 + 2] * 4)
   else
     Result := 0;
   //{$ENDIF}
@@ -1063,8 +1071,8 @@ begin
     blockx := pint(BlockPosition)^;
     blocky := pint(BlockPosition + 4)^;
   end;
-  if ((w > 1) or (h > 1)) and (px - xs + w >= area.x) and (px - xs < area.x + area.w)
-    and (py - ys + h >= area.y) and (py - ys < area.y + area.h) then
+  if ((w > 1) or (h > 1)) and (px - xs + w >= area.x) and (px - xs < area.x + area.w) and
+    (py - ys + h >= area.y) and (py - ys < area.y + area.h) then
   begin
     for iy := 1 to h do
     begin
@@ -1090,8 +1098,7 @@ begin
           p := p - 1;
           x := w - xs + px;
           y := iy - ys + py;
-          if (x >= area.x) and (y >= area.y) and
-            (x < area.x + area.w) and (y < area.y + area.h) then
+          if (x >= area.x) and (y >= area.y) and (x < area.x + area.w) and (y < area.y + area.h) then
           begin
             pix1 := puint8(colorPanel + l1 * 3)^ * (4 + shadow);
             pix2 := puint8(colorPanel + l1 * 3 + 1)^ * (4 + shadow);
@@ -1115,7 +1122,7 @@ begin
                     pixdepth := pint(BlockImageW + ((x + blockx) * heightW + y + blocky) * sizeW)^;
                     curdepth := depth;
                     //if where = 1 then
-                      //curdepth := depth - (w - xs - 1) div 18;
+                    //curdepth := depth - (w - xs - 1) div 18;
                     //处理过宽的图片, 仅画图时使用, 事实上该遮挡值只用来画主角, 起作用的唯一机会是拔金蛇剑时
                     if pixdepth >= curdepth then
                     begin
@@ -1172,7 +1179,7 @@ begin
                 if (BlockImageW <> nil) then
                 begin
                   //if (depth < 0) then
-                    //depth := (py div 9 - 1);
+                  //depth := (py div 9 - 1);
                   Pint(BlockImageW + (x * heightI + y) * sizeI)^ := depth;
                 end;
                 pix := sdl_maprgba(screen.format, pix1, pix2, pix3, pix4);
@@ -1248,6 +1255,7 @@ var
   p1: pbyte;
   p2: pbyte;
   Text: PSDL_Surface;
+  r, g, b: byte;
 begin
 {$IFDEF fpc}
   //widestring在fpc中的默认赋值动作是将utf8码每字节间插入一个00.
@@ -1287,24 +1295,14 @@ begin
   //word := @word2[1];
 {$ENDIF}
 
+  sdl_getrgb(color, sur.format, @r, @g, @b);
+  tempcolor.r := r;
+  tempcolor.g := g;
+  tempcolor.b := b;
   pword[0] := 32;
   pword[2] := 0;
 
   dest.x := x_pos;
-
-  //{$IFDEF darwin}
-    {tempcolor := TSDL_Color(color shr 8);
-    if Fullscreen <> 0 then
-    begin
-      tempcolor.b := (color shr 0) and $FF;
-      tempcolor.g := (color shr 8) and $FF;
-      tempcolor.r := (color shr 16) and $FF;
-      tempcolor.unused := 0;
-    end;}
-  //{$ELSE}
-  tempcolor := TSDL_Color(color);
-  //{$ENDIF}
-
 
   while word^ > 0 do
   begin
@@ -1344,19 +1342,12 @@ var
   a: Uint8;
   tempcolor: TSDL_Color;
   Text: PSDL_Surface;
+  r, g, b: byte;
 begin
-  //{$IFDEF darwin}
-    {tempcolor := TSDL_Color(color shr 8);
-    if Fullscreen <> 0 then
-    begin
-      tempcolor.b := (color shr 0) and $FF;
-      tempcolor.g := (color shr 8) and $FF;
-      tempcolor.r := (color shr 16) and $FF;
-      tempcolor.unused := 0;
-    end;}
-  //{$ELSE}
-  tempcolor := TSDL_Color(color);
-  //{$ENDIF}
+  sdl_getrgb(color, sur.format, @r, @g, @b);
+  tempcolor.r := r;
+  tempcolor.g := g;
+  tempcolor.b := b;
 
   Text := TTF_RenderUNICODE_blended(engfont, word, tempcolor);
   dest.x := x_pos;
@@ -1441,22 +1432,22 @@ end;
 procedure DrawRectangle(sur: PSDL_Surface; x, y, w, h: integer; colorin, colorframe: Uint32; alpha: integer);
 var
   i1, i2, l1, l2, l3, l4: integer;
-  tempscr, tempscr1: PSDL_Surface;
+  tempscr: PSDL_Surface;
   dest: TSDL_Rect;
+  r, g, b, r1, g1, b1, a: byte;
 begin
   {if (SDL_MustLock(screen)) then
   begin
     SDL_LockSurface(screen);
   end;}
-  tempscr := SDL_CreateRGBSurface(sur.flags, w + 1, h + 1, 32, 0, 0, 0, 0);
-  tempscr1 := SDL_CreateRGBSurface(sur.flags, w + 1, h + 1, 32, 0, 0, 0, 0);
-  SDL_FillRect(tempscr, nil, colorin);
-  SDL_FillRect(tempscr1, nil, 1);
-  SDL_SetAlpha(tempscr, SDL_SRCALPHA, alpha * 255 div 100);
-  SDL_SetColorKey(tempscr, SDL_SRCCOLORKEY, 1);
-  SDL_SetColorKey(tempscr1, SDL_SRCCOLORKEY, 1);
+  tempscr := SDL_CreateRGBSurface(sur.flags or SDL_SRCALPHA, w + 1, h + 1, 32, RMask, GMask, BMask, AMask);
+  SDL_GetRGB(colorin, tempscr.format, @r, @g, @b);
+  SDL_GetRGB(colorframe, tempscr.format, @r1, @g1, @b1);
+  SDL_FillRect(tempscr, nil, sdl_maprgba(tempscr.format, r, g, b, alpha * 255 div 100));
   dest.x := x;
   dest.y := y;
+  dest.w := 0;
+  dest.h := 0;
   for i1 := 0 to w do
     for i2 := 0 to h do
     begin
@@ -1464,20 +1455,23 @@ begin
       l2 := -(i1 - w) + (i2);
       l3 := (i1) - (i2 - h);
       l4 := -(i1 - w) - (i2 - h);
+      //4边角
       if not ((l1 >= 4) and (l2 >= 4) and (l3 >= 4) and (l4 >= 4)) then
       begin
-        putpixel(tempscr, i1, i2, 1);
+        putpixel(tempscr, i1, i2, 0);
       end;
+      //框线
       if (((l1 >= 4) and (l2 >= 4) and (l3 >= 4) and (l4 >= 4) and ((i1 = 0) or (i1 = w) or
         (i2 = 0) or (i2 = h))) or ((l1 = 4) or (l2 = 4) or (l3 = 4) or (l4 = 4))) then
       begin
-        putpixel(tempscr1, i1, i2, colorframe);
+        //a := round(200 - min(abs(i1/w-0.5),abs(i2/h-0.5))*2 * 100);
+        a := round(250 - abs(i1 / w + i2 / h - 1) * 150);
+        //writeln(a);
+        putpixel(tempscr, i1, i2, sdl_maprgba(tempscr.format, r1, g1, b1, a));
       end;
     end;
   SDL_BlitSurface(tempscr, nil, sur, @dest);
-  SDL_BlitSurface(tempscr1, nil, sur, @dest);
   SDL_FreeSurface(tempscr);
-  SDL_FreeSurface(tempscr1);
   {if (SDL_MustLock(screen)) then
   begin
     SDL_UnlockSurface(screen);
@@ -1525,10 +1519,12 @@ begin
   if (NIGHT_EFFECT = 1) and (where = 0) then
   begin
     now_time := now_time + 0.3;
-    if now_time > 1440 then now_time := 0;
+    if now_time > 1440 then
+      now_time := 0;
     p := now_time / 1440;
     //writeln(p);
-    if p > 0.5 then p := 1 - p;
+    if p > 0.5 then
+      p := 1 - p;
     p0 := 0.6 + p;
     p1 := 0.6 + p;
     p2 := 1.0 - 0.4 / 1.3 + p / 1.3;
@@ -1556,19 +1552,22 @@ begin
 
 end;
 
-procedure DrawPngTile(PNGIndex: TPNGIndex; FrameNum: integer; RectArea: PChar; scr: PSDL_Surface; px, py: integer); overload;
+procedure DrawPngTile(PNGIndex: TPNGIndex; FrameNum: integer; RectArea: PChar; scr: PSDL_Surface;
+  px, py: integer); overload;
 begin
   DrawPngTile(PNGIndex, FrameNum, RectArea, scr, px, py, 0, 0, 0, 0);
 end;
 
-procedure DrawPngTile(PNGIndex: TPNGIndex; FrameNum: integer; RectArea: PChar; scr: PSDL_Surface; px, py: integer; shadow, alpha: integer; MixColor: Uint32; MixAlpha: integer); overload;
+procedure DrawPngTile(PNGIndex: TPNGIndex; FrameNum: integer; RectArea: PChar; scr: PSDL_Surface;
+  px, py: integer; shadow, alpha: integer; MixColor: Uint32; MixAlpha: integer); overload;
 begin
   DrawPngTile(PNGIndex, FrameNum, RectArea, scr, px, py, shadow, alpha, MixColor, MixAlpha, 0, nil, 0, 0, 0, 0, 0);
 
 end;
 
-procedure DrawPngTile(PNGIndex: TPNGIndex; FrameNum: integer; RectArea: PChar; scr: PSDL_Surface; px, py: integer; shadow, alpha: integer; MixColor: Uint32; MixAlpha: integer;
-  depth: integer; BlockImgR: pchar; width, height, size, leftupx, leftupy: integer); overload;
+procedure DrawPngTile(PNGIndex: TPNGIndex; FrameNum: integer; RectArea: PChar; scr: PSDL_Surface;
+  px, py: integer; shadow, alpha: integer; MixColor: Uint32; MixAlpha: integer; depth: integer;
+  BlockImgR: PChar; Width, Height, size, leftupx, leftupy: integer); overload;
 var
   dest, area: TSDL_Rect;
   tempscr, tempscrfront, tempscrback, CurSurface: PSDL_Surface;
@@ -1583,7 +1582,7 @@ begin
     if (CurPointer <> nil) and (Loaded = 1) and (Frame > 0) then
     begin
       if frame > 1 then
-        inc(CurPointer, FrameNum mod Frame);
+        Inc(CurPointer, FrameNum mod Frame);
       CurSurface := CurPointer^;
       if CurSurface <> nil then
       begin
@@ -1606,8 +1605,8 @@ begin
         dest.y := py - y + 1;
         dest.w := CurSurface.w;
         dest.h := CurSurface.h;
-        if (dest.x + CurSurface.w >= x1) and (dest.y + CurSurface.h >= y1)
-          and (dest.x < x2) and (dest.y < y2) then
+        if (dest.x + CurSurface.w >= x1) and (dest.y + CurSurface.h >= y1) and
+          (dest.x < x2) and (dest.y < y2) then
         begin
           if shadow > 0 then
           begin
@@ -1682,7 +1681,7 @@ begin
               begin
                 for i2 := 0 to tempscr.h - 1 do
                 begin
-                  pixdepth := pint(BlockImgR + ((dest.x + leftupx + i1) * height + dest.y + leftupy + i2) * size)^;
+                  pixdepth := pint(BlockImgR + ((dest.x + leftupx + i1) * Height + dest.y + leftupy + i2) * size)^;
                   pixel := getpixel(tempscr, i1, i2);
                   AlphaValue := pixel and Mask;
                   if AlphaValue > 0 then
@@ -1706,7 +1705,8 @@ begin
   end;
 end;
 
-procedure SetPngTileBlock(PNGIndex: TPNGIndex; px, py, depth: integer; BlockImageW: pchar; width, height, size: integer);
+procedure SetPngTileBlock(PNGIndex: TPNGIndex; px, py, depth: integer; BlockImageW: PChar;
+  Width, Height, size: integer);
 var
   i, i1, i2, x1, y1: integer;
   CurSurface: PSDL_Surface;
@@ -1728,10 +1728,10 @@ begin
             //游戏中的遮挡实际上可由绘图顺序决定, 即绘图顺序靠后的应有最大遮挡值
             //绘图顺序比较的优先级为: x, y的最小值; 坐标差绝对值; y较小(或x较大)
             //保存遮挡需要一个数组, 但是如果利用Surface可能会更快
-            if ((getpixel(CurSurface, i1, i2) and CurSurface.format.AMask) <> 0)
-              and (x1 + i1 >= 0) and (x1 + i1 < width) and (y1 + i2 >= 0) and (y1 + i2 < height) then
+            if ((getpixel(CurSurface, i1, i2) and CurSurface.format.AMask) <> 0) and
+              (x1 + i1 >= 0) and (x1 + i1 < Width) and (y1 + i2 >= 0) and (y1 + i2 < Height) then
             begin
-              pint(BlockImageW + ((x1 + i1) * height + y1 + i2) * size)^ := depth;
+              pint(BlockImageW + ((x1 + i1) * Height + y1 + i2) * size)^ := depth;
             end;
           end;
         end;
@@ -1885,21 +1885,22 @@ procedure CheckBasicEvent;
 var
   i: integer;
 begin
-  case event.type_ of
-    SDL_QUITEV:
-      QuitConfirm;
-    SDL_VIDEORESIZE:
-      ResizeWindow(event.resize.w, event.resize.h);
-    SDL_KEYUP:
-      if (where = 2) and (event.key.keysym.sym = sdlk_Escape) then
-      begin
-        for i := 0 to BroleAmount - 1 do
+  if not (LoadingScence) then
+    case event.type_ of
+      SDL_QUITEV:
+        QuitConfirm;
+      SDL_VIDEORESIZE:
+        ResizeWindow(event.resize.w, event.resize.h);
+      SDL_KEYUP:
+        if (where = 2) and (event.key.keysym.sym = sdlk_Escape) then
         begin
-          if Brole[i].Team = 0 then
-            Brole[i].Auto := 0;
+          for i := 0 to BroleAmount - 1 do
+          begin
+            if Brole[i].Team = 0 then
+              Brole[i].Auto := 0;
+          end;
         end;
-      end;
-  end;
+    end;
 
 end;
 
