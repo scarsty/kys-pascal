@@ -3,6 +3,7 @@ unit kys_draw;
 //{$mode delphi}
 
 interface
+
 uses
   SysUtils,
 {$IFDEF fpc}
@@ -19,7 +20,9 @@ uses
 
 //画单个图片的子程
 procedure DrawTitlePic(imgnum, px, py: integer);
-procedure DrawMPic(num, px, py: integer);
+procedure DrawMPic(num, px, py: integer; Framenum: integer = -1); overload;
+procedure DrawMPic(num, px, py, shadow, alpha: integer; mixColor: Uint32; mixAlpha: integer;
+  Framenum: integer = -1); overload;
 procedure DrawSPic(num, px, py: integer); overload;
 procedure DrawSPic(num, px, py, x, y, w, h: integer); overload;
 procedure DrawSPic(num, px, py, shadow, alpha, depth: integer; mixColor: Uint32; mixAlpha: integer); overload;
@@ -64,7 +67,8 @@ procedure LoadBFieldPart2(x, y, alpha: integer);
 procedure DrawBFieldWithCursor(step: integer);
 procedure DrawBFieldWithEft(Epicnum: integer); overload;
 procedure DrawBFieldWithEft(Epicnum, beginpic, endpic, bnum: integer; MixColor: Uint32); overload;
-procedure DrawBFieldWithEft(Epicnum, beginpic, endpic, curlevel, bnum, forteam, flash: integer; MixColor: Uint32); overload;
+procedure DrawBFieldWithEft(Epicnum, beginpic, endpic, curlevel, bnum, forteam, flash: integer;
+  MixColor: Uint32); overload;
 procedure DrawBFieldWithAction(bnum, Apicnum: integer);
 
 procedure DrawClouds;
@@ -99,9 +103,19 @@ end;
 
 //显示主地图贴图
 
-procedure DrawMPic(num, px, py: integer);
+//显示主地图贴图
+
+procedure DrawMPic(num, px, py: integer; Framenum: integer = -1); overload;
+begin
+  DrawMPic(num, px, py, 0, 0, 0, 0, Framenum);
+end;
+
+//显示主地图贴图
+
+procedure DrawMPic(num, px, py, shadow, alpha: integer; mixColor: Uint32; mixAlpha: integer;
+  Framenum: integer = -1); overload;
 var
-  NeedGRP, Framenum: integer;
+  NeedGRP: integer;
 begin
   if (num >= 0) and (num < MPicAmount) then
   begin
@@ -110,19 +124,22 @@ begin
     begin
       if MPNGIndex[num].UseGRP = 0 then
       begin
-        Framenum := sdl_getticks div 200 + random(3);
-        if (num = 1377) or (num = 1388)
-          or (num = 1404) or (num = 1417) then
+        if Framenum = -1 then
+          Framenum := sdl_getticks div 200 + random(3);
+        if (num = 1377) or (num = 1388) or (num = 1404) or (num = 1417) then
           Framenum := sdl_getticks div 200;
         //瀑布场景的闪烁需要
-        DrawPNGTile(MPNGIndex[num], Framenum, nil, screen, px, py)
+        //DrawPNGTile(MPNGIndex[num], Framenum, nil, screen, px, py, shadow)
+        DrawPngTile(MPNGIndex[num], Framenum, nil, screen, px, py, shadow, alpha, mixColor, mixAlpha,
+          0, nil, 0, 0, 0, 0, 0);
       end
       else
         NeedGRP := 1;
     end;
     if (PNG_Tile = 0) or (NeedGRP = 1) then
     begin
-      DrawRLE8Pic(@ACol[0], num, px, py, @Midx[0], @Mpic[0], nil, nil, 0, 0, 0, 0);
+      DrawRLE8Pic(@ACol[0], num, px, py, @Midx[0], @Mpic[0], nil, nil, 0, 0, 0, shadow, alpha,
+        nil, nil, 0, 0, 0, 4096, mixColor, mixAlpha);
     end;
   end;
 end;
@@ -438,17 +455,17 @@ procedure DrawFPic(num, px, py, index, shadow, alpha, depth: integer; mixColor: 
 begin
   case PNG_TILE of
     1, 2:
-      begin
-        if (index >= 0) and (index < BRoleAmount) then
-          if (num >= Low(FPNGIndex[index])) and (num <= High(FPNGIndex[index])) then
-            DrawPngTile(FPNGIndex[index][num], 0, nil, screen, px, py, shadow, alpha, mixColor, mixAlpha,
-              depth, @BlockImg[0], 2304, 1402, sizeof(BlockImg[0, 0]), BlockScreen.x, BlockScreen.y);
-      end;
+    begin
+      if (index >= 0) and (index < BRoleAmount) then
+        if (num >= Low(FPNGIndex[index])) and (num <= High(FPNGIndex[index])) then
+          DrawPngTile(FPNGIndex[index][num], 0, nil, screen, px, py, shadow, alpha, mixColor, mixAlpha,
+            depth, @BlockImg[0], 2304, 1402, sizeof(BlockImg[0, 0]), BlockScreen.x, BlockScreen.y);
+    end;
     0:
-      begin
-        DrawRLE8Pic(@ACol[0], num, px, py, @FIdx[0], @FPic[0], nil, nil, 0, 0, 0, shadow, alpha,
-          @BlockImg[0], @BlockScreen, 2304, 1402, sizeof(BlockImg[0, 0]), depth, mixColor, mixAlpha);
-      end;
+    begin
+      DrawRLE8Pic(@ACol[0], num, px, py, @FIdx[0], @FPic[0], nil, nil, 0, 0, 0, shadow,
+        alpha, @BlockImg[0], @BlockScreen, 2304, 1402, sizeof(BlockImg[0, 0]), depth, mixColor, mixAlpha);
+    end;
   end;
 end;
 
@@ -476,15 +493,15 @@ begin
     1: DrawScence;
     2: DrawWholeBField;
     3:
-      begin
-        SDL_FillRect(screen, nil, 0);
-        display_img(PChar(AppPath + 'resource/open.png'), OpenPicPosition.x, OpenPicPosition.y);
-      end;
+    begin
+      SDL_FillRect(screen, nil, 0);
+      display_img(PChar(AppPath + 'resource/open.png'), OpenPicPosition.x, OpenPicPosition.y);
+    end;
     4:
-      begin
-        SDL_FillRect(screen, nil, 0);
-        display_img(PChar(AppPath + 'resource/dead.png'), OpenPicPosition.x, OpenPicPosition.y);
-      end;
+    begin
+      SDL_FillRect(screen, nil, 0);
+      display_img(PChar(AppPath + 'resource/dead.png'), OpenPicPosition.x, OpenPicPosition.y);
+    end;
   end;
   if WriteFresh = 1 then
     SDL_BlitSurface(screen, nil, freshscreen, nil);
@@ -817,8 +834,8 @@ begin
             begin
               if MPNGIndex[num].CurPointer^ <> nil then
               begin
-                width := MPNGIndex[num].CurPointer^.w;
-                height := MPNGIndex[num].CurPointer^.h;
+                Width := MPNGIndex[num].CurPointer^.w;
+                Height := MPNGIndex[num].CurPointer^.h;
                 yoffset := MPNGIndex[num].y;
               end;
             end;
@@ -963,7 +980,7 @@ var
   dest: TSDL_Rect;
 begin
   SDL_LockMutex(mutex);
-  LoadingScence := true;
+  LoadingScence := True;
   if Visible = 0 then
   begin
     x1 := 0;
@@ -1026,7 +1043,7 @@ begin
     dest.h := h;
     SDL_BlitSurface(ImgScenceBack, @dest, ImgScence, @dest);
   end;
-  LoadingScence := false;
+  LoadingScence := False;
   SDL_UnLockMutex(mutex);
 end;
 
@@ -1075,7 +1092,7 @@ begin
     end;
   end;
   //if (i1 = Sx) and (i2 = Sy) then
-    //InitialSPic(2501 + SFace * 7 + SStep, x, y - SData[CurScence, 4, Sx, Sy], x1, y1, w, h);
+  //InitialSPic(2501 + SFace * 7 + SStep, x, y - SData[CurScence, 4, Sx, Sy], x1, y1, w, h);
 end;
 
 //更改场景映像, 用于动画, 场景内动态效果
@@ -1484,7 +1501,8 @@ begin
 
 end;
 
-procedure DrawBFieldWithEft(Epicnum, beginpic, endpic, curlevel, bnum, forteam, flash: integer; MixColor: Uint32); overload;
+procedure DrawBFieldWithEft(Epicnum, beginpic, endpic, curlevel, bnum, forteam, flash: integer;
+  MixColor: Uint32); overload;
 var
   k, i1, i2: integer;
   pos: TPosition;

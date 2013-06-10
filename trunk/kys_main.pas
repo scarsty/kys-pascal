@@ -113,7 +113,7 @@ procedure ShowCommonMenu(x, y, w, max, menu: integer; menustring: array of WideS
 procedure ShowCommonMenu(x, y, w, max, menu: integer; menustring, menuengstring: array of WideString); overload;
 function CommonScrollMenu(x, y, w, max, maxshow: integer; menustring: array of WideString): integer; overload;
 function CommonScrollMenu(x, y, w, max, maxshow: integer; menustring, menuengstring: array of WideString): integer;
-overload;
+  overload;
 procedure ShowCommonScrollMenu(x, y, w, max, maxshow, menu, menutop: integer;
   menustring, menuengstring: array of WideString);
 function CommonMenu2(x, y, w: integer; menustring: array of WideString): integer;
@@ -155,6 +155,8 @@ procedure CloudCreate(num: integer);
 procedure CloudCreateOnSide(num: integer);
 
 function IsCave(snum: integer): boolean;
+
+function Round(x: real): integer;
 
 var
 
@@ -352,7 +354,7 @@ var
   AskingQuit: boolean = False; //是否正在提问退出
   begin_time: integer; //游戏开始时间, 单位为分钟, 0~1439
   now_time: real;
-  LoadingScence: boolean = false; //是否正在载入场景
+  LoadingScence: boolean = False; //是否正在载入场景
 
   //游戏开场时的设置
   TitlePosition: TPosition;
@@ -389,6 +391,7 @@ var
   ItemList: array[0..500] of smallint; //物品显示使用的列表
 
   //RegionRect: TSDL_Rect; //全局重画范围, 无用
+  RMask, GMask, BMask, AMask: uint32; //色值蒙版, 注意透明蒙版在创建RGB表面时需设为0
 
 implementation
 
@@ -438,7 +441,8 @@ begin
 
   SDL_WM_SetIcon(IMG_Load(PChar(AppPath + 'resource/icon.png')), 0);
 
-  ScreenFlag := SDL_SWSURFACE or SDL_RESIZABLE {SDL_HWSURFACE or SDL_HWACCEL or SDL_ANYFORMAT or SDL_ASYNCBLIT or SDL_FULLSCREEN};
+  ScreenFlag := SDL_SWSURFACE or SDL_RESIZABLE
+  {SDL_HWSURFACE or SDL_HWACCEL or SDL_ANYFORMAT or SDL_ASYNCBLIT or SDL_FULLSCREEN};
   if GLHR = 1 then
   begin
     ScreenFlag := SDL_OPENGL or SDL_RESIZABLE;
@@ -453,15 +457,19 @@ begin
     ScreenFlag := ScreenFlag or SDL_HWSURFACE or SDL_HWACCEL;
 
   RealScreen := SDL_SetVideoMode(RESOLUTIONX, RESOLUTIONY, 32, ScreenFlag);
-
-  screen := SDL_CreateRGBSurface(ScreenFlag, CENTER_X * 2, CENTER_Y * 2, 32, 0, 0, 0, 0);
-  prescreen := SDL_ConvertSurface(screen, screen.format, screen.flags);
+  RMask := RealScreen.format.RMask;
+  GMask := RealScreen.format.GMask;
+  BMask := RealScreen.format.BMask;
+  AMask := $FFFFFFFF - RMask - GMask - BMask;
+  screen := SDL_CreateRGBSurface(ScreenFlag, CENTER_X * 2, CENTER_Y * 2, 32, RMask, GMask, BMask, 0);
+  prescreen := SDL_DisplayFormat(screen);
   freshscreen := SDL_ConvertSurface(screen, screen.format, screen.flags);
 
-  ImgScence := SDL_CreateRGBSurface(screen.flags, 2304, 1402, 32, 0, 0, 0, 0);
-  ImgScenceBack := SDL_ConvertSurface(ImgScence, screen.format, screen.flags);
-  ImgBField := SDL_ConvertSurface(ImgScence, screen.format, screen.flags);
-  ImgBBuild := SDL_ConvertSurface(ImgScence, screen.format, screen.flags);
+  ImgScence := SDL_CreateRGBSurface(screen.flags, 2304, 1402, 32, RMask, GMask, BMask, 0);
+  //ImgScence := SDL_DisplayFormat(ImgScence);
+  ImgScenceBack := SDL_DisplayFormat(ImgScence);
+  ImgBField := SDL_DisplayFormat(ImgScence);
+  ImgBBuild := SDL_DisplayFormat(ImgScence);
   SDL_SetColorKey(ImgScenceBack, SDL_SRCCOLORKEY, 1);
   SDL_SetColorKey(ImgBBuild, SDL_SRCCOLORKEY, 1);
 
@@ -535,75 +543,75 @@ begin
 
   case MODVersion of
     0:
-      begin
+    begin
 
-      end;
+    end;
     11:
-      begin
-        TitleString := 'All Heros in Kam Yung''s Stories - A Pig';
-        TitlePosition.y := 270;
-        OpenPicPosition.y := OpenPicPosition.y + 20;
-        CENTER_Y := 240;
-      end;
+    begin
+      TitleString := 'All Heros in Kam Yung''s Stories - A Pig';
+      TitlePosition.y := 270;
+      OpenPicPosition.y := OpenPicPosition.y + 20;
+      CENTER_Y := 240;
+    end;
     12:
-      begin
-        TitleString := 'All Heros in Kam Yung''s Stories - We Are Dragons';
-        Setlength(Asound, 37);
-        TitlePosition.x := 100;
-        TitlePosition.y := 270;
-      end;
+    begin
+      TitleString := 'All Heros in Kam Yung''s Stories - We Are Dragons';
+      Setlength(Asound, 37);
+      TitlePosition.x := 100;
+      TitlePosition.y := 270;
+    end;
     21:
-      begin
-        TitleString := 'All Heros in Kam Yung''s Stories - Books';
-        TitlePosition.x := 275;
-        TitlePosition.y := 325;
-        Setlength(Esound, 59);
-      end;
+    begin
+      TitleString := 'All Heros in Kam Yung''s Stories - Books';
+      TitlePosition.x := 275;
+      TitlePosition.y := 325;
+      Setlength(Esound, 59);
+    end;
     22:
-      begin
-        TitleString := 'Why I have to go after a pineapple in the period of Three Kingdoms??';
-        Max_Item_Amount := 456;
-        Setlength(Music, 38);
-        StartMusic := 37;
-        CENTER_Y := 240;
-      end;
+    begin
+      TitleString := 'Why I have to go after a pineapple in the period of Three Kingdoms??';
+      Max_Item_Amount := 456;
+      Setlength(Music, 38);
+      StartMusic := 37;
+      CENTER_Y := 240;
+    end;
     23:
-      begin
-        TitleString := 'All Heros in Kam Yung''s Stories - Four Dreams';
-        //TitlePosition.x := 275;
-        TitlePosition.y := 165;
-        Setlength(Music, 25);
-        Setlength(Esound, 84);
-        StartMusic := 24;
-        CENTER_Y := 240;
-      end;
+    begin
+      TitleString := 'All Heros in Kam Yung''s Stories - Four Dreams';
+      //TitlePosition.x := 275;
+      TitlePosition.y := 165;
+      Setlength(Music, 25);
+      Setlength(Esound, 84);
+      StartMusic := 24;
+      CENTER_Y := 240;
+    end;
     31:
-      begin
-        TitleString := 'All Heros in Kam Yung''s Stories - Wider Rivers and Deeper Lakes';
-        Setlength(Esound, 99);
-        Setlength(Asound, 71);
-      end;
+    begin
+      TitleString := 'All Heros in Kam Yung''s Stories - Wider Rivers and Deeper Lakes';
+      Setlength(Esound, 99);
+      Setlength(Asound, 71);
+    end;
     41:
-      begin
-        TitleString := 'All Heros in Kam Yung''s Stories - Here is PTT';
-        TitlePosition.y := 255;
-        OpenPicPosition.y := OpenPicPosition.y + 20;
-        CENTER_Y := 240;
-      end;
+    begin
+      TitleString := 'All Heros in Kam Yung''s Stories - Here is PTT';
+      TitlePosition.y := 255;
+      OpenPicPosition.y := OpenPicPosition.y + 20;
+      CENTER_Y := 240;
+    end;
     51:
-      begin
-        TitleString := 'All Heros in Kam Yung''s Stories - An Prime Minister of Tang';
-        //CHINESE_FONT_SIZE:= 16;
-        //ENGLISH_FONT_SIZE:= 15;
-      end;
+    begin
+      TitleString := 'All Heros in Kam Yung''s Stories - An Prime Minister of Tang';
+      //CHINESE_FONT_SIZE:= 16;
+      //ENGLISH_FONT_SIZE:= 15;
+    end;
     62:
-      begin
-        TitleString := 'All Heros in Kam Yung''s Stories - All for You';
-        Max_Item_Amount := 968;
-        CENTER_Y := 240;
-        Setlength(Music, 195);
-        BEGIN_WALKPIC := 5697;
-      end;
+    begin
+      TitleString := 'All Heros in Kam Yung''s Stories - All for You';
+      Max_Item_Amount := 968;
+      CENTER_Y := 240;
+      Setlength(Music, 195);
+      BEGIN_WALKPIC := 5697;
+    end;
   end;
 
 {$IFDEF fpc}
@@ -688,8 +696,8 @@ begin
     PNG_TILE := Kys_ini.ReadInteger('system', 'PNG_TILE', 0);
     TRY_FIND_GRP := Kys_ini.ReadInteger('system', 'TRY_FIND_GRP', 0);
 
-    if (not fileexists(AppPath + 'resource/mmap/index.ka'))
-      and (not fileexists(AppPath + 'resource/mmap.imz')) then
+    if (not fileexists(AppPath + 'resource/mmap/index.ka')) and
+      (not fileexists(AppPath + 'resource/mmap.imz')) then
       PNG_TILE := 0;
 
     for i := 43 to 58 do
@@ -780,61 +788,61 @@ begin
     CheckBasicEvent;
     case event.type_ of //键盘事件
       SDL_KEYUP:
+      begin
+        if ((event.key.keysym.sym = sdlk_return) or (event.key.keysym.sym = sdlk_space)) then
         begin
-          if ((event.key.keysym.sym = sdlk_return) or (event.key.keysym.sym = sdlk_space)) then
-          begin
-            Selected := True;
-          end;
-          //按下方向键上
-          if event.key.keysym.sym = sdlk_up then
-          begin
-            menu := menu - 1;
-            if menu < 0 then
-              menu := 2;
-            drawtitlepic(0, x, y);
-            drawtitlepic(menu + 1, x, y + menu * 20);
-            SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-          end;
-          //按下方向键下
-          if event.key.keysym.sym = sdlk_down then
-          begin
-            menu := menu + 1;
-            if menu > 2 then
-              menu := 0;
-            drawtitlepic(0, x, y);
-            drawtitlepic(menu + 1, x, y + menu * 20);
-            SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-          end;
+          Selected := True;
         end;
+        //按下方向键上
+        if event.key.keysym.sym = sdlk_up then
+        begin
+          menu := menu - 1;
+          if menu < 0 then
+            menu := 2;
+          drawtitlepic(0, x, y);
+          drawtitlepic(menu + 1, x, y + menu * 20);
+          SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+        end;
+        //按下方向键下
+        if event.key.keysym.sym = sdlk_down then
+        begin
+          menu := menu + 1;
+          if menu > 2 then
+            menu := 0;
+          drawtitlepic(0, x, y);
+          drawtitlepic(menu + 1, x, y + menu * 20);
+          SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+        end;
+      end;
       //按下鼠标(UP表示抬起按键才执行)
       SDL_MOUSEBUTTONUP:
+      begin
+        if (event.button.button = sdl_button_left) and (round(event.button.x / (RealScreen.w / screen.w)) > x) and
+          (round(event.button.x / (RealScreen.w / screen.w)) < x + 80) and
+          (round(event.button.y / (RealScreen.h / screen.h)) > y) and
+          (round(event.button.y / (RealScreen.h / screen.h)) < y + 60) then
         begin
-          if (event.button.button = sdl_button_left) and (round(event.button.x / (RealScreen.w / screen.w)) > x) and
-            (round(event.button.x / (RealScreen.w / screen.w)) < x + 80) and
-            (round(event.button.y / (RealScreen.h / screen.h)) > y) and
-            (round(event.button.y / (RealScreen.h / screen.h)) < y + 60) then
-          begin
-            Selected := True;
-          end;
+          Selected := True;
         end;
+      end;
       //鼠标移动
       SDL_MOUSEMOTION:
+      begin
+        if (round(event.button.x / (RealScreen.w / screen.w)) > x) and
+          (round(event.button.x / (RealScreen.w / screen.w)) < x + 80) and
+          (round(event.button.y / (RealScreen.h / screen.h)) > y) and
+          (round(event.button.y / (RealScreen.h / screen.h)) < y + 60) then
         begin
-          if (round(event.button.x / (RealScreen.w / screen.w)) > x) and
-            (round(event.button.x / (RealScreen.w / screen.w)) < x + 80) and
-            (round(event.button.y / (RealScreen.h / screen.h)) > y) and
-            (round(event.button.y / (RealScreen.h / screen.h)) < y + 60) then
+          menup := menu;
+          menu := (round(event.button.y / (RealScreen.h / screen.h)) - y) div 20;
+          if menu <> menup then
           begin
-            menup := menu;
-            menu := (round(event.button.y / (RealScreen.h / screen.h)) - y) div 20;
-            if menu <> menup then
-            begin
-              drawtitlepic(0, x, y);
-              drawtitlepic(menu + 1, x, y + menu * 20);
-              SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-            end;
+            drawtitlepic(0, x, y);
+            drawtitlepic(menu + 1, x, y + menu * 20);
+            SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
           end;
         end;
+      end;
     end;
     if Selected then
     begin
@@ -842,32 +850,32 @@ begin
         2:
           break;
         1:
+        begin
+          if menuloadAtBeginning >= 0 then
           begin
-            if menuloadAtBeginning >= 0 then
+            //redraw;
+            //SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+            CurEvent := -1; //when CurEvent=-1, Draw scence by Sx, Sy. Or by Cx, Cy.
+            if where = 1 then
             begin
-              //redraw;
-              //SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-              CurEvent := -1; //when CurEvent=-1, Draw scence by Sx, Sy. Or by Cx, Cy.
-              if where = 1 then
-              begin
-                Inscence(0);
-              end;
-              Walk;
-              //menu := -1;
+              Inscence(0);
             end;
+            Walk;
+            //menu := -1;
           end;
+        end;
         0:
+        begin
+          Selected := InitialRole;
+          if Selected then
           begin
-            Selected := InitialRole;
-            if Selected then
-            begin
-              CurScence := BEGIN_SCENCE;
-              CurEvent := -1;
-              Inscence(1);
-              Walk;
-              //menu := -1;
-            end;
+            CurScence := BEGIN_SCENCE;
+            CurEvent := -1;
+            Inscence(1);
+            Walk;
+            //menu := -1;
           end;
+        end;
       end;
       redraw;
       drawtitlepic(0, x, y);
@@ -1788,8 +1796,9 @@ begin
   ScenceAmount := (MagicOffset - ScenceOffset) div 52;
   for i := 0 to ScenceAmount - 1 do
   begin
-    if (RScence[i].MainEntranceX1 >= 0) and (RScence[i].MainEntranceX1 < 480) and (RScence[i].MainEntranceY1 >= 0) and
-      (RScence[i].MainEntranceY1 < 480) and (RScence[i].MainEntranceX2 >= 0) and (RScence[i].MainEntranceX2 < 480) and
+    if (RScence[i].MainEntranceX1 >= 0) and (RScence[i].MainEntranceX1 < 480) and
+      (RScence[i].MainEntranceY1 >= 0) and (RScence[i].MainEntranceY1 < 480) and
+      (RScence[i].MainEntranceX2 >= 0) and (RScence[i].MainEntranceX2 < 480) and
       (RScence[i].MainEntranceY2 >= 0) and (RScence[i].MainEntranceY2 < 480) then
     begin
       Entrance[RScence[i].MainEntranceX1, RScence[i].MainEntranceY1] := i;
@@ -2009,50 +2018,49 @@ begin
     case event.type_ of
       //方向键使用压下按键事件, 按下方向设置状态为行走
       SDL_KEYDOWN:
+      begin
+        if (event.key.keysym.sym = sdlk_left) then
         begin
-          if (event.key.keysym.sym = sdlk_left) then
-          begin
-            MFace := 2;
-            walking := 1;
-          end;
-          if (event.key.keysym.sym = sdlk_right) then
-          begin
-            MFace := 1;
-            walking := 1;
-          end;
-          if (event.key.keysym.sym = sdlk_up) then
-          begin
-            MFace := 0;
-            walking := 1;
-          end;
-          if (event.key.keysym.sym = sdlk_down) then
-          begin
-            MFace := 3;
-            walking := 1;
-          end;
+          MFace := 2;
+          walking := 1;
         end;
+        if (event.key.keysym.sym = sdlk_right) then
+        begin
+          MFace := 1;
+          walking := 1;
+        end;
+        if (event.key.keysym.sym = sdlk_up) then
+        begin
+          MFace := 0;
+          walking := 1;
+        end;
+        if (event.key.keysym.sym = sdlk_down) then
+        begin
+          MFace := 3;
+          walking := 1;
+        end;
+      end;
       //功能键(esc)使用松开按键事件
       SDL_KEYUP:
+      begin
+        keystate := PChar(SDL_GetKeyState(nil));
+        if (puint8(keystate + sdlk_left)^ = 0) and (puint8(keystate + sdlk_right)^ = 0) and
+          (puint8(keystate + sdlk_up)^ = 0) and (puint8(keystate + sdlk_down)^ = 0) then
         begin
-          keystate := PChar(SDL_GetKeyState(nil));
-          if (puint8(keystate + sdlk_left)^ = 0) and (puint8(keystate + sdlk_right)^ = 0) and
-            (puint8(keystate + sdlk_up)^ = 0) and
-            (puint8(keystate + sdlk_down)^ = 0) then
-          begin
-            walking := 0;
-            speed := 0;
-          end;
-          keystate := nil;
+          walking := 0;
+          speed := 0;
+        end;
+        keystate := nil;
           {if event.key.keysym.sym in [sdlk_left, sdlk_right, sdlk_up, sdlk_down] then
           begin
             walking := 0;
           end;}
-          if (event.key.keysym.sym = sdlk_escape) then
-          begin
-            //event.key.keysym.sym:=0;
-            MenuEsc;
-            //walking := 0;
-          end;
+        if (event.key.keysym.sym = sdlk_escape) then
+        begin
+          //event.key.keysym.sym:=0;
+          MenuEsc;
+          //walking := 0;
+        end;
           {if (event.key.keysym.sym = sdlk_return) and (event.key.keysym.modifier = kmod_lalt) then
           begin
             if fullscreen = 1 then
@@ -2061,50 +2069,50 @@ begin
               screen := SDL_SetVideoMode(CENTER_X * 2, CENTER_Y * 2, 32, SDL_FULLSCREEN);
             fullscreen := 1 - fullscreen;
           end;}
-        end;
+      end;
       Sdl_mousemotion:
-        begin
-          if (event.button.x < CENTER_x) and (event.button.y < CENTER_y) then
-            Mface := 2;
-          if (event.button.x > CENTER_x) and (event.button.y < CENTER_y) then
-            Mface := 0;
-          if (event.button.x < CENTER_x) and (event.button.y > CENTER_y) then
-            Mface := 3;
-          if (event.button.x > CENTER_x) and (event.button.y > CENTER_y) then
-            Mface := 1;
-        end;
+      begin
+        if (event.button.x < CENTER_x) and (event.button.y < CENTER_y) then
+          Mface := 2;
+        if (event.button.x > CENTER_x) and (event.button.y < CENTER_y) then
+          Mface := 0;
+        if (event.button.x < CENTER_x) and (event.button.y > CENTER_y) then
+          Mface := 3;
+        if (event.button.x > CENTER_x) and (event.button.y > CENTER_y) then
+          Mface := 1;
+      end;
       Sdl_mousebuttonup:
+      begin
+        if event.button.button = sdl_button_right then
         begin
-          if event.button.button = sdl_button_right then
+          event.button.button := 0;
+          //showmessage(inttostr(walking));
+          menuesc;
+          nowstep := -1;
+          walking := 0;
+        end;
+        if event.button.button = sdl_button_left then
+        begin
+          walking := 2;
+          Axp := Mx + (-round(event.button.x / (RealScreen.w / screen.w)) + CENTER_x + 2 *
+            round(event.button.y / (RealScreen.h / screen.h)) - 2 * CENTER_y + 18) div 36;
+          Ayp := My + (round(event.button.x / (RealScreen.w / screen.w)) - CENTER_x + 2 *
+            round(event.button.y / (RealScreen.h / screen.h)) - 2 * CENTER_y + 18) div 36;
+          if (ayp >= 0) and (ayp <= 479) and (axp >= 0) and (axp <= 479) {and canWalk(axp, ayp)} then
           begin
-            event.button.button := 0;
-            //showmessage(inttostr(walking));
-            menuesc;
-            nowstep := -1;
+            for i := 0 to 479 do
+              for i1 := 0 to 479 do
+                Fway[i, i1] := -1;
+            findway(Mx, My);
+            Moveman(Mx, My, Axp, Ayp);
+            nowstep := Fway[Axp, Ayp] - 1;
+          end
+          else
+          begin
             walking := 0;
           end;
-          if event.button.button = sdl_button_left then
-          begin
-            walking := 2;
-            Axp := Mx + (-round(event.button.x / (RealScreen.w / screen.w)) + CENTER_x + 2 *
-              round(event.button.y / (RealScreen.h / screen.h)) - 2 * CENTER_y + 18) div 36;
-            Ayp := My + (round(event.button.x / (RealScreen.w / screen.w)) - CENTER_x + 2 * round(event.button.y /
-              (RealScreen.h / screen.h)) - 2 * CENTER_y + 18) div 36;
-            if (ayp >= 0) and (ayp <= 479) and (axp >= 0) and (axp <= 479) {and canWalk(axp, ayp)} then
-            begin
-              for i := 0 to 479 do
-                for i1 := 0 to 479 do
-                  Fway[i, i1] := -1;
-              findway(Mx, My);
-              Moveman(Mx, My, Axp, Ayp);
-              nowstep := Fway[Axp, Ayp] - 1;
-            end
-            else
-            begin
-              walking := 0;
-            end;
-          end;
         end;
+      end;
     end;
 
     //如果主角正在行走, 则移动主角
@@ -2114,59 +2122,59 @@ begin
       stillcount := 0;
       case walking of
         1:
-          begin
-            speed := speed + 1;
-            Mx1 := Mx;
-            My1 := My;
-            case mface of
-              0: Mx1 := Mx1 - 1;
-              1: My1 := My1 + 1;
-              2: My1 := My1 - 1;
-              3: Mx1 := Mx1 + 1;
-            end;
-            Mstep := Mstep + 1;
-            if Mstep >= 7 then
-              Mstep := 1;
-            if canwalk(Mx1, My1) = True then
-            begin
-              Mx := Mx1;
-              My := My1;
-            end;
-            if (speed <= 1) then
-              walking := 0;
+        begin
+          speed := speed + 1;
+          Mx1 := Mx;
+          My1 := My;
+          case mface of
+            0: Mx1 := Mx1 - 1;
+            1: My1 := My1 + 1;
+            2: My1 := My1 - 1;
+            3: Mx1 := Mx1 + 1;
           end;
+          Mstep := Mstep + 1;
+          if Mstep >= 7 then
+            Mstep := 1;
+          if canwalk(Mx1, My1) = True then
+          begin
+            Mx := Mx1;
+            My := My1;
+          end;
+          if (speed <= 1) then
+            walking := 0;
+        end;
         2:
+        begin
+          if nowstep < 0 then
+            walking := 0
+          else
           begin
-            if nowstep < 0 then
-              walking := 0
+            still := 0;
+            if sign(linex[nowstep] - Mx) < 0 then
+              MFace := 0
+            else if sign(linex[nowstep] - Mx) > 0 then
+              MFace := 3
+            else if sign(liney[nowstep] - My) > 0 then
+              MFace := 1
             else
+              MFace := 2;
+
+            MStep := MStep + 1;
+
+            if MStep >= 7 then
+              MStep := 1;
+            if (abs(Mx - linex[nowstep]) + abs(My - liney[nowstep]) = 1) and
+              canwalk(linex[nowstep], liney[nowstep]) then
             begin
-              still := 0;
-              if sign(linex[nowstep] - Mx) < 0 then
-                MFace := 0
-              else if sign(linex[nowstep] - Mx) > 0 then
-                MFace := 3
-              else if sign(liney[nowstep] - My) > 0 then
-                MFace := 1
-              else
-                MFace := 2;
+              Mx := linex[nowstep];
+              My := liney[nowstep];
+            end
+            else
+              walking := 0;
 
-              MStep := MStep + 1;
-
-              if MStep >= 7 then
-                MStep := 1;
-              if (abs(Mx - linex[nowstep]) + abs(My - liney[nowstep]) = 1) and
-                canwalk(linex[nowstep], liney[nowstep]) then
-              begin
-                Mx := linex[nowstep];
-                My := liney[nowstep];
-              end
-              else
-                walking := 0;
-
-              Dec(nowstep);
-            end;
+            Dec(nowstep);
           end;
+        end;
       end;
 
       //每走一步均重画屏幕, 并检测是否处于某场景入口
@@ -2482,52 +2490,51 @@ begin
     CheckBasicEvent;
     case event.type_ of
       SDL_KEYUP:
+      begin
+        keystate := PChar(SDL_GetKeyState(nil));
+        if (puint8(keystate + sdlk_left)^ = 0) and (puint8(keystate + sdlk_right)^ = 0) and
+          (puint8(keystate + sdlk_up)^ = 0) and (puint8(keystate + sdlk_down)^ = 0) then
         begin
-          keystate := PChar(SDL_GetKeyState(nil));
-          if (puint8(keystate + sdlk_left)^ = 0) and (puint8(keystate + sdlk_right)^ = 0) and
-            (puint8(keystate + sdlk_up)^ = 0) and
-            (puint8(keystate + sdlk_down)^ = 0) then
-          begin
-            walking := 0;
-            speed := 0;
-          end;
-          keystate := nil;
-          if (event.key.keysym.sym = sdlk_escape) then
-          begin
-            MenuEsc;
-            walking := 0;
-            speed := 0;
-            //mousewalking := 0;
-          end;
-          //按下回车或空格, 检查面对方向是否有第1类事件
-          if (event.key.keysym.sym = sdlk_return) or (event.key.keysym.sym = sdlk_space) then
-          begin
-            CheckEvent1;
-          end;
+          walking := 0;
+          speed := 0;
         end;
+        keystate := nil;
+        if (event.key.keysym.sym = sdlk_escape) then
+        begin
+          MenuEsc;
+          walking := 0;
+          speed := 0;
+          //mousewalking := 0;
+        end;
+        //按下回车或空格, 检查面对方向是否有第1类事件
+        if (event.key.keysym.sym = sdlk_return) or (event.key.keysym.sym = sdlk_space) then
+        begin
+          CheckEvent1;
+        end;
+      end;
       SDL_KEYDOWN:
+      begin
+        if (event.key.keysym.sym = sdlk_left) then
         begin
-          if (event.key.keysym.sym = sdlk_left) then
-          begin
-            SFace := 2;
-            walking := 1;
-          end;
-          if (event.key.keysym.sym = sdlk_right) then
-          begin
-            SFace := 1;
-            walking := 1;
-          end;
-          if (event.key.keysym.sym = sdlk_up) then
-          begin
-            SFace := 0;
-            walking := 1;
-          end;
-          if (event.key.keysym.sym = sdlk_down) then
-          begin
-            SFace := 3;
-            walking := 1;
-          end;
+          SFace := 2;
+          walking := 1;
         end;
+        if (event.key.keysym.sym = sdlk_right) then
+        begin
+          SFace := 1;
+          walking := 1;
+        end;
+        if (event.key.keysym.sym = sdlk_up) then
+        begin
+          SFace := 0;
+          walking := 1;
+        end;
+        if (event.key.keysym.sym = sdlk_down) then
+        begin
+          SFace := 3;
+          walking := 1;
+        end;
+      end;
       {Sdl_mousebuttondown:
         begin
           if event.button.button = sdl_button_left then
@@ -2547,70 +2554,70 @@ begin
             CheckEvent1;
         end;}
       Sdl_mousemotion:
-        begin
-          if (event.button.x < CENTER_x) and (event.button.y < CENTER_y) then
-            Sface := 2;
-          if (event.button.x > CENTER_x) and (event.button.y < CENTER_y) then
-            Sface := 0;
-          if (event.button.x < CENTER_x) and (event.button.y > CENTER_y) then
-            Sface := 3;
-          if (event.button.x > CENTER_x) and (event.button.y > CENTER_y) then
-            Sface := 1;
-        end;
+      begin
+        if (event.button.x < CENTER_x) and (event.button.y < CENTER_y) then
+          Sface := 2;
+        if (event.button.x > CENTER_x) and (event.button.y < CENTER_y) then
+          Sface := 0;
+        if (event.button.x < CENTER_x) and (event.button.y > CENTER_y) then
+          Sface := 3;
+        if (event.button.x > CENTER_x) and (event.button.y > CENTER_y) then
+          Sface := 1;
+      end;
       Sdl_mousebuttonup:
+      begin
+        if event.button.button = sdl_button_right then
         begin
-          if event.button.button = sdl_button_right then
+          menuesc;
+          nowstep := 0;
+          walking := 0;
+          speed := 0;
+          if where = 0 then
           begin
-            menuesc;
-            nowstep := 0;
-            walking := 0;
-            speed := 0;
-            if where = 0 then
+            if RScence[CurScence].ExitMusic >= 0 then
             begin
-              if RScence[CurScence].ExitMusic >= 0 then
-              begin
-                stopmp3;
-                playmp3(RScence[CurScence].ExitMusic, -1);
-              end;
-              redraw;
-              SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-              exit;
+              stopmp3;
+              playmp3(RScence[CurScence].ExitMusic, -1);
             end;
+            redraw;
+            SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+            exit;
           end;
-          if event.button.button = sdl_button_middle then
+        end;
+        if event.button.button = sdl_button_middle then
+        begin
+          CheckEvent1;
+        end;
+        if event.button.button = sdl_button_left then
+        begin
+          if walking = 0 then
           begin
-            CheckEvent1;
-          end;
-          if event.button.button = sdl_button_left then
-          begin
-            if walking = 0 then
+            walking := 2;
+            Ayp := (-(round(event.button.x / (RealScreen.w / screen.w))) + CENTER_x + 2 *
+              ((round(event.button.y / (RealScreen.h / screen.h))) + Sdata[curScence, 4, sx, sy]) -
+              2 * CENTER_y + 18) div 36 + Sx;
+            Axp := ((round(event.button.x / (RealScreen.w / screen.w))) - CENTER_x + 2 *
+              ((round(event.button.y / (RealScreen.h / screen.h))) + Sdata[curScence, 4, sx, sy]) -
+              2 * CENTER_y + 18) div 36 + Sy;
+            if (ayp in [0..63]) and (axp in [0..63]) then
             begin
-              walking := 2;
-              Ayp := (-(round(event.button.x / (RealScreen.w / screen.w))) + CENTER_x + 2 *
-                ((round(event.button.y / (RealScreen.h / screen.h))) + Sdata[curScence, 4, sx, sy]) -
-                2 * CENTER_y + 18) div 36 + Sx;
-              Axp := ((round(event.button.x / (RealScreen.w / screen.w))) - CENTER_x + 2 *
-                ((round(event.button.y / (RealScreen.h / screen.h))) + Sdata[curScence, 4, sx, sy]) -
-                2 * CENTER_y + 18) div 36 + Sy;
-              if (ayp in [0..63]) and (axp in [0..63]) then
-              begin
-                for i := 0 to 63 do
-                  for i1 := 0 to 63 do
-                    Fway[i, i1] := -1;
-                findway(SY, SX);
-                Moveman(SY, sx, axp, ayp);
-                nowstep := Fway[axp, ayp] - 1;
-              end
-              else
-              begin
-                walking := 0;
-              end;
+              for i := 0 to 63 do
+                for i1 := 0 to 63 do
+                  Fway[i, i1] := -1;
+              findway(SY, SX);
+              Moveman(SY, sx, axp, ayp);
+              nowstep := Fway[axp, ayp] - 1;
             end
             else
+            begin
               walking := 0;
-            event.button.button := 0;
-          end;
+            end;
+          end
+          else
+            walking := 0;
+          event.button.button := 0;
         end;
+      end;
     end;
 
     //是否处于行走状态
@@ -2618,9 +2625,9 @@ begin
     begin
       case walking of
         1:
-          begin
-            speed := speed + 1;
-            stillcount := 0;
+        begin
+          speed := speed + 1;
+          stillcount := 0;
             {if walking = 2 then //如果用鼠标则重置方向
             begin
               SDL_GetMouseState2(x, y);
@@ -2633,64 +2640,64 @@ begin
               if (x > CENTER_x) and (y > CENTER_y) then
                 Sface := 1;
             end;}
-            Sx1 := Sx;
-            Sy1 := Sy;
-            case Sface of
-              0: Sx1 := Sx1 - 1;
-              1: Sy1 := Sy1 + 1;
-              2: Sy1 := Sy1 - 1;
-              3: Sx1 := Sx1 + 1;
-            end;
-            Sstep := Sstep + 1;
-            if Sstep >= 7 then
-              Sstep := 1;
-            if canwalkInScence(Sx1, Sy1) = True then
-            begin
-              Sx := Sx1;
-              Sy := Sy1;
-            end;
-
-            //一定步数之内一次动一格
-            if (speed <= 1) then
-            begin
-              walking := 0;
-              //sdl_delay(20);
-            end;
-            if event.key.keysym.sym = 0 then
-              walking := 0;
+          Sx1 := Sx;
+          Sy1 := Sy;
+          case Sface of
+            0: Sx1 := Sx1 - 1;
+            1: Sy1 := Sy1 + 1;
+            2: Sy1 := Sy1 - 1;
+            3: Sx1 := Sx1 + 1;
           end;
-        2:
+          Sstep := Sstep + 1;
+          if Sstep >= 7 then
+            Sstep := 1;
+          if canwalkInScence(Sx1, Sy1) = True then
           begin
-            if nowstep >= 0 then
+            Sx := Sx1;
+            Sy := Sy1;
+          end;
+
+          //一定步数之内一次动一格
+          if (speed <= 1) then
+          begin
+            walking := 0;
+            //sdl_delay(20);
+          end;
+          if event.key.keysym.sym = 0 then
+            walking := 0;
+        end;
+        2:
+        begin
+          if nowstep >= 0 then
+          begin
+            if sign(linex[nowstep] - Sy) < 0 then
+              SFace := 2
+            else if sign(linex[nowstep] - Sy) > 0 then
+              sFace := 1
+            else if sign(liney[nowstep] - SX) > 0 then
+              SFace := 3
+            else
+              sFace := 0;
+
+            SStep := SStep + 1;
+
+            if SStep >= 7 then
+              SStep := 1;
+            if abs(Sy - linex[nowstep]) + abs(Sx - liney[nowstep]) = 1 then
             begin
-              if sign(linex[nowstep] - Sy) < 0 then
-                SFace := 2
-              else if sign(linex[nowstep] - Sy) > 0 then
-                sFace := 1
-              else if sign(liney[nowstep] - SX) > 0 then
-                SFace := 3
-              else
-                sFace := 0;
-
-              SStep := SStep + 1;
-
-              if SStep >= 7 then
-                SStep := 1;
-              if abs(Sy - linex[nowstep]) + abs(Sx - liney[nowstep]) = 1 then
-              begin
-                Sy := linex[nowstep];
-                Sx := liney[nowstep];
-              end
-              else
-                walking := 0;
-              Dec(nowstep);
-
+              Sy := linex[nowstep];
+              Sx := liney[nowstep];
             end
             else
-            begin
               walking := 0;
-            end;
+            Dec(nowstep);
+
+          end
+          else
+          begin
+            walking := 0;
           end;
+        end;
       end;
       Redraw;
       SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
@@ -2765,56 +2772,56 @@ begin
     //判断当前点四周格子的状况
     case where of
       1:
+      begin
+        for i := 1 to 4 do
         begin
-          for i := 1 to 4 do
-          begin
-            nextX := curX + Xinc[i];
-            nextY := curY + Yinc[i];
-            if (nextX < 0) or (nextX > 63) or (nextY < 0) or (nextY > 63) then
-              Bgrid[i] := 3
-            else if Fway[nextX, nextY] >= 0 then
-              Bgrid[i] := 2
-            else if not canwalkinScence(cury, curx, nexty, nextx) then
-              Bgrid[i] := 1
-            else
-              Bgrid[i] := 0;
-          end;
+          nextX := curX + Xinc[i];
+          nextY := curY + Yinc[i];
+          if (nextX < 0) or (nextX > 63) or (nextY < 0) or (nextY > 63) then
+            Bgrid[i] := 3
+          else if Fway[nextX, nextY] >= 0 then
+            Bgrid[i] := 2
+          else if not canwalkinScence(cury, curx, nexty, nextx) then
+            Bgrid[i] := 1
+          else
+            Bgrid[i] := 0;
         end;
+      end;
       0:
+      begin
+        for i := 1 to 4 do
         begin
-          for i := 1 to 4 do
+          nextX := curX + Xinc[i];
+          nextY := curY + Yinc[i];
+          if (nextX < 0) or (nextX > 479) or (nextY < 0) or (nextY > 479) then
+            Bgrid[i] := 3 //越界
+          else if (Entrance[nextx, nexty] >= 0) then
+            Bgrid[i] := 6 //入口
+          else if Fway[nextX, nextY] >= 0 then
+            Bgrid[i] := 2 //已走过
+          else if buildx[nextx, nexty] > 0 then
+            Bgrid[i] := 1 //阻碍
+          else if ((surface[nextx, nexty] >= 1692) and (surface[nextx, nexty] <= 1700)) then
+            Bgrid[i] := 7
+          else if (earth[nextx, nexty] = 838) or ((earth[nextx, nexty] >= 612) and (earth[nextx, nexty] <= 670)) then
+            Bgrid[i] := 1
+          else if ((earth[nextx, nexty] >= 358) and (earth[nextx, nexty] <= 362)) or
+            ((earth[nextx, nexty] >= 506) and (earth[nextx, nexty] <= 670)) or
+            ((earth[nextx, nexty] >= 1016) and (earth[nextx, nexty] <= 1022)) then
           begin
-            nextX := curX + Xinc[i];
-            nextY := curY + Yinc[i];
-            if (nextX < 0) or (nextX > 479) or (nextY < 0) or (nextY > 479) then
-              Bgrid[i] := 3 //越界
-            else if (Entrance[nextx, nexty] >= 0) then
-              Bgrid[i] := 6 //入口
-            else if Fway[nextX, nextY] >= 0 then
-              Bgrid[i] := 2 //已走过
-            else if buildx[nextx, nexty] > 0 then
-              Bgrid[i] := 1 //阻碍
-            else if ((surface[nextx, nexty] >= 1692) and (surface[nextx, nexty] <= 1700)) then
-              Bgrid[i] := 7
-            else if (earth[nextx, nexty] = 838) or ((earth[nextx, nexty] >= 612) and (earth[nextx, nexty] <= 670)) then
-              Bgrid[i] := 1
-            else if ((earth[nextx, nexty] >= 358) and (earth[nextx, nexty] <= 362)) or
-              ((earth[nextx, nexty] >= 506) and (earth[nextx, nexty] <= 670)) or ((earth[nextx, nexty] >= 1016) and
-              (earth[nextx, nexty] <= 1022)) then
-            begin
-              if (nextx = shipy) and (nexty = shipx) then
-                Bgrid[i] := 4 //船
-              else if ((surface[nextx, nexty] div 2 >= 863) and (surface[nextx, nexty] div 2 <= 872)) or
-                ((surface[nextx, nexty] div 2 >= 852) and (surface[nextx, nexty] div 2 <= 854)) or
-                ((surface[nextx, nexty] div 2 >= 858) and (surface[nextx, nexty] div 2 <= 860)) then
-                Bgrid[i] := 0 //船
-              else
-                Bgrid[i] := 5; //水
-            end
+            if (nextx = shipy) and (nexty = shipx) then
+              Bgrid[i] := 4 //船
+            else if ((surface[nextx, nexty] div 2 >= 863) and (surface[nextx, nexty] div 2 <= 872)) or
+              ((surface[nextx, nexty] div 2 >= 852) and (surface[nextx, nexty] div 2 <= 854)) or
+              ((surface[nextx, nexty] div 2 >= 858) and (surface[nextx, nexty] div 2 <= 860)) then
+              Bgrid[i] := 0 //船
             else
-              Bgrid[i] := 0;
-          end;
+              Bgrid[i] := 5; //水
+          end
+          else
+            Bgrid[i] := 0;
         end;
+      end;
       //移动的情况
     end;
     for i := 1 to 4 do
@@ -2822,11 +2829,11 @@ begin
       canwalk := False;
       case MODVersion of
         22:
-          begin
-            if ((inship = 1) and (Bgrid[i] = 5)) or (((Bgrid[i] = 0) or (Bgrid[i] = 4)) and (inship = 0)) then
-              canwalk := True;
-          end;
-      else
+        begin
+          if ((inship = 1) and (Bgrid[i] = 5)) or (((Bgrid[i] = 0) or (Bgrid[i] = 4)) and (inship = 0)) then
+            canwalk := True;
+        end;
+        else
         begin
           if (Bgrid[i] = 0) or (Bgrid[i] = 4) or (Bgrid[i] = 5) or (Bgrid[i] = 7) then
             canwalk := True;
@@ -2918,9 +2925,8 @@ begin
     Result := False;
   //直接判定贴图范围
   if ((SData[CurScence, 0, x, y] >= 358) and (SData[CurScence, 0, x, y] <= 362)) or
-    (SData[CurScence, 0, x, y] = 522) or
-    (SData[CurScence, 0, x, y] = 1022) or ((SData[CurScence, 0, x, y] >= 1324) and
-    (SData[CurScence, 0, x, y] <= 1330)) or
+    (SData[CurScence, 0, x, y] = 522) or (SData[CurScence, 0, x, y] = 1022) or
+    ((SData[CurScence, 0, x, y] >= 1324) and (SData[CurScence, 0, x, y] <= 1330)) or
     (SData[CurScence, 0, x, y] = 1348) then
     Result := False;
   //if SData[CurScence, 0, x, y] = 1358 * 2 then result := true;
@@ -2940,9 +2946,8 @@ begin
     Result := False;
   //直接判定贴图范围
   if ((SData[CurScence, 0, x, y] >= 358) and (SData[CurScence, 0, x, y] <= 362)) or
-    (SData[CurScence, 0, x, y] = 522) or
-    (SData[CurScence, 0, x, y] = 1022) or ((SData[CurScence, 0, x, y] >= 1324) and
-    (SData[CurScence, 0, x, y] <= 1330)) or
+    (SData[CurScence, 0, x, y] = 522) or (SData[CurScence, 0, x, y] = 1022) or
+    ((SData[CurScence, 0, x, y] >= 1324) and (SData[CurScence, 0, x, y] <= 1330)) or
     (SData[CurScence, 0, x, y] = 1348) then
     Result := False;
   //if SData[CurScence, 0, x, y] = 1358 * 2 then result := true;
@@ -3024,31 +3029,53 @@ begin
     CheckBasicEvent;
     case event.type_ of
       SDL_KEYUP:
+      begin
+        if (event.key.keysym.sym = sdlk_down) then
         begin
-          if (event.key.keysym.sym = sdlk_down) then
-          begin
-            menu := menu + 1;
-            if menu > max then
-              menu := 0;
-            showcommonMenu(x, y, w, max, menu, menustring, menuengstring);
-            SDL_UpdateRect2(screen, x, y, w + 1, max * 22 + 29);
-          end;
-          if (event.key.keysym.sym = sdlk_up) then
-          begin
-            menu := menu - 1;
-            if menu < 0 then
-              menu := max;
-            showcommonMenu(x, y, w, max, menu, menustring, menuengstring);
-            SDL_UpdateRect2(screen, x, y, w + 1, max * 22 + 29);
-          end;
-          if ((event.key.keysym.sym = sdlk_escape)) {and (where <= 2)} then
-          begin
-            Result := -1;
-            //ReDraw;
-            //SDL_UpdateRect2(screen, x, y, w + 1, max * 22 + 29);
-            break;
-          end;
-          if (event.key.keysym.sym = sdlk_return) or (event.key.keysym.sym = sdlk_space) then
+          menu := menu + 1;
+          if menu > max then
+            menu := 0;
+          showcommonMenu(x, y, w, max, menu, menustring, menuengstring);
+          SDL_UpdateRect2(screen, x, y, w + 1, max * 22 + 29);
+        end;
+        if (event.key.keysym.sym = sdlk_up) then
+        begin
+          menu := menu - 1;
+          if menu < 0 then
+            menu := max;
+          showcommonMenu(x, y, w, max, menu, menustring, menuengstring);
+          SDL_UpdateRect2(screen, x, y, w + 1, max * 22 + 29);
+        end;
+        if ((event.key.keysym.sym = sdlk_escape)) {and (where <= 2)} then
+        begin
+          Result := -1;
+          //ReDraw;
+          //SDL_UpdateRect2(screen, x, y, w + 1, max * 22 + 29);
+          break;
+        end;
+        if (event.key.keysym.sym = sdlk_return) or (event.key.keysym.sym = sdlk_space) then
+        begin
+          Result := menu;
+          //Redraw;
+          //SDL_UpdateRect2(screen, x, y, w + 1, max * 22 + 29);
+          break;
+        end;
+      end;
+      SDL_MOUSEBUTTONUP:
+      begin
+        if (event.button.button = sdl_button_right) {and (where <= 2)} then
+        begin
+          Result := -1;
+          //ReDraw;
+          //SDL_UpdateRect2(screen, x, y, w + 1, max * 22 + 29);
+          break;
+        end;
+        if (event.button.button = sdl_button_left) then
+        begin
+          if (round(event.button.x / (RealScreen.w / screen.w)) >= x) and
+            (round(event.button.x / (RealScreen.w / screen.w)) < x + w) and
+            (round(event.button.y / (RealScreen.h / screen.h)) > y) and
+            (round(event.button.y / (RealScreen.h / screen.h)) < y + max * 22 + 29) then
           begin
             Result := menu;
             //Redraw;
@@ -3056,51 +3083,27 @@ begin
             break;
           end;
         end;
-      SDL_MOUSEBUTTONUP:
-        begin
-          if (event.button.button = sdl_button_right) {and (where <= 2)} then
-          begin
-            Result := -1;
-            //ReDraw;
-            //SDL_UpdateRect2(screen, x, y, w + 1, max * 22 + 29);
-            break;
-          end;
-          if (event.button.button = sdl_button_left) then
-          begin
-            if (round(event.button.x / (RealScreen.w / screen.w)) >= x) and
-              (round(event.button.x / (RealScreen.w / screen.w)) < x + w) and
-              (round(event.button.y / (RealScreen.h / screen.h)) > y) and
-              (round(event.button.y / (RealScreen.h / screen.h)) <
-              y + max * 22 + 29) then
-            begin
-              Result := menu;
-              //Redraw;
-              //SDL_UpdateRect2(screen, x, y, w + 1, max * 22 + 29);
-              break;
-            end;
-          end;
-        end;
+      end;
       SDL_MOUSEMOTION:
+      begin
+        if (round(event.button.x / (RealScreen.w / screen.w)) >= x) and
+          (round(event.button.x / (RealScreen.w / screen.w)) < x + w) and
+          (round(event.button.y / (RealScreen.h / screen.h)) > y) and
+          (round(event.button.y / (RealScreen.h / screen.h)) < y + max * 22 + 29) then
         begin
-          if (round(event.button.x / (RealScreen.w / screen.w)) >= x) and
-            (round(event.button.x / (RealScreen.w / screen.w)) < x + w) and
-            (round(event.button.y / (RealScreen.h / screen.h)) > y) and
-            (round(event.button.y / (RealScreen.h / screen.h)) < y +
-            max * 22 + 29) then
+          menup := menu;
+          menu := (round(event.button.y / (RealScreen.h / screen.h)) - y - 2) div 22;
+          if menu > max then
+            menu := max;
+          if menu < 0 then
+            menu := 0;
+          if menup <> menu then
           begin
-            menup := menu;
-            menu := (round(event.button.y / (RealScreen.h / screen.h)) - y - 2) div 22;
-            if menu > max then
-              menu := max;
-            if menu < 0 then
-              menu := 0;
-            if menup <> menu then
-            begin
-              showcommonMenu(x, y, w, max, menu, menustring, menuengstring);
-              SDL_UpdateRect2(screen, x, y, w + 1, max * 22 + 29);
-            end;
+            showcommonMenu(x, y, w, max, menu, menustring, menuengstring);
+            SDL_UpdateRect2(screen, x, y, w + 1, max * 22 + 29);
           end;
         end;
+      end;
     end;
   end;
 
@@ -3128,65 +3131,64 @@ begin
     CheckBasicEvent;
     case event.type_ of
       SDL_KEYUP:
+      begin
+        if (event.key.keysym.sym = sdlk_down) then
         begin
-          if (event.key.keysym.sym = sdlk_down) then
-          begin
-            menu := menu + 1;
-            if menu > max then
-              menu := 0;
-            showcommonMenu(x, y, w, max, menu, menustring, menuengstring);
-            SDL_UpdateRect2(screen, x, y, w + 1, max * 22 + 29);
-            fn(menu);
-          end;
-          if (event.key.keysym.sym = sdlk_up) then
-          begin
-            menu := menu - 1;
-            if menu < 0 then
-              menu := max;
-            showcommonMenu(x, y, w, max, menu, menustring, menuengstring);
-            SDL_UpdateRect2(screen, x, y, w + 1, max * 22 + 29);
-            fn(menu);
-          end;
-          if ((event.key.keysym.sym = sdlk_escape)) {and (where <= 2)} then
-          begin
-            Result := -1;
-            //ReDraw;
-            //SDL_UpdateRect2(screen, x, y, w + 1, max * 22 + 29);
-            break;
-          end;
+          menu := menu + 1;
+          if menu > max then
+            menu := 0;
+          showcommonMenu(x, y, w, max, menu, menustring, menuengstring);
+          SDL_UpdateRect2(screen, x, y, w + 1, max * 22 + 29);
+          fn(menu);
         end;
+        if (event.key.keysym.sym = sdlk_up) then
+        begin
+          menu := menu - 1;
+          if menu < 0 then
+            menu := max;
+          showcommonMenu(x, y, w, max, menu, menustring, menuengstring);
+          SDL_UpdateRect2(screen, x, y, w + 1, max * 22 + 29);
+          fn(menu);
+        end;
+        if ((event.key.keysym.sym = sdlk_escape)) {and (where <= 2)} then
+        begin
+          Result := -1;
+          //ReDraw;
+          //SDL_UpdateRect2(screen, x, y, w + 1, max * 22 + 29);
+          break;
+        end;
+      end;
       SDL_MOUSEBUTTONUP:
+      begin
+        if (event.button.button = sdl_button_right) {and (where <= 2)} then
         begin
-          if (event.button.button = sdl_button_right) {and (where <= 2)} then
-          begin
-            Result := -1;
-            //ReDraw;
-            //SDL_UpdateRect2(screen, x, y, w + 1, max * 22 + 29);
-            break;
-          end;
+          Result := -1;
+          //ReDraw;
+          //SDL_UpdateRect2(screen, x, y, w + 1, max * 22 + 29);
+          break;
         end;
+      end;
       SDL_MOUSEMOTION:
+      begin
+        if (round(event.button.x / (RealScreen.w / screen.w)) >= x) and
+          (round(event.button.x / (RealScreen.w / screen.w)) < x + w) and
+          (round(event.button.y / (RealScreen.h / screen.h)) > y) and
+          (round(event.button.y / (RealScreen.h / screen.h)) < y + max * 22 + 29) then
         begin
-          if (round(event.button.x / (RealScreen.w / screen.w)) >= x) and
-            (round(event.button.x / (RealScreen.w / screen.w)) < x + w) and
-            (round(event.button.y / (RealScreen.h / screen.h)) > y) and
-            (round(event.button.y / (RealScreen.h / screen.h)) < y +
-            max * 22 + 29) then
+          menup := menu;
+          menu := (round(event.button.y / (RealScreen.h / screen.h)) - y - 2) div 22;
+          if menu > max then
+            menu := max;
+          if menu < 0 then
+            menu := 0;
+          if menup <> menu then
           begin
-            menup := menu;
-            menu := (round(event.button.y / (RealScreen.h / screen.h)) - y - 2) div 22;
-            if menu > max then
-              menu := max;
-            if menu < 0 then
-              menu := 0;
-            if menup <> menu then
-            begin
-              showcommonMenu(x, y, w, max, menu, menustring, menuengstring);
-              SDL_UpdateRect2(screen, x, y, w + 1, max * 22 + 29);
-              fn(menu);
-            end;
+            showcommonMenu(x, y, w, max, menu, menustring, menuengstring);
+            SDL_UpdateRect2(screen, x, y, w + 1, max * 22 + 29);
+            fn(menu);
           end;
         end;
+      end;
     end;
   end;
   //清空键盘键和鼠标键值, 避免影响其余部分
@@ -3259,75 +3261,97 @@ begin
     CheckBasicEvent;
     case event.type_ of
       SDL_KEYUP:
+      begin
+        if (event.key.keysym.sym = sdlk_down) then
         begin
-          if (event.key.keysym.sym = sdlk_down) then
+          menu := menu + 1;
+          if menu - menutop >= maxshow then
           begin
-            menu := menu + 1;
-            if menu - menutop >= maxshow then
-            begin
-              menutop := menutop + 1;
-            end;
-            if menu > max then
-            begin
-              menu := 0;
-              menutop := 0;
-            end;
-            showcommonscrollMenu(x, y, w, max, maxshow, menu, menutop, menustring, menuengstring);
-            SDL_UpdateRect2(screen, x, y, w + 1, maxshow * 22 + 29);
+            menutop := menutop + 1;
           end;
-          if (event.key.keysym.sym = sdlk_up) then
+          if menu > max then
           begin
-            menu := menu - 1;
-            if menu <= menutop then
-            begin
-              menutop := menu;
-            end;
-            if menu < 0 then
-            begin
-              menu := max;
-              menutop := menu - maxshow + 1;
-            end;
-            showcommonscrollMenu(x, y, w, max, maxshow, menu, menutop, menustring, menuengstring);
-            SDL_UpdateRect2(screen, x, y, w + 1, maxshow * 22 + 29);
+            menu := 0;
+            menutop := 0;
           end;
-          if (event.key.keysym.sym = sdlk_pagedown) then
+          showcommonscrollMenu(x, y, w, max, maxshow, menu, menutop, menustring, menuengstring);
+          SDL_UpdateRect2(screen, x, y, w + 1, maxshow * 22 + 29);
+        end;
+        if (event.key.keysym.sym = sdlk_up) then
+        begin
+          menu := menu - 1;
+          if menu <= menutop then
           begin
-            menu := menu + maxshow;
-            menutop := menutop + maxshow;
-            if menu > max then
-            begin
-              menu := max;
-            end;
-            if menutop > max - maxshow + 1 then
-            begin
-              menutop := max - maxshow + 1;
-            end;
-            showcommonscrollMenu(x, y, w, max, maxshow, menu, menutop, menustring, menuengstring);
-            SDL_UpdateRect2(screen, x, y, w + 1, maxshow * 22 + 29);
+            menutop := menu;
           end;
-          if (event.key.keysym.sym = sdlk_pageup) then
+          if menu < 0 then
           begin
-            menu := menu - maxshow;
-            menutop := menutop - maxshow;
-            if menu < 0 then
-            begin
-              menu := 0;
-            end;
-            if menutop < 0 then
-            begin
-              menutop := 0;
-            end;
-            showcommonscrollMenu(x, y, w, max, maxshow, menu, menutop, menustring, menuengstring);
-            SDL_UpdateRect2(screen, x, y, w + 1, maxshow * 22 + 29);
+            menu := max;
+            menutop := menu - maxshow + 1;
           end;
-          if ((event.key.keysym.sym = sdlk_escape)) and (where <= 2) then
+          showcommonscrollMenu(x, y, w, max, maxshow, menu, menutop, menustring, menuengstring);
+          SDL_UpdateRect2(screen, x, y, w + 1, maxshow * 22 + 29);
+        end;
+        if (event.key.keysym.sym = sdlk_pagedown) then
+        begin
+          menu := menu + maxshow;
+          menutop := menutop + maxshow;
+          if menu > max then
           begin
-            Result := -1;
-            //ReDraw;
-            //SDL_UpdateRect2(screen, x, y, w + 1, maxshow * 22 + 29);
-            break;
+            menu := max;
           end;
-          if (event.key.keysym.sym = sdlk_return) or (event.key.keysym.sym = sdlk_space) then
+          if menutop > max - maxshow + 1 then
+          begin
+            menutop := max - maxshow + 1;
+          end;
+          showcommonscrollMenu(x, y, w, max, maxshow, menu, menutop, menustring, menuengstring);
+          SDL_UpdateRect2(screen, x, y, w + 1, maxshow * 22 + 29);
+        end;
+        if (event.key.keysym.sym = sdlk_pageup) then
+        begin
+          menu := menu - maxshow;
+          menutop := menutop - maxshow;
+          if menu < 0 then
+          begin
+            menu := 0;
+          end;
+          if menutop < 0 then
+          begin
+            menutop := 0;
+          end;
+          showcommonscrollMenu(x, y, w, max, maxshow, menu, menutop, menustring, menuengstring);
+          SDL_UpdateRect2(screen, x, y, w + 1, maxshow * 22 + 29);
+        end;
+        if ((event.key.keysym.sym = sdlk_escape)) and (where <= 2) then
+        begin
+          Result := -1;
+          //ReDraw;
+          //SDL_UpdateRect2(screen, x, y, w + 1, maxshow * 22 + 29);
+          break;
+        end;
+        if (event.key.keysym.sym = sdlk_return) or (event.key.keysym.sym = sdlk_space) then
+        begin
+          Result := menu;
+          //Redraw;
+          //SDL_UpdateRect2(screen, x, y, w + 1, maxshow * 22 + 29);
+          break;
+        end;
+      end;
+      SDL_MOUSEBUTTONUP:
+      begin
+        if (event.button.button = sdl_button_right) and (where <= 2) then
+        begin
+          Result := -1;
+          //ReDraw;
+          //SDL_UpdateRect2(screen, x, y, w + 1, maxshow * 22 + 29);
+          break;
+        end;
+        if (event.button.button = sdl_button_left) then
+        begin
+          if (round(event.button.x / (RealScreen.w / screen.w)) >= x) and
+            (round(event.button.x / (RealScreen.w / screen.w)) < x + w) and
+            (round(event.button.y / (RealScreen.h / screen.h)) > y) and
+            (round(event.button.y / (RealScreen.h / screen.h)) < y + max * 22 + 29) then
           begin
             Result := menu;
             //Redraw;
@@ -3335,81 +3359,57 @@ begin
             break;
           end;
         end;
-      SDL_MOUSEBUTTONUP:
+        if (event.button.button = sdl_button_wheeldown) then
         begin
-          if (event.button.button = sdl_button_right) and (where <= 2) then
+          menu := menu + 1;
+          if menu - menutop >= maxshow then
           begin
-            Result := -1;
-            //ReDraw;
-            //SDL_UpdateRect2(screen, x, y, w + 1, maxshow * 22 + 29);
-            break;
+            menutop := menutop + 1;
           end;
-          if (event.button.button = sdl_button_left) then
+          if menu > max then
           begin
-            if (round(event.button.x / (RealScreen.w / screen.w)) >= x) and
-              (round(event.button.x / (RealScreen.w / screen.w)) < x + w) and
-              (round(event.button.y / (RealScreen.h / screen.h)) > y) and
-              (round(event.button.y / (RealScreen.h / screen.h)) <
-              y + max * 22 + 29) then
-            begin
-              Result := menu;
-              //Redraw;
-              //SDL_UpdateRect2(screen, x, y, w + 1, maxshow * 22 + 29);
-              break;
-            end;
+            menu := 0;
+            menutop := 0;
           end;
-          if (event.button.button = sdl_button_wheeldown) then
-          begin
-            menu := menu + 1;
-            if menu - menutop >= maxshow then
-            begin
-              menutop := menutop + 1;
-            end;
-            if menu > max then
-            begin
-              menu := 0;
-              menutop := 0;
-            end;
-            showcommonscrollMenu(x, y, w, max, maxshow, menu, menutop, menustring, menuengstring);
-            SDL_UpdateRect2(screen, x, y, w + 1, maxshow * 22 + 29);
-          end;
-          if (event.button.button = sdl_button_wheelup) then
-          begin
-            menu := menu - 1;
-            if menu <= menutop then
-            begin
-              menutop := menu;
-            end;
-            if menu < 0 then
-            begin
-              menu := max;
-              menutop := menu - maxshow + 1;
-            end;
-            showcommonscrollMenu(x, y, w, max, maxshow, menu, menutop, menustring, menuengstring);
-            SDL_UpdateRect2(screen, x, y, w + 1, maxshow * 22 + 29);
-          end;
+          showcommonscrollMenu(x, y, w, max, maxshow, menu, menutop, menustring, menuengstring);
+          SDL_UpdateRect2(screen, x, y, w + 1, maxshow * 22 + 29);
         end;
+        if (event.button.button = sdl_button_wheelup) then
+        begin
+          menu := menu - 1;
+          if menu <= menutop then
+          begin
+            menutop := menu;
+          end;
+          if menu < 0 then
+          begin
+            menu := max;
+            menutop := menu - maxshow + 1;
+          end;
+          showcommonscrollMenu(x, y, w, max, maxshow, menu, menutop, menustring, menuengstring);
+          SDL_UpdateRect2(screen, x, y, w + 1, maxshow * 22 + 29);
+        end;
+      end;
       SDL_MOUSEMOTION:
+      begin
+        if (round(event.button.x / (RealScreen.w / screen.w)) >= x) and
+          (round(event.button.x / (RealScreen.w / screen.w)) < x + w) and
+          (round(event.button.y / (RealScreen.h / screen.h)) > y) and
+          (round(event.button.y / (RealScreen.h / screen.h)) < y + max * 22 + 29) then
         begin
-          if (round(event.button.x / (RealScreen.w / screen.w)) >= x) and
-            (round(event.button.x / (RealScreen.w / screen.w)) < x + w) and
-            (round(event.button.y / (RealScreen.h / screen.h)) > y) and
-            (round(event.button.y / (RealScreen.h / screen.h)) < y +
-            max * 22 + 29) then
+          menup := menu;
+          menu := (round(event.button.y / (RealScreen.h / screen.h)) - y - 2) div 22 + menutop;
+          if menu > max then
+            menu := max;
+          if menu < 0 then
+            menu := 0;
+          if menup <> menu then
           begin
-            menup := menu;
-            menu := (round(event.button.y / (RealScreen.h / screen.h)) - y - 2) div 22 + menutop;
-            if menu > max then
-              menu := max;
-            if menu < 0 then
-              menu := 0;
-            if menup <> menu then
-            begin
-              showcommonscrollMenu(x, y, w, max, maxshow, menu, menutop, menustring, menuengstring);
-              SDL_UpdateRect2(screen, x, y, w + 1, maxshow * 22 + 29);
-            end;
+            showcommonscrollMenu(x, y, w, max, maxshow, menu, menutop, menustring, menuengstring);
+            SDL_UpdateRect2(screen, x, y, w + 1, maxshow * 22 + 29);
           end;
         end;
+      end;
     end;
   end;
   //清空键盘键和鼠标键值, 避免影响其余部分
@@ -3436,13 +3436,15 @@ begin
     begin
       drawshadowtext(screen, @menustring[i][1], x - 17, y + 2 + 22 * (i - menutop), colcolor($66), colcolor($64));
       if p = 1 then
-        drawengshadowtext(screen, @menuengstring[i][1], x + 93, y + 2 + 22 * (i - menutop), colcolor($66), colcolor($64));
+        drawengshadowtext(screen, @menuengstring[i][1], x + 93, y + 2 + 22 * (i - menutop),
+          colcolor($66), colcolor($64));
     end
     else
     begin
       drawshadowtext(screen, @menustring[i][1], x - 17, y + 2 + 22 * (i - menutop), colcolor($7), colcolor($5));
       if p = 1 then
-        drawengshadowtext(screen, @menuengstring[i][1], x + 93, y + 2 + 22 * (i - menutop), colcolor($7), colcolor($5));
+        drawengshadowtext(screen, @menuengstring[i][1], x + 93, y + 2 + 22 * (i - menutop),
+          colcolor($7), colcolor($5));
     end;
 
 end;
@@ -3465,24 +3467,46 @@ begin
     CheckBasicEvent;
     case event.type_ of
       SDL_KEYUP:
+      begin
+        if (event.key.keysym.sym = sdlk_left) or (event.key.keysym.sym = sdlk_right) then
         begin
-          if (event.key.keysym.sym = sdlk_left) or (event.key.keysym.sym = sdlk_right) then
-          begin
-            if menu = 1 then
-              menu := 0
-            else
-              menu := 1;
-            showcommonMenu2(x, y, w, menu, menustring);
-            SDL_UpdateRect2(screen, x, y, w + 1, 29);
-          end;
-          if ((event.key.keysym.sym = sdlk_escape)) and (where <= 2) then
-          begin
-            Result := -1;
-            //ReDraw;
-            //SDL_UpdateRect2(screen, x, y, w + 1, 29);
-            break;
-          end;
-          if (event.key.keysym.sym = sdlk_return) or (event.key.keysym.sym = sdlk_space) then
+          if menu = 1 then
+            menu := 0
+          else
+            menu := 1;
+          showcommonMenu2(x, y, w, menu, menustring);
+          SDL_UpdateRect2(screen, x, y, w + 1, 29);
+        end;
+        if ((event.key.keysym.sym = sdlk_escape)) and (where <= 2) then
+        begin
+          Result := -1;
+          //ReDraw;
+          //SDL_UpdateRect2(screen, x, y, w + 1, 29);
+          break;
+        end;
+        if (event.key.keysym.sym = sdlk_return) or (event.key.keysym.sym = sdlk_space) then
+        begin
+          Result := menu;
+          //Redraw;
+          //SDL_UpdateRect2(screen, x, y, w + 1, 29);
+          break;
+        end;
+      end;
+      SDL_MOUSEBUTTONUP:
+      begin
+        if (event.button.button = sdl_button_right) and (where <= 2) then
+        begin
+          Result := -1;
+          //ReDraw;
+          //SDL_UpdateRect2(screen, x, y, w + 1, 29);
+          break;
+        end;
+        if (event.button.button = sdl_button_left) then
+        begin
+          if (round(event.button.x / (RealScreen.w / screen.w)) >= x) and
+            (round(event.button.x / (RealScreen.w / screen.w)) < x + w) and
+            (round(event.button.y / (RealScreen.h / screen.h)) > y) and
+            (round(event.button.y / (RealScreen.h / screen.h)) < y + 29) then
           begin
             Result := menu;
             //Redraw;
@@ -3490,49 +3514,27 @@ begin
             break;
           end;
         end;
-      SDL_MOUSEBUTTONUP:
-        begin
-          if (event.button.button = sdl_button_right) and (where <= 2) then
-          begin
-            Result := -1;
-            //ReDraw;
-            //SDL_UpdateRect2(screen, x, y, w + 1, 29);
-            break;
-          end;
-          if (event.button.button = sdl_button_left) then
-          begin
-            if (round(event.button.x / (RealScreen.w / screen.w)) >= x) and
-              (round(event.button.x / (RealScreen.w / screen.w)) < x + w) and
-              (round(event.button.y / (RealScreen.h / screen.h)) > y) and
-              (round(event.button.y / (RealScreen.h / screen.h)) < y + 29) then
-            begin
-              Result := menu;
-              //Redraw;
-              //SDL_UpdateRect2(screen, x, y, w + 1, 29);
-              break;
-            end;
-          end;
-        end;
+      end;
       SDL_MOUSEMOTION:
+      begin
+        if (round(event.button.x / (RealScreen.w / screen.w)) >= x) and
+          (round(event.button.x / (RealScreen.w / screen.w)) < x + w) and
+          (round(event.button.y / (RealScreen.h / screen.h)) > y) and
+          (round(event.button.y / (RealScreen.h / screen.h)) < y + 29) then
         begin
-          if (round(event.button.x / (RealScreen.w / screen.w)) >= x) and
-            (round(event.button.x / (RealScreen.w / screen.w)) < x + w) and
-            (round(event.button.y / (RealScreen.h / screen.h)) > y) and
-            (round(event.button.y / (RealScreen.h / screen.h)) < y + 29) then
+          menup := menu;
+          menu := (round(event.button.x / (RealScreen.w / screen.w)) - x - 2) div 50;
+          if menu > 1 then
+            menu := 1;
+          if menu < 0 then
+            menu := 0;
+          if menup <> menu then
           begin
-            menup := menu;
-            menu := (round(event.button.x / (RealScreen.w / screen.w)) - x - 2) div 50;
-            if menu > 1 then
-              menu := 1;
-            if menu < 0 then
-              menu := 0;
-            if menup <> menu then
-            begin
-              showcommonMenu2(x, y, w, menu, menustring);
-              SDL_UpdateRect2(screen, x, y, w + 1, 29);
-            end;
+            showcommonMenu2(x, y, w, menu, menustring);
+            SDL_UpdateRect2(screen, x, y, w + 1, 29);
           end;
         end;
+      end;
     end;
   end;
   //清空键盘键和鼠标键值, 避免影响其余部分
@@ -3622,17 +3624,17 @@ begin
       5: MenuSystem;
       4: MenuLeave;
       3:
+      begin
+        if MODVersion = 51 then
         begin
-          if MODVersion = 51 then
-          begin
-            //ReFreshScreen;
-            callEvent(1092);
-            redraw;
-            SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-          end
-          else
-            MenuStatus;
-        end;
+          //ReFreshScreen;
+          callEvent(1092);
+          redraw;
+          SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+        end
+        else
+          MenuStatus;
+      end;
     end;
     Redraw;
     SDL_UpdateRect2(screen, 80, 0, screen.w - 80, screen.h);
@@ -3850,30 +3852,30 @@ begin
   //setlength(Menuengstring, 0);
   case where of
     0, 1:
-      begin
-        max := 6;
-        setlength(menustring, max + 1);
-        menustring[0] := (' 全部物品');
-        menustring[1] := (' 劇情物品');
-        menustring[2] := (' 神兵寶甲');
-        menustring[3] := (' 武功秘笈');
-        menustring[4] := (' 靈丹妙藥');
-        menustring[5] := (' 傷人暗器');
-        menustring[6] := (' 整理物品');
-        xm := 80;
-        ym := 30;
+    begin
+      max := 6;
+      setlength(menustring, max + 1);
+      menustring[0] := (' 全部物品');
+      menustring[1] := (' 劇情物品');
+      menustring[2] := (' 神兵寶甲');
+      menustring[3] := (' 武功秘笈');
+      menustring[4] := (' 靈丹妙藥');
+      menustring[5] := (' 傷人暗器');
+      menustring[6] := (' 整理物品');
+      xm := 80;
+      ym := 30;
 
-      end;
+    end;
     2:
-      begin
-        max := 1;
-        setlength(menustring, max + 1);
-        menustring[0] := (' 靈丹妙藥');
-        menustring[1] := (' 傷人暗器');
-        xm := 150;
-        ym := 150;
+    begin
+      max := 1;
+      setlength(menustring, max + 1);
+      menustring[0] := (' 靈丹妙藥');
+      menustring[1] := (' 傷人暗器');
+      xm := 150;
+      ym := 150;
 
-      end;
+    end;
   end;
 
   menu := 0;
@@ -3883,18 +3885,18 @@ begin
 
     case where of
       0, 1:
-        begin
-          if menu = 0 then
-            i := 100
-          else
-            i := menu - 1;
+      begin
+        if menu = 0 then
+          i := 100
+        else
+          i := menu - 1;
 
-        end;
+      end;
       2:
-        begin
-          if menu >= 0 then
-            i := menu + 3;
-        end;
+      begin
+        if menu >= 0 then
+          i := menu + 3;
+      end;
     end;
 
     if menu < 0 then
@@ -3918,88 +3920,115 @@ begin
         CheckBasicEvent;
         case event.type_ of
           SDL_KEYUP:
+          begin
+            if (event.key.keysym.sym = sdlk_down) then
             begin
-              if (event.key.keysym.sym = sdlk_down) then
+              y := y + 1;
+              if y < 0 then
+                y := 0;
+              if (y >= row) then
               begin
-                y := y + 1;
-                if y < 0 then
-                  y := 0;
-                if (y >= row) then
-                begin
-                  if (ItemList[atlu + col * row] >= 0) then
-                    atlu := atlu + col;
+                if (ItemList[atlu + col * row] >= 0) then
+                  atlu := atlu + col;
+                y := row - 1;
+              end;
+              showMenuItem(row, col, x, y, atlu);
+              SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+            end;
+            if (event.key.keysym.sym = sdlk_up) then
+            begin
+              y := y - 1;
+              if y < 0 then
+              begin
+                y := 0;
+                if atlu > 0 then
+                  atlu := atlu - col;
+              end;
+              showMenuItem(row, col, x, y, atlu);
+              SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+            end;
+            if (event.key.keysym.sym = sdlk_pagedown) then
+            begin
+              //y := y + row;
+              atlu := atlu + col * row;
+              if y < 0 then
+                y := 0;
+              if (ItemList[atlu + col * row] < 0) and (iamount > col * row) then
+              begin
+                y := y - (iamount - atlu) div col - 1 + row;
+                atlu := (iamount div col - row + 1) * col;
+                if y >= row then
                   y := row - 1;
-                end;
-                showMenuItem(row, col, x, y, atlu);
-                SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
               end;
-              if (event.key.keysym.sym = sdlk_up) then
+              showMenuItem(row, col, x, y, atlu);
+              SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+            end;
+            if (event.key.keysym.sym = sdlk_pageup) then
+            begin
+              //y := y - row;
+              atlu := atlu - col * row;
+              if atlu < 0 then
               begin
-                y := y - 1;
-                if y < 0 then
-                begin
-                  y := 0;
-                  if atlu > 0 then
-                    atlu := atlu - col;
-                end;
-                showMenuItem(row, col, x, y, atlu);
-                SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-              end;
-              if (event.key.keysym.sym = sdlk_pagedown) then
-              begin
-                //y := y + row;
-                atlu := atlu + col * row;
+                y := y + atlu div col;
+                atlu := 0;
                 if y < 0 then
                   y := 0;
-                if (ItemList[atlu + col * row] < 0) and (iamount > col * row) then
-                begin
-                  y := y - (iamount - atlu) div col - 1 + row;
-                  atlu := (iamount div col - row + 1) * col;
-                  if y >= row then
-                    y := row - 1;
-                end;
-                showMenuItem(row, col, x, y, atlu);
-                SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
               end;
-              if (event.key.keysym.sym = sdlk_pageup) then
-              begin
-                //y := y - row;
-                atlu := atlu - col * row;
-                if atlu < 0 then
-                begin
-                  y := y + atlu div col;
-                  atlu := 0;
-                  if y < 0 then
-                    y := 0;
-                end;
-                showMenuItem(row, col, x, y, atlu);
-                SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-              end;
-              if (event.key.keysym.sym = sdlk_right) then
-              begin
-                x := x + 1;
-                if x >= col then
-                  x := 0;
-                showMenuItem(row, col, x, y, atlu);
-                SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-              end;
-              if (event.key.keysym.sym = sdlk_left) then
-              begin
-                x := x - 1;
-                if x < 0 then
-                  x := col - 1;
-                showMenuItem(row, col, x, y, atlu);
-                SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-              end;
-              if (event.key.keysym.sym = sdlk_escape) then
-              begin
-                //ReDraw;
-                //ShowMenu(2);
-                Result := False;
-                //SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-                break;
-              end;
-              if (event.key.keysym.sym = sdlk_return) or (event.key.keysym.sym = sdlk_space) then
+              showMenuItem(row, col, x, y, atlu);
+              SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+            end;
+            if (event.key.keysym.sym = sdlk_right) then
+            begin
+              x := x + 1;
+              if x >= col then
+                x := 0;
+              showMenuItem(row, col, x, y, atlu);
+              SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+            end;
+            if (event.key.keysym.sym = sdlk_left) then
+            begin
+              x := x - 1;
+              if x < 0 then
+                x := col - 1;
+              showMenuItem(row, col, x, y, atlu);
+              SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+            end;
+            if (event.key.keysym.sym = sdlk_escape) then
+            begin
+              //ReDraw;
+              //ShowMenu(2);
+              Result := False;
+              //SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+              break;
+            end;
+            if (event.key.keysym.sym = sdlk_return) or (event.key.keysym.sym = sdlk_space) then
+            begin
+              //ReDraw;
+              CurItem := RItemlist[itemlist[(y * col + x + atlu)]].Number;
+              if (where <> 2) and (CurItem >= 0) and (itemlist[(y * col + x + atlu)] >= 0) then
+                UseItem(CurItem);
+              //ShowMenu(2);
+              Result := True;
+              //SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+              break;
+            end;
+          end;
+          SDL_MOUSEBUTTONUP:
+          begin
+            if (event.button.button = sdl_button_right) then
+            begin
+              //ReDraw;
+              //ShowMenu(2);
+              Result := False;
+              //SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+              break;
+            end;
+            if (event.button.button = sdl_button_left) then
+            begin
+              if (round(event.button.x / (RealScreen.w / screen.w)) >= 110) and
+                (round(event.button.x / (RealScreen.w / screen.w)) < 496) and
+                (round(event.button.y / (RealScreen.h / screen.h)) > 90) and
+                (round(event.button.y / (RealScreen.h / screen.h)) < 308) then
               begin
                 //ReDraw;
                 CurItem := RItemlist[itemlist[(y * col + x + atlu)]].Number;
@@ -4011,106 +4040,79 @@ begin
                 break;
               end;
             end;
-          SDL_MOUSEBUTTONUP:
+            if (event.button.button = sdl_button_wheeldown) then
             begin
-              if (event.button.button = sdl_button_right) then
+              y := y + 1;
+              if y < 0 then
+                y := 0;
+              if (y >= row) then
               begin
-                //ReDraw;
-                //ShowMenu(2);
-                Result := False;
-                //SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-                break;
-              end;
-              if (event.button.button = sdl_button_left) then
-              begin
-                if (round(event.button.x / (RealScreen.w / screen.w)) >= 110) and
-                  (round(event.button.x / (RealScreen.w / screen.w)) < 496) and
-                  (round(event.button.y / (RealScreen.h / screen.h)) > 90) and
-                  (round(event.button.y / (RealScreen.h / screen.h)) < 308) then
-                begin
-                  //ReDraw;
-                  CurItem := RItemlist[itemlist[(y * col + x + atlu)]].Number;
-                  if (where <> 2) and (CurItem >= 0) and (itemlist[(y * col + x + atlu)] >= 0) then
-                    UseItem(CurItem);
-                  //ShowMenu(2);
-                  Result := True;
-                  //SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-                  break;
-                end;
-              end;
-              if (event.button.button = sdl_button_wheeldown) then
-              begin
-                y := y + 1;
-                if y < 0 then
-                  y := 0;
-                if (y >= row) then
-                begin
-                  if (ItemList[atlu + col * row] >= 0) then
-                    atlu := atlu + col;
-                  y := row - 1;
-                end;
-                showMenuItem(row, col, x, y, atlu);
-                SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-              end;
-              if (event.button.button = sdl_button_wheelup) then
-              begin
-                y := y - 1;
-                if y < 0 then
-                begin
-                  y := 0;
-                  if atlu > 0 then
-                    atlu := atlu - col;
-                end;
-                showMenuItem(row, col, x, y, atlu);
-                SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-              end;
-            end;
-          SDL_MOUSEMOTION:
-            begin
-              if (round(event.button.x / (RealScreen.w / screen.w)) >= 110) and
-                (round(event.button.x / (RealScreen.w / screen.w)) < 496) and
-                (round(event.button.y / (RealScreen.h / screen.h)) > 90) and
-                (round(event.button.y / (RealScreen.h / screen.h)) < 308) then
-              begin
-                xp := x;
-                yp := y;
-                x := (round(event.button.x / (RealScreen.w / screen.w)) - 115) div 42;
-                y := (round(event.button.y / (RealScreen.h / screen.h)) - 95) div 42;
-                if x >= col then
-                  x := col - 1;
-                if y >= row then
-                  y := row - 1;
-                if x < 0 then
-                  x := 0;
-                if y < 0 then
-                  y := 0;
-                //鼠标移动时仅在x, y发生变化时才重画
-                if (x <> xp) or (y <> yp) then
-                begin
-                  showMenuItem(row, col, x, y, atlu);
-                  SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-                end;
-              end;
-              if (round(event.button.x / (RealScreen.w / screen.w)) >= 110) and
-                (round(event.button.x / (RealScreen.w / screen.w)) < 496) and (round(event.button.y /
-                (RealScreen.h / screen.h)) > 308) then
-              begin
-                //atlu := atlu+col;
-                if (ItemList[atlu + col * 5] >= 0) then
+                if (ItemList[atlu + col * row] >= 0) then
                   atlu := atlu + col;
-                showMenuItem(row, col, x, y, atlu);
-                SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+                y := row - 1;
               end;
-              if (round(event.button.x / (RealScreen.w / screen.w)) >= 110) and
-                (round(event.button.x / (RealScreen.w / screen.w)) < 496) and (round(event.button.y /
-                (RealScreen.h / screen.h)) < 90) then
+              showMenuItem(row, col, x, y, atlu);
+              SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+            end;
+            if (event.button.button = sdl_button_wheelup) then
+            begin
+              y := y - 1;
+              if y < 0 then
               begin
+                y := 0;
                 if atlu > 0 then
                   atlu := atlu - col;
+              end;
+              showMenuItem(row, col, x, y, atlu);
+              SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+            end;
+          end;
+          SDL_MOUSEMOTION:
+          begin
+            if (round(event.button.x / (RealScreen.w / screen.w)) >= 110) and
+              (round(event.button.x / (RealScreen.w / screen.w)) < 496) and
+              (round(event.button.y / (RealScreen.h / screen.h)) > 90) and
+              (round(event.button.y / (RealScreen.h / screen.h)) < 308) then
+            begin
+              xp := x;
+              yp := y;
+              x := (round(event.button.x / (RealScreen.w / screen.w)) - 115) div 42;
+              y := (round(event.button.y / (RealScreen.h / screen.h)) - 95) div 42;
+              if x >= col then
+                x := col - 1;
+              if y >= row then
+                y := row - 1;
+              if x < 0 then
+                x := 0;
+              if y < 0 then
+                y := 0;
+              //鼠标移动时仅在x, y发生变化时才重画
+              if (x <> xp) or (y <> yp) then
+              begin
                 showMenuItem(row, col, x, y, atlu);
                 SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
               end;
             end;
+            if (round(event.button.x / (RealScreen.w / screen.w)) >= 110) and
+              (round(event.button.x / (RealScreen.w / screen.w)) < 496) and
+              (round(event.button.y / (RealScreen.h / screen.h)) > 308) then
+            begin
+              //atlu := atlu+col;
+              if (ItemList[atlu + col * row] >= 0) then
+                atlu := atlu + col;
+              showMenuItem(row, col, x, y, atlu);
+              SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+            end;
+            if (round(event.button.x / (RealScreen.w / screen.w)) >= 110) and
+              (round(event.button.x / (RealScreen.w / screen.w)) < 496) and
+              (round(event.button.y / (RealScreen.h / screen.h)) < 90) then
+            begin
+              if atlu > 0 then
+                atlu := atlu - col;
+              showMenuItem(row, col, x, y, atlu);
+              SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+            end;
+          end;
         end;
       end;
     end;
@@ -4181,6 +4183,7 @@ var
   words3: array[0..12] of WideString;
   p2: array[0..22] of integer;
   p3: array[0..12] of integer;
+  color1, color2: integer;
 begin
   words[0] := (' 劇情物品');
   words[1] := (' 神兵寶甲');
@@ -4257,7 +4260,10 @@ begin
       listnum := ItemList[i1 * col + i2 + atlu];
       if (RItemlist[listnum].Number >= 0) and (listnum < MAX_ITEM_AMOUNT) and (listnum >= 0) then
       begin
-        DrawMPic(ITEM_BEGIN_PIC + RItemlist[listnum].Number, i2 * 42 + 115, i1 * 42 + 95);
+        if (i1 = y) and (i2 = x) then
+          DrawMPic(ITEM_BEGIN_PIC + RItemlist[listnum].Number, i2 * 42 + 115, i1 * 42 + 95, 0, 0, 0, 0)
+        else
+          DrawMPic(ITEM_BEGIN_PIC + RItemlist[listnum].Number, i2 * 42 + 115, i1 * 42 + 95, 0, 50, 0, 0);
       end;
     end;
   listnum := itemlist[y * col + x + atlu];
@@ -4344,9 +4350,18 @@ begin
             1: str := ('    陽');
             2: str := ('  調和');
           end;
-
+        if (i = 0) or (i = 5) then
+        begin
+          color1 := colcolor($10);
+          color2 := colcolor($13);
+        end
+        else
+        begin
+          color1 := colcolor($64);
+          color2 := colcolor($66);
+        end;
         drawshadowtext(screen, @words2[i][1], 97 + i1 mod 3 * 130, i1 div 3 * 20 + 346, colcolor($7), colcolor($5));
-        drawshadowtext(screen, @str[1], 147 + i1 mod 3 * 130, i1 div 3 * 20 + 346, colcolor($66), colcolor($64));
+        drawshadowtext(screen, @str[1], 147 + i1 mod 3 * 130, i1 div 3 * 20 + 346, color1, color2);
         i1 := i1 + 1;
       end;
     end;
@@ -4363,11 +4378,20 @@ begin
             1: str := ('    陽');
             2: str := ('  調和');
           end;
-
+        if (i = 1) then
+        begin
+          color1 := colcolor($10);
+          color2 := colcolor($13);
+        end
+        else
+        begin
+          color1 := colcolor($64);
+          color2 := colcolor($66);
+        end;
         drawshadowtext(screen, @words3[i][1], 97 + i1 mod 3 * 130, ((len2 + 2) div 3 + i1 div 3) *
           20 + 346, colcolor($50), colcolor($4E));
-        drawshadowtext(screen, @str[1], 147 + i1 mod 3 * 130, ((len2 + 2) div 3 + i1 div 3) * 20 +
-          346, colcolor($66), colcolor($64));
+        drawshadowtext(screen, @str[1], 147 + i1 mod 3 * 130, ((len2 + 2) div 3 + i1 div 3) *
+          20 + 346, color1, color2);
         i1 := i1 + 1;
       end;
     end;
@@ -4381,14 +4405,19 @@ end;
 
 procedure DrawItemFrame(x, y: integer);
 var
-  i: integer;
+  i, xp, yp, d: integer;
+  t: byte;
 begin
+  xp := 110;
+  yp := 60;
+  d := 42;
   for i := 0 to 39 do
   begin
-    putpixel(screen, x * 42 + 116 + i, y * 42 + 96, colcolor(255));
-    putpixel(screen, x * 42 + 116 + i, y * 42 + 96 + 39, colcolor(255));
-    putpixel(screen, x * 42 + 116, y * 42 + 96 + i, colcolor(255));
-    putpixel(screen, x * 42 + 116 + 39, y * 42 + 96 + i, colcolor(255));
+    t := 250 - i * 3;
+    putpixel(screen, x * d + 6 + i + xp, y * d + 36 + yp, sdl_maprgb(screen.format, t, t, t));
+    putpixel(screen, x * d + 6 + 39 - i + xp, y * d + 36 + 39 + yp, sdl_maprgb(screen.format, t, t, t));
+    putpixel(screen, x * d + 6 + xp, y * d + 36 + i + yp, sdl_maprgb(screen.format, t, t, t));
+    putpixel(screen, x * d + 6 + 39 + xp, y * d + 36 + 39 - i + yp, sdl_maprgb(screen.format, t, t, t));
   end;
 
 end;
@@ -4405,148 +4434,148 @@ begin
   redraw;
   case RItem[inum].ItemType of
     0: //剧情物品
+    begin
+      //如某属性大于0, 直接调用事件
+      if ritem[inum].UnKnow7 > 0 then
+        callevent(ritem[inum].UnKnow7)
+      else
       begin
-        //如某属性大于0, 直接调用事件
-        if ritem[inum].UnKnow7 > 0 then
-          callevent(ritem[inum].UnKnow7)
-        else
+        if where = 1 then
         begin
-          if where = 1 then
-          begin
-            x := Sx;
-            y := Sy;
-            case SFace of
-              0: x := x - 1;
-              1: y := y + 1;
-              2: y := y - 1;
-              3: x := x + 1;
-            end;
-            //如面向位置有第2类事件则调用
-            if SData[CurScence, 3, x, y] >= 0 then
-            begin
-              CurEvent := SData[CurScence, 3, x, y];
-              if DData[CurScence, SData[CurScence, 3, x, y], 3] >= 0 then
-                callevent(DData[CurScence, SData[CurScence, 3, x, y], 3]);
-            end;
-            CurEvent := -1;
+          x := Sx;
+          y := Sy;
+          case SFace of
+            0: x := x - 1;
+            1: y := y + 1;
+            2: y := y - 1;
+            3: x := x + 1;
           end;
+          //如面向位置有第2类事件则调用
+          if SData[CurScence, 3, x, y] >= 0 then
+          begin
+            CurEvent := SData[CurScence, 3, x, y];
+            if DData[CurScence, SData[CurScence, 3, x, y], 3] >= 0 then
+              callevent(DData[CurScence, SData[CurScence, 3, x, y], 3]);
+          end;
+          CurEvent := -1;
         end;
       end;
+    end;
     1: //装备
+    begin
+      menu := 1;
+      if Ritem[inum].User >= 0 then
       begin
-        menu := 1;
-        if Ritem[inum].User >= 0 then
-        begin
-          setlength(menustring, 2);
-          menustring[0] := (' 取消');
-          menustring[1] := (' 繼續');
-          str := (' 此物品正有人裝備，是否繼續？');
-          drawtextwithrect(screen, @str[1], 80, 30, 285, colcolor(7), colcolor(5));
-          menu := commonmenu(80, 65, 45, 1, menustring);
-        end;
-        if menu = 1 then
-        begin
-          str := (' 誰要裝備');
-          str1 := big5tounicode(@Ritem[inum].Name);
-          drawtextwithrect(screen, @str[1], 80, 30, length(str1) * 22 + 80, colcolor($23), colcolor($21));
-          drawshadowtext(screen, @str1[1], 160, 32, colcolor($66), colcolor($64));
-          SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-          menu := SelectOneTeamMember(80, 65, '', 0, 0);
-          if menu >= 0 then
-          begin
-            rnum := Teamlist[menu];
-            p := Ritem[inum].EquipType;
-            if (p < 0) or (p > 1) then
-              p := 0;
-            if canequip(rnum, inum) then
-            begin
-              if Ritem[inum].User >= 0 then
-                Rrole[Ritem[inum].User].Equip[p] := -1;
-              if Rrole[rnum].Equip[p] >= 0 then
-                Ritem[RRole[rnum].Equip[p]].User := -1;
-              Rrole[rnum].Equip[p] := inum;
-              Ritem[inum].User := rnum;
-            end
-            else
-            begin
-              str := (' 此人不適合裝備此物品');
-              drawtextwithrect(screen, @str[1], 80, 30, 205, colcolor($66), colcolor($64));
-              waitanykey;
-              redraw;
-              //SDL_UpdateRect2(screen,0,0,screen.w,screen.h);
-            end;
-          end;
-        end;
+        setlength(menustring, 2);
+        menustring[0] := (' 取消');
+        menustring[1] := (' 繼續');
+        str := (' 此物品正有人裝備，是否繼續？');
+        drawtextwithrect(screen, @str[1], 80, 30, 285, colcolor(7), colcolor(5));
+        menu := commonmenu(80, 65, 45, 1, menustring);
       end;
-    2: //秘笈
+      if menu = 1 then
       begin
-        menu := 1;
-        if Ritem[inum].User >= 0 then
-        begin
-          setlength(menustring, 2);
-          menustring[0] := (' 取消');
-          menustring[1] := (' 繼續');
-          str := (' 此秘笈正有人修煉，是否繼續？');
-          drawtextwithrect(screen, @str[1], 80, 30, 285, colcolor(7), colcolor(5));
-          menu := commonmenu(80, 65, 45, 1, menustring);
-        end;
-        if menu = 1 then
-        begin
-          str := (' 誰要修煉');
-          str1 := big5tounicode(@Ritem[inum].Name);
-          drawtextwithrect(screen, @str[1], 80, 30, length(str1) * 22 + 80, colcolor($23), colcolor($21));
-          drawshadowtext(screen, @str1[1], 160, 32, colcolor($66), colcolor($64));
-          SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-          menu := SelectOneTeamMember(80, 65, '', 0, 0);
-          if menu >= 0 then
-          begin
-            rnum := TeamList[menu];
-            if canequip(rnum, inum) then
-            begin
-              if Ritem[inum].User >= 0 then
-                Rrole[Ritem[inum].User].PracticeBook := -1;
-              if Rrole[rnum].PracticeBook >= 0 then
-                Ritem[RRole[rnum].PracticeBook].User := -1;
-              Rrole[rnum].PracticeBook := inum;
-              Ritem[inum].User := rnum;
-              {if (inum in [78, 93]) then
-                rrole[rnum].Sexual := 2;}
-            end
-            else
-            begin
-              str := (' 此人不適合修煉此秘笈');
-              drawtextwithrect(screen, @str[1], 80, 30, 205, colcolor($66), colcolor($64));
-              waitanykey;
-              redraw;
-              //SDL_UpdateRect2(screen,0,0,screen.w,screen.h);
-            end;
-          end;
-        end;
-      end;
-    3: //药品
-      begin
-        if where <> 2 then
-        begin
-          str := (' 誰要服用');
-          str1 := big5tounicode(@Ritem[inum].Name);
-          drawtextwithrect(screen, @str[1], 80, 30, length(str1) * 22 + 80, colcolor($23), colcolor($21));
-          drawshadowtext(screen, @str1[1], 160, 32, colcolor($66), colcolor($64));
-          SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-          menu := SelectOneTeamMember(80, 65, '', 0, 0);
-          rnum := TeamList[menu];
-        end;
+        str := (' 誰要裝備');
+        str1 := big5tounicode(@Ritem[inum].Name);
+        drawtextwithrect(screen, @str[1], 80, 30, length(str1) * 22 + 80, colcolor($23), colcolor($21));
+        drawshadowtext(screen, @str1[1], 160, 32, colcolor($66), colcolor($64));
+        SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+        menu := SelectOneTeamMember(80, 65, '', 0, 0);
         if menu >= 0 then
         begin
-          redraw;
-          EatOneItem(rnum, inum);
-          instruct_32(inum, -1);
-          waitanykey;
+          rnum := Teamlist[menu];
+          p := Ritem[inum].EquipType;
+          if (p < 0) or (p > 1) then
+            p := 0;
+          if canequip(rnum, inum) then
+          begin
+            if Ritem[inum].User >= 0 then
+              Rrole[Ritem[inum].User].Equip[p] := -1;
+            if Rrole[rnum].Equip[p] >= 0 then
+              Ritem[RRole[rnum].Equip[p]].User := -1;
+            Rrole[rnum].Equip[p] := inum;
+            Ritem[inum].User := rnum;
+          end
+          else
+          begin
+            str := (' 此人不適合裝備此物品');
+            drawtextwithrect(screen, @str[1], 80, 30, 205, colcolor($66), colcolor($64));
+            waitanykey;
+            redraw;
+            //SDL_UpdateRect2(screen,0,0,screen.w,screen.h);
+          end;
         end;
       end;
-    4: //不处理暗器类物品
+    end;
+    2: //秘笈
+    begin
+      menu := 1;
+      if Ritem[inum].User >= 0 then
       begin
-        //if where<>3 then break;
+        setlength(menustring, 2);
+        menustring[0] := (' 取消');
+        menustring[1] := (' 繼續');
+        str := (' 此秘笈正有人修煉，是否繼續？');
+        drawtextwithrect(screen, @str[1], 80, 30, 285, colcolor(7), colcolor(5));
+        menu := commonmenu(80, 65, 45, 1, menustring);
       end;
+      if menu = 1 then
+      begin
+        str := (' 誰要修煉');
+        str1 := big5tounicode(@Ritem[inum].Name);
+        drawtextwithrect(screen, @str[1], 80, 30, length(str1) * 22 + 80, colcolor($23), colcolor($21));
+        drawshadowtext(screen, @str1[1], 160, 32, colcolor($66), colcolor($64));
+        SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+        menu := SelectOneTeamMember(80, 65, '', 0, 0);
+        if menu >= 0 then
+        begin
+          rnum := TeamList[menu];
+          if canequip(rnum, inum) then
+          begin
+            if Ritem[inum].User >= 0 then
+              Rrole[Ritem[inum].User].PracticeBook := -1;
+            if Rrole[rnum].PracticeBook >= 0 then
+              Ritem[RRole[rnum].PracticeBook].User := -1;
+            Rrole[rnum].PracticeBook := inum;
+            Ritem[inum].User := rnum;
+              {if (inum in [78, 93]) then
+                rrole[rnum].Sexual := 2;}
+          end
+          else
+          begin
+            str := (' 此人不適合修煉此秘笈');
+            drawtextwithrect(screen, @str[1], 80, 30, 205, colcolor($66), colcolor($64));
+            waitanykey;
+            redraw;
+            //SDL_UpdateRect2(screen,0,0,screen.w,screen.h);
+          end;
+        end;
+      end;
+    end;
+    3: //药品
+    begin
+      if where <> 2 then
+      begin
+        str := (' 誰要服用');
+        str1 := big5tounicode(@Ritem[inum].Name);
+        drawtextwithrect(screen, @str[1], 80, 30, length(str1) * 22 + 80, colcolor($23), colcolor($21));
+        drawshadowtext(screen, @str1[1], 160, 32, colcolor($66), colcolor($64));
+        SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+        menu := SelectOneTeamMember(80, 65, '', 0, 0);
+        rnum := TeamList[menu];
+      end;
+      if menu >= 0 then
+      begin
+        redraw;
+        EatOneItem(rnum, inum);
+        instruct_32(inum, -1);
+        waitanykey;
+      end;
+    end;
+    4: //不处理暗器类物品
+    begin
+      //if where<>3 then break;
+    end;
   end;
 
 end;
@@ -4750,7 +4779,8 @@ begin
   drawheadpic(Rrole[rnum].HeadNum, x + 60, y + 80);
   //显示姓名
   Name := big5tounicode(@Rrole[rnum].Name);
-  drawshadowtext(screen, @Name[1], x + 68 - length(PChar(@Rrole[rnum].Name)) * 5, y + 85, colcolor($66), colcolor($63));
+  drawshadowtext(screen, @Name[1], x + 68 - length(PChar(@Rrole[rnum].Name)) * 5, y + 85,
+    colcolor($66), colcolor($63));
   //显示所需字符
   for i := 0 to 5 do
     drawshadowtext(screen, @strs[i, 1], x - 10, y + 110 + 21 * i, colcolor($23), colcolor($21));
@@ -4825,16 +4855,16 @@ begin
   //生命值, 在受伤和中毒值不同时使用不同颜色
   case RRole[rnum].Hurt of
     34..66:
-      begin
-        color1 := colcolor($E);
-        color2 := colcolor($10);
-      end;
+    begin
+      color1 := colcolor($E);
+      color2 := colcolor($10);
+    end;
     67..1000:
-      begin
-        color1 := colcolor($14);
-        color2 := colcolor($16);
-      end;
-  else
+    begin
+      color1 := colcolor($14);
+      color2 := colcolor($16);
+    end;
+    else
     begin
       color1 := colcolor($7);
       color2 := colcolor($5);
@@ -4848,16 +4878,16 @@ begin
 
   case RRole[rnum].Poison of
     34..66:
-      begin
-        color1 := colcolor($30);
-        color2 := colcolor($32);
-      end;
+    begin
+      color1 := colcolor($30);
+      color2 := colcolor($32);
+    end;
     67..1000:
-      begin
-        color1 := colcolor($35);
-        color2 := colcolor($37);
-      end;
-  else
+    begin
+      color1 := colcolor($35);
+      color2 := colcolor($37);
+    end;
+    else
     begin
       color1 := colcolor($23);
       color2 := colcolor($21);
@@ -4999,10 +5029,10 @@ begin
       1: MenuSave;
       0: Menuload;
       2:
-        begin
-          SwitchFullScreen;
-          break;
-        end;
+      begin
+        SwitchFullScreen;
+        break;
+      end;
     end;
     if where = 3 then
       break;
@@ -5306,7 +5336,7 @@ begin
   if addlife > RRole[role2].MaxHP - Rrole[role2].CurrentHP then
     addlife := RRole[role2].MaxHP - Rrole[role2].CurrentHP;
   Rrole[role2].CurrentHP := Rrole[role2].CurrentHP + addlife;
-  result := addlife;
+  Result := addlife;
 
   if where <> 2 then
   begin
@@ -5340,7 +5370,7 @@ begin
   if minuspoi > Rrole[role2].Poison then
     minuspoi := Rrole[role2].Poison;
   Rrole[role2].Poison := Rrole[role2].Poison - minuspoi;
-  result := minuspoi;
+  Result := minuspoi;
 
   if where <> 2 then
   begin
@@ -5437,7 +5467,7 @@ begin
   //减少受伤
   addvalue[23] := -(addvalue[0] div LIFE_HURT);
 
-  if - addvalue[23] > rrole[rnum].Data[19] then
+  if -addvalue[23] > rrole[rnum].Data[19] then
     addvalue[23] := -rrole[rnum].Data[19];
 
   //增加生命, 内力最大值的处理
@@ -5630,352 +5660,352 @@ begin
         break;
       case e[i] of
         0:
-          begin
-            i := i + 1;
-            instruct_0;
-          end;
+        begin
+          i := i + 1;
+          instruct_0;
+        end;
         1:
-          begin
-            instruct_1(e[i + 1], e[i + 2], e[i + 3]);
-            i := i + 4;
-          end;
+        begin
+          instruct_1(e[i + 1], e[i + 2], e[i + 3]);
+          i := i + 4;
+        end;
         2:
-          begin
-            instruct_2(e[i + 1], e[i + 2]);
-            i := i + 3;
-          end;
+        begin
+          instruct_2(e[i + 1], e[i + 2]);
+          i := i + 3;
+        end;
         3:
-          begin
-            instruct_3([e[i + 1], e[i + 2], e[i + 3], e[i + 4], e[i + 5], e[i + 6], e[i + 7], e[i + 8],
-              e[i + 9], e[i + 10], e[i + 11], e[i + 12], e[i + 13]]);
-            i := i + 14;
-          end;
+        begin
+          instruct_3([e[i + 1], e[i + 2], e[i + 3], e[i + 4], e[i + 5], e[i + 6], e[i + 7],
+            e[i + 8], e[i + 9], e[i + 10], e[i + 11], e[i + 12], e[i + 13]]);
+          i := i + 14;
+        end;
         4:
-          begin
-            i := i + instruct_4(e[i + 1], e[i + 2], e[i + 3]);
-            i := i + 4;
-          end;
+        begin
+          i := i + instruct_4(e[i + 1], e[i + 2], e[i + 3]);
+          i := i + 4;
+        end;
         5:
-          begin
-            i := i + instruct_5(e[i + 1], e[i + 2]);
-            i := i + 3;
-          end;
+        begin
+          i := i + instruct_5(e[i + 1], e[i + 2]);
+          i := i + 3;
+        end;
         6:
-          begin
-            i := i + instruct_6(e[i + 1], e[i + 2], e[i + 3], e[i + 4]);
-            i := i + 5;
-          end;
+        begin
+          i := i + instruct_6(e[i + 1], e[i + 2], e[i + 3], e[i + 4]);
+          i := i + 5;
+        end;
         7: //Break the event.
-          begin
-            i := i + 1;
-            break;
-          end;
+        begin
+          i := i + 1;
+          break;
+        end;
         8:
-          begin
-            instruct_8(e[i + 1]);
-            i := i + 2;
-          end;
+        begin
+          instruct_8(e[i + 1]);
+          i := i + 2;
+        end;
         9:
-          begin
-            i := i + instruct_9(e[i + 1], e[i + 2]);
-            i := i + 3;
-          end;
+        begin
+          i := i + instruct_9(e[i + 1], e[i + 2]);
+          i := i + 3;
+        end;
         10:
-          begin
-            instruct_10(e[i + 1]);
-            i := i + 2;
-          end;
+        begin
+          instruct_10(e[i + 1]);
+          i := i + 2;
+        end;
         11:
-          begin
-            i := i + instruct_11(e[i + 1], e[i + 2]);
-            i := i + 3;
-          end;
+        begin
+          i := i + instruct_11(e[i + 1], e[i + 2]);
+          i := i + 3;
+        end;
         12:
-          begin
-            instruct_12;
-            i := i + 1;
-          end;
+        begin
+          instruct_12;
+          i := i + 1;
+        end;
         13:
-          begin
-            instruct_13;
-            i := i + 1;
-          end;
+        begin
+          instruct_13;
+          i := i + 1;
+        end;
         14:
-          begin
-            instruct_14;
-            i := i + 1;
-          end;
+        begin
+          instruct_14;
+          i := i + 1;
+        end;
         15:
-          begin
-            instruct_15;
-            i := i + 1;
-            break;
-          end;
+        begin
+          instruct_15;
+          i := i + 1;
+          break;
+        end;
         16:
-          begin
-            i := i + instruct_16(e[i + 1], e[i + 2], e[i + 3]);
-            i := i + 4;
-          end;
+        begin
+          i := i + instruct_16(e[i + 1], e[i + 2], e[i + 3]);
+          i := i + 4;
+        end;
         17:
-          begin
-            instruct_17([e[i + 1], e[i + 2], e[i + 3], e[i + 4], e[i + 5]]);
-            i := i + 6;
-          end;
+        begin
+          instruct_17([e[i + 1], e[i + 2], e[i + 3], e[i + 4], e[i + 5]]);
+          i := i + 6;
+        end;
         18:
-          begin
-            i := i + instruct_18(e[i + 1], e[i + 2], e[i + 3]);
-            i := i + 4;
-          end;
+        begin
+          i := i + instruct_18(e[i + 1], e[i + 2], e[i + 3]);
+          i := i + 4;
+        end;
         19:
-          begin
-            instruct_19(e[i + 1], e[i + 2]);
-            i := i + 3;
-          end;
+        begin
+          instruct_19(e[i + 1], e[i + 2]);
+          i := i + 3;
+        end;
         20:
-          begin
-            i := i + instruct_20(e[i + 1], e[i + 2]);
-            i := i + 3;
-          end;
+        begin
+          i := i + instruct_20(e[i + 1], e[i + 2]);
+          i := i + 3;
+        end;
         21:
-          begin
-            instruct_21(e[i + 1]);
-            i := i + 2;
-          end;
+        begin
+          instruct_21(e[i + 1]);
+          i := i + 2;
+        end;
         22:
-          begin
-            instruct_22;
-            i := i + 1;
-          end;
+        begin
+          instruct_22;
+          i := i + 1;
+        end;
         23:
-          begin
-            instruct_23(e[i + 1], e[i + 2]);
-            i := i + 3;
-          end;
+        begin
+          instruct_23(e[i + 1], e[i + 2]);
+          i := i + 3;
+        end;
         24:
-          begin
-            instruct_24;
-            i := i + 1;
-          end;
+        begin
+          instruct_24;
+          i := i + 1;
+        end;
         25:
-          begin
-            instruct_25(e[i + 1], e[i + 2], e[i + 3], e[i + 4]);
-            i := i + 5;
-          end;
+        begin
+          instruct_25(e[i + 1], e[i + 2], e[i + 3], e[i + 4]);
+          i := i + 5;
+        end;
         26:
-          begin
-            instruct_26(e[i + 1], e[i + 2], e[i + 3], e[i + 4], e[i + 5]);
-            i := i + 6;
-          end;
+        begin
+          instruct_26(e[i + 1], e[i + 2], e[i + 3], e[i + 4], e[i + 5]);
+          i := i + 6;
+        end;
         27:
-          begin
-            instruct_27(e[i + 1], e[i + 2], e[i + 3]);
-            i := i + 4;
-          end;
+        begin
+          instruct_27(e[i + 1], e[i + 2], e[i + 3]);
+          i := i + 4;
+        end;
         28:
-          begin
-            i := i + instruct_28(e[i + 1], e[i + 2], e[i + 3], e[i + 4], e[i + 5]);
-            i := i + 6;
-          end;
+        begin
+          i := i + instruct_28(e[i + 1], e[i + 2], e[i + 3], e[i + 4], e[i + 5]);
+          i := i + 6;
+        end;
         29:
-          begin
-            i := i + instruct_29(e[i + 1], e[i + 2], e[i + 3], e[i + 4], e[i + 5]);
-            i := i + 6;
-          end;
+        begin
+          i := i + instruct_29(e[i + 1], e[i + 2], e[i + 3], e[i + 4], e[i + 5]);
+          i := i + 6;
+        end;
         30:
-          begin
-            instruct_30(e[i + 1], e[i + 2], e[i + 3], e[i + 4]);
-            i := i + 5;
-          end;
+        begin
+          instruct_30(e[i + 1], e[i + 2], e[i + 3], e[i + 4]);
+          i := i + 5;
+        end;
         31:
-          begin
-            i := i + instruct_31(e[i + 1], e[i + 2], e[i + 3]);
-            i := i + 4;
-          end;
+        begin
+          i := i + instruct_31(e[i + 1], e[i + 2], e[i + 3]);
+          i := i + 4;
+        end;
         32:
-          begin
-            instruct_32(e[i + 1], e[i + 2]);
-            i := i + 3;
-          end;
+        begin
+          instruct_32(e[i + 1], e[i + 2]);
+          i := i + 3;
+        end;
         33:
-          begin
-            instruct_33(e[i + 1], e[i + 2], e[i + 3]);
-            i := i + 4;
-          end;
+        begin
+          instruct_33(e[i + 1], e[i + 2], e[i + 3]);
+          i := i + 4;
+        end;
         34:
-          begin
-            instruct_34(e[i + 1], e[i + 2]);
-            i := i + 3;
-          end;
+        begin
+          instruct_34(e[i + 1], e[i + 2]);
+          i := i + 3;
+        end;
         35:
-          begin
-            instruct_35(e[i + 1], e[i + 2], e[i + 3], e[i + 4]);
-            i := i + 5;
-          end;
+        begin
+          instruct_35(e[i + 1], e[i + 2], e[i + 3], e[i + 4]);
+          i := i + 5;
+        end;
         36:
-          begin
-            i := i + instruct_36(e[i + 1], e[i + 2], e[i + 3]);
-            i := i + 4;
-          end;
+        begin
+          i := i + instruct_36(e[i + 1], e[i + 2], e[i + 3]);
+          i := i + 4;
+        end;
         37:
-          begin
-            instruct_37(e[i + 1]);
-            i := i + 2;
-          end;
+        begin
+          instruct_37(e[i + 1]);
+          i := i + 2;
+        end;
         38:
-          begin
-            instruct_38(e[i + 1], e[i + 2], e[i + 3], e[i + 4]);
-            i := i + 5;
-          end;
+        begin
+          instruct_38(e[i + 1], e[i + 2], e[i + 3], e[i + 4]);
+          i := i + 5;
+        end;
         39:
-          begin
-            instruct_39(e[i + 1]);
-            i := i + 2;
-          end;
+        begin
+          instruct_39(e[i + 1]);
+          i := i + 2;
+        end;
         40:
-          begin
-            instruct_40(e[i + 1]);
-            i := i + 2;
-          end;
+        begin
+          instruct_40(e[i + 1]);
+          i := i + 2;
+        end;
         41:
-          begin
-            instruct_41(e[i + 1], e[i + 2], e[i + 3]);
-            i := i + 4;
-          end;
+        begin
+          instruct_41(e[i + 1], e[i + 2], e[i + 3]);
+          i := i + 4;
+        end;
         42:
-          begin
-            i := i + instruct_42(e[i + 1], e[i + 2]);
-            i := i + 3;
-          end;
+        begin
+          i := i + instruct_42(e[i + 1], e[i + 2]);
+          i := i + 3;
+        end;
         43:
-          begin
-            i := i + instruct_43(e[i + 1], e[i + 2], e[i + 3]);
-            i := i + 4;
-          end;
+        begin
+          i := i + instruct_43(e[i + 1], e[i + 2], e[i + 3]);
+          i := i + 4;
+        end;
         44:
-          begin
-            instruct_44(e[i + 1], e[i + 2], e[i + 3], e[i + 4], e[i + 5], e[i + 6]);
-            i := i + 7;
-          end;
+        begin
+          instruct_44(e[i + 1], e[i + 2], e[i + 3], e[i + 4], e[i + 5], e[i + 6]);
+          i := i + 7;
+        end;
         45:
-          begin
-            instruct_45(e[i + 1], e[i + 2]);
-            i := i + 3;
-          end;
+        begin
+          instruct_45(e[i + 1], e[i + 2]);
+          i := i + 3;
+        end;
         46:
-          begin
-            instruct_46(e[i + 1], e[i + 2]);
-            i := i + 3;
-          end;
+        begin
+          instruct_46(e[i + 1], e[i + 2]);
+          i := i + 3;
+        end;
         47:
-          begin
-            instruct_47(e[i + 1], e[i + 2]);
-            i := i + 3;
-          end;
+        begin
+          instruct_47(e[i + 1], e[i + 2]);
+          i := i + 3;
+        end;
         48:
-          begin
-            instruct_48(e[i + 1], e[i + 2]);
-            i := i + 3;
-          end;
+        begin
+          instruct_48(e[i + 1], e[i + 2]);
+          i := i + 3;
+        end;
         49:
-          begin
-            instruct_49(e[i + 1], e[i + 2]);
-            i := i + 3;
-          end;
+        begin
+          instruct_49(e[i + 1], e[i + 2]);
+          i := i + 3;
+        end;
         50:
-          begin
-            p := instruct_50([e[i + 1], e[i + 2], e[i + 3], e[i + 4], e[i + 5], e[i + 6], e[i + 7]]);
-            i := i + 8;
-            if p < 622592 then
-              i := i + p
-            else
-              e[i + ((p + 32768) div 655360) - 1] := p mod 655360;
-          end;
+        begin
+          p := instruct_50([e[i + 1], e[i + 2], e[i + 3], e[i + 4], e[i + 5], e[i + 6], e[i + 7]]);
+          i := i + 8;
+          if p < 622592 then
+            i := i + p
+          else
+            e[i + ((p + 32768) div 655360) - 1] := p mod 655360;
+        end;
         51:
-          begin
-            instruct_51;
-            i := i + 1;
-          end;
+        begin
+          instruct_51;
+          i := i + 1;
+        end;
         52:
-          begin
-            instruct_52;
-            i := i + 1;
-          end;
+        begin
+          instruct_52;
+          i := i + 1;
+        end;
         53:
-          begin
-            instruct_53;
-            i := i + 1;
-          end;
+        begin
+          instruct_53;
+          i := i + 1;
+        end;
         54:
-          begin
-            instruct_54;
-            i := i + 1;
-          end;
+        begin
+          instruct_54;
+          i := i + 1;
+        end;
         55:
-          begin
-            i := i + instruct_55(e[i + 1], e[i + 2], e[i + 3], e[i + 4]);
-            i := i + 5;
-          end;
+        begin
+          i := i + instruct_55(e[i + 1], e[i + 2], e[i + 3], e[i + 4]);
+          i := i + 5;
+        end;
         56:
-          begin
-            instruct_56(e[i + 1]);
-            i := i + 2;
-          end;
+        begin
+          instruct_56(e[i + 1]);
+          i := i + 2;
+        end;
         57:
-          begin
-            instruct_57;
-            i := i + 1;
-          end;
+        begin
+          instruct_57;
+          i := i + 1;
+        end;
         58:
-          begin
-            instruct_58;
-            i := i + 1;
-          end;
+        begin
+          instruct_58;
+          i := i + 1;
+        end;
         59:
-          begin
-            instruct_59;
-            i := i + 1;
-          end;
+        begin
+          instruct_59;
+          i := i + 1;
+        end;
         60:
-          begin
-            i := i + instruct_60(e[i + 1], e[i + 2], e[i + 3], e[i + 4], e[i + 5]);
-            i := i + 6;
-          end;
+        begin
+          i := i + instruct_60(e[i + 1], e[i + 2], e[i + 3], e[i + 4], e[i + 5]);
+          i := i + 6;
+        end;
         61:
-          begin
-            i := i + instruct_61(e[i + 1], e[i + 2]);
-            i := i + 3;
-          end;
+        begin
+          i := i + instruct_61(e[i + 1], e[i + 2]);
+          i := i + 3;
+        end;
         62:
-          begin
-            instruct_62(e[i + 1], e[i + 2], e[i + 3], e[i + 4], e[i + 5], e[i + 6]);
-            i := i + 7;
-            break;
-          end;
+        begin
+          instruct_62(e[i + 1], e[i + 2], e[i + 3], e[i + 4], e[i + 5], e[i + 6]);
+          i := i + 7;
+          break;
+        end;
         63:
-          begin
-            instruct_63(e[i + 1], e[i + 2]);
-            i := i + 3;
-          end;
+        begin
+          instruct_63(e[i + 1], e[i + 2]);
+          i := i + 3;
+        end;
         64:
-          begin
-            instruct_64;
-            i := i + 1;
-          end;
+        begin
+          instruct_64;
+          i := i + 1;
+        end;
         65:
-          begin
-            i := i + 1;
-          end;
+        begin
+          i := i + 1;
+        end;
         66:
-          begin
-            instruct_66(e[i + 1]);
-            i := i + 2;
-          end;
+        begin
+          instruct_66(e[i + 1]);
+          i := i + 2;
+        end;
         67:
-          begin
-            instruct_67(e[i + 1]);
-            i := i + 2;
-          end;
-      else
+        begin
+          instruct_67(e[i + 1]);
+          i := i + 2;
+        end;
+        else
         begin
           i := i + 1;
         end;
@@ -6037,6 +6067,12 @@ end;
 function IsCave(snum: integer): boolean;
 begin
   Result := snum in [5, 7, 10, 41, 42, 46, 65, 66, 67, 72, 79];
+end;
+
+
+function Round(x: real): integer;
+begin
+  Result := floor(x + 0.5);
 end;
 
 end.
