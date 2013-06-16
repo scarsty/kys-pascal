@@ -91,7 +91,7 @@ begin
   if PNG_TILE > 0 then
   begin
     if imgnum <= high(TitlePNGIndex) then
-      DrawPngTile(TitlePNGIndex[imgnum], 0, nil, screen, px, py);
+      DrawPNGTile(TitlePNGIndex[imgnum], 0, nil, screen, px, py);
   end;
   if PNG_TILE = 0 then
   begin
@@ -125,12 +125,12 @@ begin
       if MPNGIndex[num].UseGRP = 0 then
       begin
         if Framenum = -1 then
-          Framenum := sdl_getticks div 200 + random(3);
+          Framenum := SDL_GetTicks div 200 + random(3);
         if (num = 1377) or (num = 1388) or (num = 1404) or (num = 1417) then
-          Framenum := sdl_getticks div 200;
+          Framenum := SDL_GetTicks div 200;
         //瀑布场景的闪烁需要
         //DrawPNGTile(MPNGIndex[num], Framenum, nil, screen, px, py, shadow)
-        DrawPngTile(MPNGIndex[num], Framenum, nil, screen, px, py, shadow, alpha, mixColor, mixAlpha,
+        DrawPNGTile(MPNGIndex[num], Framenum, nil, screen, px, py, shadow, alpha, mixColor, mixAlpha,
           0, nil, 0, 0, 0, 0, 0);
       end
       else
@@ -167,7 +167,7 @@ begin
       py := py - 50;
     end;
     if PNG_Tile > 0 then
-      DrawPngTile(SPNGIndex[num], 0, @Area, screen, px, py)
+      DrawPNGTile(SPNGIndex[num], 0, @Area, screen, px, py)
     else
     begin
       DrawRLE8Pic(@ACol[0], num, px, py, @SIdx[0], @SPic[0], @Area, nil, 0, 0, 0, 0);
@@ -187,7 +187,7 @@ begin
       py := py - 50;
     end;
     if PNG_Tile > 0 then
-      DrawPngTile(SPNGIndex[num], 0, nil, screen, px, py, shadow, alpha, mixColor, mixAlpha,
+      DrawPNGTile(SPNGIndex[num], 0, nil, screen, px, py, shadow, alpha, mixColor, mixAlpha,
         depth, @BlockImg[0], 2304, 1402, sizeof(BlockImg[0, 0]), BlockScreen.x, BlockScreen.y)
     else
     begin
@@ -249,7 +249,7 @@ begin
     begin
       if temp <> 1 then
         LoadOnePNGTile('resource/smap/', nil, num, SPNGIndex[num], @SPNGTile[0]);
-      DrawPNGTile(SPNGIndex[num], sdl_getticks div 300, @Area, pImg, px, py);
+      DrawPNGTile(SPNGIndex[num], SDL_GetTicks div 300, @Area, pImg, px, py);
       if needBlock <> 0 then
       begin
         SetPNGTileBlock(SPNGIndex[num], px, py, depth, pBlock, 2304, 1402, sizeof(BlockImg[0, 0]));
@@ -458,7 +458,7 @@ begin
     begin
       if (index >= 0) and (index < BRoleAmount) then
         if (num >= Low(FPNGIndex[index])) and (num <= High(FPNGIndex[index])) then
-          DrawPngTile(FPNGIndex[index][num], 0, nil, screen, px, py, shadow, alpha, mixColor, mixAlpha,
+          DrawPNGTile(FPNGIndex[index][num], 0, nil, screen, px, py, shadow, alpha, mixColor, mixAlpha,
             depth, @BlockImg[0], 2304, 1402, sizeof(BlockImg[0, 0]), BlockScreen.x, BlockScreen.y);
     end;
     0:
@@ -475,7 +475,7 @@ procedure DrawCPic(num, px, py, shadow, alpha: integer; mixColor: Uint32; mixAlp
 begin
   if PNG_TILE > 0 then
   begin
-    DrawPngTile(CPNGIndex[num], 0, nil, screen, px, py, shadow, alpha, mixColor, MixAlpha);
+    DrawPNGTile(CPNGIndex[num], 0, nil, screen, px, py, shadow, alpha, mixColor, MixAlpha);
   end;
   if PNG_TILE = 0 then
   begin
@@ -920,7 +920,7 @@ var
   i1, i2, sumi, i: integer;
   pos: TPosition;
 begin
-  loadScencePart(-x * 18 + y * 18 + 1151 - CENTER_X, x * 9 + y * 9 + 9 - CENTER_Y + 250);
+  LoadScencePart(-x * 18 + y * 18 + 1151 - CENTER_X, x * 9 + y * 9 + 9 - CENTER_Y + 250);
 
   {for i1 := 0 to 63 do
     for i2 := 0 to 63 do
@@ -956,7 +956,7 @@ var
   depth: integer;
   pos: TPosition;
 begin
-  pos := getpositiononscreen(Sx, Sy, x, y);
+  pos := GetPositionOnScreen(Sx, Sy, x, y);
   DrawSPic(CurScenceRolePic, pos.x, pos.y - SData[CurScence, 4, Sx, Sy], 0, 100, CalBlock(Sx, Sy), 0, 0);
 
 end;
@@ -1202,7 +1202,7 @@ begin
       exit;
     end;
   end;}
-  DrawBFieldWithoutRole(Bx, By);
+  DrawBfieldWithoutRole(Bx, By);
 
   for i1 := 0 to 63 do
     for i2 := 0 to 63 do
@@ -1222,7 +1222,7 @@ end;
 
 //画不含主角的战场
 
-procedure DrawBFieldWithoutRole(x, y: integer);
+procedure DrawBfieldWithoutRole(x, y: integer);
 var
   i1, i2, xpoint, ypoint: integer;
 begin
@@ -1235,7 +1235,7 @@ begin
     end;
   end;}
   //BFieldDrawn := 0;
-  loadBfieldPart(-x * 18 + y * 18 + 1151 - CENTER_X, x * 9 + y * 9 + 9 - CENTER_Y + 250);
+  LoadBfieldPart(-x * 18 + y * 18 + 1151 - CENTER_X, x * 9 + y * 9 + 9 - CENTER_Y + 250);
 
   {if (SDL_MustLock(screen)) then
   begin
@@ -1324,7 +1324,7 @@ end;
 
 //将战场映像画到屏幕并载入遮挡数据
 
-procedure LoadBFieldPart(x, y: integer);
+procedure LoadBfieldPart(x, y: integer);
 var
   i1, i2: integer;
   dest: TSDL_Rect;
@@ -1411,7 +1411,7 @@ begin
     for i2 := 0 to 63 do
       if Bfield[0, i1, i2] > 0 then
       begin
-        pos := GetpositionOnScreen(i1, i2, Bx, By);
+        pos := GetPositionOnScreen(i1, i2, Bx, By);
         if {(i1 = Ax) and (i2 = Ay)}  Bfield[4, i1, i2] > 0 then
           //DrawBPic(Bfield[0, i1, i2] div 2, pos.x, pos.y, 0, 0, 0, $FFFFFFFF, 20)
           DrawBPic(Bfield[0, i1, i2] div 2, pos.x, pos.y, 1)
@@ -1423,12 +1423,12 @@ begin
           DrawMPic(1, pos.x, pos.y);}
       end;
 
-  loadBfieldPart2(-Bx * 18 + By * 18 + 1151 - CENTER_X, Bx * 9 + By * 9 + 9 - CENTER_Y + 250, 35);
+  LoadBFieldPart2(-Bx * 18 + By * 18 + 1151 - CENTER_X, Bx * 9 + By * 9 + 9 - CENTER_Y + 250, 35);
 
   for i1 := 0 to 63 do
     for i2 := 0 to 63 do
     begin
-      pos := getpositiononScreen(i1, i2, Bx, By);
+      pos := GetPositionOnScreen(i1, i2, Bx, By);
       bnum := Bfield[2, i1, i2];
       if (bnum >= 0) and (Brole[bnum].Dead = 0) then
       begin
@@ -1465,9 +1465,9 @@ begin
   for i1 := 0 to 63 do
     for i2 := 0 to 63 do
     begin
-      pos := getpositiononScreen(i1, i2, Bx, By);
+      pos := GetPositionOnScreen(i1, i2, Bx, By);
       if (Bfield[2, i1, i2] >= 0) and (Brole[Bfield[2, i1, i2]].Dead = 0) then
-        DrawRoleOnBField(i1, i2);
+        DrawRoleOnBfield(i1, i2);
       if Bfield[4, i1, i2] > 0 then
         DrawEPic(Epicnum, pos.x, pos.y, 0, 25, 0, 0, 0);
     end;
@@ -1490,9 +1490,9 @@ begin
   for i1 := 0 to 63 do
     for i2 := 0 to 63 do
     begin
-      pos := getpositiononScreen(i1, i2, Bx, By);
+      pos := GetPositionOnScreen(i1, i2, Bx, By);
       if (Bfield[2, i1, i2] >= 0) and (Brole[Bfield[2, i1, i2]].Dead = 0) then
-        DrawRoleOnBField(i1, i2, 0, 50);
+        DrawRoleOnBfield(i1, i2, 0, 50);
       if (Bfield[4, i1, i2] > 0) and (Epicnum - Bfield[4, i1, i2] + 1 >= beginpic) and
         (Epicnum - Bfield[4, i1, i2] + 1 <= endpic) then
         DrawEPic(Epicnum - Bfield[4, i1, i2] + 1, pos.x, pos.y, 0, 25, 0, 0, 0);
@@ -1512,7 +1512,7 @@ begin
   for i1 := 0 to 63 do
     for i2 := 0 to 63 do
     begin
-      pos := getpositiononScreen(i1, i2, Bx, By);
+      pos := GetPositionOnScreen(i1, i2, Bx, By);
       k := Bfield[2, i1, i2];
       if (k >= 0) and (Brole[k].Dead = 0) then
       begin
@@ -1530,7 +1530,7 @@ begin
               flash := 1;
           end;
         end;
-        DrawRoleOnBField(i1, i2, MixColor, flash * (10 + random(40)));
+        DrawRoleOnBfield(i1, i2, MixColor, flash * (10 + random(40)));
       end;
       if Bfield[4, i1, i2] > 0 then
       begin
@@ -1597,7 +1597,7 @@ begin
   if SEMIREAL = 1 then
   begin
     x := 50;
-    y := Center_Y * 2 - 80;
+    y := CENTER_Y * 2 - 80;
     dest.y := y;
     DrawRectangleWithoutFrame(screen, 0, CENTER_Y * 2 - 50, CENTER_X * 2, 50, 0, 50);
     if length(BHead) = BRoleAmount then
