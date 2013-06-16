@@ -156,7 +156,6 @@ function SelectOneTeamMemberScript(L: Plua_state): integer; cdecl;
 implementation
 
 uses kys_draw;
-
 procedure InitialScript;
 begin
   //LoadLua;
@@ -386,7 +385,7 @@ end;
 
 function Pause(L: Plua_state): integer; cdecl;
 begin
-  lua_pushnumber(L, waitanykey);
+  lua_pushnumber(L, WaitAnyKey);
   Result := 1;
 
 end;
@@ -429,7 +428,7 @@ begin
     t := 0;
   end;
   lua_pushnumber(L, t);
-  sdl_delay(10);
+  SDL_Delay(10);
   Result := 1;
 
 end;
@@ -454,7 +453,7 @@ begin
   begin
     x50[$7100 + i] := floor(lua_tonumber(L, -n + 1 + i));
   end;
-  callevent(e);
+  CallEvent(e);
   Result := 0;
 
 end;
@@ -506,51 +505,51 @@ begin
 
   case dismode of
     0:
-      begin
-        headx := 40;
-        heady := 85;
-        diagx := 100;
-        diagy := 30;
-      end;
+    begin
+      headx := 40;
+      heady := 85;
+      diagx := 100;
+      diagy := 30;
+    end;
     1:
-      begin
-        headx := 546;
-        heady := CENTER_Y * 2 - 75;
-        diagx := 10;
-        diagy := CENTER_Y * 2 - 130;
-      end;
+    begin
+      headx := 546;
+      heady := CENTER_Y * 2 - 75;
+      diagx := 10;
+      diagy := CENTER_Y * 2 - 130;
+    end;
     2:
-      begin
-        headx := -1;
-        heady := -1;
-        diagx := 100;
-        diagy := 30;
-      end;
+    begin
+      headx := -1;
+      heady := -1;
+      diagx := 100;
+      diagy := 30;
+    end;
     5:
-      begin
-        headx := 40;
-        heady := CENTER_Y * 2 - 75;
-        diagx := 100;
-        diagy := CENTER_Y * 2 - 130;
-      end;
+    begin
+      headx := 40;
+      heady := CENTER_Y * 2 - 75;
+      diagx := 100;
+      diagy := CENTER_Y * 2 - 130;
+    end;
     4:
-      begin
-        headx := 546;
-        heady := 85;
-        diagx := 10;
-        diagy := 30;
-      end;
+    begin
+      headx := 546;
+      heady := 85;
+      diagx := 10;
+      diagy := 30;
+    end;
     3:
-      begin
-        headx := -1;
-        heady := -1;
-        diagx := 100;
-        diagy := CENTER_Y * 2 - 130;
-      end;
+    begin
+      headx := -1;
+      heady := -1;
+      diagx := 100;
+      diagy := CENTER_Y * 2 - 130;
+    end;
   end;
-  drawrectanglewithoutframe(screen, 0, diagy - 10, 640, 120, 0, 40);
+  DrawRectangleWithoutFrame(screen, 0, diagy - 10, 640, 120, 0, 40);
   if headx > 0 then
-    drawheadpic(rnum, headx, heady);
+    DrawHeadPic(rnum, headx, heady);
   len := length(content);
 
   w1 := 0;
@@ -560,7 +559,7 @@ begin
     if content[i] <> '*' then
     begin
       str := content[i];
-      drawshadowtext(screen, @str[1], diagx + w1 * 10, diagy + l1 * 22, colcolor($FF), colcolor($0));
+      DrawShadowText(screen, @str[1], diagx + w1 * 10, diagy + l1 * 22, ColColor($FF), ColColor($0));
       if integer(str[1]) < 128 then
         w1 := w1 + 1
       else
@@ -581,16 +580,16 @@ begin
       SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
       WaitAnyKey;
       Redraw;
-      drawrectanglewithoutframe(screen, 0, diagy - 10, 640, 120, 0, 40);
+      DrawRectangleWithoutFrame(screen, 0, diagy - 10, 640, 120, 0, 40);
       if headx > 0 then
-        drawheadpic(rnum, headx, heady);
+        DrawHeadPic(rnum, headx, heady);
       w1 := 0;
       l1 := 0;
     end;
   end;
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-  waitanykey;
-  redraw;
+  WaitAnyKey;
+  Redraw;
   Result := 0;
 
 end;
@@ -627,7 +626,7 @@ begin
   x := floor(lua_tonumber(L, -3));
   y := floor(lua_tonumber(L, -2));
   str := ' ' + UTF8Decode(lua_tostring(L, -1));
-  DrawShadowText(screen, @str[1], x, y, colcolor(5), colcolor(7));
+  DrawShadowText(screen, @str[1], x, y, ColColor(5), ColColor(7));
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
   Result := 0;
 
@@ -659,8 +658,8 @@ begin
       w := wt;
   end;
 
-  DrawRectangle(screen, x, y - 2, w * 10 + 5, h * 22 + 5, 0, colcolor(255), 30);
-  DrawShadowText(screen, @str[1], x - 17, y, colcolor(5), colcolor(7));
+  DrawRectangle(screen, x, y - 2, w * 10 + 5, h * 22 + 5, 0, ColColor(255), 30);
+  DrawShadowText(screen, @str[1], x - 17, y, ColColor(5), ColColor(7));
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
   Result := 0;
 
@@ -995,7 +994,7 @@ end;
 
 function Delay(L: Plua_state): integer; cdecl;
 begin
-  sdl_delay(floor(lua_tonumber(L, -1)));
+  SDL_Delay(floor(lua_tonumber(L, -1)));
   Result := 0;
 end;
 
@@ -1264,7 +1263,7 @@ begin
 {$IFDEF fpc}
   str := CP950ToUTF8(p1);
 {$ELSE}
-  str := UTF8encode(big5tounicode(p1));
+  str := UTF8encode(Big5ToUnicode(p1));
 {$ENDIF}
   lua_pushstring(L, @str[1]);
   Result := 1;
@@ -1293,7 +1292,7 @@ begin
   Sy := y;
   instruct_14;
   InitialScence;
-  Drawscence;
+  DrawScence;
   instruct_13;
   ShowScenceName(CurScence);
   CheckEvent3;
@@ -1569,8 +1568,7 @@ var
 begin
   n := lua_gettop(L);
   lua_pushboolean(L, instruct_28(floor(lua_tonumber(L, -n)), floor(lua_tonumber(L, 1 - n)),
-    floor(lua_tonumber(L, 2 - n)),
-    1, 0) = 1);
+    floor(lua_tonumber(L, 2 - n)), 1, 0) = 1);
   Result := 1;
 end;
 
@@ -1580,8 +1578,7 @@ var
 begin
   n := lua_gettop(L);
   lua_pushboolean(L, instruct_29(floor(lua_tonumber(L, -n)), floor(lua_tonumber(L, 1 - n)),
-    floor(lua_tonumber(L, 2 - n)),
-    1, 0) = 1);
+    floor(lua_tonumber(L, 2 - n)), 1, 0) = 1);
   Result := 1;
 end;
 
@@ -1708,8 +1705,7 @@ var
 begin
   n := lua_gettop(L);
   lua_pushboolean(L, instruct_60(floor(lua_tonumber(L, -n)), floor(lua_tonumber(L, 1 - n)),
-    floor(lua_tonumber(L, 2 - n)),
-    1, 0) = 1);
+    floor(lua_tonumber(L, 2 - n)), 1, 0) = 1);
   Result := 1;
 end;
 
@@ -1744,8 +1740,8 @@ end;
 
 function SelectOneTeamMemberScript(L: Plua_state): integer; cdecl;
 begin
-  lua_pushnumber(L, SelectOneTeamMember(floor(lua_tonumber(L, -5)), floor(lua_tonumber(L, -4)), lua_tostring(L, -3),
-    floor(lua_tonumber(L, -2)), floor(lua_tonumber(L, -1))));
+  lua_pushnumber(L, SelectOneTeamMember(floor(lua_tonumber(L, -5)), floor(lua_tonumber(L, -4)),
+    lua_tostring(L, -3), floor(lua_tonumber(L, -2)), floor(lua_tonumber(L, -1))));
   Result := 1;
 end;
 
