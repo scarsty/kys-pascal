@@ -31,7 +31,7 @@ procedure PlaySoundA(SoundNum, times: integer);
 
 //用于读取的子程
 procedure ReadTiles;
-function ReadFiletoBuffer(p: PChar; filename: string; size, malloc: integer): PChar;
+function ReadFileToBuffer(p: PChar; filename: string; size, malloc: integer): PChar;
 procedure FreeFileBuffer(var p: PChar);
 function LoadIdxGrp(stridx, strgrp: string; var idxarray: TIntArray; var grparray: TByteArray): integer;
 function LoadPNGTiles(path: string; var PNGIndexArray: TPNGIndexArray; var SurfaceArray: TSurfaceArray;
@@ -80,14 +80,14 @@ procedure DrawTextWithRect(sur: PSDL_Surface; word: puint16; x, y, w: integer; c
 
 
 //PNG贴图相关的子程
-procedure DrawPngTile(PNGIndex: TPNGIndex; FrameNum: integer; RectArea: PChar; scr: PSDL_Surface;
+procedure DrawPNGTile(PNGIndex: TPNGIndex; FrameNum: integer; RectArea: PChar; scr: PSDL_Surface;
   px, py: integer); overload;
-procedure DrawPngTile(PNGIndex: TPNGIndex; FrameNum: integer; RectArea: PChar; scr: PSDL_Surface;
+procedure DrawPNGTile(PNGIndex: TPNGIndex; FrameNum: integer; RectArea: PChar; scr: PSDL_Surface;
   px, py: integer; shadow, alpha: integer; MixColor: Uint32; MixAlpha: integer); overload;
-procedure DrawPngTile(PNGIndex: TPNGIndex; FrameNum: integer; RectArea: PChar; scr: PSDL_Surface;
+procedure DrawPNGTile(PNGIndex: TPNGIndex; FrameNum: integer; RectArea: PChar; scr: PSDL_Surface;
   px, py: integer; shadow, alpha: integer; MixColor: Uint32; MixAlpha: integer; depth: integer;
   BlockImgR: PChar; Width, Height, size, leftupx, leftupy: integer); overload;
-procedure SetPngTileBlock(PNGIndex: TPNGIndex; px, py, depth: integer; BlockImageW: PChar;
+procedure SetPNGTileBlock(PNGIndex: TPNGIndex; px, py, depth: integer; BlockImageW: PChar;
   Width, Height, size: integer);
 
 //用于系统响应的子程
@@ -95,7 +95,7 @@ procedure ChangeCol;
 procedure SDL_UpdateRect2(scr1: PSDL_Surface; x, y, w, h: integer);
 procedure SDL_GetMouseState2(var x, y: integer);
 procedure ResizeWindow(w, h: integer);
-procedure SwitchFullScreen;
+procedure SwitchFullscreen;
 procedure QuitConfirm;
 procedure CheckBasicEvent;
 
@@ -110,7 +110,6 @@ function FileExistsUTF8(filename: string): boolean; overload;
 implementation
 
 uses kys_draw, kys_battle;
-
 procedure InitialMusic;
 var
   i: integer;
@@ -498,7 +497,7 @@ end;
 //当读入的位置并非变长数据时, 务必设置 malloc = 0!
 //size小于0时, 则读整个文件.
 
-function ReadFiletoBuffer(p: PChar; filename: string; size, malloc: integer): PChar;
+function ReadFileToBuffer(p: PChar; filename: string; size, malloc: integer): PChar;
 var
   i: integer;
 begin
@@ -623,8 +622,8 @@ begin
 
     for i := size div 4 downto 0 do
     begin
-      if fileexists(AppPath + path + IntToStr(i) + '.png') or fileexists(AppPath +
-        path + IntToStr(i) + '_0.png') then
+      if fileexists(AppPath + path + IntToStr(i) + '.png') or fileexists(AppPath + path +
+        IntToStr(i) + '_0.png') then
       begin
         Result := i + 1;
         break;
@@ -882,7 +881,7 @@ begin
   (* Map the color yellow to this display (R := $ff, G := $FF, B := $00)
      Note:  If the display is palettized, you must set the palette first.
   *)
-  if (SDL_MustLock(screen)) then
+  if (SDL_MUSTLOCK(screen)) then
   begin
     if (SDL_LockSurface(screen) < 0) then
     begin
@@ -893,7 +892,7 @@ begin
 
   putpixel(screen, x, y, color);
 
-  if (SDL_MustLock(screen)) then
+  if (SDL_MUSTLOCK(screen)) then
   begin
     SDL_UnlockSurface(screen);
   end;
@@ -957,7 +956,7 @@ begin
   //colcolor := SDL_mapRGB(screen.format, Acol[num * 3 + 0] * 4, Acol[num * 3 + 1] * 4, Acol[num * 3 + 2] * 4);
   //{$ELSE}
   if (num >= 0) and (num <= 255) then
-    Result := SDL_mapRGB(screen.format, Acol[num * 3] * 4, Acol[num * 3 + 1] * 4, Acol[num * 3 + 2] * 4)
+    Result := SDL_MapRGB(screen.format, Acol[num * 3] * 4, Acol[num * 3 + 1] * 4, Acol[num * 3 + 2] * 4)
   else
     Result := 0;
   //{$ENDIF}
@@ -1168,7 +1167,7 @@ begin
                 pix4 := (mixAlpha * color4 + (100 - mixAlpha) * pix4) div 100;
                 //pix := pix1 + pix2 shl 8 + pix3 shl 16 + pix4 shl 24;
               end;
-              pix := sdl_maprgba(screen.format, pix1, pix2, pix3, pix4);
+              pix := SDL_MapRGBA(screen.format, pix1, pix2, pix3, pix4);
               if (Alpha < 100) or (pixdepth <= curdepth) then
                 putpixel(screen, x, y, pix);
             end
@@ -1182,7 +1181,7 @@ begin
                   //depth := (py div 9 - 1);
                   Pint(BlockImageW + (x * heightI + y) * sizeI)^ := depth;
                 end;
-                pix := sdl_maprgba(screen.format, pix1, pix2, pix3, pix4);
+                pix := SDL_MapRGBA(screen.format, pix1, pix2, pix3, pix4);
                 putpixel(Image, x, y, pix);
               end;
             end;
@@ -1295,7 +1294,7 @@ begin
   //word := @word2[1];
 {$ENDIF}
 
-  sdl_getrgb(color, sur.format, @r, @g, @b);
+  SDL_GetRGB(color, sur.format, @r, @g, @b);
   tempcolor.r := r;
   tempcolor.g := g;
   tempcolor.b := b;
@@ -1344,7 +1343,7 @@ var
   Text: PSDL_Surface;
   r, g, b: byte;
 begin
-  sdl_getrgb(color, sur.format, @r, @g, @b);
+  SDL_GetRGB(color, sur.format, @r, @g, @b);
   tempcolor.r := r;
   tempcolor.g := g;
   tempcolor.b := b;
@@ -1390,7 +1389,7 @@ begin
   MultiByteToWideChar(950, 0, PChar(str), length(str), pwidechar(words), len + 1);
 {$ENDIF}
   words := ' ' + words;
-  drawtext(sur, @words[1], x_pos, y_pos, color);
+  DrawText(sur, @words[1], x_pos, y_pos, color);
 
 end;
 
@@ -1421,7 +1420,7 @@ var
   len: integer;
   p: PChar;
 begin
-  DrawRectangle(sur, x, y, w, 28, 0, colcolor(255), 30);
+  DrawRectangle(sur, x, y, w, 28, 0, ColColor(255), 30);
   DrawShadowText(sur, word, x - 17, y + 2, color1, color2);
   SDL_UpdateRect2(screen, x, y, w + 1, 29);
 
@@ -1443,7 +1442,7 @@ begin
   tempscr := SDL_CreateRGBSurface(sur.flags or SDL_SRCALPHA, w + 1, h + 1, 32, RMask, GMask, BMask, AMask);
   SDL_GetRGB(colorin, tempscr.format, @r, @g, @b);
   SDL_GetRGB(colorframe, tempscr.format, @r1, @g1, @b1);
-  SDL_FillRect(tempscr, nil, sdl_maprgba(tempscr.format, r, g, b, alpha * 255 div 100));
+  SDL_FillRect(tempscr, nil, SDL_MapRGBA(tempscr.format, r, g, b, alpha * 255 div 100));
   dest.x := x;
   dest.y := y;
   dest.w := 0;
@@ -1467,7 +1466,7 @@ begin
         //a := round(200 - min(abs(i1/w-0.5),abs(i2/h-0.5))*2 * 100);
         a := round(250 - abs(i1 / w + i2 / h - 1) * 150);
         //writeln(a);
-        putpixel(tempscr, i1, i2, sdl_maprgba(tempscr.format, r1, g1, b1, a));
+        putpixel(tempscr, i1, i2, SDL_MapRGBA(tempscr.format, r1, g1, b1, a));
       end;
     end;
   SDL_BlitSurface(tempscr, nil, sur, @dest);
@@ -1515,7 +1514,7 @@ var
   now, next_time: uint32;
   p, p0, p1, p2: real;
 begin
-  now := sdl_getticks;
+  now := SDL_GetTicks;
   if (NIGHT_EFFECT = 1) and (where = 0) then
   begin
     now_time := now_time + 0.3;
@@ -1552,20 +1551,20 @@ begin
 
 end;
 
-procedure DrawPngTile(PNGIndex: TPNGIndex; FrameNum: integer; RectArea: PChar; scr: PSDL_Surface;
+procedure DrawPNGTile(PNGIndex: TPNGIndex; FrameNum: integer; RectArea: PChar; scr: PSDL_Surface;
   px, py: integer); overload;
 begin
-  DrawPngTile(PNGIndex, FrameNum, RectArea, scr, px, py, 0, 0, 0, 0);
+  DrawPNGTile(PNGIndex, FrameNum, RectArea, scr, px, py, 0, 0, 0, 0);
 end;
 
-procedure DrawPngTile(PNGIndex: TPNGIndex; FrameNum: integer; RectArea: PChar; scr: PSDL_Surface;
+procedure DrawPNGTile(PNGIndex: TPNGIndex; FrameNum: integer; RectArea: PChar; scr: PSDL_Surface;
   px, py: integer; shadow, alpha: integer; MixColor: Uint32; MixAlpha: integer); overload;
 begin
-  DrawPngTile(PNGIndex, FrameNum, RectArea, scr, px, py, shadow, alpha, MixColor, MixAlpha, 0, nil, 0, 0, 0, 0, 0);
+  DrawPNGTile(PNGIndex, FrameNum, RectArea, scr, px, py, shadow, alpha, MixColor, MixAlpha, 0, nil, 0, 0, 0, 0, 0);
 
 end;
 
-procedure DrawPngTile(PNGIndex: TPNGIndex; FrameNum: integer; RectArea: PChar; scr: PSDL_Surface;
+procedure DrawPNGTile(PNGIndex: TPNGIndex; FrameNum: integer; RectArea: PChar; scr: PSDL_Surface;
   px, py: integer; shadow, alpha: integer; MixColor: Uint32; MixAlpha: integer; depth: integer;
   BlockImgR: PChar; Width, Height, size, leftupx, leftupy: integer); overload;
 var
@@ -1605,8 +1604,8 @@ begin
         dest.y := py - y + 1;
         dest.w := CurSurface.w;
         dest.h := CurSurface.h;
-        if (dest.x + CurSurface.w >= x1) and (dest.y + CurSurface.h >= y1) and
-          (dest.x < x2) and (dest.y < y2) then
+        if (dest.x + CurSurface.w >= x1) and (dest.y + CurSurface.h >= y1) and (dest.x < x2) and
+          (dest.y < y2) then
         begin
           if shadow > 0 then
           begin
@@ -1705,7 +1704,7 @@ begin
   end;
 end;
 
-procedure SetPngTileBlock(PNGIndex: TPNGIndex; px, py, depth: integer; BlockImageW: PChar;
+procedure SetPNGTileBlock(PNGIndex: TPNGIndex; px, py, depth: integer; BlockImageW: PChar;
   Width, Height, size: integer);
 var
   i, i1, i2, x1, y1: integer;
@@ -1749,7 +1748,7 @@ end;}
 procedure SDL_UpdateRect2(scr1: PSDL_Surface; x, y, w, h: integer);
 var
   realx, realy, realw, realh, ZoomType: integer;
-  tempscr: Psdl_surface;
+  tempscr: PSDL_Surface;
   now, Next: Uint32;
   dest: TSDL_Rect;
   TextureID: GLUint;
@@ -1778,8 +1777,8 @@ begin
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     end;
 
-    glENABLE(GL_TEXTURE_2D);
-    glBEGIN(GL_QUADS);
+    glEnable(GL_TEXTURE_2D);
+    glBegin(GL_QUADS);
     glTexCoord2f(0.0, 0.0);
     glVertex3f(-1.0, 1.0, 0.0);
     glTexCoord2f(1.0, 0.0);
@@ -1788,8 +1787,8 @@ begin
     glVertex3f(1.0, -1.0, 0.0);
     glTexCoord2f(0.0, 1.0);
     glVertex3f(-1.0, -1.0, 0.0);
-    glEND;
-    glDISABLE(GL_TEXTURE_2D);
+    glEnd;
+    glDisable(GL_TEXTURE_2D);
     SDL_GL_SwapBuffers;
     glDeleteTextures(1, @TextureID);
   end
@@ -1809,7 +1808,7 @@ begin
     begin
       tempscr := sdl_gfx.zoomSurface(prescreen, RealScreen.w / screen.w, RealScreen.h / screen.h, SMOOTH);
       SDL_BlitSurface(tempscr, nil, RealScreen, nil);
-      sdl_freesurface(tempscr);
+      SDL_FreeSurface(tempscr);
     end;
     SDL_UpdateRect(RealScreen, 0, 0, RealScreen.w, RealScreen.h);
   end;
@@ -1831,7 +1830,7 @@ procedure ResizeWindow(w, h: integer);
 begin
   RealScreen := SDL_SetVideoMode(w, h, 32, ScreenFlag);
   event.type_ := 0;
-  SDL_UpdateRect2(Screen, 0, 0, screen.w, screen.h);
+  SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
 
 end;
 
@@ -1840,18 +1839,18 @@ begin
   fullscreen := 1 - fullscreen;
   if fullscreen = 0 then
   begin
-    realscreen := SDL_SetVideoMode(RESOLUTIONX, RESOLUTIONY, 32, ScreenFlag);
+    RealScreen := SDL_SetVideoMode(RESOLUTIONX, RESOLUTIONY, 32, ScreenFlag);
   end
   else
   begin
-    realscreen := SDL_SetVideoMode(Center_X * 2, Center_Y * 2, 32, ScreenFlag or SDL_FULLSCREEN);
+    RealScreen := SDL_SetVideoMode(CENTER_X * 2, CENTER_Y * 2, 32, ScreenFlag or SDL_FULLSCREEN);
   end;
 
 end;
 
 procedure QuitConfirm;
 var
-  tempscr: Psdl_surface;
+  tempscr: PSDL_Surface;
   menustring: array[0..1] of WideString;
 begin
   if (EXIT_GAME = 0) or (AskingQuit = True) then
@@ -1865,17 +1864,17 @@ begin
       exit;
     AskingQuit := True;
     tempscr := SDL_ConvertSurface(prescreen, screen.format, screen.flags);
-    SDL_BlitSurface(tempscr, nil, Screen, nil);
+    SDL_BlitSurface(tempscr, nil, screen, nil);
     DrawRectangleWithoutFrame(screen, 0, 0, screen.w, screen.h, 0, 50);
     SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
     menustring[0] := ' 取消';
     menustring[1] := ' 確認';
-    if commonmenu(CENTER_X * 2 - 50, 2, 45, 1, menustring) = 1 then
+    if CommonMenu(CENTER_X * 2 - 50, 2, 45, 1, menustring) = 1 then
       Quit;
-    redraw(1);
-    SDL_BlitSurface(tempscr, nil, Screen, nil);
+    Redraw(1);
+    SDL_BlitSurface(tempscr, nil, screen, nil);
     SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-    sdl_freesurface(tempscr);
+    SDL_FreeSurface(tempscr);
     AskingQuit := False;
   end;
 
@@ -1892,7 +1891,8 @@ begin
       SDL_VIDEORESIZE:
         ResizeWindow(event.resize.w, event.resize.h);
       SDL_KEYUP:
-        if (where = 2) and (event.key.keysym.sym = sdlk_Escape) then
+        if (where = 2) and (event.key.keysym.sym = SDLK_ESCAPE) then
+
         begin
           for i := 0 to BroleAmount - 1 do
           begin

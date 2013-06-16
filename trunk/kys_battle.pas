@@ -48,7 +48,7 @@ procedure AttackAction(bnum, i, mnum, level: integer); overload;
 procedure AttackAction(bnum, mnum, level: integer); overload;
 procedure ShowMagicName(mnum: integer; mode: integer = 0);
 function SelectMagic(rnum: integer): integer;
-procedure ShowMagicMenu(menustatus, menu, max: integer; menustring, menuengstring: array of WideString);
+procedure ShowMagicMenu(MenuStatus, menu, max: integer; menustring, menuengstring: array of WideString);
 procedure SetAminationPosition(mode, step: integer; range: integer = 0); overload;
 procedure SetAminationPosition(Bx, By, Ax, Ay, mode, step: integer; range: integer = 0); overload;
 procedure PlayMagicAmination(bnum, enum: integer; ForTeam: integer = 0; mode: integer = 0);
@@ -81,13 +81,13 @@ function TeamModeMenu: boolean;
 procedure AutoBattle(bnum: integer);
 procedure AutoUseItem(bnum, list: integer);
 
-procedure trymoveattack(var Mx1, My1, Ax1, Ay1, tempmaxhurt: integer; bnum, mnum, level: integer);
+procedure TryMoveAttack(var Mx1, My1, Ax1, Ay1, tempmaxhurt: integer; bnum, mnum, level: integer);
 procedure calline(var Mx1, My1, Ax1, Ay1, tempmaxhurt: integer; curX, curY, bnum, mnum, level: integer);
 procedure calarea(var Mx1, My1, Ax1, Ay1, tempmaxhurt: integer; curX, curY, bnum, mnum, level: integer);
 procedure calpoint(var Mx1, My1, Ax1, Ay1, tempmaxhurt: integer; curX, curY, bnum, mnum, level: integer);
 procedure calcross(var Mx1, My1, Ax1, Ay1, tempmaxhurt: integer; curX, curY, bnum, mnum, level: integer);
-procedure nearestmove(var Mx1, My1: integer; bnum: integer);
-procedure nearestmoveByPro(var Mx1, My1, Ax1, Ay1: integer; bnum, TeamMate, KeepDis, Prolist, MaxMinPro: integer;
+procedure NearestMove(var Mx1, My1: integer; bnum: integer);
+procedure NearestMoveByPro(var Mx1, My1, Ax1, Ay1: integer; bnum, TeamMate, KeepDis, Prolist, MaxMinPro: integer;
   mode: integer);
 
 var
@@ -119,7 +119,7 @@ begin
       x := warsta.TeamX[i];
       if SelectTeamList and (1 shl i) > 0 then
       begin
-        InitialBrole(BRoleAmount, TeamList[i], 0, x, y);
+        InitialBRole(BRoleAmount, TeamList[i], 0, x, y);
         BRoleAmount := BRoleAmount + 1;
       end;
     end;
@@ -129,18 +129,18 @@ begin
       x := warsta.TeamX[i];
       if (warsta.TeamMate[i] > 0) and (instruct_16(warsta.TeamMate[i], 1, 0) = 0) then
       begin
-        InitialBrole(BRoleAmount, warsta.TeamMate[i], 0, x, y);
+        InitialBRole(BRoleAmount, warsta.TeamMate[i], 0, x, y);
         BRoleAmount := BRoleAmount + 1;
       end;
     end;
   end;
   instruct_14;
   Where := 2;
-  initialwholeBfield; //初始化场景
+  InitialWholeBField; //初始化场景
 
   PreMusic := nowmusic;
-  stopMP3;
-  playmp3(warsta.MusicNum, -1);
+  StopMP3;
+  PlayMP3(warsta.MusicNum, -1);
 
   //Setlength(AutoMode, BRoleAmount);
   for i := 0 to BRoleAmount - 1 do
@@ -152,7 +152,7 @@ begin
     setlength(BHead, BRoleAmount);
     for i := 0 to broleamount - 1 do
     begin
-      BHead[i] := LoadSurfaceFromFile(AppPath + 'head/' + inttostr(Rrole[Brole[i].rnum].HeadNum) + '.png');
+      BHead[i] := LoadSurfaceFromFile(AppPath + 'head/' + IntToStr(Rrole[Brole[i].rnum].HeadNum) + '.png');
       if BHead[i] = nil then
       begin
         BHead[i] := SDL_CreateRGBSurface(screen.flags, 56, 71, 32, 0, 0, 0, 0);
@@ -222,11 +222,11 @@ begin
 
   if Rscence[CurScence].EntranceMusic >= 0 then
   begin
-    stopmp3;
-    playmp3(Rscence[CurScence].EntranceMusic, -1);
+    StopMP3;
+    PlayMP3(Rscence[CurScence].EntranceMusic, -1);
   end
   else
-    playmp3(PreMusic, -1);
+    PlayMP3(PreMusic, -1);
 
   Where := 1;
   if bstatus = 1 then
@@ -283,7 +283,7 @@ begin
     x := warsta.TeamX[i];
     if warsta.AutoTeamMate[i] >= 0 then
     begin
-      InitialBrole(BRoleAmount, warsta.AutoTeamMate[i], 0, x, y);
+      InitialBRole(BRoleAmount, warsta.AutoTeamMate[i], 0, x, y);
       BRoleAmount := BRoleAmount + 1;
     end;
   end;
@@ -296,7 +296,7 @@ begin
     x := warsta.EnemyX[i];
     if warsta.Enemy[i] >= 0 then
     begin
-      InitialBrole(BRoleAmount, warsta.Enemy[i], 1, x, y);
+      InitialBRole(BRoleAmount, warsta.Enemy[i], 1, x, y);
       BRoleAmount := BRoleAmount + 1;
     end;
   end;
@@ -340,7 +340,7 @@ begin
   begin
     if Teamlist[i] >= 0 then
     begin
-      menustring[i + 1] := Big5toUnicode(@RRole[Teamlist[i]].Name);
+      menustring[i + 1] := Big5ToUnicode(@RRole[Teamlist[i]].Name);
       max := max + 1;
     end;
   end;
@@ -353,10 +353,47 @@ begin
     CheckBasicEvent;
     case event.type_ of
       SDL_KEYUP:
+      begin
+        if ((event.key.keysym.sym = SDLK_RETURN) or (event.key.keysym.sym = SDLK_SPACE)) and (menu <> max) then
         begin
-          if ((event.key.keysym.sym = sdlk_return) or (event.key.keysym.sym = sdlk_space)) and (menu <> max) then
+          //选中人物则反转对应bit
+          if menu > 0 then
+            Result := Result xor (1 shl (menu - 1))
+          else if Result < round(power(2, (max - 1)) - 1) then
+            Result := round(power(2, (max - 1)) - 1)
+          else
+            Result := 0;
+          ShowMultiMenu(max, menu, Result, menustring);
+        end;
+        if ((event.key.keysym.sym = SDLK_RETURN) or (event.key.keysym.sym = SDLK_SPACE)) and (menu = max) then
+        begin
+          if Result <> 0 then
+            break;
+        end;
+        if (event.key.keysym.sym = SDLK_UP) then
+        begin
+          menu := menu - 1;
+          if menu < 0 then
+            menu := max;
+          ShowMultiMenu(max, menu, Result, menustring);
+        end;
+        if (event.key.keysym.sym = SDLK_DOWN) then
+        begin
+          menu := menu + 1;
+          if menu > max then
+            menu := 0;
+          ShowMultiMenu(max, menu, Result, menustring);
+        end;
+      end;
+      SDL_MOUSEBUTTONUP:
+      begin
+        if (round(event.button.x / (RealScreen.w / screen.w)) >= CENTER_X - 75) and
+          (round(event.button.x / (RealScreen.w / screen.w)) < CENTER_X + 75) and
+          (round(event.button.y / (RealScreen.h / screen.h)) >= 150) and
+          (round(event.button.y / (RealScreen.h / screen.h)) < max * 22 + 178) then
+        begin
+          if (event.button.button = SDL_BUTTON_LEFT) and (menu <> max) then
           begin
-            //选中人物则反转对应bit
             if menu > 0 then
               Result := Result xor (1 shl (menu - 1))
             else if Result < round(power(2, (max - 1)) - 1) then
@@ -365,63 +402,26 @@ begin
               Result := 0;
             ShowMultiMenu(max, menu, Result, menustring);
           end;
-          if ((event.key.keysym.sym = sdlk_return) or (event.key.keysym.sym = sdlk_space)) and (menu = max) then
+          if (event.button.button = SDL_BUTTON_LEFT) and (menu = max) then
           begin
             if Result <> 0 then
               break;
           end;
-          if (event.key.keysym.sym = sdlk_up) then
-          begin
-            menu := menu - 1;
-            if menu < 0 then
-              menu := max;
-            ShowMultiMenu(max, menu, Result, menustring);
-          end;
-          if (event.key.keysym.sym = sdlk_down) then
-          begin
-            menu := menu + 1;
-            if menu > max then
-              menu := 0;
-            ShowMultiMenu(max, menu, Result, menustring);
-          end;
         end;
-      SDL_MOUSEBUTTONUP:
-        begin
-          if (round(event.button.x / (RealScreen.w / screen.w)) >= CENTER_X - 75) and
-            (round(event.button.x / (RealScreen.w / screen.w)) < CENTER_X + 75) and
-            (round(event.button.y / (RealScreen.h / screen.h)) >= 150) and
-            (round(event.button.y / (RealScreen.h / screen.h)) < max * 22 + 178) then
-          begin
-            if (event.button.button = sdl_button_left) and (menu <> max) then
-            begin
-              if menu > 0 then
-                Result := Result xor (1 shl (menu - 1))
-              else if Result < round(power(2, (max - 1)) - 1) then
-                Result := round(power(2, (max - 1)) - 1)
-              else
-                Result := 0;
-              ShowMultiMenu(max, menu, Result, menustring);
-            end;
-            if (event.button.button = sdl_button_left) and (menu = max) then
-            begin
-              if Result <> 0 then
-                break;
-            end;
-          end;
-        end;
+      end;
       SDL_MOUSEMOTION:
+      begin
+        if (round(event.button.x / (RealScreen.w / screen.w)) >= CENTER_X - 75) and
+          (round(event.button.x / (RealScreen.w / screen.w)) < CENTER_X + 75) and
+          (round(event.button.y / (RealScreen.h / screen.h)) >= 150) and
+          (round(event.button.y / (RealScreen.h / screen.h)) < max * 22 + 178) then
         begin
-          if (round(event.button.x / (RealScreen.w / screen.w)) >= CENTER_X - 75) and
-            (round(event.button.x / (RealScreen.w / screen.w)) < CENTER_X + 75) and
-            (round(event.button.y / (RealScreen.h / screen.h)) >= 150) and
-            (round(event.button.y / (RealScreen.h / screen.h)) < max * 22 + 178) then
-          begin
-            menup := menu;
-            menu := (round(event.button.y / (RealScreen.h / screen.h)) - 152) div 22;
-            if menup <> menu then
-              ShowMultiMenu(max, menu, Result, menustring);
-          end;
+          menup := menu;
+          menu := (round(event.button.y / (RealScreen.h / screen.h)) - 152) div 22;
+          if menup <> menu then
+            ShowMultiMenu(max, menu, Result, menustring);
         end;
+      end;
     end;
   end;
 
@@ -436,23 +436,23 @@ var
 begin
   x := CENTER_X - 105;
   y := 150;
-  redraw;
+  Redraw;
   str := (' 選擇參與戰鬥之人物');
   str1 := (' 參戰');
   //Drawtextwithrect(@str[1],x + 5, y-35, 200 , colcolor($23), colcolor($21));
-  DrawRectangle(screen, x + 30, y, 150, max * 22 + 28, 0, colcolor(255), 30);
+  DrawRectangle(screen, x + 30, y, 150, max * 22 + 28, 0, ColColor(255), 30);
   for i := 0 to max do
     if i = menu then
     begin
-      drawshadowtext(screen, @menustring[i][1], x + 13, y + 3 + 22 * i, colcolor($66), colcolor($64));
+      DrawShadowText(screen, @menustring[i][1], x + 13, y + 3 + 22 * i, ColColor($66), ColColor($64));
       if ((status and (1 shl (i - 1))) > 0) and (i > 0) and (i < max) then
-        drawshadowtext(screen, @str1[1], x + 113, y + 3 + 22 * i, colcolor($66), colcolor($64));
+        DrawShadowText(screen, @str1[1], x + 113, y + 3 + 22 * i, ColColor($66), ColColor($64));
     end
     else
     begin
-      drawshadowtext(screen, @menustring[i][1], x + 13, y + 3 + 22 * i, colcolor($7), colcolor($5));
+      DrawShadowText(screen, @menustring[i][1], x + 13, y + 3 + 22 * i, ColColor($7), ColColor($5));
       if ((status and (1 shl (i - 1))) > 0) and (i > 0) and (i < max) then
-        drawshadowtext(screen, @str1[1], x + 113, y + 3 + 22 * i, colcolor($23), colcolor($21));
+        DrawShadowText(screen, @str1[1], x + 113, y + 3 + 22 * i, ColColor($23), ColColor($21));
     end;
   SDL_UpdateRect2(screen, x + 30, y, 151, max * 22 + 28 + 1);
 end;
@@ -514,7 +514,7 @@ begin
         ReadFreshScreen(0, 0, screen.w, screen.h);
         DrawProgress;
         SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-        sdl_delay(delaytime);
+        SDL_Delay(delaytime);
         CheckBasicEvent;
       end;
     end;
@@ -527,7 +527,7 @@ begin
       while (SDL_PollEvent(@event) >= 0) do
       begin
         CheckBasicEvent;
-        if (event.key.keysym.sym = sdlk_Escape) or (event.button.button = sdl_button_right) then
+        if (event.key.keysym.sym = SDLK_ESCAPE) or (event.button.button = SDL_BUTTON_RIGHT) then
         begin
           brole[i].Auto := 0;
           //AutoMode[i]:=-1;
@@ -544,7 +544,7 @@ begin
         //当前人物位置作为屏幕中心
         Bx := Brole[i].X;
         By := Brole[i].Y;
-        redraw;
+        Redraw;
         if (Brole[i].Team = 0) and (Brole[i].Auto = 0) then
         begin
           if Brole[i].Acted = 0 then
@@ -559,38 +559,37 @@ begin
             4: Medcine(i);
             5: BattleMenuItem(i);
             6:
-              begin
-                Wait(i);
-              end;
+            begin
+              Wait(i);
+            end;
             7:
-              begin
-                //ShowStatus(Brole[i].rnum);
-                //waitanykey;
-                MenuStatus;
-              end;
+            begin
+              //ShowStatus(Brole[i].rnum);
+              //waitanykey;
+              MenuStatus;
+            end;
             8: Rest(i);
             9:
+            begin
+              if MODVersion = 51 then
+                CallEvent(1077)
+              else
               begin
-                if MODVersion = 51 then
-                  callEvent(1077)
-                else
-                begin
-                  if TeamModeMenu then
-                    for j := 0 to broleamount - 1 do
-                      if (Brole[j].Team = 0) and (Brole[j].Dead = 0) then
-                        Brole[j].Auto := Brole[j].AutoMode;
-                end;
-                //Brole[i].Acted := 0;
+                if TeamModeMenu then
+                  for j := 0 to broleamount - 1 do
+                    if (Brole[j].Team = 0) and (Brole[j].Dead = 0) then
+                      Brole[j].Auto := Brole[j].AutoMode;
               end;
-            -1:
+              //Brole[i].Acted := 0;
+            end; -1:
+            begin
+              if tempbrole.rnum = Brole[i].rnum then
               begin
-                if tempbrole.rnum = Brole[i].rnum then
-                begin
-                  Bfield[2, tempBrole.X, tempBrole.Y] := i;
-                  Bfield[2, Brole[i].X, Brole[i].Y] := -1;
-                  Brole[i] := tempBrole;
-                end;
+                Bfield[2, tempBrole.X, tempBrole.Y] := i;
+                Bfield[2, Brole[i].X, Brole[i].Y] := -1;
+                Brole[i] := tempBrole;
               end;
+            end;
           end;
         end
         else
@@ -603,7 +602,7 @@ begin
         Brole[i].Acted := 1;
 
       ClearDeadRolePic;
-      redraw;
+      Redraw;
       Bstatus := BattleStatus;
 
       if Brole[i].Acted = 1 then
@@ -712,17 +711,17 @@ end;
 
 function BattleMenu(bnum: integer): integer;
 var
-  i, p, menustatus, menu, max, rnum, menup: integer;
+  i, p, MenuStatus, menu, max, rnum, menup: integer;
   realmenu: array[0..9] of integer;
 begin
-  menustatus := $3E0;
+  MenuStatus := $3E0;
   max := 4;
   //for i:=0 to 9 do
   rnum := brole[bnum].rnum;
   //移动是否可用
   if brole[bnum].Step > 0 then
   begin
-    menustatus := menustatus or 1;
+    MenuStatus := MenuStatus or 1;
     max := max + 1;
   end;
 
@@ -741,42 +740,42 @@ begin
     end;
     if p > 0 then
     begin
-      menustatus := menustatus or 2;
+      MenuStatus := MenuStatus or 2;
       max := max + 1;
     end;
   end;
   //用毒是否可用
   if (Rrole[rnum].UsePoi > 0) and (rrole[rnum].PhyPower >= 30) then
   begin
-    menustatus := menustatus or 4;
+    MenuStatus := MenuStatus or 4;
     max := max + 1;
   end;
   //解毒是否可用
   if (Rrole[rnum].MedPoi > 0) and (rrole[rnum].PhyPower >= 50) then
   begin
-    menustatus := menustatus or 8;
+    MenuStatus := MenuStatus or 8;
     max := max + 1;
   end;
   //医疗是否可用
   if (Rrole[rnum].Medcine > 0) and (rrole[rnum].PhyPower >= 50) then
   begin
-    menustatus := menustatus or 16;
+    MenuStatus := MenuStatus or 16;
     max := max + 1;
   end;
 
   //等待是否可用
   if SEMIREAL = 1 then
   begin
-    menustatus := menustatus - 64;
+    MenuStatus := MenuStatus - 64;
     max := max - 1;
   end;
 
-  ReDraw;
+  Redraw;
   ShowSimpleStatus(brole[bnum].rnum, CENTER_X + 100, 50);
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
   menu := 0;
 
-  showbmenu(menustatus, menu, max);
+  ShowBMenu(MenuStatus, menu, max);
 
   //SDL_UpdateRect2(screen,0,0,screen.w,screen.h);
   while (SDL_WaitEvent(@event) >= 0) do
@@ -784,30 +783,30 @@ begin
     CheckBasicEvent;
     case event.type_ of
       SDL_KEYUP:
+      begin
+        if (event.key.keysym.sym = SDLK_RETURN) or (event.key.keysym.sym = SDLK_SPACE) then
         begin
-          if (event.key.keysym.sym = sdlk_return) or (event.key.keysym.sym = sdlk_space) then
-          begin
-            break;
-          end;
-          if (event.key.keysym.sym = sdlk_escape) then
-          begin
-            menu := -1;
-            break;
-          end;
-          if (event.key.keysym.sym = sdlk_up) then
-          begin
-            menu := menu - 1;
-            if menu < 0 then
-              menu := max;
-            showbmenu(menustatus, menu, max);
-          end;
-          if (event.key.keysym.sym = sdlk_down) then
-          begin
-            menu := menu + 1;
-            if menu > max then
-              menu := 0;
-            showbmenu(menustatus, menu, max);
-          end;
+          break;
+        end;
+        if (event.key.keysym.sym = SDLK_ESCAPE) then
+        begin
+          menu := -1;
+          break;
+        end;
+        if (event.key.keysym.sym = SDLK_UP) then
+        begin
+          menu := menu - 1;
+          if menu < 0 then
+            menu := max;
+          ShowBMenu(MenuStatus, menu, max);
+        end;
+        if (event.key.keysym.sym = SDLK_DOWN) then
+        begin
+          menu := menu + 1;
+          if menu > max then
+            menu := 0;
+          ShowBMenu(MenuStatus, menu, max);
+        end;
           {if (event.key.keysym.sym = sdlk_return) and (event.key.keysym.modifier = kmod_lalt) then
           begin
             if fullscreen = 1 then
@@ -816,45 +815,44 @@ begin
               screen := SDL_SetVideoMode(CENTER_X * 2, CENTER_Y * 2, 32, SDL_FULLSCREEN);
             fullscreen := 1 - fullscreen;
           end;}
-        end;
+      end;
       SDL_MOUSEBUTTONUP:
+      begin
+        if (event.button.button = SDL_BUTTON_LEFT) and (round(event.button.x /
+          (RealScreen.w / screen.w)) >= 100) and (round(event.button.x / (RealScreen.w / screen.w)) < 147) and
+          (round(event.button.y / (RealScreen.h / screen.h)) >= 50) and
+          (round(event.button.y / (RealScreen.h / screen.h)) < max * 22 + 78) then
+          break;
+        if (event.button.button = SDL_BUTTON_RIGHT) then
         begin
-          if (event.button.button = sdl_button_left) and
-            (round(event.button.x / (RealScreen.w / screen.w)) >= 100) and
-            (round(event.button.x / (RealScreen.w / screen.w)) < 147) and
-            (round(event.button.y / (RealScreen.h / screen.h)) >= 50) and
-            (round(event.button.y / (RealScreen.h / screen.h)) < max * 22 + 78) then
-            break;
-          if (event.button.button = sdl_button_right) then
-          begin
-            menu := -1;
-            break;
-          end;
+          menu := -1;
+          break;
         end;
+      end;
       SDL_MOUSEMOTION:
+      begin
+        if (round(event.button.x / (RealScreen.w / screen.w)) >= 100) and
+          (round(event.button.x / (RealScreen.w / screen.w)) < 147) and
+          (round(event.button.y / (RealScreen.h / screen.h)) >= 50) and
+          (round(event.button.y / (RealScreen.h / screen.h)) < max * 22 + 78) then
         begin
-          if (round(event.button.x / (RealScreen.w / screen.w)) >= 100) and
-            (round(event.button.x / (RealScreen.w / screen.w)) < 147) and
-            (round(event.button.y / (RealScreen.h / screen.h)) >= 50) and
-            (round(event.button.y / (RealScreen.h / screen.h)) < max * 22 + 78) then
-          begin
-            menup := menu;
-            menu := (round(event.button.y / (RealScreen.h / screen.h)) - 52) div 22;
-            if menu > max then
-              menu := max;
-            if menu < 0 then
-              menu := 0;
-            if menup <> menu then
-              showbmenu(menustatus, menu, max);
-          end;
+          menup := menu;
+          menu := (round(event.button.y / (RealScreen.h / screen.h)) - 52) div 22;
+          if menu > max then
+            menu := max;
+          if menu < 0 then
+            menu := 0;
+          if menup <> menu then
+            ShowBMenu(MenuStatus, menu, max);
         end;
+      end;
     end;
   end;
   //result:=0;
   p := 0;
   for i := 0 to 9 do
   begin
-    if (menustatus and (1 shl i)) > 0 then
+    if (MenuStatus and (1 shl i)) > 0 then
     begin
       p := p + 1;
       if p > menu then
@@ -885,20 +883,20 @@ begin
   word[8] := (' 休息');
   word[9] := (' 自動');
 
-  redraw;
+  Redraw;
 
-  DrawRectangle(screen, 100, 50, 47, max * 22 + 28, 0, colcolor(255), 30);
+  DrawRectangle(screen, 100, 50, 47, max * 22 + 28, 0, ColColor(255), 30);
   p := 0;
   for i := 0 to 9 do
   begin
-    if (p = menu) and ((menustatus and (1 shl i) > 0)) then
+    if (p = menu) and ((MenuStatus and (1 shl i) > 0)) then
     begin
-      drawshadowtext(screen, @word[i][1], 83, 53 + 22 * p, colcolor($66), colcolor($64));
+      DrawShadowText(screen, @word[i][1], 83, 53 + 22 * p, ColColor($66), ColColor($64));
       p := p + 1;
     end
-    else if (p <> menu) and ((menustatus and (1 shl i) > 0)) then
+    else if (p <> menu) and ((MenuStatus and (1 shl i) > 0)) then
     begin
-      drawshadowtext(screen, @word[i][1], 83, 53 + 22 * p, colcolor($23), colcolor($21));
+      DrawShadowText(screen, @word[i][1], 83, 53 + 22 * p, ColColor($23), ColColor($21));
       p := p + 1;
     end;
   end;
@@ -1063,7 +1061,7 @@ begin
       Dec(Brole[bnum].Step);
       Redraw;
       SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-      sdl_delay(30);
+      SDL_Delay(30);
     end;
 
     Brole[bnum].X := Bx;
@@ -1081,7 +1079,7 @@ var
 begin
   Ax := Bx;
   Ay := By;
-  redraw;
+  Redraw;
   SetAminationPosition(AreaType, step, AreaRange);
   DrawBFieldWithCursor(step);
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
@@ -1090,67 +1088,67 @@ begin
     CheckBasicEvent;
     case event.type_ of
       SDL_KEYUP:
+      begin
+        if (event.key.keysym.sym = SDLK_RETURN) or (event.key.keysym.sym = SDLK_SPACE) then
         begin
-          if (event.key.keysym.sym = sdlk_return) or (event.key.keysym.sym = sdlk_space) then
-          begin
-            if (Ax >= 0) and (Ax <= 63) and (Ay >= 0) and (Ay <= 63) and
-              (abs(Ax - Bx) + abs(Ay - By) <= step) and (Bfield[3, Ax, Ay] >= 0) then
-            begin
-              Result := True;
-              x50[28927] := 1;
-              break;
-            end;
-          end;
-          if (event.key.keysym.sym = sdlk_escape) then
-          begin
-            Result := False;
-            x50[28927] := 0;
-            break;
-          end;
-        end;
-      SDL_KEYDOWN:
-        begin
-          Axp := Ax;
-          Ayp := Ay;
-          case event.key.keysym.sym of
-            sdlk_left: Ay := Ay - 1;
-            sdlk_right: Ay := Ay + 1;
-            sdlk_down: Ax := Ax + 1;
-            sdlk_up: Ax := Ax - 1;
-          end;
-          if (abs(Ax - Bx) + abs(Ay - By) > step) or (Bfield[3, Ax, Ay] < 0) or (Ax < 0) or
-            (Ax > 63) or (Ay < 0) or (Ay > 63) then
-          begin
-            Ax := Axp;
-            Ay := Ayp;
-          end;
-          event.key.keysym.sym := 0;
-        end;
-      SDL_MOUSEBUTTONUP:
-        begin
-          if (event.button.button = sdl_button_left) then
+          if (Ax >= 0) and (Ax <= 63) and (Ay >= 0) and (Ay <= 63) and
+            (abs(Ax - Bx) + abs(Ay - By) <= step) and (Bfield[3, Ax, Ay] >= 0) then
           begin
             Result := True;
-            break;
-          end;
-          if (event.button.button = sdl_button_right) then
-          begin
-            Result := False;
+            x50[28927] := 1;
             break;
           end;
         end;
-      SDL_MOUSEMOTION:
+        if (event.key.keysym.sym = SDLK_ESCAPE) then
         begin
-          Axp := (-round(event.button.x / (RealScreen.w / screen.w)) + CENTER_x + 2 *
-            round(event.button.y / (RealScreen.h / screen.h)) - 2 * CENTER_y + 18) div 36 + Bx;
-          Ayp := (round(event.button.x / (RealScreen.w / screen.w)) - CENTER_x + 2 *
-            round(event.button.y / (RealScreen.h / screen.h)) - 2 * CENTER_y + 18) div 36 + By;
-          if (abs(Axp - Bx) + abs(Ayp - By) <= step) and (Bfield[3, Axp, Ayp] >= 0) then
-          begin
-            Ax := Axp;
-            Ay := Ayp;
-          end;
+          Result := False;
+          x50[28927] := 0;
+          break;
         end;
+      end;
+      SDL_KEYDOWN:
+      begin
+        Axp := Ax;
+        Ayp := Ay;
+        case event.key.keysym.sym of
+          SDLK_LEFT: Ay := Ay - 1;
+          SDLK_RIGHT: Ay := Ay + 1;
+          SDLK_DOWN: Ax := Ax + 1;
+          SDLK_UP: Ax := Ax - 1;
+        end;
+        if (abs(Ax - Bx) + abs(Ay - By) > step) or (Bfield[3, Ax, Ay] < 0) or (Ax < 0) or
+          (Ax > 63) or (Ay < 0) or (Ay > 63) then
+        begin
+          Ax := Axp;
+          Ay := Ayp;
+        end;
+        event.key.keysym.sym := 0;
+      end;
+      SDL_MOUSEBUTTONUP:
+      begin
+        if (event.button.button = SDL_BUTTON_LEFT) then
+        begin
+          Result := True;
+          break;
+        end;
+        if (event.button.button = SDL_BUTTON_RIGHT) then
+        begin
+          Result := False;
+          break;
+        end;
+      end;
+      SDL_MOUSEMOTION:
+      begin
+        Axp := (-round(event.button.x / (RealScreen.w / screen.w)) + CENTER_X + 2 *
+          round(event.button.y / (RealScreen.h / screen.h)) - 2 * CENTER_Y + 18) div 36 + Bx;
+        Ayp := (round(event.button.x / (RealScreen.w / screen.w)) - CENTER_X + 2 *
+          round(event.button.y / (RealScreen.h / screen.h)) - 2 * CENTER_Y + 18) div 36 + By;
+        if (abs(Axp - Bx) + abs(Ayp - By) <= step) and (Bfield[3, Axp, Ayp] >= 0) then
+        begin
+          Ax := Axp;
+          Ay := Ayp;
+        end;
+      end;
     end;
     SetAminationPosition(AreaType, step, AreaRange);
     DrawBFieldWithCursor(step);
@@ -1277,10 +1275,10 @@ begin
   end;
 
   SetAminationPosition(1, step);
-  DrawBfieldWithCursor(-1);
+  DrawBFieldWithCursor(-1);
 
   str := (' 選擇攻擊方向');
-  Drawtextwithrect(screen, @str[1], 280, 200, 125, colcolor($23), colcolor($21));
+  DrawTextWithRect(screen, @str[1], 280, 200, 125, ColColor($23), ColColor($21));
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
   Result := False;
   while (SDL_WaitEvent(@event) >= 0) do
@@ -1288,78 +1286,78 @@ begin
     CheckBasicEvent;
     case event.type_ of
       SDL_KEYUP:
+      begin
+        if (event.key.keysym.sym = SDLK_ESCAPE) then
         begin
-          if (event.key.keysym.sym = sdlk_escape) then
-          begin
-            Result := False;
-            break;
-          end;
-          if (event.key.keysym.sym = sdlk_left) then
-          begin
-            Ay := By - 1;
-            Ax := Bx;
-          end;
-          if (event.key.keysym.sym = sdlk_right) then
-          begin
-            Ay := By + 1;
-            Ax := Bx;
-          end;
-          if (event.key.keysym.sym = sdlk_down) then
-          begin
-            Ax := Bx + 1;
-            Ay := By;
-          end;
-          if (event.key.keysym.sym = sdlk_up) then
-          begin
-            Ax := Bx - 1;
-            Ay := By;
-          end;
-          if (event.key.keysym.sym = sdlk_return) or (event.key.keysym.sym = sdlk_space) then
-          begin
-            if (Ax <> Bx) or (Ay <> By) then
-            begin
-              Result := True;
-              break;
-            end;
-          end;
+          Result := False;
+          break;
         end;
-      Sdl_mousebuttonup:
+        if (event.key.keysym.sym = SDLK_LEFT) then
         begin
-          if (event.button.button = sdl_button_right) then
-          begin
-            Result := False;
-            break;
-          end;
-          if (event.button.button = sdl_button_left) then
-          begin
-            if (Ax <> Bx) or (Ay <> By) then
-            begin
-              Result := True;
-              break;
-            end;
-          end;
-        end;
-      Sdl_mousemotion:
-        begin
-          //按照所点击位置设置方向
+          Ay := By - 1;
           Ax := Bx;
-          Ay := By;
-          if (round(event.button.x / (RealScreen.w / screen.w)) < CENTER_x) and
-            (round(event.button.y / (RealScreen.h / screen.h)) < CENTER_y) then
-            Ay := By - 1;
-          if (round(event.button.x / (RealScreen.w / screen.w)) < CENTER_x) and
-            (round(event.button.y / (RealScreen.h / screen.h)) >= CENTER_y) then
-            Ax := Bx + 1;
-          if (round(event.button.x / (RealScreen.w / screen.w)) >= CENTER_x) and
-            (round(event.button.y / (RealScreen.h / screen.h)) < CENTER_y) then
-            Ax := Bx - 1;
-          if (round(event.button.x / (RealScreen.w / screen.w)) >= CENTER_x) and
-            (round(event.button.y / (RealScreen.h / screen.h)) >= CENTER_y) then
-            Ay := By + 1;
         end;
+        if (event.key.keysym.sym = SDLK_RIGHT) then
+        begin
+          Ay := By + 1;
+          Ax := Bx;
+        end;
+        if (event.key.keysym.sym = SDLK_DOWN) then
+        begin
+          Ax := Bx + 1;
+          Ay := By;
+        end;
+        if (event.key.keysym.sym = SDLK_UP) then
+        begin
+          Ax := Bx - 1;
+          Ay := By;
+        end;
+        if (event.key.keysym.sym = SDLK_RETURN) or (event.key.keysym.sym = SDLK_SPACE) then
+        begin
+          if (Ax <> Bx) or (Ay <> By) then
+          begin
+            Result := True;
+            break;
+          end;
+        end;
+      end;
+      SDL_MOUSEBUTTONUP:
+      begin
+        if (event.button.button = SDL_BUTTON_RIGHT) then
+        begin
+          Result := False;
+          break;
+        end;
+        if (event.button.button = SDL_BUTTON_LEFT) then
+        begin
+          if (Ax <> Bx) or (Ay <> By) then
+          begin
+            Result := True;
+            break;
+          end;
+        end;
+      end;
+      SDL_MOUSEMOTION:
+      begin
+        //按照所点击位置设置方向
+        Ax := Bx;
+        Ay := By;
+        if (round(event.button.x / (RealScreen.w / screen.w)) < CENTER_X) and
+          (round(event.button.y / (RealScreen.h / screen.h)) < CENTER_Y) then
+          Ay := By - 1;
+        if (round(event.button.x / (RealScreen.w / screen.w)) < CENTER_X) and
+          (round(event.button.y / (RealScreen.h / screen.h)) >= CENTER_Y) then
+          Ax := Bx + 1;
+        if (round(event.button.x / (RealScreen.w / screen.w)) >= CENTER_X) and
+          (round(event.button.y / (RealScreen.h / screen.h)) < CENTER_Y) then
+          Ax := Bx - 1;
+        if (round(event.button.x / (RealScreen.w / screen.w)) >= CENTER_X) and
+          (round(event.button.y / (RealScreen.h / screen.h)) >= CENTER_Y) then
+          Ay := By + 1;
+      end;
     end;
     SetAminationPosition(1, step);
-    DrawBfieldWithCursor(-1);
+    DrawBFieldWithCursor(-1);
     SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
   end;
 
@@ -1721,42 +1719,42 @@ begin
       //依据攻击范围进一步选择
       case Rmagic[mnum].AttAreaType of
         0, 3:
+        begin
+          //CalCanSelect(bnum, 1);
+          step := Rmagic[mnum].MoveDistance[level - 1];
+          CalCanSelect(bnum, 1, step);
+          if SelectAim(bnum, step, Rmagic[mnum].AttAreaType, Rmagic[mnum].AttDistance[level - 1]) then
           begin
-            //CalCanSelect(bnum, 1);
-            step := Rmagic[mnum].MoveDistance[level - 1];
-            CalCanSelect(bnum, 1, step);
-            if SelectAim(bnum, step, Rmagic[mnum].AttAreaType, Rmagic[mnum].AttDistance[level - 1]) then
-            begin
-              //SetAminationPosition(Rmagic[mnum].AttAreaType, Rmagic[mnum].MoveDistance[level - 1],
-              //Rmagic[mnum].AttDistance[level - 1]);
-              Brole[bnum].Acted := 1;
-            end;
+            //SetAminationPosition(Rmagic[mnum].AttAreaType, Rmagic[mnum].MoveDistance[level - 1],
+            //Rmagic[mnum].AttDistance[level - 1]);
+            Brole[bnum].Acted := 1;
           end;
+        end;
         1:
+        begin
+          if SelectDirector(bnum, Rmagic[mnum].MoveDistance[level - 1]) then
           begin
-            if SelectDirector(bnum, Rmagic[mnum].MoveDistance[level - 1]) then
-            begin
-              //SetAminationPosition(Rmagic[mnum].AttAreaType, Rmagic[mnum].MoveDistance[level - 1],
-              //Rmagic[mnum].AttDistance[level - 1]);
-              Brole[bnum].Acted := 1;
-            end;
+            //SetAminationPosition(Rmagic[mnum].AttAreaType, Rmagic[mnum].MoveDistance[level - 1],
+            //Rmagic[mnum].AttDistance[level - 1]);
+            Brole[bnum].Acted := 1;
           end;
+        end;
         2:
+        begin
+          SetAminationPosition(Rmagic[mnum].AttAreaType, Rmagic[mnum].MoveDistance[level - 1],
+            Rmagic[mnum].AttDistance[level - 1]);
+          DrawBFieldWithCursor(-1);
+          SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+          i1 := 0;
+          while (i1 <> SDLK_RETURN) and (i1 <> SDLK_SPACE) and (i1 <> SDLK_ESCAPE) do
           begin
-            SetAminationPosition(Rmagic[mnum].AttAreaType, Rmagic[mnum].MoveDistance[level - 1],
-              Rmagic[mnum].AttDistance[level - 1]);
-            DrawBfieldWithCursor(-1);
-            SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-            i1 := 0;
-            while (i1 <> sdlk_return) and (i1 <> sdlk_space) and (i1 <> sdlk_escape) do
-            begin
-              i1 := waitanykey;
-            end;
-            if (i1 <> sdlk_escape) then
-            begin
-              Brole[bnum].Acted := 1;
-            end;
+            i1 := WaitAnyKey;
           end;
+          if (i1 <> SDLK_ESCAPE) then
+          begin
+            Brole[bnum].Acted := 1;
+          end;
+        end;
       end;
     if Brole[bnum].Acted = 1 then
       break;
@@ -1779,7 +1777,7 @@ begin
       if Rrole[rnum].MagLevel[i] > 999 then
         Rrole[rnum].MagLevel[i] := 999;
       if rmagic[mnum].UnKnow[4] > 0 then
-        callevent(rmagic[mnum].UnKnow[4])
+        CallEvent(rmagic[mnum].UnKnow[4])
       else
         AttackAction(bnum, mnum, level);
     end;
@@ -1806,14 +1804,14 @@ var
   str: WideString;
 begin
   Redraw;
-  str := big5tounicode(@Rmagic[mnum].Name);
+  str := Big5ToUnicode(@Rmagic[mnum].Name);
   if mode = 1 then
-    str := big5tounicode(@Ritem[mnum].Name);
+    str := Big5ToUnicode(@Ritem[mnum].Name);
   str := MidStr(str, 1, 6);
   l := length(str);
-  drawtextwithrect(screen, @str[1], CENTER_X - l * 10, CENTER_Y - 150, l * 20 - 14, colcolor($14), colcolor($16));
+  DrawTextWithRect(screen, @str[1], CENTER_X - l * 10, CENTER_Y - 150, l * 20 - 14, ColColor($14), ColColor($16));
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-  Sdl_Delay(500);
+  SDL_Delay(500);
 
 end;
 
@@ -1821,10 +1819,10 @@ end;
 
 function SelectMagic(rnum: integer): integer;
 var
-  i, p, menustatus, max, menu, menup: integer;
+  i, p, MenuStatus, max, menu, menup: integer;
   menustring, menuengstring: array[0..9] of WideString;
 begin
-  menustatus := 0;
+  MenuStatus := 0;
   max := 0;
   //setlength(menustring, 10);
   //setlength(menuengstring, 10);
@@ -1832,18 +1830,18 @@ begin
   begin
     if Rrole[rnum].Magic[i] > 0 then
     begin
-      menustatus := menustatus or (1 shl i);
-      menustring[i] := Big5toUnicode(@Rmagic[Rrole[rnum].Magic[i]].Name);
+      MenuStatus := MenuStatus or (1 shl i);
+      menustring[i] := Big5ToUnicode(@Rmagic[Rrole[rnum].Magic[i]].Name);
       menuengstring[i] := format('%3d', [Rrole[rnum].MagLevel[i] div 100 + 1]);
       max := max + 1;
     end;
   end;
   max := max - 1;
 
-  ReDraw;
+  Redraw;
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
   menu := 0;
-  showmagicmenu(menustatus, menu, max, menustring, menuengstring);
+  ShowMagicMenu(MenuStatus, menu, max, menustring, menuengstring);
   //SDL_UpdateRect2(screen,0,0,screen.w,screen.h);
   Result := 0;
   while (SDL_WaitEvent(@event) >= 0) do
@@ -1851,60 +1849,60 @@ begin
     CheckBasicEvent;
     case event.type_ of
       SDL_KEYUP:
+      begin
+        if (event.key.keysym.sym = SDLK_RETURN) or (event.key.keysym.sym = SDLK_SPACE) then
         begin
-          if (event.key.keysym.sym = sdlk_return) or (event.key.keysym.sym = sdlk_space) then
-          begin
-            break;
-          end;
-          if (event.key.keysym.sym = sdlk_escape) then
-          begin
-            Result := -1;
-            break;
-          end;
-          if (event.key.keysym.sym = sdlk_up) then
-          begin
-            menu := menu - 1;
-            if menu < 0 then
-              menu := max;
-            showmagicmenu(menustatus, menu, max, menustring, menuengstring);
-          end;
-          if (event.key.keysym.sym = sdlk_down) then
-          begin
-            menu := menu + 1;
-            if menu > max then
-              menu := 0;
-            showmagicmenu(menustatus, menu, max, menustring, menuengstring);
-          end;
+          break;
         end;
+        if (event.key.keysym.sym = SDLK_ESCAPE) then
+        begin
+          Result := -1;
+          break;
+        end;
+        if (event.key.keysym.sym = SDLK_UP) then
+        begin
+          menu := menu - 1;
+          if menu < 0 then
+            menu := max;
+          ShowMagicMenu(MenuStatus, menu, max, menustring, menuengstring);
+        end;
+        if (event.key.keysym.sym = SDLK_DOWN) then
+        begin
+          menu := menu + 1;
+          if menu > max then
+            menu := 0;
+          ShowMagicMenu(MenuStatus, menu, max, menustring, menuengstring);
+        end;
+      end;
       SDL_MOUSEBUTTONUP:
+      begin
+        if (event.button.button = SDL_BUTTON_LEFT) then
         begin
-          if (event.button.button = sdl_button_left) then
-          begin
-            break;
-          end;
-          if (event.button.button = sdl_button_right) then
-          begin
-            Result := -1;
-            break;
-          end;
+          break;
         end;
+        if (event.button.button = SDL_BUTTON_RIGHT) then
+        begin
+          Result := -1;
+          break;
+        end;
+      end;
       SDL_MOUSEMOTION:
+      begin
+        if (round(event.button.x / (RealScreen.w / screen.w)) >= 100) and
+          (round(event.button.x / (RealScreen.w / screen.w)) < 267) and
+          (round(event.button.y / (RealScreen.h / screen.h)) >= 50) and
+          (round(event.button.y / (RealScreen.h / screen.h)) < max * 22 + 78) then
         begin
-          if (round(event.button.x / (RealScreen.w / screen.w)) >= 100) and
-            (round(event.button.x / (RealScreen.w / screen.w)) < 267) and
-            (round(event.button.y / (RealScreen.h / screen.h)) >= 50) and
-            (round(event.button.y / (RealScreen.h / screen.h)) < max * 22 + 78) then
-          begin
-            menup := menu;
-            menu := (round(event.button.y / (RealScreen.h / screen.h)) - 52) div 22;
-            if menu > max then
-              menu := max;
-            if menu < 0 then
-              menu := 0;
-            if menup <> menu then
-              showmagicmenu(menustatus, menu, max, menustring, menuengstring);
-          end;
+          menup := menu;
+          menu := (round(event.button.y / (RealScreen.h / screen.h)) - 52) div 22;
+          if menu > max then
+            menu := max;
+          if menu < 0 then
+            menu := 0;
+          if menup <> menu then
+            ShowMagicMenu(MenuStatus, menu, max, menustring, menuengstring);
         end;
+      end;
     end;
   end;
   //result:=0;
@@ -1913,7 +1911,7 @@ begin
     p := 0;
     for i := 0 to 9 do
     begin
-      if (menustatus and (1 shl i)) > 0 then
+      if (MenuStatus and (1 shl i)) > 0 then
       begin
         p := p + 1;
         if p > menu then
@@ -1927,25 +1925,25 @@ end;
 
 //显示武功选单
 
-procedure ShowMagicMenu(menustatus, menu, max: integer; menustring, menuengstring: array of WideString);
+procedure ShowMagicMenu(MenuStatus, menu, max: integer; menustring, menuengstring: array of WideString);
 var
   i, p: integer;
 begin
-  redraw;
-  DrawRectangle(screen, 100, 50, 167, max * 22 + 28, 0, colcolor(255), 30);
+  Redraw;
+  DrawRectangle(screen, 100, 50, 167, max * 22 + 28, 0, ColColor(255), 30);
   p := 0;
   for i := 0 to 9 do
   begin
-    if (p = menu) and ((menustatus and (1 shl i) > 0)) then
+    if (p = menu) and ((MenuStatus and (1 shl i) > 0)) then
     begin
-      drawshadowtext(screen, @menustring[i][1], 83, 53 + 22 * p, colcolor($66), colcolor($64));
-      drawengshadowtext(screen, @menuengstring[i][1], 223, 53 + 22 * p, colcolor($66), colcolor($64));
+      DrawShadowText(screen, @menustring[i][1], 83, 53 + 22 * p, ColColor($66), ColColor($64));
+      DrawEngShadowText(screen, @menuengstring[i][1], 223, 53 + 22 * p, ColColor($66), ColColor($64));
       p := p + 1;
     end
-    else if (p <> menu) and ((menustatus and (1 shl i) > 0)) then
+    else if (p <> menu) and ((MenuStatus and (1 shl i) > 0)) then
     begin
-      drawshadowtext(screen, @menustring[i][1], 83, 53 + 22 * p, colcolor($23), colcolor($21));
-      drawengshadowtext(screen, @menuengstring[i][1], 223, 53 + 22 * p, colcolor($23), colcolor($21));
+      DrawShadowText(screen, @menustring[i][1], 83, 53 + 22 * p, ColColor($23), ColColor($21));
+      DrawEngShadowText(screen, @menuengstring[i][1], 223, 53 + 22 * p, ColColor($23), ColColor($21));
       p := p + 1;
     end;
   end;
@@ -1968,43 +1966,43 @@ begin
   //按攻击类型
   case mode of
     0:
-      begin
-        Bfield[4, Ax, Ay] := 1;
-      end;
+    begin
+      Bfield[4, Ax, Ay] := 1;
+    end;
     3:
-      begin
-        for i1 := max(Ax - range, 0) to min(Ax + range, 63) do
-          for i2 := max(Ay - range, 0) to min(Ay + range, 63) do
-            Bfield[4, i1, i2] := (abs(i1 - Bx) + abs(i2 - By)) * 2 + random(24) + 1;
-      end;
+    begin
+      for i1 := max(Ax - range, 0) to min(Ax + range, 63) do
+        for i2 := max(Ay - range, 0) to min(Ay + range, 63) do
+          Bfield[4, i1, i2] := (abs(i1 - Bx) + abs(i2 - By)) * 2 + random(24) + 1;
+    end;
     1:
+    begin
+      i := 1;
+      i1 := sign(Ax - Bx);
+      i2 := sign(Ay - By);
+      if i1 > 0 then
+        step := min(63 - Bx, step);
+      if i2 > 0 then
+        step := min(63 - By, step);
+      if i1 < 0 then
+        step := min(Bx, step);
+      if i2 < 0 then
+        step := min(By, step);
+      if (i1 = 0) and (i2 = 0) then
+        step := 0;
+      while i <= step do
       begin
-        i := 1;
-        i1 := sign(Ax - Bx);
-        i2 := sign(Ay - By);
-        if i1 > 0 then
-          step := min(63 - Bx, step);
-        if i2 > 0 then
-          step := min(63 - By, step);
-        if i1 < 0 then
-          step := min(Bx, step);
-        if i2 < 0 then
-          step := min(By, step);
-        if (i1 = 0) and (i2 = 0) then
-          step := 0;
-        while i <= step do
-        begin
-          Bfield[4, Bx + i1 * i, By + i2 * i] := i * 2;
-          i := i + 1;
-        end;
+        Bfield[4, Bx + i1 * i, By + i2 * i] := i * 2;
+        i := i + 1;
       end;
+    end;
     2:
-      begin
-        for i1 := max(Bx - step, 0) to min(Bx + step, 63) do
-          Bfield[4, i1, By] := abs(i1 - Bx) * 2;
-        for i2 := max(By - step, 0) to min(By + step, 63) do
-          Bfield[4, Bx, i2] := abs(i2 - By) * 2;
-      end;
+    begin
+      for i1 := max(Bx - step, 0) to min(Bx + step, 63) do
+        Bfield[4, i1, By] := abs(i1 - Bx) * 2;
+      for i2 := max(By - step, 0) to min(By + step, 63) do
+        Bfield[4, Bx, i2] := abs(i2 - By) * 2;
+    end;
   end;
   case mode of
     0: maxdelaypicnum := 1;
@@ -2042,8 +2040,8 @@ begin
 
   beginpic := 0;
   //含音效
-  posA := getpositiononscreen(Ax, Ay, CENTER_X, CENTER_Y);
-  posB := getpositiononscreen(Bx, By, CENTER_X, CENTER_Y);
+  posA := GetPositionOnScreen(Ax, Ay, CENTER_X, CENTER_Y);
+  posB := GetPositionOnScreen(Bx, By, CENTER_X, CENTER_Y);
   x := posA.x - posB.x;
   y := posB.y - posA.y;
   z := -((Ax + Ay) - (Bx + By)) * 9;
@@ -2065,7 +2063,7 @@ begin
     CheckBasicEvent;
     DrawBFieldWithEft(i, beginpic, endpic, min, bnum, forteam, 1, $FFFFFFFF);
     SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-    sdl_delay(20);
+    SDL_Delay(20);
     i := i + 1;
     if i > endpic + max - min then
       break;
@@ -2168,25 +2166,25 @@ begin
 
   case Rmagic[mnum].MagicType of
     1:
-      begin
-        att := att + Rrole[rnum1].Fist;
-        def := def + Rrole[rnum2].Fist;
-      end;
+    begin
+      att := att + Rrole[rnum1].Fist;
+      def := def + Rrole[rnum2].Fist;
+    end;
     2:
-      begin
-        att := att + Rrole[rnum1].Sword;
-        def := def + Rrole[rnum2].Sword;
-      end;
+    begin
+      att := att + Rrole[rnum1].Sword;
+      def := def + Rrole[rnum2].Sword;
+    end;
     3:
-      begin
-        att := att + Rrole[rnum1].Knife;
-        def := def + Rrole[rnum2].Knife;
-      end;
+    begin
+      att := att + Rrole[rnum1].Knife;
+      def := def + Rrole[rnum2].Knife;
+    end;
     4:
-      begin
-        att := att + Rrole[rnum1].Unusual;
-        def := def + Rrole[rnum2].Unusual;
-      end;
+    begin
+      att := att + Rrole[rnum1].Unusual;
+      def := def + Rrole[rnum2].Unusual;
+    end;
   end;
 
   //攻击, 防御按伤害的折扣
@@ -2250,35 +2248,35 @@ var
 begin
   case mode of
     0:
-      begin
-        color1 := colcolor($10);
-        color2 := colcolor($14);
-        str := '-%d';
-      end;
+    begin
+      color1 := ColColor($10);
+      color2 := ColColor($14);
+      str := '-%d';
+    end;
     1:
-      begin
-        color1 := colcolor($50);
-        color2 := colcolor($53);
-        str := '-%d';
-      end;
+    begin
+      color1 := ColColor($50);
+      color2 := ColColor($53);
+      str := '-%d';
+    end;
     2:
-      begin
-        color1 := colcolor($30);
-        color2 := colcolor($32);
-        str := '+%d';
-      end;
+    begin
+      color1 := ColColor($30);
+      color2 := ColColor($32);
+      str := '+%d';
+    end;
     3:
-      begin
-        color1 := colcolor($7);
-        color2 := colcolor($5);
-        str := '+%d';
-      end;
+    begin
+      color1 := ColColor($7);
+      color2 := ColColor($5);
+      str := '+%d';
+    end;
     4:
-      begin
-        color1 := colcolor($91);
-        color2 := colcolor($93);
-        str := '-%d';
-      end;
+    begin
+      color1 := ColColor($91);
+      color2 := ColColor($93);
+      str := '-%d';
+    end;
   end;
   if trans = 1 then
   begin
@@ -2313,22 +2311,22 @@ begin
   while SDL_PollEvent(@event) >= 0 do
   begin
     CheckBasicEvent;
-    ReDraw;
+    Redraw;
     for i := 0 to broleamount - 1 do
     begin
       x := -(Brole[i].X - Bx) * 18 + (Brole[i].Y - By) * 18 + CENTER_X - 10;
       y := (Brole[i].X - Bx) * 9 + (Brole[i].Y - By) * 9 + CENTER_Y - 40;
       if word[i] <> '' then
-        drawengshadowtext(screen, @word[i, 1], x, y - i1 * 2, color1, color2);
+        DrawEngShadowText(screen, @word[i, 1], x, y - i1 * 2, color1, color2);
       //showmessage(word[i]);
     end;
-    sdl_delay(20);
+    SDL_Delay(20);
     SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
     i1 := i1 + 1;
     if i1 > 10 then
       break;
   end;
-  redraw;
+  Redraw;
 
 end;
 
@@ -2399,80 +2397,80 @@ begin
   strs[2] := (' 內力');
   strs[3] := (' 體力');
 
-  DrawRectangle(screen, x, y, 145, 173, 0, colcolor(255), 30);
-  drawheadpic(Rrole[rnum].HeadNum, x + 50, y + 63);
-  str := big5tounicode(@rrole[rnum].Name);
-  drawshadowtext(screen, @str[1], x + 60 - length(PChar(@rrole[rnum].Name)) * 5, y + 65, colcolor($66), colcolor($63));
+  DrawRectangle(screen, x, y, 145, 173, 0, ColColor(255), 30);
+  DrawHeadPic(Rrole[rnum].HeadNum, x + 50, y + 63);
+  str := Big5ToUnicode(@rrole[rnum].Name);
+  DrawShadowText(screen, @str[1], x + 60 - length(PChar(@rrole[rnum].Name)) * 5, y + 65, ColColor($66), ColColor($63));
   for i := 0 to 3 do
-    drawshadowtext(screen, @strs[i, 1], x - 17, y + 86 + 21 * i, colcolor($23), colcolor($21));
+    DrawShadowText(screen, @strs[i, 1], x - 17, y + 86 + 21 * i, ColColor($23), ColColor($21));
 
   str := format('%9d', [Rrole[rnum].Level]);
-  drawengshadowtext(screen, @str[1], x + 50, y + 86, colcolor($7), colcolor($5));
+  DrawEngShadowText(screen, @str[1], x + 50, y + 86, ColColor($7), ColColor($5));
 
   case RRole[rnum].Hurt of
     34..66:
-      begin
-        color1 := colcolor($E);
-        color2 := colcolor($10);
-      end;
-    67..1000:
-      begin
-        color1 := colcolor($14);
-        color2 := colcolor($16);
-      end;
-  else
     begin
-      color1 := colcolor($7);
-      color2 := colcolor($5);
+      color1 := ColColor($E);
+      color2 := ColColor($10);
+    end;
+    67..1000:
+    begin
+      color1 := ColColor($14);
+      color2 := ColColor($16);
+    end;
+    else
+    begin
+      color1 := ColColor($7);
+      color2 := ColColor($5);
     end;
   end;
   str := format('%4d', [RRole[rnum].CurrentHP]);
-  drawengshadowtext(screen, @str[1], x + 50, y + 107, color1, color2);
+  DrawEngShadowText(screen, @str[1], x + 50, y + 107, color1, color2);
 
   str := '/';
-  drawengshadowtext(screen, @str[1], x + 90, y + 107, colcolor($66), colcolor($63));
+  DrawEngShadowText(screen, @str[1], x + 90, y + 107, ColColor($66), ColColor($63));
 
   case RRole[rnum].Poison of
     34..66:
-      begin
-        color1 := colcolor($30);
-        color2 := colcolor($32);
-      end;
-    67..1000:
-      begin
-        color1 := colcolor($35);
-        color2 := colcolor($37);
-      end;
-  else
     begin
-      color1 := colcolor($23);
-      color2 := colcolor($21);
+      color1 := ColColor($30);
+      color2 := ColColor($32);
+    end;
+    67..1000:
+    begin
+      color1 := ColColor($35);
+      color2 := ColColor($37);
+    end;
+    else
+    begin
+      color1 := ColColor($23);
+      color2 := ColColor($21);
     end;
   end;
   str := format('%4d', [RRole[rnum].MaxHP]);
-  drawengshadowtext(screen, @str[1], x + 100, y + 107, color1, color2);
+  DrawEngShadowText(screen, @str[1], x + 100, y + 107, color1, color2);
 
   //str:=format('%4d/%4d', [Rrole[rnum,17],Rrole[rnum,18]]);
   //drawengshadowtext(@str[1],x+50,y+107,colcolor($7),colcolor($5));
   if rrole[rnum].MPType = 0 then
   begin
-    color1 := colcolor($50);
-    color2 := colcolor($4E);
+    color1 := ColColor($50);
+    color2 := ColColor($4E);
   end
   else if rrole[rnum].MPType = 1 then
   begin
-    color1 := colcolor($7);
-    color2 := colcolor($5);
+    color1 := ColColor($7);
+    color2 := ColColor($5);
   end
   else
   begin
-    color1 := colcolor($66);
-    color2 := colcolor($63);
+    color1 := ColColor($66);
+    color2 := ColColor($63);
   end;
   str := format('%4d/%4d', [RRole[rnum].CurrentMP, RRole[rnum].MaxMP]);
-  drawengshadowtext(screen, @str[1], x + 50, y + 128, color1, color2);
+  DrawEngShadowText(screen, @str[1], x + 50, y + 128, color1, color2);
   str := format('%9d', [rrole[rnum].PhyPower]);
-  drawengshadowtext(screen, @str[1], x + 50, y + 149, colcolor($7), colcolor($5));
+  DrawEngShadowText(screen, @str[1], x + 50, y + 149, ColColor($7), ColColor($5));
 
   //SDL_UpdateRect2(screen, x, y, 146, 174);
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
@@ -2546,7 +2544,7 @@ var
   str: WideString;
 begin
   pmax := 65535;
-  amount := Calrnum(0);
+  amount := CalRNum(0);
   for i := 0 to BRoleAmount - 1 do
   begin
     rnum := Brole[i].rnum;
@@ -2571,14 +2569,14 @@ begin
       p := min(Rrole[rnum].ExpForItem + basicvalue div 5 * 3, pmax);
       Rrole[rnum].ExpForItem := p;
       ShowSimpleStatus(rnum, 100, 50);
-      DrawRectangle(screen, 100, 235, 145, 25, 0, colcolor(255), 25);
+      DrawRectangle(screen, 100, 235, 145, 25, 0, ColColor(255), 25);
       str := (' 得經驗');
-      Drawshadowtext(screen, @str[1], 83, 237, colcolor($23), colcolor($21));
+      DrawShadowText(screen, @str[1], 83, 237, ColColor($23), ColColor($21));
       str := format('%5d', [Brole[i].ExpGot + basicvalue]);
-      Drawengshadowtext(screen, @str[1], 188, 237, colcolor($66), colcolor($64));
+      DrawEngShadowText(screen, @str[1], 188, 237, ColColor($66), ColColor($64));
       SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
       Redraw;
-      waitanykey;
+      WaitAnyKey;
     end;
 
   end;
@@ -2649,8 +2647,8 @@ begin
   begin
     ShowStatus(rnum);
     str := (' 升級');
-    Drawtextwithrect(screen, @str[1], 58, CENTER_Y - 150, 46, colcolor($23), colcolor($21));
-    waitanykey;
+    DrawTextWithRect(screen, @str[1], 58, CENTER_Y - 150, 46, ColColor($23), ColColor($21));
+    WaitAnyKey;
   end;
 
 end;
@@ -2686,10 +2684,10 @@ begin
         //writeln(Rrole[rnum].ExpForBook,',',needexp,',',mlevel,',',p);
         if (Rrole[rnum].ExpForBook >= needexp) and (mlevel < 10) then
         begin
-          redraw;
+          Redraw;
           EatOneItem(rnum, inum);
-          waitanykey;
-          redraw;
+          WaitAnyKey;
+          Redraw;
           SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
           if mnum > 0 then
           begin
@@ -2724,7 +2722,7 @@ begin
       if (Rrole[rnum].ExpForItem >= ritem[inum].NeedExpForItem) and (ritem[inum].NeedExpForItem > 0) and
         (Brole[i].Team = 0) then
       begin
-        redraw;
+        Redraw;
         p := 0;
         for i2 := 0 to 4 do
         begin
@@ -2746,9 +2744,9 @@ begin
           if needitemamount <= itemamount then
           begin
             ShowSimpleStatus(rnum, 350, 50);
-            DrawRectangle(screen, 115, 63, 145, 25, 0, colcolor(255), 25);
+            DrawRectangle(screen, 115, 63, 145, 25, 0, ColColor(255), 25);
             str := (' 製藥成功');
-            Drawshadowtext(screen, @str[1], 127, 65, colcolor($23), colcolor($21));
+            DrawShadowText(screen, @str[1], 127, 65, ColColor($23), ColColor($21));
 
             instruct_2(ritem[inum].GetItem[p], 1 + random(5));
             instruct_32(needitem, -needitemamount);
@@ -2792,16 +2790,16 @@ begin
     mode := Ritem[inum].ItemType;
     case mode of
       3:
-        begin
-          EatOneItem(rnum, inum);
-          instruct_32(inum, -1);
-          Brole[bnum].Acted := 1;
-          waitanykey;
-        end;
+      begin
+        EatOneItem(rnum, inum);
+        instruct_32(inum, -1);
+        Brole[bnum].Acted := 1;
+        WaitAnyKey;
+      end;
       4:
-        begin
-          UseHiddenWeapon(bnum, inum);
-        end;
+      begin
+        UseHiddenWeapon(bnum, inum);
+      end;
     end;
   end;
 
@@ -2861,7 +2859,7 @@ begin
     filename := formatfloat('fight/fight000', rrole[rnum].HeadNum);
     LoadIdxGrp(filename + '.idx', filename + '.grp', FIdx, FPic);
     //if PNG_TILE = 1 then
-      //LoadPNGTiles('resource/' + filename + '/', FPNGIndex, FPNGTile, 1);
+    //LoadPNGTiles('resource/' + filename + '/', FPNGIndex, FPNGTile, 1);
 
     spic := beginpic + rrole[rnum].SoundDealy[mode] - 1;
     //PlaySound2(rmagic[mnum].SoundNum, 0);
@@ -2869,11 +2867,11 @@ begin
     while (SDL_PollEvent(@event) >= 0) do
     begin
       CheckBasicEvent;
-      DrawBfieldWithAction(bnum, i);
+      DrawBFieldWithAction(bnum, i);
       if (i = spic) and (mnum >= 0) then
         PlaySoundA(rmagic[mnum].SoundNum, 0);
       SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-      sdl_delay(20);
+      SDL_Delay(20);
       i := i + 1;
       if i > endpic then
         break;
@@ -2899,7 +2897,7 @@ begin
   CalCanSelect(bnum, 1, step);
   select := False;
   if (Brole[bnum].Team = 0) and (brole[bnum].Auto = 0) then
-    select := selectaim(bnum, step)
+    select := SelectAim(bnum, step)
   else
   begin
     minDefPoi := MaxProList[49];
@@ -2959,7 +2957,7 @@ begin
   CalCanSelect(bnum, 1, step);
   select := False;
   if (Brole[bnum].Team = 0) and (brole[bnum].Auto = 0) then
-    select := selectaim(bnum, step)
+    select := SelectAim(bnum, step)
   else
   begin
     {minHP := Max_HP;
@@ -3019,7 +3017,7 @@ begin
   CalCanSelect(bnum, 1, step);
   select := False;
   if (Brole[bnum].Team = 0) and (brole[bnum].Auto = 0) then
-    select := selectaim(bnum, step)
+    select := SelectAim(bnum, step)
   else
   begin
     if Bfield[3, Ax, Ay] >= 0 then
@@ -3063,11 +3061,11 @@ begin
   else
     eventnum := ritem[inum].UnKnow7;
   if eventnum > 0 then
-    callevent(eventnum)
+    CallEvent(eventnum)
   else
   begin
     if (Brole[bnum].Team = 0) and (brole[bnum].Auto = 0) then
-      select := selectaim(bnum, step)
+      select := SelectAim(bnum, step)
     else
     begin
       if Bfield[3, Ax, Ay] >= 0 then
@@ -3185,102 +3183,102 @@ begin
   //for i := 0 to length(a) - 1 do
   //AutoMode[a[i]] := 0;
   menu := 0;
-  showTeamModemenu(menu);
+  ShowTeamModeMenu(menu);
   while (SDL_WaitEvent(@event) >= 0) do
   begin
     CheckBasicEvent;
     case event.type_ of
       SDL_KEYUP:
+      begin
+        if (event.key.keysym.sym = SDLK_RETURN) or (event.key.keysym.sym = SDLK_SPACE) then
         begin
-          if (event.key.keysym.sym = sdlk_return) or (event.key.keysym.sym = sdlk_space) then
-          begin
-            break;
-          end;
-          if (event.key.keysym.sym = sdlk_escape) then
-          begin
-            Result := False;
-            break;
-          end;
-          if (event.key.keysym.sym = sdlk_up) then
-          begin
-            menu := menu - 1;
-            if menu = -1 then
-              menu := -2;
-            if menu = -3 then
-              menu := amount - 1;
-            showTeamModemenu(menu);
-          end;
-          if (event.key.keysym.sym = sdlk_down) then
-          begin
-            menu := menu + 1;
-            if menu = amount then
-              menu := -2;
-            if menu = -1 then
-              menu := 0;
-            showTeamModemenu(menu);
-          end;
-          if (event.key.keysym.sym = sdlk_left) then
-          begin
-            Brole[a[menu]].AutoMode := Brole[a[menu]].AutoMode - 1;
-            if Brole[a[menu]].AutoMode < 0 then
-              Brole[a[menu]].AutoMode := 1;
-            showTeamModemenu(menu);
-          end;
-          if (event.key.keysym.sym = sdlk_right) then
+          break;
+        end;
+        if (event.key.keysym.sym = SDLK_ESCAPE) then
+        begin
+          Result := False;
+          break;
+        end;
+        if (event.key.keysym.sym = SDLK_UP) then
+        begin
+          menu := menu - 1;
+          if menu = -1 then
+            menu := -2;
+          if menu = -3 then
+            menu := amount - 1;
+          ShowTeamModeMenu(menu);
+        end;
+        if (event.key.keysym.sym = SDLK_DOWN) then
+        begin
+          menu := menu + 1;
+          if menu = amount then
+            menu := -2;
+          if menu = -1 then
+            menu := 0;
+          ShowTeamModeMenu(menu);
+        end;
+        if (event.key.keysym.sym = SDLK_LEFT) then
+        begin
+          Brole[a[menu]].AutoMode := Brole[a[menu]].AutoMode - 1;
+          if Brole[a[menu]].AutoMode < 0 then
+            Brole[a[menu]].AutoMode := 1;
+          ShowTeamModeMenu(menu);
+        end;
+        if (event.key.keysym.sym = SDLK_RIGHT) then
+        begin
+          Brole[a[menu]].AutoMode := Brole[a[menu]].AutoMode + 1;
+          if Brole[a[menu]].AutoMode > 1 then
+            Brole[a[menu]].AutoMode := 0;
+          ShowTeamModeMenu(menu);
+        end;
+      end;
+      SDL_MOUSEBUTTONUP:
+      begin
+        if (event.button.button = SDL_BUTTON_LEFT) then
+        begin
+          if (menu > -1) then
           begin
             Brole[a[menu]].AutoMode := Brole[a[menu]].AutoMode + 1;
             if Brole[a[menu]].AutoMode > 1 then
               Brole[a[menu]].AutoMode := 0;
-            showTeamModemenu(menu);
-          end;
-        end;
-      SDL_MOUSEBUTTONUP:
-        begin
-          if (event.button.button = sdl_button_left) then
+            ShowTeamModeMenu(menu);
+          end
+          else if (menu = -2) then
           begin
-            if (menu > -1) then
-            begin
-              Brole[a[menu]].AutoMode := Brole[a[menu]].AutoMode + 1;
-              if Brole[a[menu]].AutoMode > 1 then
-                Brole[a[menu]].AutoMode := 0;
-              showTeamModemenu(menu);
-            end
-            else if (menu = -2) then
-            begin
-              break;
-            end;
-          end;
-          if (event.button.button = sdl_button_right) then
-          begin
-            Result := False;
             break;
           end;
         end;
-      SDL_MOUSEMOTION:
+        if (event.button.button = SDL_BUTTON_RIGHT) then
         begin
-          if (round(event.button.x / (RealScreen.w / screen.w)) >= x) and
-            (round(event.button.x / (RealScreen.w / screen.w)) < x + w) and
-            (round(event.button.y / (RealScreen.h / screen.h)) >= y) and
-            (round(event.button.y / (RealScreen.h / screen.h)) < amount * 22 + 78) then
-          begin
-            menup := menu;
-            menu := (round(event.button.y / (RealScreen.h / screen.h)) - y) div 22;
-            if menu < 0 then
-              menu := 0;
-            if menu >= amount then
-              menu := -2;
-            if menup <> menu then
-              showTeamModemenu(menu);
-          end
-          else
-            menu := -1;
+          Result := False;
+          break;
         end;
+      end;
+      SDL_MOUSEMOTION:
+      begin
+        if (round(event.button.x / (RealScreen.w / screen.w)) >= x) and
+          (round(event.button.x / (RealScreen.w / screen.w)) < x + w) and
+          (round(event.button.y / (RealScreen.h / screen.h)) >= y) and
+          (round(event.button.y / (RealScreen.h / screen.h)) < amount * 22 + 78) then
+        begin
+          menup := menu;
+          menu := (round(event.button.y / (RealScreen.h / screen.h)) - y) div 22;
+          if menu < 0 then
+            menu := 0;
+          if menu >= amount then
+            menu := -2;
+          if menup <> menu then
+            ShowTeamModeMenu(menu);
+        end
+        else
+          menu := -1;
+      end;
     end;
     event.key.keysym.sym := 0;
     event.button.button := 0;
   end;
   //SDL_EnableKeyRepeat(30,35);
-  redraw;
+  Redraw;
   if Result = False then
     for i := 0 to broleamount - 1 do
       Brole[i].AutoMode := tempmode[i];
@@ -3309,37 +3307,37 @@ begin
       amount := amount + 1;
       setlength(namestr, amount);
       setlength(a, amount);
-      namestr[amount - 1] := ' ' + big5tounicode(@rrole[brole[i].rnum].Name[0]);
+      namestr[amount - 1] := ' ' + Big5ToUnicode(@rrole[brole[i].rnum].Name[0]);
       a[amount - 1] := Brole[i].AutoMode;
     end;
   end;
   h := amount * 22 + 32;
 
-  redraw;
+  Redraw;
 
-  DrawRectangle(screen, x, y, w, h, 0, colcolor(255), 30);
+  DrawRectangle(screen, x, y, w, h, 0, ColColor(255), 30);
   for i := 0 to amount - 1 do
   begin
     if (i = menu) then
     begin
-      drawshadowtext(screen, @namestr[i][1], x - 17, 53 + 22 * i, colcolor($64), colcolor($66));
+      DrawShadowText(screen, @namestr[i][1], x - 17, 53 + 22 * i, ColColor($64), ColColor($66));
       //SDL_UpdateRect2(screen, x, y,w+2, h+2);
-      drawshadowtext(screen, @modestring[a[i]][1], x + 100 - 17, 53 + 22 * i, colcolor($64), colcolor($66));
+      DrawShadowText(screen, @modestring[a[i]][1], x + 100 - 17, 53 + 22 * i, ColColor($64), ColColor($66));
       //SDL_UpdateRect2(screen, x, y,w+2, h+2);
     end
     else
     begin
-      drawshadowtext(screen, @namestr[i][1], x - 17, 53 + 22 * i, colcolor($21), colcolor($23));
+      DrawShadowText(screen, @namestr[i][1], x - 17, 53 + 22 * i, ColColor($21), ColColor($23));
       //SDL_UpdateRect2(screen, x, y,w+2, h+2);
-      drawshadowtext(screen, @modestring[a[i]][1], x + 100 - 17, 53 + 22 * i, colcolor($21), colcolor($23));
+      DrawShadowText(screen, @modestring[a[i]][1], x + 100 - 17, 53 + 22 * i, ColColor($21), ColColor($23));
       //SDL_UpdateRect2(screen, x, y,w+2, h+2);
     end;
 
   end;
   if menu = -2 then
-    drawshadowtext(screen, @str[1], x - 17, 53 + 22 * amount, colcolor($64), colcolor($66))
+    DrawShadowText(screen, @str[1], x - 17, 53 + 22 * amount, ColColor($64), ColColor($66))
   else
-    drawshadowtext(screen, @str[1], x - 17, 53 + 22 * amount, colcolor($21), colcolor($23));
+    DrawShadowText(screen, @str[1], x - 17, 53 + 22 * amount, ColColor($21), ColColor($23));
   SDL_UpdateRect2(screen, x, y, w + 2, h + 2);
 
 end;
@@ -3354,8 +3352,8 @@ var
   str: WideString;
 begin
   rnum := brole[bnum].rnum;
-  showsimplestatus(rnum, CENTER_X + 100, 50);
-  sdl_delay(450);
+  ShowSimpleStatus(rnum, CENTER_X + 100, 50);
+  SDL_Delay(450);
 
   //CalCanSelect(bnum, 0, Brole[bnum].step);
 
@@ -3369,7 +3367,7 @@ begin
       //医疗大于50, 且体力大于50才对自身医疗
       if (Rrole[rnum].Medcine >= 50) and (rrole[rnum].PhyPower >= 50) and (random(100) < 50) then
       begin
-        medcine(bnum);
+        Medcine(bnum);
       end
       else
       begin
@@ -3407,7 +3405,7 @@ begin
     begin
       //showmessage(inttostr(rrole[rnum].UsePoi));
       CalCanSelect(bnum, 0, Brole[bnum].step);
-      nearestmoveByPro(Ax, Ay, Ax1, Ay1, bnum, 1, 0, 17, -1, 1);
+      NearestMoveByPro(Ax, Ay, Ax1, Ay1, bnum, 1, 0, 17, -1, 1);
       if (Ax1 <> -1) then
       begin
         MoveAmination(bnum);
@@ -3425,7 +3423,7 @@ begin
     begin
       //showmessage(inttostr(rrole[rnum].UsePoi));
       CalCanSelect(bnum, 0, Brole[bnum].step);
-      nearestmoveByPro(Ax, Ay, Ax1, Ay1, bnum, 1, 0, 20, 1, 2);
+      NearestMoveByPro(Ax, Ay, Ax1, Ay1, bnum, 1, 0, 20, 1, 2);
       if (Ax1 <> -1) then
       begin
         MoveAmination(bnum);
@@ -3443,7 +3441,7 @@ begin
     begin
       //showmessage(inttostr(rrole[rnum].UsePoi));
       CalCanSelect(bnum, 0, Brole[bnum].step);
-      nearestmoveByPro(Ax, Ay, Ax1, Ay1, bnum, 0, min(Rrole[rnum].UsePoi div 15 + 1, 15), 49, -1, 0);
+      NearestMoveByPro(Ax, Ay, Ax1, Ay1, bnum, 0, min(Rrole[rnum].UsePoi div 15 + 1, 15), 49, -1, 0);
       if (Ax1 <> -1) then
       begin
         MoveAmination(bnum);
@@ -3461,7 +3459,7 @@ begin
     begin
       //showmessage(inttostr(rrole[rnum].UsePoi));
       CalCanSelect(bnum, 0, Brole[bnum].step);
-      nearestmoveByPro(Ax, Ay, Ax1, Ay1, bnum, 0, 1, 17, -1, 0);
+      NearestMoveByPro(Ax, Ay, Ax1, Ay1, bnum, 0, 1, 17, -1, 0);
       if (Ax1 <> -1) then
       begin
         MoveAmination(bnum);
@@ -3501,7 +3499,7 @@ begin
           level := 10;
         if level <= 0 then
           level := 1;
-        trymoveattack(Bx1, By1, Ax1, Ay1, tempmaxhurt, bnum, mnum, level);
+        TryMoveAttack(Bx1, By1, Ax1, Ay1, tempmaxhurt, bnum, mnum, level);
         if tempmaxhurt > curMaxHurt then
         begin
           curBx1 := Bx1;
@@ -3689,14 +3687,14 @@ begin
   end;
 end;}
 
-//If all other actions fail, try to move closest to the nearest enemy and rest.
-//如果上面行动全部失败, 尽量靠近最近的敌人, 休息
+  //If all other actions fail, try to move closest to the nearest enemy and rest.
+  //如果上面行动全部失败, 尽量靠近最近的敌人, 休息
   if Brole[bnum].Acted = 0 then
   begin
     CalCanSelect(bnum, 0, Brole[bnum].step);
-    nearestmove(Ax, Ay, bnum);
+    NearestMove(Ax, Ay, bnum);
     MoveAmination(bnum);
-    rest(bnum);
+    Rest(bnum);
   end;
 
   //检查是否有esc被按下
@@ -3753,7 +3751,7 @@ begin
       inum := rrole[rnum].TakingItem[p]
     else
       inum := RItemList[p].Number;
-    redraw;
+    Redraw;
     SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
     EatOneItem(rnum, inum);
     if Brole[bnum].Team <> 0 then
@@ -3761,12 +3759,12 @@ begin
     else
       instruct_32(RItemList[p].Number, -1);
     Brole[bnum].Acted := 1;
-    sdl_delay(500);
+    SDL_Delay(500);
   end;
 
 end;
 
-procedure trymoveattack(var Mx1, My1, Ax1, Ay1, tempmaxhurt: integer; bnum, mnum, level: integer);
+procedure TryMoveAttack(var Mx1, My1, Ax1, Ay1, tempmaxhurt: integer; bnum, mnum, level: integer);
 var
   curX, curY, curstep, nextX, nextY, dis, dis0, temphurt: integer;
   i, i1, i2, eneamount, aim: integer;
@@ -4087,11 +4085,11 @@ end;
 
 //移动到离最近的敌人最近的地方
 
-procedure nearestmove(var Mx1, My1: integer; bnum: integer);
+procedure NearestMove(var Mx1, My1: integer; bnum: integer);
 var
   temp1, temp2: integer;
 begin
-  nearestmoveByPro(Mx1, My1, temp1, temp2, bnum, 0, 1, 0, 0, 0);
+  NearestMoveByPro(Mx1, My1, temp1, temp2, bnum, 0, 1, 0, 0, 0);
 
   {myteam := brole[bnum].Team;
   mindis := 9999;
@@ -4140,7 +4138,9 @@ end;
 //MaxMinPro: 1-search max, -1-search min, 0-any.
 //mode: 0-nearest only, 1-medcine, 2-
 
-procedure nearestmoveByPro(var Mx1, My1, Ax1, Ay1: integer; bnum, TeamMate, KeepDis, Prolist, MaxMinPro: integer;
+procedure NearestMoveByPro(var Mx1, My1, Ax1, Ay1: integer; bnum, TeamMate, KeepDis, Prolist, MaxMinPro: integer;
+
+
   mode: integer);
 var
   i, tempdis, mindis, tempPro, rnum: integer;

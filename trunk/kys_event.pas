@@ -16,7 +16,7 @@ uses
   SDL_mixer,
   SDL_image,
   SDL,
-  math,
+  Math,
   kys_main, Dialogs;
 
 //事件系统
@@ -70,7 +70,7 @@ procedure instruct_44(enum1, beginpic1, endpic1, enum2, beginpic2, endpic2: inte
 procedure instruct_44e(enum1, beginpic1, endpic1, enum2, beginpic2, enum3, beginpic3: integer);
 procedure instruct_45(rnum, speed: integer);
 procedure instruct_46(rnum, mp: integer);
-procedure instruct_47(rnum, attack: integer);
+procedure instruct_47(rnum, Attack: integer);
 procedure instruct_48(rnum, hp: integer);
 procedure instruct_49(rnum, MPpro: integer);
 function instruct_50(list: array of integer): integer;
@@ -108,7 +108,7 @@ uses kys_script, kys_engine, kys_battle, kys_draw;
 procedure instruct_0;
 begin
 
-  redraw;
+  Redraw;
   //SDL_UpdateRect2(screen,0,0,screen.w,screen.h);
 
 end;
@@ -127,47 +127,47 @@ begin
 
   case dismode of
     0:
-      begin
-        headx := 40;
-        heady := 85;
-        diagx := 100;
-        diagy := 30;
-      end;
+    begin
+      headx := 40;
+      heady := 85;
+      diagx := 100;
+      diagy := 30;
+    end;
     1:
-      begin
-        headx := 546;
-        heady := CENTER_Y * 2 - 75;
-        diagx := 10;
-        diagy := CENTER_Y * 2 - 130;
-      end;
+    begin
+      headx := 546;
+      heady := CENTER_Y * 2 - 75;
+      diagx := 10;
+      diagy := CENTER_Y * 2 - 130;
+    end;
     2:
-      begin
-        headx := -1;
-        heady := -1;
-        diagx := 100;
-        diagy := 30;
-      end;
+    begin
+      headx := -1;
+      heady := -1;
+      diagx := 100;
+      diagy := 30;
+    end;
     5:
-      begin
-        headx := 40;
-        heady := CENTER_Y * 2 - 75;
-        diagx := 100;
-        diagy := CENTER_Y * 2 - 130;
-      end;
+    begin
+      headx := 40;
+      heady := CENTER_Y * 2 - 75;
+      diagx := 100;
+      diagy := CENTER_Y * 2 - 130;
+    end;
     4:
-      begin
-        headx := 546;
-        heady := 85;
-        diagx := 10;
-        diagy := 30;
-      end;
+    begin
+      headx := 546;
+      heady := 85;
+      diagx := 10;
+      diagy := 30;
+    end;
     3:
-      begin
-        headx := -1;
-        heady := -1;
-        diagx := 100;
-        diagy := CENTER_Y * 2 - 130;
-      end;
+    begin
+      headx := -1;
+      heady := -1;
+      diagx := 100;
+      diagy := CENTER_Y * 2 - 130;
+    end;
   end;
 
   len := 0;
@@ -184,9 +184,9 @@ begin
   setlength(talkarray, len + 1);
   move(TDef[offset], talkarray[0], len);
 
-  drawrectanglewithoutframe(screen, 0, diagy - 10, 640, 120, 0, 40);
+  DrawRectangleWithoutFrame(screen, 0, diagy - 10, 640, 120, 0, 40);
   if headx > 0 then
-    drawheadpic(headnum, headx, heady);
+    DrawHeadPic(headnum, headx, heady);
   //if headnum <= MAX_HEAD_NUM then
   //begin
   //name := Big5toUnicode(@rrole[headnum].Name);
@@ -205,7 +205,7 @@ begin
   begin
     if (talkarray[i] = 0) {or ((i mod 48 = 0) and (i > 0))} then
     begin
-      drawbig5shadowtext(screen, @talkarray[p], diagx, diagy + l * 22, colcolor($FF), colcolor($0));
+      DrawBig5ShadowText(screen, @talkarray[p], diagx, diagy + l * 22, ColColor($FF), ColColor($0));
       p := i + 1;
       l := l + 1;
       if (l >= 4) and (i < len) then
@@ -213,11 +213,11 @@ begin
         SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
         repeat
           key := WaitAnyKey;
-        until (key <> sdlk_left) and (key <> sdlk_right) and (key <> sdlk_up) and (key <> sdlk_down);
+        until (key <> SDLK_LEFT) and (key <> SDLK_RIGHT) and (key <> SDLK_UP) and (key <> SDLK_DOWN);
         Redraw;
-        drawrectanglewithoutframe(screen, 0, diagy - 10, 640, 120, 0, 40);
+        DrawRectangleWithoutFrame(screen, 0, diagy - 10, 640, 120, 0, 40);
         if headx > 0 then
-          drawheadpic(headnum, headx, heady);
+          DrawHeadPic(headnum, headx, heady);
         l := 0;
       end;
     end;
@@ -225,8 +225,8 @@ begin
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
   repeat
     key := WaitAnyKey;
-  until (key <> sdlk_left) and (key <> sdlk_right) and (key <> sdlk_up) and (key <> sdlk_down);
-  redraw;
+  until (key <> SDLK_LEFT) and (key <> SDLK_RIGHT) and (key <> SDLK_UP) and (key <> SDLK_DOWN);
+  Redraw;
 
 end;
 
@@ -242,21 +242,21 @@ begin
   if where = 2 then
     x := 190;
 
-  DrawRectangle(screen, x - 85, 98, 170, 76, 0, colcolor(255), 30);
+  DrawRectangle(screen, x - 85, 98, 170, 76, 0, ColColor(255), 30);
   //DrawMPic(ITEM_BEGIN_PIC + inum, x - 20, 100);
   if amount >= 0 then
     word := (' 得到物品')
   else
     word := (' 失去物品');
-  drawshadowtext(screen, @word[1], x - 100, 100, colcolor($23), colcolor($21));
-  drawbig5shadowtext(screen, @RItem[inum].Name, x - 100, 125, colcolor($7), colcolor($5));
+  DrawShadowText(screen, @word[1], x - 100, 100, ColColor($23), ColColor($21));
+  DrawBig5ShadowText(screen, @RItem[inum].Name, x - 100, 125, ColColor($7), ColColor($5));
   word := (' 數量');
-  drawshadowtext(screen, @word[1], x - 100, 150, colcolor($66), colcolor($64));
+  DrawShadowText(screen, @word[1], x - 100, 150, ColColor($66), ColColor($64));
   word := format(' %5d', [amount]);
-  drawengshadowtext(screen, @word[1], x - 0, 150, colcolor($66), colcolor($64));
+  DrawEngShadowText(screen, @word[1], x - 0, 150, ColColor($66), ColColor($64));
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-  waitanykey;
-  redraw;
+  WaitAnyKey;
+  Redraw;
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
 
 end;
@@ -332,7 +332,7 @@ begin
   if DData[CurScence, CurEvent, 5] <> curPic then
   begin
     InitialScence(1);
-    redraw;
+    Redraw;
     //SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
   end;
   if (list[0] = CurScence) and (preEventPic <> DData[list[0], list[1], 5]) then
@@ -363,13 +363,13 @@ begin
   menustring[0] := (' 取消');
   menustring[1] := (' 戰鬥');
   menustring[2] := (' 是否與之戰鬥？');
-  drawtextwithrect(screen, @menustring[2][1], CENTER_X - 75, CENTER_Y - 85, 150, colcolor(7), colcolor(5));
-  menu := commonmenu2(CENTER_X - 49, CENTER_Y - 50, 98, menustring);
+  DrawTextWithRect(screen, @menustring[2][1], CENTER_X - 75, CENTER_Y - 85, 150, ColColor(7), ColColor(5));
+  menu := CommonMenu2(CENTER_X - 49, CENTER_Y - 50, 98, menustring);
   if menu = 1 then
     Result := jump1
   else
     Result := jump2;
-  redraw;
+  Redraw;
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
 
 end;
@@ -400,13 +400,13 @@ begin
   menustring[0] := (' 取消');
   menustring[1] := (' 要求');
   menustring[2] := (' 是否要求加入？');
-  drawtextwithrect(screen, @menustring[2][1], CENTER_X - 75, CENTER_Y - 85, 150, colcolor(7), colcolor(5));
-  menu := commonmenu2(CENTER_X - 49, CENTER_Y - 50, 98, menustring);
+  DrawTextWithRect(screen, @menustring[2][1], CENTER_X - 75, CENTER_Y - 85, 150, ColColor(7), ColColor(5));
+  menu := CommonMenu2(CENTER_X - 49, CENTER_Y - 50, 98, menustring);
   if menu = 1 then
     Result := jump1
   else
     Result := jump2;
-  redraw;
+  Redraw;
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
 
 end;
@@ -452,13 +452,13 @@ begin
   menustring[2] := (' 是否需要住宿？');
   if MODVersion <> 0 then
     menustring[2] := (' 请選擇是或者否');
-  drawtextwithrect(screen, @menustring[2][1], CENTER_X - 75, CENTER_Y - 85, 150, colcolor(7), colcolor(5));
-  menu := commonmenu2(CENTER_X - 49, CENTER_Y - 50, 98, menustring);
+  DrawTextWithRect(screen, @menustring[2][1], CENTER_X - 75, CENTER_Y - 85, 150, ColColor(7), ColColor(5));
+  menu := CommonMenu2(CENTER_X - 49, CENTER_Y - 50, 98, menustring);
   if menu = 1 then
     Result := jump1
   else
     Result := jump2;
-  redraw;
+  Redraw;
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
 
 end;
@@ -532,13 +532,13 @@ var
   str: WideString;
 begin
   where := 4;
-  redraw;
+  Redraw;
   str := (' 勝敗乃兵家常事，但是……');
-  drawshadowtext(screen, @str[1], CENTER_X - 120, 340, colcolor(255), colcolor(255));
+  DrawShadowText(screen, @str[1], CENTER_X - 120, 340, ColColor(255), ColColor(255));
   str := (' 地球上又多了一失蹤人口');
-  drawshadowtext(screen, @str[1], CENTER_X - 110, 370, colcolor(255), colcolor(255));
+  DrawShadowText(screen, @str[1], CENTER_X - 110, 370, ColColor(255), ColColor(255));
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-  waitanykey;
+  WaitAnyKey;
 end;
 
 function instruct_16(rnum, jump1, jump2: integer): integer;
@@ -663,7 +663,7 @@ begin
     while (SDL_PollEvent(@event) >= 0) do
     begin
       CheckBasicEvent;
-      sdl_delay(50);
+      SDL_Delay(50);
       DrawScenceWithoutRole(y1, i);
       //showmessage(inttostr(i));
       DrawRoleOnScence(y1, i);
@@ -679,7 +679,7 @@ begin
     while (SDL_PollEvent(@event) >= 0) do
     begin
       CheckBasicEvent;
-      sdl_delay(50);
+      SDL_Delay(50);
       DrawScenceWithoutRole(i, x2);
       //showmessage(inttostr(i));
       DrawRoleOnScence(i, x2);
@@ -724,7 +724,7 @@ begin
     begin
       CheckBasicEvent;
       CurScenceRolePic := i div 2;
-      sdl_delay(20);
+      SDL_Delay(20);
       //DData[CurScence, CurEvent, 5] := -1;
       DrawScence;
       SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
@@ -744,7 +744,7 @@ begin
       DData[CurScence, enum, 7] := i;
       //UpdateScence(DData[CurScence, enum, 10], DData[CurScence, enum, 9]);
       InitialScence(1);
-      sdl_delay(20);
+      SDL_Delay(20);
       DrawScence;
       SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
       i := i + 1;
@@ -788,7 +788,7 @@ begin
     while SDL_PollEvent(@event) >= 0 do
     begin
       CheckBasicEvent;
-      sdl_delay(50);
+      SDL_Delay(50);
       DrawScenceWithoutRole(Sx, Sy);
       SStep := SStep + 1;
       if SStep >= 7 then
@@ -810,7 +810,7 @@ begin
     while SDL_PollEvent(@event) >= 0 do
     begin
       CheckBasicEvent;
-      sdl_delay(50);
+      SDL_Delay(50);
       DrawScenceWithoutRole(Sx, Sy);
       SStep := SStep + 1;
       if SStep >= 7 then
@@ -896,14 +896,14 @@ begin
   //if i = 10 then rrole[rnum].data[i+63] := magicnum;
   if dismode = 0 then
   begin
-    DrawRectangle(screen, CENTER_X - 75, 98, 145, 76, 0, colcolor(255), 30);
+    DrawRectangle(screen, CENTER_X - 75, 98, 145, 76, 0, ColColor(255), 30);
     word := (' 學會');
-    drawshadowtext(screen, @word[1], CENTER_X - 90, 125, colcolor($7), colcolor($5));
-    drawbig5shadowtext(screen, @rrole[rnum].Name, CENTER_X - 90, 100, colcolor($23), colcolor($21));
-    drawbig5shadowtext(screen, @Rmagic[magicnum].Name, CENTER_X - 90, 150, colcolor($66), colcolor($64));
+    DrawShadowText(screen, @word[1], CENTER_X - 90, 125, ColColor($7), ColColor($5));
+    DrawBig5ShadowText(screen, @rrole[rnum].Name, CENTER_X - 90, 100, ColColor($23), ColColor($21));
+    DrawBig5ShadowText(screen, @Rmagic[magicnum].Name, CENTER_X - 90, 150, ColColor($66), ColColor($64));
     SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-    waitanykey;
-    redraw;
+    WaitAnyKey;
+    Redraw;
   end;
 end;
 
@@ -922,15 +922,15 @@ begin
   end;
   if iq > 0 then
   begin
-    DrawRectangle(screen, CENTER_X - 75, 98, 145, 51, 0, colcolor(255), 30);
+    DrawRectangle(screen, CENTER_X - 75, 98, 145, 51, 0, ColColor(255), 30);
     word := (' 資質增加');
-    drawshadowtext(screen, @word[1], CENTER_X - 90, 125, colcolor($7), colcolor($5));
-    drawbig5shadowtext(screen, @rrole[rnum].Name, CENTER_X - 90, 100, colcolor($23), colcolor($21));
+    DrawShadowText(screen, @word[1], CENTER_X - 90, 125, ColColor($7), ColColor($5));
+    DrawBig5ShadowText(screen, @rrole[rnum].Name, CENTER_X - 90, 100, ColColor($23), ColColor($21));
     word := format('%3d', [iq]);
-    drawengshadowtext(screen, @word[1], CENTER_X + 30, 125, colcolor($66), colcolor($64));
+    DrawEngShadowText(screen, @word[1], CENTER_X + 30, 125, ColColor($66), ColColor($64));
     SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-    waitanykey;
-    redraw;
+    WaitAnyKey;
+    Redraw;
   end;
 end;
 
@@ -1086,7 +1086,7 @@ begin
     //UpdateScence(DData[CurScence, enum1, 10], DData[CurScence, enum1, 9]);
     //UpdateScence(DData[CurScence, enum2, 10], DData[CurScence, enum2, 9]);
     InitialScence(1);
-    sdl_delay(20);
+    SDL_Delay(20);
     //DrawScenceWithoutRole(Sx, Sy);
     DrawScence;
     SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
@@ -1114,7 +1114,7 @@ begin
     //UpdateScence(DData[CurScence, enum1, 10], DData[CurScence, enum1, 9]);
     //UpdateScence(DData[CurScence, enum2, 10], DData[CurScence, enum2, 9]);
     InitialScence(1);
-    sdl_delay(20);
+    SDL_Delay(20);
     //writeln(1);
     //DrawScenceWithoutRole(Sx, Sy);
     DrawScence;
@@ -1131,15 +1131,15 @@ var
   word: WideString;
 begin
   RRole[rnum].Speed := RRole[rnum].Speed + speed;
-  DrawRectangle(screen, CENTER_X - 75, 98, 145, 51, 0, colcolor(255), 30);
+  DrawRectangle(screen, CENTER_X - 75, 98, 145, 51, 0, ColColor(255), 30);
   word := (' 輕功增加');
-  drawshadowtext(screen, @word[1], CENTER_X - 90, 125, colcolor($7), colcolor($5));
-  drawbig5shadowtext(screen, @rrole[rnum].Name, CENTER_X - 90, 100, colcolor($23), colcolor($21));
+  DrawShadowText(screen, @word[1], CENTER_X - 90, 125, ColColor($7), ColColor($5));
+  DrawBig5ShadowText(screen, @rrole[rnum].Name, CENTER_X - 90, 100, ColColor($23), ColColor($21));
   word := format('%4d', [speed]);
-  drawengshadowtext(screen, @word[1], CENTER_X + 20, 125, colcolor($66), colcolor($64));
+  DrawEngShadowText(screen, @word[1], CENTER_X + 20, 125, ColColor($66), ColColor($64));
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-  waitanykey;
-  redraw;
+  WaitAnyKey;
+  Redraw;
 end;
 
 procedure instruct_46(rnum, mp: integer);
@@ -1148,31 +1148,31 @@ var
 begin
   RRole[rnum].MaxMP := RRole[rnum].MaxMP + mp;
   RRole[rnum].CurrentMP := RRole[rnum].MaxMP;
-  DrawRectangle(screen, CENTER_X - 75, 98, 145, 51, 0, colcolor(255), 30);
+  DrawRectangle(screen, CENTER_X - 75, 98, 145, 51, 0, ColColor(255), 30);
   word := (' 內力增加');
-  drawshadowtext(screen, @word[1], CENTER_X - 90, 125, colcolor($7), colcolor($5));
-  drawbig5shadowtext(screen, @rrole[rnum].Name, CENTER_X - 90, 100, colcolor($23), colcolor($21));
+  DrawShadowText(screen, @word[1], CENTER_X - 90, 125, ColColor($7), ColColor($5));
+  DrawBig5ShadowText(screen, @rrole[rnum].Name, CENTER_X - 90, 100, ColColor($23), ColColor($21));
   word := format('%4d', [mp]);
-  drawengshadowtext(screen, @word[1], CENTER_X + 20, 125, colcolor($66), colcolor($64));
+  DrawEngShadowText(screen, @word[1], CENTER_X + 20, 125, ColColor($66), ColColor($64));
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-  waitanykey;
-  redraw;
+  WaitAnyKey;
+  Redraw;
 end;
 
-procedure instruct_47(rnum, attack: integer);
+procedure instruct_47(rnum, Attack: integer);
 var
   word: WideString;
 begin
-  RRole[rnum].Attack := RRole[rnum].Attack + attack;
-  DrawRectangle(screen, CENTER_X - 75, 98, 145, 51, 0, colcolor(255), 30);
+  RRole[rnum].Attack := RRole[rnum].Attack + Attack;
+  DrawRectangle(screen, CENTER_X - 75, 98, 145, 51, 0, ColColor(255), 30);
   word := (' 武力增加');
-  drawshadowtext(screen, @word[1], CENTER_X - 90, 125, colcolor($7), colcolor($5));
-  drawbig5shadowtext(screen, @rrole[rnum].Name, CENTER_X - 90, 100, colcolor($23), colcolor($21));
-  word := format('%4d', [attack]);
-  drawengshadowtext(screen, @word[1], CENTER_X + 20, 125, colcolor($66), colcolor($64));
+  DrawShadowText(screen, @word[1], CENTER_X - 90, 125, ColColor($7), ColColor($5));
+  DrawBig5ShadowText(screen, @rrole[rnum].Name, CENTER_X - 90, 100, ColColor($23), ColColor($21));
+  word := format('%4d', [Attack]);
+  DrawEngShadowText(screen, @word[1], CENTER_X + 20, 125, ColColor($66), ColColor($64));
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-  waitanykey;
-  redraw;
+  WaitAnyKey;
+  Redraw;
 end;
 
 procedure instruct_48(rnum, hp: integer);
@@ -1181,15 +1181,15 @@ var
 begin
   RRole[rnum].MaxHP := RRole[rnum].MaxHP + hp;
   RRole[rnum].CurrentHP := RRole[rnum].MaxHP;
-  DrawRectangle(screen, CENTER_X - 75, 98, 145, 51, 0, colcolor(255), 30);
+  DrawRectangle(screen, CENTER_X - 75, 98, 145, 51, 0, ColColor(255), 30);
   word := (' 生命增加');
-  drawshadowtext(screen, @word[1], CENTER_X - 90, 125, colcolor($7), colcolor($5));
-  drawbig5shadowtext(screen, @rrole[rnum].Name, CENTER_X - 90, 100, colcolor($23), colcolor($21));
+  DrawShadowText(screen, @word[1], CENTER_X - 90, 125, ColColor($7), ColColor($5));
+  DrawBig5ShadowText(screen, @rrole[rnum].Name, CENTER_X - 90, 100, ColColor($23), ColColor($21));
   word := format('%4d', [hp]);
-  drawengshadowtext(screen, @word[1], CENTER_X + 20, 125, colcolor($66), colcolor($64));
+  DrawEngShadowText(screen, @word[1], CENTER_X + 20, 125, ColColor($66), ColColor($64));
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-  waitanykey;
-  redraw;
+  WaitAnyKey;
+  Redraw;
 end;
 
 procedure instruct_49(rnum, MPpro: integer);
@@ -1229,28 +1229,28 @@ procedure instruct_52;
 var
   word: WideString;
 begin
-  DrawRectangle(screen, CENTER_X - 110, 98, 220, 26, 0, colcolor(255), 30);
+  DrawRectangle(screen, CENTER_X - 110, 98, 220, 26, 0, ColColor(255), 30);
   word := (' 你的品德指數為：');
-  drawshadowtext(screen, @word[1], CENTER_X - 125, 100, colcolor($7), colcolor($5));
+  DrawShadowText(screen, @word[1], CENTER_X - 125, 100, ColColor($7), ColColor($5));
   word := format('%3d', [rrole[0].Ethics]);
-  drawengshadowtext(screen, @word[1], CENTER_X + 65, 100, colcolor($66), colcolor($64));
+  DrawEngShadowText(screen, @word[1], CENTER_X + 65, 100, ColColor($66), ColColor($64));
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-  waitanykey;
-  redraw;
+  WaitAnyKey;
+  Redraw;
 end;
 
 procedure instruct_53;
 var
   word: WideString;
 begin
-  DrawRectangle(screen, CENTER_X - 110, 98, 220, 26, 0, colcolor(255), 30);
+  DrawRectangle(screen, CENTER_X - 110, 98, 220, 26, 0, ColColor(255), 30);
   word := (' 你的聲望指數為：');
-  drawshadowtext(screen, @word[1], CENTER_X - 125, 100, colcolor($7), colcolor($5));
+  DrawShadowText(screen, @word[1], CENTER_X - 125, 100, ColColor($7), ColColor($5));
   word := format('%3d', [rrole[0].Repute]);
-  drawengshadowtext(screen, @word[1], CENTER_X + 65, 100, colcolor($66), colcolor($64));
+  DrawEngShadowText(screen, @word[1], CENTER_X + 65, 100, ColColor($66), ColColor($64));
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-  waitanykey;
-  redraw;
+  WaitAnyKey;
+  Redraw;
 end;
 
 //Open all scences.
@@ -1322,7 +1322,7 @@ begin
   begin
     p := random(2);
     instruct_1(2854 + i * 2 + p, headarray[i * 2 + p], random(2) * 4 + random(2));
-    if not (battle(102 + i * 2 + p, 0)) then
+    if not (Battle(102 + i * 2 + p, 0)) then
     begin
       instruct_15;
       break;
@@ -1393,7 +1393,7 @@ begin
   CurScenceRolePic := -1;
   instruct_44(enum1, beginpic1, endpic1, enum2, beginpic2, endpic2);
   where := 3;
-  redraw;
+  Redraw;
   EndAmi;
   //display_img('end.png', 0, 0);
   //where := 3;
@@ -1406,7 +1406,7 @@ var
   p: integer;
 begin
   instruct_14;
-  redraw;
+  Redraw;
   i := fileopen(AppPath + 'list/end.txt', fmOpenRead);
   len := fileseek(i, 0, 2);
   fileseek(i, 0, 0);
@@ -1416,7 +1416,7 @@ begin
   p := 1;
   x := 30;
   y := 80;
-  drawrectanglewithoutframe(screen, 0, 0, CENTER_X * 2, CENTER_Y * 2, 0, 60);
+  DrawRectangleWithoutFrame(screen, 0, 0, CENTER_X * 2, CENTER_Y * 2, 0, 60);
   for i := 1 to len + 1 do
   begin
     if str[i] = widechar(10) then
@@ -1424,7 +1424,7 @@ begin
     if str[i] = widechar(13) then
     begin
       str[i] := widechar(0);
-      drawshadowtext(screen, @str[p], x, y, colcolor($FF), colcolor($FF));
+      DrawShadowText(screen, @str[p], x, y, ColColor($FF), ColColor($FF));
       p := i + 1;
       y := y + 25;
       SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
@@ -1433,12 +1433,12 @@ begin
     begin
       str[i] := ' ';
       y := 80;
-      redraw;
-      waitanykey;
-      drawrectanglewithoutframe(screen, 0, 0, CENTER_X * 2, CENTER_Y * 2, 0, 60);
+      Redraw;
+      WaitAnyKey;
+      DrawRectangleWithoutFrame(screen, 0, 0, CENTER_X * 2, CENTER_Y * 2, 0, 60);
     end;
   end;
-  waitanykey;
+  WaitAnyKey;
   instruct_14;
 
   i := 0;
@@ -1449,13 +1449,13 @@ begin
     begin
       display_img(PChar(AppPath + 'resource/end.png'), 0, i);
       SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-      sdl_delay(20);
+      SDL_Delay(20);
     end;
     i := i - 1;
     if i < 440 - 794 then
       break;
   end;
-  waitanykey;
+  WaitAnyKey;
 
 end;
 
@@ -1484,7 +1484,7 @@ begin
   begin
     if Rshop[shopnum].Amount[i] > 0 then
     begin
-      menustring[amount] := Big5toUnicode(@Ritem[Rshop[shopnum].Item[i]].Name);
+      menustring[amount] := Big5ToUnicode(@Ritem[Rshop[shopnum].Item[i]].Name);
       menuengstring[amount] := format('%10d', [Rshop[shopnum].Price[i]]);
       list[amount] := i;
       amount := amount + 1;
@@ -1493,8 +1493,9 @@ begin
   instruct_1($B9E, $6F, 0);
   if amount >= 1 then
   begin
-    menu := commonmenu(CENTER_X - 120, 150, 105 + length(menuengstring[0]) * 10, amount - 1, menustring, menuengstring);
-    redraw;
+    menu := CommonMenu(CENTER_X - 120, 150, 105 + length(menuengstring[0]) * 10, amount - 1,
+      menustring, menuengstring);
+    Redraw;
     if menu >= 0 then
     begin
       menu := list[menu];
@@ -1514,8 +1515,8 @@ end;
 
 procedure instruct_66(musicnum: integer);
 begin
-  stopmp3;
-  playmp3(musicnum, -1);
+  StopMP3;
+  PlayMP3(musicnum, -1);
 end;
 
 procedure instruct_67(Soundnum: integer);
@@ -1559,66 +1560,66 @@ begin
   Result := 0;
   case code of
     0: //Give a value to a papameter.
-      begin
-        x50[e1] := e2;
-      end;
+    begin
+      x50[e1] := e2;
+    end;
     1: //Give a value to one member in parameter group.
-      begin
-        t1 := e3 + e_getvalue(0, e1, e4);
-        t1 := CutRegion(t1);
-        x50[t1] := e_getvalue(1, e1, e5);
-        if e2 = 1 then
-          x50[t1] := x50[t1] and $FF;
-      end;
+    begin
+      t1 := e3 + e_GetValue(0, e1, e4);
+      t1 := CutRegion(t1);
+      x50[t1] := e_GetValue(1, e1, e5);
+      if e2 = 1 then
+        x50[t1] := x50[t1] and $FF;
+    end;
     2: //Get the value of one member in parameter group.
-      begin
-        t1 := e3 + e_getvalue(0, e1, e4);
-        t1 := CutRegion(t1);
-        x50[e5] := x50[t1];
-        if e2 = 1 then
-          x50[t1] := x50[t1] and $FF;
-      end;
+    begin
+      t1 := e3 + e_GetValue(0, e1, e4);
+      t1 := CutRegion(t1);
+      x50[e5] := x50[t1];
+      if e2 = 1 then
+        x50[t1] := x50[t1] and $FF;
+    end;
     3: //Basic calculations.
-      begin
-        t1 := e_getvalue(0, e1, e5);
-        case e2 of
-          0: x50[e3] := x50[e4] + t1;
-          1: x50[e3] := x50[e4] - t1;
-          2: x50[e3] := x50[e4] * t1;
-          3: x50[e3] := x50[e4] div t1;
-          4: x50[e3] := x50[e4] mod t1;
-          5: x50[e3] := Uint16(x50[e4]) div t1;
-        end;
+    begin
+      t1 := e_GetValue(0, e1, e5);
+      case e2 of
+        0: x50[e3] := x50[e4] + t1;
+        1: x50[e3] := x50[e4] - t1;
+        2: x50[e3] := x50[e4] * t1;
+        3: x50[e3] := x50[e4] div t1;
+        4: x50[e3] := x50[e4] mod t1;
+        5: x50[e3] := Uint16(x50[e4]) div t1;
       end;
+    end;
     4: //Judge the parameter.
-      begin
-        x50[$7000] := 0;
-        t1 := e_getvalue(0, e1, e4);
-        case e2 of
-          0: if not (x50[e3] < t1) then
-              x50[$7000] := 1;
-          1: if not (x50[e3] <= t1) then
-              x50[$7000] := 1;
-          2: if not (x50[e3] = t1) then
-              x50[$7000] := 1;
-          3: if not (x50[e3] <> t1) then
-              x50[$7000] := 1;
-          4: if not (x50[e3] >= t1) then
-              x50[$7000] := 1;
-          5: if not (x50[e3] > t1) then
-              x50[$7000] := 1;
-          6: x50[$7000] := 0;
-          7: x50[$7000] := 1;
-        end;
+    begin
+      x50[$7000] := 0;
+      t1 := e_GetValue(0, e1, e4);
+      case e2 of
+        0: if not (x50[e3] < t1) then
+            x50[$7000] := 1;
+        1: if not (x50[e3] <= t1) then
+            x50[$7000] := 1;
+        2: if not (x50[e3] = t1) then
+            x50[$7000] := 1;
+        3: if not (x50[e3] <> t1) then
+            x50[$7000] := 1;
+        4: if not (x50[e3] >= t1) then
+            x50[$7000] := 1;
+        5: if not (x50[e3] > t1) then
+            x50[$7000] := 1;
+        6: x50[$7000] := 0;
+        7: x50[$7000] := 1;
       end;
+    end;
     5: //Zero all parameters.
-      begin
-        for i := -$8000 to $7FFF do
-          x50[i] := 0;
-      end;
+    begin
+      for i := -$8000 to $7FFF do
+        x50[i] := 0;
+    end;
     8: //Read talk to string.
-      begin
-        t1 := e_getvalue(0, e1, e2);
+    begin
+      t1 := e_GetValue(0, e1, e2);
         {idx := fileopen(AppPath + 'resource/talk.idx', fmopenread);
         grp := fileopen(AppPath + 'resource/talk.grp', fmopenread);
         if t1 = 0 then
@@ -1637,607 +1638,607 @@ begin
         //fileread(grp, x50[e3], len);
         fileclose(idx);
         fileclose(grp);}
-        len := 0;
-        if t1 = 0 then
-        begin
-          offset := 0;
-          len := TIdx[0];
-        end
-        else
-        begin
-          offset := TIdx[t1 - 1];
-          len := TIdx[t1] - offset;
-        end;
-        //setlength(talkarray, len + 1);
-        move(TDef[offset], x50[e3], len);
-        p := @x50[e3];
-        for i := 0 to len - 2 do //最后一位为0, 不处理
-        begin
-          p^ := char(byte(p^) xor $FF);
-          p := p + 1;
-        end;
-        p^ := char(0);
-        //x50[e3+i]:=0;
+      len := 0;
+      if t1 = 0 then
+      begin
+        offset := 0;
+        len := TIdx[0];
+      end
+      else
+      begin
+        offset := TIdx[t1 - 1];
+        len := TIdx[t1] - offset;
       end;
+      //setlength(talkarray, len + 1);
+      move(TDef[offset], x50[e3], len);
+      p := @x50[e3];
+      for i := 0 to len - 2 do //最后一位为0, 不处理
+      begin
+        p^ := char(byte(p^) xor $FF);
+        p := p + 1;
+      end;
+      p^ := char(0);
+      //x50[e3+i]:=0;
+    end;
     9: //Format the string.
+    begin
+      e4 := e_GetValue(0, e1, e4);
+      p := @x50[e2];
+      p1 := @x50[e3];
+      str := p1;
+      str := format(string(p1), [e4]);
+      for i := 0 to length(str) do
       begin
-        e4 := e_getvalue(0, e1, e4);
-        p := @x50[e2];
-        p1 := @x50[e3];
-        str := p1;
-        str := format(string(p1), [e4]);
-        for i := 0 to length(str) do
-        begin
-          p^ := str[i + 1];
-          p := p + 1;
-        end;
+        p^ := str[i + 1];
+        p := p + 1;
       end;
+    end;
     10: //Get the length of a string.
-      begin
-        x50[e2] := length(PChar(@x50[e1]));
-        //showmessage(inttostr(x50[e2]));
-      end;
+    begin
+      x50[e2] := length(PChar(@x50[e1]));
+      //showmessage(inttostr(x50[e2]));
+    end;
     11: //Combine 2 strings.
+    begin
+      p := @x50[e1];
+      p1 := @x50[e2];
+      for i := 0 to length(p1) - 1 do
       begin
-        p := @x50[e1];
-        p1 := @x50[e2];
-        for i := 0 to length(p1) - 1 do
-        begin
-          p^ := (p1 + i)^;
-          p := p + 1;
-        end;
-        if (length(p1) mod 2 = 1) then
-        begin
-          p^ := char($20);
-          p := p + 1;
-        end;
-        p1 := @x50[e3];
-        for i := 0 to length(p1) do
-        begin
-          p^ := (p1 + i)^;
-          p := p + 1;
-        end;
-        //p^:=char(0);
+        p^ := (p1 + i)^;
+        p := p + 1;
       end;
+      if (length(p1) mod 2 = 1) then
+      begin
+        p^ := char($20);
+        p := p + 1;
+      end;
+      p1 := @x50[e3];
+      for i := 0 to length(p1) do
+      begin
+        p^ := (p1 + i)^;
+        p := p + 1;
+      end;
+      //p^:=char(0);
+    end;
     12: //Build a string with spaces.
       //Note: here the width of one 'space' is the same as one Chinese charactor.
+    begin
+      e3 := e_GetValue(0, e1, e3);
+      p := @x50[e2];
+      for i := 0 to e3 do
       begin
-        e3 := e_getvalue(0, e1, e3);
-        p := @x50[e2];
-        for i := 0 to e3 do
-        begin
-          p^ := char($20);
-          p := p + 1;
-        end;
-        p^ := char(0);
+        p^ := char($20);
+        p := p + 1;
       end;
+      p^ := char(0);
+    end;
     16: //Write R data.
-      begin
-        e3 := e_getvalue(0, e1, e3);
-        e4 := e_getvalue(1, e1, e4);
-        e5 := e_getvalue(2, e1, e5);
-        case e2 of
-          0: Rrole[e3].Data[e4 div 2] := e5;
-          1: Ritem[e3].Data[e4 div 2] := e5;
-          2: Rscence[e3].Data[e4 div 2] := e5;
-          3: Rmagic[e3].Data[e4 div 2] := e5;
-          4: Rshop[e3].Data[e4 div 2] := e5;
-        end;
+    begin
+      e3 := e_GetValue(0, e1, e3);
+      e4 := e_GetValue(1, e1, e4);
+      e5 := e_GetValue(2, e1, e5);
+      case e2 of
+        0: Rrole[e3].Data[e4 div 2] := e5;
+        1: Ritem[e3].Data[e4 div 2] := e5;
+        2: Rscence[e3].Data[e4 div 2] := e5;
+        3: Rmagic[e3].Data[e4 div 2] := e5;
+        4: Rshop[e3].Data[e4 div 2] := e5;
       end;
+    end;
     17: //Read R data.
-      begin
-        e3 := e_getvalue(0, e1, e3);
-        e4 := e_getvalue(1, e1, e4);
-        case e2 of
-          0: x50[e5] := Rrole[e3].Data[e4 div 2];
-          1: x50[e5] := Ritem[e3].Data[e4 div 2];
-          2: x50[e5] := Rscence[e3].Data[e4 div 2];
-          3: x50[e5] := Rmagic[e3].Data[e4 div 2];
-          4: x50[e5] := Rshop[e3].Data[e4 div 2];
-        end;
+    begin
+      e3 := e_GetValue(0, e1, e3);
+      e4 := e_GetValue(1, e1, e4);
+      case e2 of
+        0: x50[e5] := Rrole[e3].Data[e4 div 2];
+        1: x50[e5] := Ritem[e3].Data[e4 div 2];
+        2: x50[e5] := Rscence[e3].Data[e4 div 2];
+        3: x50[e5] := Rmagic[e3].Data[e4 div 2];
+        4: x50[e5] := Rshop[e3].Data[e4 div 2];
       end;
+    end;
     18: //Write team data.
-      begin
-        e2 := e_getvalue(0, e1, e2);
-        e3 := e_getvalue(1, e1, e3);
-        TeamList[e2] := e3;
-        //showmessage(inttostr(e3));
-      end;
+    begin
+      e2 := e_GetValue(0, e1, e2);
+      e3 := e_GetValue(1, e1, e3);
+      TeamList[e2] := e3;
+      //showmessage(inttostr(e3));
+    end;
     19: //Read team data.
-      begin
-        e2 := e_getvalue(0, e1, e2);
-        x50[e3] := TeamList[e2];
-      end;
+    begin
+      e2 := e_GetValue(0, e1, e2);
+      x50[e3] := TeamList[e2];
+    end;
     20: //Get the amount of one item.
-      begin
-        e2 := e_getvalue(0, e1, e2);
-        x50[e3] := 0;
-        for i := 0 to MAX_ITEM_AMOUNT - 1 do
-          if RItemList[i].Number = e2 then
-          begin
-            x50[e3] := RItemList[i].Amount;
-            break;
-          end;
-        //showmessage('rer');
-      end;
+    begin
+      e2 := e_GetValue(0, e1, e2);
+      x50[e3] := 0;
+      for i := 0 to MAX_ITEM_AMOUNT - 1 do
+        if RItemList[i].Number = e2 then
+        begin
+          x50[e3] := RItemList[i].Amount;
+          break;
+        end;
+      //showmessage('rer');
+    end;
     21: //Write event in scence.
-      begin
-        e2 := e_getvalue(0, e1, e2);
-        e3 := e_getvalue(1, e1, e3);
-        e4 := e_getvalue(2, e1, e4);
-        e5 := e_getvalue(3, e1, e5);
-        Ddata[e2, e3, e4] := e5;
-        //if e2=CurScence then DData[CurScence, [e3,e4]:=e5;
-        //InitialScence;
-        //Redraw;
-        //SDL_UpdateRect2(screen,0,0,screen.w,screen.h);
-      end;
+    begin
+      e2 := e_GetValue(0, e1, e2);
+      e3 := e_GetValue(1, e1, e3);
+      e4 := e_GetValue(2, e1, e4);
+      e5 := e_GetValue(3, e1, e5);
+      Ddata[e2, e3, e4] := e5;
+      //if e2=CurScence then DData[CurScence, [e3,e4]:=e5;
+      //InitialScence;
+      //Redraw;
+      //SDL_UpdateRect2(screen,0,0,screen.w,screen.h);
+    end;
     22:
-      begin
-        e2 := e_getvalue(0, e1, e2);
-        e3 := e_getvalue(1, e1, e3);
-        e4 := e_getvalue(2, e1, e4);
-        x50[e5] := Ddata[e2, e3, e4];
-      end;
+    begin
+      e2 := e_GetValue(0, e1, e2);
+      e3 := e_GetValue(1, e1, e3);
+      e4 := e_GetValue(2, e1, e4);
+      x50[e5] := Ddata[e2, e3, e4];
+    end;
     23:
-      begin
-        e2 := e_getvalue(0, e1, e2);
-        e3 := e_getvalue(1, e1, e3);
-        e4 := e_getvalue(2, e1, e4);
-        e5 := e_getvalue(3, e1, e5);
-        e6 := e_getvalue(4, e1, e6);
-        Sdata[e2, e3, e5, e4] := e6;
-        //if e2=CurScence then SData[CurScence, 3, e5,e4]:=e6;;
-        //InitialScence;
-        //Redraw;
-        //SDL_UpdateRect2(screen,0,0,screen.w,screen.h);
-      end;
+    begin
+      e2 := e_GetValue(0, e1, e2);
+      e3 := e_GetValue(1, e1, e3);
+      e4 := e_GetValue(2, e1, e4);
+      e5 := e_GetValue(3, e1, e5);
+      e6 := e_GetValue(4, e1, e6);
+      Sdata[e2, e3, e5, e4] := e6;
+      //if e2=CurScence then SData[CurScence, 3, e5,e4]:=e6;;
+      //InitialScence;
+      //Redraw;
+      //SDL_UpdateRect2(screen,0,0,screen.w,screen.h);
+    end;
     24:
-      begin
-        e2 := e_getvalue(0, e1, e2);
-        e3 := e_getvalue(1, e1, e3);
-        e4 := e_getvalue(2, e1, e4);
-        e5 := e_getvalue(3, e1, e5);
-        x50[e6] := Sdata[e2, e3, e5, e4];
-        //showmessage(inttostr(sface));
-      end;
+    begin
+      e2 := e_GetValue(0, e1, e2);
+      e3 := e_GetValue(1, e1, e3);
+      e4 := e_GetValue(2, e1, e4);
+      e5 := e_GetValue(3, e1, e5);
+      x50[e6] := Sdata[e2, e3, e5, e4];
+      //showmessage(inttostr(sface));
+    end;
     25:
-      begin
-        e5 := e_getvalue(0, e1, e5);
-        e6 := e_getvalue(1, e1, e6);
-        t1 := uint16(e3) + uint16(e4) * $10000 + uint16(e6);
-        i := uint16(e3) + uint16(e4) * $10000;
-        case t1 of
-          $1D295A: Sx := e5;
-          $1D295C: Sy := e5;
-          //$1D2956: Cx := e5;
-          //$1D2958: Cy := e5;
-          //$0544f2:
-        end;
-        case i of
-          $18FE2C:
-            begin
-              if e6 mod 4 <= 1 then
-                Ritemlist[e6 div 4].Number := e5
-              else
-                Ritemlist[e6 div 4].Amount := e5;
-            end;
-          $051C83:
-            begin
-              puint16(@Acol[e6])^ := e5;
-              puint16(@Acol1[e6])^ := e5;
-              puint16(@Acol2[e6])^ := e5;
-              //Acol2[e6] := e5 mod 256;
-              //Acol2[e6 + 1] := e5 div 256;
-            end;
-          $01D295E:
-            begin
-              CurScence := e5;
-            end;
-        end;
-        //redraw;
-        SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+    begin
+      e5 := e_GetValue(0, e1, e5);
+      e6 := e_GetValue(1, e1, e6);
+      t1 := uint16(e3) + uint16(e4) * $10000 + uint16(e6);
+      i := uint16(e3) + uint16(e4) * $10000;
+      case t1 of
+        $1D295A: Sx := e5;
+        $1D295C: Sy := e5;
+        //$1D2956: Cx := e5;
+        //$1D2958: Cy := e5;
+        //$0544f2:
       end;
+      case i of
+        $18FE2C:
+        begin
+          if e6 mod 4 <= 1 then
+            Ritemlist[e6 div 4].Number := e5
+          else
+            Ritemlist[e6 div 4].Amount := e5;
+        end;
+        $051C83:
+        begin
+          puint16(@Acol[e6])^ := e5;
+          puint16(@Acol1[e6])^ := e5;
+          puint16(@Acol2[e6])^ := e5;
+          //Acol2[e6] := e5 mod 256;
+          //Acol2[e6 + 1] := e5 div 256;
+        end;
+        $01D295E:
+        begin
+          CurScence := e5;
+        end;
+      end;
+      //redraw;
+      SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+    end;
     26:
-      begin
-        e6 := e_getvalue(0, e1, e6);
-        t1 := uint16(e3) + uint16(e4) * $10000 + uint(e6);
-        i := uint16(e3) + uint16(e4) * $10000;
-        case t1 of
-          $1D295E: x50[e5] := CurScence;
-          $1D295A: x50[e5] := Sx;
-          $1D295C: x50[e5] := Sy;
-          $1C0B88: x50[e5] := Mx;
-          $1C0B8C: x50[e5] := My;
-          //$1D2956: x50[e5] := Cx;
-          //$1D2958: x50[e5] := Cy;
-          $05B53A: x50[e5] := 1;
-          $0544F2: x50[e5] := Sface;
-          $1E6ED6: x50[e5] := x50[28100];
-          $556DA: x50[e5] := Ax;
-          $556DC: x50[e5] := Ay;
-          $1C0B90: x50[e5] := sdl_getticks div 55 mod 65536;
-        end;
-        if (t1 - $18FE2C >= 0) and (t1 - $18FE2C < 800) then
-        begin
-          i := t1 - $18FE2C;
-          //showmessage(inttostr(e3));
-          if i mod 4 <= 1 then
-            x50[e5] := Ritemlist[i div 4].Number
-          else
-            x50[e5] := Ritemlist[i div 4].Amount;
-        end;
-        if (t1 >= $1E4A04) and (t1 < $1E6A04) then
-        begin
-          i := (t1 - $1E4A04) div 2;
-          //showmessage(inttostr(e3));
-          x50[e5] := Bfield[2, i mod 64, i div 64];
-        end;
-
+    begin
+      e6 := e_GetValue(0, e1, e6);
+      t1 := uint16(e3) + uint16(e4) * $10000 + uint(e6);
+      i := uint16(e3) + uint16(e4) * $10000;
+      case t1 of
+        $1D295E: x50[e5] := CurScence;
+        $1D295A: x50[e5] := Sx;
+        $1D295C: x50[e5] := Sy;
+        $1C0B88: x50[e5] := Mx;
+        $1C0B8C: x50[e5] := My;
+        //$1D2956: x50[e5] := Cx;
+        //$1D2958: x50[e5] := Cy;
+        $05B53A: x50[e5] := 1;
+        $0544F2: x50[e5] := Sface;
+        $1E6ED6: x50[e5] := x50[28100];
+        $556DA: x50[e5] := Ax;
+        $556DC: x50[e5] := Ay;
+        $1C0B90: x50[e5] := SDL_GetTicks div 55 mod 65536;
       end;
+      if (t1 - $18FE2C >= 0) and (t1 - $18FE2C < 800) then
+      begin
+        i := t1 - $18FE2C;
+        //showmessage(inttostr(e3));
+        if i mod 4 <= 1 then
+          x50[e5] := Ritemlist[i div 4].Number
+        else
+          x50[e5] := Ritemlist[i div 4].Amount;
+      end;
+      if (t1 >= $1E4A04) and (t1 < $1E6A04) then
+      begin
+        i := (t1 - $1E4A04) div 2;
+        //showmessage(inttostr(e3));
+        x50[e5] := Bfield[2, i mod 64, i div 64];
+      end;
+
+    end;
     27: //Read name to string.
-      begin
-        e3 := e_getValue(0, e1, e3);
-        p := @x50[e4];
-        case e2 of
-          0: p1 := @Rrole[e3].Name;
-          1: p1 := @Ritem[e3].Name;
-          2: p1 := @Rscence[e3].Name;
-          3: p1 := @Rmagic[e3].Name;
-        end;
-        for i := 0 to 9 do
-        begin
-          (p + i)^ := (p1 + i)^;
-          if (p1 + i)^ = char(0) then
-            break;
-        end;
-        (p + i + 1)^ := char($20);
-        (p + i + 2)^ := char(0);
+    begin
+      e3 := e_GetValue(0, e1, e3);
+      p := @x50[e4];
+      case e2 of
+        0: p1 := @Rrole[e3].Name;
+        1: p1 := @Ritem[e3].Name;
+        2: p1 := @Rscence[e3].Name;
+        3: p1 := @Rmagic[e3].Name;
       end;
+      for i := 0 to 9 do
+      begin
+        (p + i)^ := (p1 + i)^;
+        if (p1 + i)^ = char(0) then
+          break;
+      end;
+      (p + i + 1)^ := char($20);
+      (p + i + 2)^ := char(0);
+    end;
     28: //Get the battle number.
-      begin
-        x50[e1] := x50[28005];
-      end;
+    begin
+      x50[e1] := x50[28005];
+    end;
     29: //Select aim.
+    begin
+      e2 := e_GetValue(0, e1, e2);
+      e3 := e_GetValue(1, e1, e3);
+      if e5 = 0 then
       begin
-        e2 := e_getvalue(0, e1, e2);
-        e3 := e_getvalue(1, e1, e3);
-        if e5 = 0 then
-        begin
-          //showmessage('IN CASE');
-          selectaim(e2, e3);
-        end;
-        x50[e4] := bfield[2, Ax, Ay];
+        //showmessage('IN CASE');
+        SelectAim(e2, e3);
       end;
+      x50[e4] := bfield[2, Ax, Ay];
+    end;
     30: //Read battle properties.
-      begin
-        e2 := e_getvalue(0, e1, e2);
-        e3 := e_getvalue(1, e1, e3);
-        x50[e4] := brole[e2].Data[e3 div 2];
-      end;
+    begin
+      e2 := e_GetValue(0, e1, e2);
+      e3 := e_GetValue(1, e1, e3);
+      x50[e4] := brole[e2].Data[e3 div 2];
+    end;
     31: //Write battle properties.
-      begin
-        e2 := e_getvalue(0, e1, e2);
-        e3 := e_getvalue(1, e1, e3);
-        e4 := e_getvalue(2, e1, e4);
-        brole[e2].Data[e3 div 2] := e4;
-      end;
+    begin
+      e2 := e_GetValue(0, e1, e2);
+      e3 := e_GetValue(1, e1, e3);
+      e4 := e_GetValue(2, e1, e4);
+      brole[e2].Data[e3 div 2] := e4;
+    end;
     32: //Modify next instruct.
-      begin
-        e3 := e_getvalue(0, e1, e3);
-        Result := 655360 * (e3 + 1) + x50[e2];
-        //showmessage(inttostr(result));
-      end;
+    begin
+      e3 := e_GetValue(0, e1, e3);
+      Result := 655360 * (e3 + 1) + x50[e2];
+      //showmessage(inttostr(result));
+    end;
     33: //Draw a string.
+    begin
+      e3 := e_GetValue(0, e1, e3);
+      e4 := e_GetValue(1, e1, e4);
+      e5 := e_GetValue(2, e1, e5);
+      //showmessage(inttostr(e5));
+      i := 0;
+      t1 := 0;
+      p := @x50[e2];
+      p1 := p;
+      //for i := 0 to length(p) do showmessage(inttostr(pbyte(p+i)^));
+      while byte(p^) > 0 do
       begin
-        e3 := e_getvalue(0, e1, e3);
-        e4 := e_getvalue(1, e1, e4);
-        e5 := e_getvalue(2, e1, e5);
-        //showmessage(inttostr(e5));
-        i := 0;
-        t1 := 0;
-        p := @x50[e2];
-        p1 := p;
-        //for i := 0 to length(p) do showmessage(inttostr(pbyte(p+i)^));
-        while byte(p^) > 0 do
-        begin
-          if byte(p^) = $2A then
-          begin
-            p^ := char(0);
-            drawbig5shadowtext(screen, p1, e3 - 22, e4 + 22 * i - 3, colcolor(e5 and $FF), colcolor((e5 and $FF00) shl 8));
-            i := i + 1;
-            p1 := p + 1;
-          end;
-          p := p + 1;
-        end;
-        drawbig5shadowtext(screen, p1, e3 - 22, e4 + 22 * i - 3, colcolor(e5 and $FF), colcolor((e5 and $FF00) shl 8));
-        SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-        //waitanykey;
-      end;
-    34: //Draw a rectangle as background.
-      begin
-        e2 := e_getvalue(0, e1, e2);
-        e3 := e_getvalue(1, e1, e3);
-        e4 := e_getvalue(2, e1, e4);
-        e5 := e_getvalue(3, e1, e5);
-        Drawrectangle(screen, e2, e3, e4, e5, 0, colcolor($FF), 40);
-        //SDL_UpdateRect2(screen,e1,e2,e3+1,e4+1);
-      end;
-    35: //Pause and wait a key.
-      begin
-        i := waitanykey;
-        x50[e1] := i;
-        case i of
-          sdlk_left: x50[e1] := 154;
-          sdlk_right: x50[e1] := 156;
-          sdlk_up: x50[e1] := 158;
-          sdlk_down: x50[e1] := 152;
-        end;
-      end;
-    36: //Draw a string with background then pause, if the key pressed is 'Y' then jump=0.
-      begin
-        e3 := e_getvalue(0, e1, e3);
-        e4 := e_getvalue(1, e1, e4);
-        e5 := e_getvalue(2, e1, e5);
-        //word := big5tounicode(@x50[e2]);
-        //t1 := length(word);
-        //drawtextwithrect(@word[1], e3, e4, t1 * 20 - 15, colcolor(e5 and $FF), colcolor((e5 and $FF00) shl 8));
-        p := @x50[e2];
-        i1 := 1;
-        i2 := 0;
-        t1 := 0;
-        e3 := abs(e3); //该值不应为负, 某些mod中可能写法有误
-        while byte(p^) > 0 do
-        begin
-          //showmessage('');
-          if byte(p^) = $2A then
-          begin
-            if t1 > i2 then
-              i2 := t1;
-            t1 := 0;
-            i1 := i1 + 1;
-          end;
-          if byte(p^) = $20 then
-            t1 := t1 + 1;
-          p := p + 1;
-          t1 := t1 + 1;
-        end;
-        if t1 > i2 then
-          i2 := t1;
-        p := p - 1;
-        if i1 = 0 then
-          i1 := 1;
         if byte(p^) = $2A then
-          i1 := i1 - 1;
-        DrawRectangle(screen, e3, e4, i2 * 10 + 25, i1 * 22 + 5, 0, colcolor(255), 30);
-        p := @x50[e2];
-        p1 := p;
-        i := 0;
-        while byte(p^) > 0 do
         begin
-          if byte(p^) = $2A then
-          begin
-            p^ := char(0);
-            drawbig5shadowtext(screen, p1, e3 - 17, e4 + 22 * i + 2, colcolor(e5 and $FF), colcolor((e5 and $FF00) shl 8));
-            i := i + 1;
-            p1 := p + 1;
-          end;
-          p := p + 1;
+          p^ := char(0);
+          DrawBig5ShadowText(screen, p1, e3 - 22, e4 + 22 * i - 3, ColColor(e5 and $FF),
+            ColColor((e5 and $FF00) shl 8));
+          i := i + 1;
+          p1 := p + 1;
         end;
-        drawbig5shadowtext(screen, p1, e3 - 17, e4 + 22 * i + 2, colcolor(e5 and $FF), colcolor((e5 and $FF00) shl 8));
-        SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-        i := waitanykey;
-        if i = sdlk_y then
-          x50[$7000] := 0
-        else
-          x50[$7000] := 1;
-        //redraw;
+        p := p + 1;
       end;
-    37: //Delay.
-      begin
-        e2 := e_getvalue(0, e1, e2);
-        sdl_delay(e2);
+      DrawBig5ShadowText(screen, p1, e3 - 22, e4 + 22 * i - 3, ColColor(e5 and $FF), ColColor((e5 and $FF00) shl 8));
+      SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+      //waitanykey;
+    end;
+    34: //Draw a rectangle as background.
+    begin
+      e2 := e_GetValue(0, e1, e2);
+      e3 := e_GetValue(1, e1, e3);
+      e4 := e_GetValue(2, e1, e4);
+      e5 := e_GetValue(3, e1, e5);
+      DrawRectangle(screen, e2, e3, e4, e5, 0, ColColor($FF), 40);
+      //SDL_UpdateRect2(screen,e1,e2,e3+1,e4+1);
+    end;
+    35: //Pause and wait a key.
+    begin
+      i := WaitAnyKey;
+      x50[e1] := i;
+      case i of
+        SDLK_LEFT: x50[e1] := 154;
+        SDLK_RIGHT: x50[e1] := 156;
+        SDLK_UP: x50[e1] := 158;
+        SDLK_DOWN: x50[e1] := 152;
       end;
-    38: //Get a number randomly.
+    end;
+    36: //Draw a string with background then pause, if the key pressed is 'Y' then jump=0.
+    begin
+      e3 := e_GetValue(0, e1, e3);
+      e4 := e_GetValue(1, e1, e4);
+      e5 := e_GetValue(2, e1, e5);
+      //word := big5tounicode(@x50[e2]);
+      //t1 := length(word);
+      //drawtextwithrect(@word[1], e3, e4, t1 * 20 - 15, colcolor(e5 and $FF), colcolor((e5 and $FF00) shl 8));
+      p := @x50[e2];
+      i1 := 1;
+      i2 := 0;
+      t1 := 0;
+      e3 := abs(e3); //该值不应为负, 某些mod中可能写法有误
+      while byte(p^) > 0 do
       begin
-        e2 := e_getvalue(0, e1, e2);
-        x50[e3] := random(e2);
-      end;
-    39: //Show a menu to select. The 40th instruct is too complicable, just use the 30th.
-      begin
-        e2 := e_getvalue(0, e1, e2);
-        e5 := e_getvalue(1, e1, e5);
-        e6 := e_getvalue(2, e1, e6);
-        setlength(menustring, e2);
-        setlength(menuengstring, 0);
-        t1 := 0;
-        for i := 0 to e2 - 1 do
+        //showmessage('');
+        if byte(p^) = $2A then
         begin
-          menustring[i] := big5tounicode(@x50[x50[e3 + i]]);
-          i1 := length(PChar(@x50[x50[e3 + i]]));
-          if i1 > t1 then
-            t1 := i1;
+          if t1 > i2 then
+            i2 := t1;
+          t1 := 0;
+          i1 := i1 + 1;
         end;
-        x50[e4] := commonmenu(e5, e6, t1 * 10 + 5, e2 - 1, menustring) + 1;
+        if byte(p^) = $20 then
+          t1 := t1 + 1;
+        p := p + 1;
+        t1 := t1 + 1;
       end;
-    40: //Show a menu to select. The 40th instruct is too complicable, just use the 30th.
+      if t1 > i2 then
+        i2 := t1;
+      p := p - 1;
+      if i1 = 0 then
+        i1 := 1;
+      if byte(p^) = $2A then
+        i1 := i1 - 1;
+      DrawRectangle(screen, e3, e4, i2 * 10 + 25, i1 * 22 + 5, 0, ColColor(255), 30);
+      p := @x50[e2];
+      p1 := p;
+      i := 0;
+      while byte(p^) > 0 do
       begin
-        e2 := e_getvalue(0, e1, e2);
-        e5 := e_getvalue(1, e1, e5);
-        e6 := e_getvalue(2, e1, e6);
-        setlength(menustring, e2);
-        setlength(menuengstring, 0);
-        i2 := 0;
-        for i := 0 to e2 - 1 do
+        if byte(p^) = $2A then
         begin
-          menustring[i] := big5tounicode(@x50[x50[e3 + i]]);
-          i1 := length(PChar(@x50[x50[e3 + i]]));
-          if i1 > i2 then
-            i2 := i1;
+          p^ := char(0);
+          DrawBig5ShadowText(screen, p1, e3 - 17, e4 + 22 * i + 2, ColColor(e5 and $FF),
+            ColColor((e5 and $FF00) shl 8));
+          i := i + 1;
+          p1 := p + 1;
         end;
-        t1 := (e1 shr 8) and $FF;
-        if t1 = 0 then
-          t1 := 5;
-        //showmessage(inttostr(t1));
-        x50[e4] := commonscrollmenu(e5, e6, i2 * 10 + 5, e2 - 1, t1, menustring) + 1;
+        p := p + 1;
       end;
-    41: //Draw a picture.
-      begin
-        e3 := e_getvalue(0, e1, e3);
-        e4 := e_getvalue(1, e1, e4);
-        e5 := e_getvalue(2, e1, e5);
-        case e2 of
-          0:
-            begin
-              if where = 1 then
-                DrawSPic(e5 div 2, e3, e4, 0, 0, screen.w, screen.h)
-              else
-                DrawMPic(e5 div 2, e3, e4);
-            end;
-          1: DrawHeadPic(e5, e3, e4);
-          2:
-            begin
-              str := AppPath + 'pic/' + IntToStr(e5) + '.png';
-              display_img(@str[1], e3, e4);
-            end;
-        end;
-        SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-      end;
-    42: //Change the poistion on world map.
-      begin
-        e2 := e_getvalue(0, e1, e2);
-        e3 := e_getvalue(0, e1, e3);
-        Mx := e3;
-        My := e2;
-      end;
-    43: //Call another event.
-      begin
-        e2 := e_getvalue(0, e1, e2);
-        e3 := e_getvalue(1, e1, e3);
-        e4 := e_getvalue(2, e1, e4);
-        e5 := e_getvalue(3, e1, e5);
-        e6 := e_getvalue(4, e1, e6);
-        x50[$7100] := e3;
-        x50[$7101] := e4;
-        x50[$7102] := e5;
-        x50[$7103] := e6;
-        if e2 = 202 then
-        begin
-          if e5 = 0 then
-            instruct_2(e3, e4)
-          else
-            instruct_32(e3, e4);
-        end
-        else if e2 = 201 then
-          NewTalk(e3, e4, e5, e6 mod 100, (e6 mod 100) div 10, e6 div 100, 0)
-        else if (e2 = 999) and (MODVersion = 62) then
-        begin
-          CurScence := e3;
-          Sx := e5;
-          Sy := e4;
-          Cx := Sx;
-          Cy := Sy;
-          instruct_14;
-          InitialScence;
-          Drawscence;
-          ShowScenceName(CurScence);
-          CheckEvent3;
-        end
-        else
-          callevent(e2);
-        //showmessage(inttostr(e2));
-      end;
-    44: //Play amination.
-      begin
-        e2 := e_getvalue(0, e1, e2);
-        e3 := e_getvalue(1, e1, e3);
-        e4 := e_getvalue(2, e1, e4);
-        playActionAmination(e2, e3);
-        playMagicAmination(e2, e4);
-      end;
-    45: //Show values.
-      begin
-        e2 := e_getvalue(0, e1, e2);
-        showhurtvalue(e2);
-      end;
-    46: //Set effect layer.
-      begin
-        e2 := e_getvalue(0, e1, e2);
-        e3 := e_getvalue(1, e1, e3);
-        e4 := e_getvalue(2, e1, e4);
-        e5 := e_getvalue(3, e1, e5);
-        e6 := e_getvalue(4, e1, e6);
-        for i1 := e2 to e2 + e4 - 1 do
-          for i2 := e3 to e3 + e5 - 1 do
-            bfield[4, i1, i2] := e6;
-      end;
-    47: //Here no need to re-set the pic.
-      begin
-      end;
-    48: //Show some parameters.
-      begin
-        str := '';
-        for i := e1 to e1 + e2 - 1 do
-          str := str + 'x' + IntToStr(i) + '=' + IntToStr(x50[i]) + char(13) + char(10);
-        messagebox(0, @str[1], 'KYS Windows', MB_OK);
-      end;
-    49: //In PE files, you can't call any procedure as your wish.
-      begin
-      end;
-    50: //Enter name for items, magics and roles.
-      begin
-        e2 := e_getvalue(0, e1, e2);
-        e3 := e_getvalue(1, e1, e3);
-        e4 := e_getvalue(2, e1, e4);
-        e5 := e_getvalue(3, e1, e5);
-
-        case e2 of
-          0: p := @Rrole[e3].Name[0];
-          1: p := @Ritem[e3].Name[0];
-          2: p := @Rmagic[e3].Name[0];
-          3: p := @Rscence[e3].Name[0];
-        end;
-        ShowMessage(IntToStr(e4));
-        word1 := big5tounicode(p);
-        word1 := MidStr(word1, 2, length(word1) - 1);
-        word := '請輸入名稱              ';
-        word := InputBox('Enter name', word, word1);
-        str := unicodetobig5(@word[1]);
-        p1 := @str[1];
-        for i := 0 to e5 - 1 do
-          (p + i)^ := (p1 + i)^;
-      end;
-    51: //Enter a number.
-      begin
-        while (True) do
-        begin
-          word := InputBox('输入数量 ',
-            '输入数量           ',
-            '0');
-          try
-            i := StrToInt(word);
-            break;
-          except
-            ShowMessage('输入错误，请重新输入！            ');
-          end;
-        end;
-        x50[e1] := i;
-      end;
-    52: //Judge someone grasp some mggic.
-      begin
-        e2 := e_getvalue(0, e1, e2);
-        e3 := e_getvalue(1, e1, e3);
-        e4 := e_getvalue(2, e1, e4);
+      DrawBig5ShadowText(screen, p1, e3 - 17, e4 + 22 * i + 2, ColColor(e5 and $FF), ColColor((e5 and $FF00) shl 8));
+      SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+      i := WaitAnyKey;
+      if i = SDLK_y then
+        x50[$7000] := 0
+      else
         x50[$7000] := 1;
-        if (HaveMagic(e2, e3, e4) = True) then
-          x50[$7000] := 0;
-      end;
-    60: //Call scripts.
+      //redraw;
+    end;
+    37: //Delay.
+    begin
+      e2 := e_GetValue(0, e1, e2);
+      SDL_Delay(e2);
+    end;
+    38: //Get a number randomly.
+    begin
+      e2 := e_GetValue(0, e1, e2);
+      x50[e3] := random(e2);
+    end;
+    39: //Show a menu to select. The 40th instruct is too complicable, just use the 30th.
+    begin
+      e2 := e_GetValue(0, e1, e2);
+      e5 := e_GetValue(1, e1, e5);
+      e6 := e_GetValue(2, e1, e6);
+      setlength(menustring, e2);
+      setlength(menuengstring, 0);
+      t1 := 0;
+      for i := 0 to e2 - 1 do
       begin
-        e2 := e_getvalue(0, e1, e2);
-        e3 := e_getvalue(1, e1, e3);
-        execscript(PChar('script/' + IntToStr(e2) + '.lua'), PChar('f' + IntToStr(e3)));
+        menustring[i] := Big5ToUnicode(@x50[x50[e3 + i]]);
+        i1 := length(PChar(@x50[x50[e3 + i]]));
+        if i1 > t1 then
+          t1 := i1;
       end;
+      x50[e4] := CommonMenu(e5, e6, t1 * 10 + 5, e2 - 1, menustring) + 1;
+    end;
+    40: //Show a menu to select. The 40th instruct is too complicable, just use the 30th.
+    begin
+      e2 := e_GetValue(0, e1, e2);
+      e5 := e_GetValue(1, e1, e5);
+      e6 := e_GetValue(2, e1, e6);
+      setlength(menustring, e2);
+      setlength(menuengstring, 0);
+      i2 := 0;
+      for i := 0 to e2 - 1 do
+      begin
+        menustring[i] := Big5ToUnicode(@x50[x50[e3 + i]]);
+        i1 := length(PChar(@x50[x50[e3 + i]]));
+        if i1 > i2 then
+          i2 := i1;
+      end;
+      t1 := (e1 shr 8) and $FF;
+      if t1 = 0 then
+        t1 := 5;
+      //showmessage(inttostr(t1));
+      x50[e4] := CommonScrollMenu(e5, e6, i2 * 10 + 5, e2 - 1, t1, menustring) + 1;
+    end;
+    41: //Draw a picture.
+    begin
+      e3 := e_GetValue(0, e1, e3);
+      e4 := e_GetValue(1, e1, e4);
+      e5 := e_GetValue(2, e1, e5);
+      case e2 of
+        0:
+        begin
+          if where = 1 then
+            DrawSPic(e5 div 2, e3, e4, 0, 0, screen.w, screen.h)
+          else
+            DrawMPic(e5 div 2, e3, e4);
+        end;
+        1: DrawHeadPic(e5, e3, e4);
+        2:
+        begin
+          str := AppPath + 'pic/' + IntToStr(e5) + '.png';
+          display_img(@str[1], e3, e4);
+        end;
+      end;
+      SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+    end;
+    42: //Change the poistion on world map.
+    begin
+      e2 := e_GetValue(0, e1, e2);
+      e3 := e_GetValue(0, e1, e3);
+      Mx := e3;
+      My := e2;
+    end;
+    43: //Call another event.
+    begin
+      e2 := e_GetValue(0, e1, e2);
+      e3 := e_GetValue(1, e1, e3);
+      e4 := e_GetValue(2, e1, e4);
+      e5 := e_GetValue(3, e1, e5);
+      e6 := e_GetValue(4, e1, e6);
+      x50[$7100] := e3;
+      x50[$7101] := e4;
+      x50[$7102] := e5;
+      x50[$7103] := e6;
+      if e2 = 202 then
+      begin
+        if e5 = 0 then
+          instruct_2(e3, e4)
+        else
+          instruct_32(e3, e4);
+      end
+      else if e2 = 201 then
+        NewTalk(e3, e4, e5, e6 mod 100, (e6 mod 100) div 10, e6 div 100, 0)
+      else if (e2 = 999) and (MODVersion = 62) then
+      begin
+        CurScence := e3;
+        Sx := e5;
+        Sy := e4;
+        Cx := Sx;
+        Cy := Sy;
+        instruct_14;
+        InitialScence;
+        DrawScence;
+        ShowScenceName(CurScence);
+        CheckEvent3;
+      end
+      else
+        CallEvent(e2);
+      //showmessage(inttostr(e2));
+    end;
+    44: //Play amination.
+    begin
+      e2 := e_GetValue(0, e1, e2);
+      e3 := e_GetValue(1, e1, e3);
+      e4 := e_GetValue(2, e1, e4);
+      PlayActionAmination(e2, e3);
+      PlayMagicAmination(e2, e4);
+    end;
+    45: //Show values.
+    begin
+      e2 := e_GetValue(0, e1, e2);
+      ShowHurtValue(e2);
+    end;
+    46: //Set effect layer.
+    begin
+      e2 := e_GetValue(0, e1, e2);
+      e3 := e_GetValue(1, e1, e3);
+      e4 := e_GetValue(2, e1, e4);
+      e5 := e_GetValue(3, e1, e5);
+      e6 := e_GetValue(4, e1, e6);
+      for i1 := e2 to e2 + e4 - 1 do
+        for i2 := e3 to e3 + e5 - 1 do
+          bfield[4, i1, i2] := e6;
+    end;
+    47: //Here no need to re-set the pic.
+    begin
+    end;
+    48: //Show some parameters.
+    begin
+      str := '';
+      for i := e1 to e1 + e2 - 1 do
+        str := str + 'x' + IntToStr(i) + '=' + IntToStr(x50[i]) + char(13) + char(10);
+      messagebox(0, @str[1], 'KYS Windows', MB_OK);
+    end;
+    49: //In PE files, you can't call any procedure as your wish.
+    begin
+    end;
+    50: //Enter name for items, magics and roles.
+    begin
+      e2 := e_GetValue(0, e1, e2);
+      e3 := e_GetValue(1, e1, e3);
+      e4 := e_GetValue(2, e1, e4);
+      e5 := e_GetValue(3, e1, e5);
+
+      case e2 of
+        0: p := @Rrole[e3].Name[0];
+        1: p := @Ritem[e3].Name[0];
+        2: p := @Rmagic[e3].Name[0];
+        3: p := @Rscence[e3].Name[0];
+      end;
+      ShowMessage(IntToStr(e4));
+      word1 := Big5ToUnicode(p);
+      word1 := MidStr(word1, 2, length(word1) - 1);
+      word := '請輸入名稱              ';
+      word := InputBox('Enter name', word, word1);
+      str := UnicodeToBig5(@word[1]);
+      p1 := @str[1];
+      for i := 0 to e5 - 1 do
+        (p + i)^ := (p1 + i)^;
+    end;
+    51: //Enter a number.
+    begin
+      while (True) do
+      begin
+        word := InputBox('输入数量 ', '输入数量           ', '0');
+        try
+          i := StrToInt(word);
+          break;
+        except
+          ShowMessage('输入错误，请重新输入！            ');
+        end;
+      end;
+      x50[e1] := i;
+    end;
+    52: //Judge someone grasp some mggic.
+    begin
+      e2 := e_GetValue(0, e1, e2);
+      e3 := e_GetValue(1, e1, e3);
+      e4 := e_GetValue(2, e1, e4);
+      x50[$7000] := 1;
+      if (HaveMagic(e2, e3, e4) = True) then
+        x50[$7000] := 0;
+    end;
+    60: //Call scripts.
+    begin
+      e2 := e_GetValue(0, e1, e2);
+      e3 := e_GetValue(1, e1, e3);
+      execscript(PChar('script/' + IntToStr(e2) + '.lua'), PChar('f' + IntToStr(e3)));
+    end;
   end;
 
 end;
@@ -2275,14 +2276,14 @@ begin
   //if i = 10 then rrole[rnum].data[i+63] := magicnum;
   if dismode = 0 then
   begin
-    DrawRectangle(screen, CENTER_X - 75, 98, 145, 76, 0, colcolor(255), 30);
+    DrawRectangle(screen, CENTER_X - 75, 98, 145, 76, 0, ColColor(255), 30);
     word := (' 學會');
-    drawshadowtext(screen, @word[1], CENTER_X - 90, 125, colcolor($7), colcolor($5));
-    drawbig5shadowtext(screen, @rrole[rnum].Name, CENTER_X - 90, 100, colcolor($23), colcolor($21));
-    drawbig5shadowtext(screen, @Rmagic[newmagicnum].Name, CENTER_X - 90, 150, colcolor($66), colcolor($64));
+    DrawShadowText(screen, @word[1], CENTER_X - 90, 125, ColColor($7), ColColor($5));
+    DrawBig5ShadowText(screen, @rrole[rnum].Name, CENTER_X - 90, 100, ColColor($23), ColColor($21));
+    DrawBig5ShadowText(screen, @Rmagic[newmagicnum].Name, CENTER_X - 90, 150, ColColor($66), ColColor($64));
     SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-    waitanykey;
-    redraw;
+    WaitAnyKey;
+    Redraw;
   end;
 end;
 
@@ -2450,21 +2451,16 @@ begin
   else if alen > 6 then
   begin
     if ((puint16(ap)^ = $6EAB) and ((puint16(ap + 2)^ = $63AE))) or
-      ((puint16(ap)^ = $E8A6) and ((puint16(ap + 2)^ = $F9AA))) or
-      ((puint16(ap)^ = $46AA) and ((puint16(ap + 2)^ = $E8A4))) or
-      ((puint16(ap)^ = $4FA5) and ((puint16(ap + 2)^ = $B0AA))) or
-      ((puint16(ap)^ = $7DBC) and ((puint16(ap + 2)^ = $65AE))) or
-      ((puint16(ap)^ = $71A5) and ((puint16(ap + 2)^ = $A8B0))) or
-      ((puint16(ap)^ = $D1BD) and ((puint16(ap + 2)^ = $AFB8))) or
-      ((puint16(ap)^ = $71A5) and ((puint16(ap + 2)^ = $C5AA))) or
-      ((puint16(ap)^ = $D3A4) and ((puint16(ap + 2)^ = $76A5))) or
-      ((puint16(ap)^ = $BDA4) and ((puint16(ap + 2)^ = $5DAE))) or
-      ((puint16(ap)^ = $DABC) and ((puint16(ap + 2)^ = $A7B6))) or
-      ((puint16(ap)^ = $43AD) and ((puint16(ap + 2)^ = $DFAB))) or
-      ((puint16(ap)^ = $71A5) and ((puint16(ap + 2)^ = $7BAE))) or
-      ((puint16(ap)^ = $B9A7) and ((puint16(ap + 2)^ = $43C3))) or
-      ((puint16(ap)^ = $61B0) and ((puint16(ap + 2)^ = $D5C1))) or
-      ((puint16(ap)^ = $74A6) and ((puint16(ap + 2)^ = $E5A4))) or
+      ((puint16(ap)^ = $E8A6) and ((puint16(ap + 2)^ = $F9AA))) or ((puint16(ap)^ = $46AA) and
+      ((puint16(ap + 2)^ = $E8A4))) or ((puint16(ap)^ = $4FA5) and ((puint16(ap + 2)^ = $B0AA))) or
+      ((puint16(ap)^ = $7DBC) and ((puint16(ap + 2)^ = $65AE))) or ((puint16(ap)^ = $71A5) and
+      ((puint16(ap + 2)^ = $A8B0))) or ((puint16(ap)^ = $D1BD) and ((puint16(ap + 2)^ = $AFB8))) or
+      ((puint16(ap)^ = $71A5) and ((puint16(ap + 2)^ = $C5AA))) or ((puint16(ap)^ = $D3A4) and
+      ((puint16(ap + 2)^ = $76A5))) or ((puint16(ap)^ = $BDA4) and ((puint16(ap + 2)^ = $5DAE))) or
+      ((puint16(ap)^ = $DABC) and ((puint16(ap + 2)^ = $A7B6))) or ((puint16(ap)^ = $43AD) and
+      ((puint16(ap + 2)^ = $DFAB))) or ((puint16(ap)^ = $71A5) and ((puint16(ap + 2)^ = $7BAE))) or
+      ((puint16(ap)^ = $B9A7) and ((puint16(ap + 2)^ = $43C3))) or ((puint16(ap)^ = $61B0) and
+      ((puint16(ap + 2)^ = $D5C1))) or ((puint16(ap)^ = $74A6) and ((puint16(ap + 2)^ = $E5A4))) or
       ((puint16(ap)^ = $DDA9) and ((puint16(ap + 2)^ = $5BB6))) then
     begin
       setlength(name1, 5);
@@ -2575,13 +2571,13 @@ begin
 
   while ((puint16(tp + ch))^ shl 8 <> 0) and ((puint16(tp + ch))^ shr 8 <> 0) do
   begin
-    redraw;
+    Redraw;
     c1 := 0;
     r1 := 0;
-    DrawRectangle(screen, x, y, w, h, frame, colcolor($FF), 40);
+    DrawRectangle(screen, x, y, w, h, frame, ColColor($FF), 40);
     if (showhead = 0) or (headnum < 0) then
     begin
-      DrawRectangle(screen, hx, hy, hw, hh, frame, colcolor($FF), 40);
+      DrawRectangle(screen, hx, hy, hw, hh, frame, ColColor($FF), 40);
       if headnum = 0 then
       begin
         DrawHeadPic(RRole[0].HeadNum, hx, hy + 68);
@@ -2593,9 +2589,9 @@ begin
     end;
     if namenum <> 0 then
     begin
-      DrawRectangle(screen, nx, ny, nw, nh, frame, colcolor($FF), 40);
+      DrawRectangle(screen, nx, ny, nw, nh, frame, ColColor($FF), 40);
       namelen := length(np);
-      DrawBig5ShadowText(screen, np, nx + 20 - namelen * 9 div 2, ny + 4, colcolor($63), colcolor($70));
+      DrawBig5ShadowText(screen, np, nx + 20 - namelen * 9 div 2, ny + 4, ColColor($63), ColColor($70));
     end;
 
     while r1 < row do
@@ -2614,15 +2610,15 @@ begin
             4: newcolor := 28466;
             5: newcolor := 28450;
             64: newcolor := color;
-          else
-            newcolor := color;
+            else
+              newcolor := color;
           end;
           color1 := newcolor and $FF;
           color2 := (newcolor shr 8) and $FF;
         end
         else if pword[0] = $2323 then //## 延时
         begin
-          sdl_delay(500);
+          SDL_Delay(500);
         end
         else if pword[0] = $2A2A then //**换行
         begin
@@ -2633,13 +2629,11 @@ begin
         else if pword[0] = $4040 then //@@等待击键
         begin
           SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-          k := waitanykey;
-          while (k = sdlk_right) or
-            (k = sdlk_left) or
-            (k = sdlk_up) or
-            (k = sdlk_down) do
+          k := WaitAnyKey;
+          while (k = SDLK_RIGHT) or (k = SDLK_LEFT) or (k = SDLK_UP) or
+            (k = SDLK_DOWN) do
           begin
-            k := waitanykey;
+            k := WaitAnyKey;
           end;
         end
         else if (pword[0] = $2626) or (pword[0] = $2525) or (pword[0] = $2424) then
@@ -2654,8 +2648,8 @@ begin
           begin
             pword[0] := puint16(np3 + i)^;
             i := i + 2;
-            Drawbig5ShadowText(screen, @pword[0], x - 14 + CHINESE_FONT_SIZE * c1, y + 4 +
-              CHINESE_FONT_SIZE * r1, colcolor(color1), colcolor(color2));
+            DrawBig5ShadowText(screen, @pword[0], x - 14 + CHINESE_FONT_SIZE * c1, y + 4 +
+              CHINESE_FONT_SIZE * r1, ColColor(color1), ColColor(color2));
             Inc(c1);
             if c1 = cell then
             begin
@@ -2664,21 +2658,19 @@ begin
               if r1 = row then
               begin
                 SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-                k := waitanykey;
-                while (k = sdlk_right) or
-                  (k = sdlk_left) or
-                  (k = sdlk_up) or
-                  (k = sdlk_down) do
+                k := WaitAnyKey;
+                while (k = SDLK_RIGHT) or (k = SDLK_LEFT) or
+                  (k = SDLK_UP) or (k = SDLK_DOWN) do
                 begin
-                  k := waitanykey;
+                  k := WaitAnyKey;
                 end;
                 c1 := 0;
                 r1 := 0;
-                redraw;
-                DrawRectangle(screen, x, y, w, h, frame, colcolor($FF), 40);
+                Redraw;
+                DrawRectangle(screen, x, y, w, h, frame, ColColor($FF), 40);
                 if (showhead = 0) or (headnum < 0) then
                 begin
-                  DrawRectangle(screen, hx, hy, hw, hh, frame, colcolor($FF), 40);
+                  DrawRectangle(screen, hx, hy, hw, hh, frame, ColColor($FF), 40);
                   if headnum = 0 then
                   begin
                     DrawHeadPic(RRole[0].HeadNum, hx, hy + 68);
@@ -2690,9 +2682,9 @@ begin
                 end;
                 if namenum <> 0 then
                 begin
-                  DrawRectangle(screen, nx, ny, nw, nh, frame, colcolor($FF), 40);
+                  DrawRectangle(screen, nx, ny, nw, nh, frame, ColColor($FF), 40);
                   namelen := length(np);
-                  DrawBig5ShadowText(screen, np, nx + 20 - namelen * 9 div 2, ny + 4, colcolor($63), colcolor($70));
+                  DrawBig5ShadowText(screen, np, nx + 20 - namelen * 9 div 2, ny + 4, ColColor($63), ColColor($70));
                 end;
               end;
             end;
@@ -2700,8 +2692,8 @@ begin
         end
         else //显示文字
         begin
-          DrawBig5ShadowText(screen, @pword, x - 14 + CHINESE_FONT_SIZE * c1, y + 4 + CHINESE_FONT_SIZE *
-            r1, colcolor(color1), colcolor(color2));
+          DrawBig5ShadowText(screen, @pword, x - 14 + CHINESE_FONT_SIZE * c1, y + 4 +
+            CHINESE_FONT_SIZE * r1, ColColor(color1), ColColor(color2));
           Inc(c1);
           if c1 = cell then
           begin
@@ -2714,19 +2706,15 @@ begin
         break;
     end;
     SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-    k := waitanykey;
-    while (k = sdlk_right) or
-      (k = sdlk_left) or
-      (k = sdlk_up) or
-      (k = sdlk_down) do
+    k := WaitAnyKey;
+    while (k = SDLK_RIGHT) or (k = SDLK_LEFT) or (k = SDLK_UP) or (k = SDLK_DOWN) do
     begin
-      k := waitanykey;
+      k := WaitAnyKey;
     end;
     if (pword[0] and $FF = 0) or (pword[0] and $FF00 = 0) then
       break;
   end;
-  redraw;
-
+  Redraw;
   setlength(wd, 0);
   setlength(str, 0);
   setlength(temp2, 0);
