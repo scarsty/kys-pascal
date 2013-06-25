@@ -1608,7 +1608,7 @@ begin
       for i := 0 to BRoleAmount - 1 do
       begin
         range[i] := i;
-        p[i] := BRole[i].RealProgress * 500 {* CENTER_X div 320} div 10000;
+        p[i] := Brole[i].RealProgress * 500 {* CENTER_X div 320} div 10000;
       end;
       for i := 0 to BRoleAmount - 2 do
         for j := i + 1 to BRoleAmount - 1 do
