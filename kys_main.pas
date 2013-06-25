@@ -229,10 +229,10 @@ var
   InShip, Useless1, Mx, My, Sx, Sy, MFace, ShipX, ShipY, ShipX1, ShipY1, ShipFace: smallint;
   TeamList: array[0..5] of smallint;
   RItemList: array of TItemList;
-  RRole: array[0..2031] of TRole;
-  RItem: array[0..724] of TItem;
-  RScence: array[0..200] of TScence;
-  RMagic: array[0..998] of TMagic;
+  Rrole: array[0..2031] of TRole;
+  Ritem: array[0..724] of TItem;
+  Rscence: array[0..200] of TScence;
+  Rmagic: array[0..998] of TMagic;
   RShop: array[0..10] of TShop;
   //R文件数据, 均远大于原有容量
 
@@ -370,7 +370,7 @@ var
   //where: 0-主地图, 1-场景, 2-战场, 3-开头画面
   SaveNum: integer;
   //存档号, 未使用
-  BRole: array[0..99] of TBattleRole;
+  Brole: array[0..99] of TBattleRole;
   //战场人物属性
   //0-人物序号, 1-敌我, 2, 3-坐标, 4-面对方向, 5-是否仍在战场, 6-可移动步数, 7-是否行动完毕,
   //8-贴图(未使用), 9-头上显示数字, 10, 11, 12-未使用, 13-已获得经验, 14-是否自动战斗
@@ -979,10 +979,10 @@ begin
       homename := Name + '居';
     str2 := UnicodeToBig5(@homename[1]);
 {$ENDIF}
-    p0 := @rrole[0].Name;
+    p0 := @Rrole[0].Name;
     p1 := @str1[1];
     for i := 0 to 4 do
-      rrole[0].Data[4 + i] := 0;
+      Rrole[0].Data[4 + i] := 0;
     for i := 0 to 7 do
     begin
       (p0 + i)^ := (p1 + i)^;
@@ -990,10 +990,10 @@ begin
 
     if (MODVersion <> 22) and (MODVersion <> 11) and (MODVersion <> 12) then
     begin
-      p0 := @RScence[BEGIN_SCENCE].Name;
+      p0 := @Rscence[BEGIN_SCENCE].Name;
       p1 := @str2[1];
       for i := 0 to 4 do
-        RScence[BEGIN_SCENCE].Data[1 + i] := 0;
+        Rscence[BEGIN_SCENCE].Data[1 + i] := 0;
       for i := 0 to 8 do
       begin
         (p0 + i)^ := (p1 + i)^;
@@ -1027,7 +1027,7 @@ begin
 
       end;
 
-      rrole[0].Aptitude := 1 + random(100);
+      Rrole[0].Aptitude := 1 + random(100);
 
       if MODVersion = 0 then
       begin
@@ -1046,7 +1046,7 @@ begin
       Redraw;
       ShowStatus(0);
       DrawShadowText(screen, @str[1], 30, CENTER_Y + 111, ColColor($23), ColColor($21));
-      str0 := format('%4d', [RRole[0].Aptitude]);
+      str0 := format('%4d', [Rrole[0].Aptitude]);
       DrawEngShadowText(screen, @str0[1], 150, CENTER_Y + 111, ColColor($66), ColColor($63));
       SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
       i := WaitAnyKey;
@@ -1115,15 +1115,15 @@ begin
         Rrole[0].Unusual := 130;
         Rrole[0].HidWeapon := 130;
 
-        rrole[0].Aptitude := 100;
+        Rrole[0].Aptitude := 100;
 
         Rrole[0].Knowledge := 85;
 
-        rrole[0].Magic[0] := 94;
-        rrole[0].MagLevel[0] := 850;
-        rrole[0].Magic[1] := 93;
+        Rrole[0].Magic[0] := 94;
+        Rrole[0].MagLevel[0] := 850;
+        Rrole[0].Magic[1] := 93;
 
-        rrole[0].AttPoi := 0;
+        Rrole[0].AttPoi := 0;
       end;
 
       if Name = '龍吟星落' then
@@ -1147,15 +1147,15 @@ begin
         Rrole[0].Unusual := 130;
         Rrole[0].HidWeapon := 130;
 
-        rrole[0].Aptitude := 100;
+        Rrole[0].Aptitude := 100;
 
         Rrole[0].Knowledge := 0;
 
-        rrole[0].Magic[0] := 168;
-        rrole[0].Magic[1] := 169;
-        rrole[0].Magic[2] := 170;
-        rrole[0].Magic[3] := 171;
-        rrole[0].Magic[4] := 172;
+        Rrole[0].Magic[0] := 168;
+        Rrole[0].Magic[1] := 169;
+        Rrole[0].Magic[2] := 170;
+        Rrole[0].Magic[3] := 171;
+        Rrole[0].Magic[4] := 172;
       end;
 
       if Name = '小隨' then
@@ -1179,14 +1179,14 @@ begin
         Rrole[0].Unusual := 130;
         Rrole[0].HidWeapon := 130;
 
-        rrole[0].Aptitude := 100;
+        Rrole[0].Aptitude := 100;
 
         Rrole[0].Knowledge := 0;
 
-        rrole[0].Magic[0] := 94;
-        rrole[0].MagLevel[0] := 850;
+        Rrole[0].Magic[0] := 94;
+        Rrole[0].MagLevel[0] := 850;
 
-        rrole[0].AttTwice := 1;
+        Rrole[0].AttTwice := 1;
       end;
 
       if Name = '破大俠' then
@@ -1210,16 +1210,16 @@ begin
         Rrole[0].Unusual := 230;
         Rrole[0].HidWeapon := 230;
 
-        rrole[0].Aptitude := 100;
+        Rrole[0].Aptitude := 100;
 
         Rrole[0].Knowledge := 100;
 
-        rrole[0].Magic[0] := 168;
-        rrole[0].Magic[1] := 169;
-        rrole[0].Magic[2] := 170;
-        rrole[0].Magic[3] := 171;
-        rrole[0].Magic[4] := 172;
-        rrole[0].Magic[5] := 94;
+        Rrole[0].Magic[0] := 168;
+        Rrole[0].Magic[1] := 169;
+        Rrole[0].Magic[2] := 170;
+        Rrole[0].Magic[3] := 171;
+        Rrole[0].Magic[4] := 172;
+        Rrole[0].Magic[5] := 94;
 
         //rrole[0].AttTwice := 1;
       end;
@@ -1254,7 +1254,7 @@ begin
           Rrole[i].Unusual := 130;
           Rrole[i].HidWeapon := 130;
 
-          rrole[i].Aptitude := 100;
+          Rrole[i].Aptitude := 100;
         end;
       end;
     end;
@@ -1282,20 +1282,20 @@ begin
         Rrole[0].Unusual := 30;
         Rrole[0].HidWeapon := 30;
 
-        rrole[0].Aptitude := 100;
+        Rrole[0].Aptitude := 100;
 
         Rrole[0].Knowledge := 0;
 
-        rrole[0].Magic[0] := 27;
-        rrole[0].MagLevel[0] := 850;
-        rrole[0].Magic[1] := 37;
-        rrole[0].MagLevel[1] := 850;
-        rrole[0].Magic[2] := 94;
-        rrole[0].MagLevel[2] := 850;
-        rrole[0].Magic[3] := 62;
-        rrole[0].MagLevel[3] := 850;
+        Rrole[0].Magic[0] := 27;
+        Rrole[0].MagLevel[0] := 850;
+        Rrole[0].Magic[1] := 37;
+        Rrole[0].MagLevel[1] := 850;
+        Rrole[0].Magic[2] := 94;
+        Rrole[0].MagLevel[2] := 850;
+        Rrole[0].Magic[3] := 62;
+        Rrole[0].MagLevel[3] := 850;
 
-        rrole[0].AttPoi := 0;
+        Rrole[0].AttPoi := 0;
       end;
 
       if Name = 'k小邪' then
@@ -1319,16 +1319,16 @@ begin
         Rrole[0].Unusual := 30;
         Rrole[0].HidWeapon := 30;
 
-        rrole[0].Aptitude := 100;
+        Rrole[0].Aptitude := 100;
 
         Rrole[0].Knowledge := 0;
 
-        rrole[0].Magic[0] := 27;
-        rrole[0].MagLevel[0] := 850;
+        Rrole[0].Magic[0] := 27;
+        Rrole[0].MagLevel[0] := 850;
 
-        rrole[0].AttPoi := 70;
+        Rrole[0].AttPoi := 70;
 
-        rrole[0].Magic[1] := 15;
+        Rrole[0].Magic[1] := 15;
 
         for i := 0 to 9 do
         begin
@@ -1362,12 +1362,12 @@ begin
         Rrole[0].Unusual := 30;
         Rrole[0].HidWeapon := 30;
 
-        rrole[0].Aptitude := 100;
+        Rrole[0].Aptitude := 100;
 
         Rrole[0].Knowledge := 0;
 
-        rrole[0].Magic[0] := 37;
-        rrole[0].MagLevel[0] := 890;
+        Rrole[0].Magic[0] := 37;
+        Rrole[0].MagLevel[0] := 890;
 
         Rmagic[37].AttAreaType := 3;
         Rmagic[37].MoveDistance[9] := 4;
@@ -1395,14 +1395,14 @@ begin
         Rrole[0].Unusual := 30;
         Rrole[0].HidWeapon := 30;
 
-        rrole[0].Aptitude := 100;
+        Rrole[0].Aptitude := 100;
 
         Rrole[0].Knowledge := 0;
 
-        rrole[0].Magic[0] := 94;
-        rrole[0].MagLevel[0] := 850;
+        Rrole[0].Magic[0] := 94;
+        Rrole[0].MagLevel[0] := 850;
 
-        rrole[0].AttTwice := 1;
+        Rrole[0].AttTwice := 1;
       end;
 
       if Name = '飛蟲王' then
@@ -1426,14 +1426,14 @@ begin
         Rrole[0].Unusual := 30;
         Rrole[0].HidWeapon := 30;
 
-        rrole[0].Aptitude := 100;
+        Rrole[0].Aptitude := 100;
 
         Rrole[0].Knowledge := 60;
 
-        rrole[0].Magic[0] := 62;
-        rrole[0].MagLevel[0] := 850;
+        Rrole[0].Magic[0] := 62;
+        Rrole[0].MagLevel[0] := 850;
 
-        rrole[0].AttPoi := 95;
+        Rrole[0].AttPoi := 95;
       end;
 
       if Name = '破劍式' then
@@ -1457,20 +1457,20 @@ begin
         Rrole[0].Unusual := 90;
         Rrole[0].HidWeapon := 90;
 
-        rrole[0].Aptitude := 100;
+        Rrole[0].Aptitude := 100;
 
         Rrole[0].Knowledge := 0;
 
-        rrole[0].Magic[0] := 27;
-        rrole[0].MagLevel[0] := 899;
-        rrole[0].Magic[1] := 37;
-        rrole[0].MagLevel[1] := 899;
-        rrole[0].Magic[2] := 94;
-        rrole[0].MagLevel[2] := 899;
-        rrole[0].Magic[3] := 62;
-        rrole[0].MagLevel[3] := 899;
+        Rrole[0].Magic[0] := 27;
+        Rrole[0].MagLevel[0] := 899;
+        Rrole[0].Magic[1] := 37;
+        Rrole[0].MagLevel[1] := 899;
+        Rrole[0].Magic[2] := 94;
+        Rrole[0].MagLevel[2] := 899;
+        Rrole[0].Magic[3] := 62;
+        Rrole[0].MagLevel[3] := 899;
 
-        rrole[0].AttPoi := 90;
+        Rrole[0].AttPoi := 90;
       end;
 
       if Name = '9523' then
@@ -1490,7 +1490,7 @@ begin
         Rrole[0].Unusual := 30;
         Rrole[0].HidWeapon := 30;
 
-        rrole[0].Aptitude := 100;
+        Rrole[0].Aptitude := 100;
 
         for i := 0 to 9 do
         begin
@@ -1502,31 +1502,31 @@ begin
           Rmagic[17].AttDistance[i] := 8;
         end;
 
-        rrole[0].Magic[0] := 15;
-        rrole[0].Magic[1] := 16;
-        rrole[0].Magic[2] := 17;
+        Rrole[0].Magic[0] := 15;
+        Rrole[0].Magic[1] := 16;
+        Rrole[0].Magic[2] := 17;
       end;
 
       if Name = '鳳凰ice' then
       begin
         Rrole[0].MPType := 2;
         Rrole[0].IncLife := 10;
-        rrole[0].Aptitude := 100;
+        Rrole[0].Aptitude := 100;
         for i := 0 to 99 do
         begin
           if leavelist[i] > 0 then
           begin
-            rrole[leavelist[i]].IncLife := 30;
-            rrole[leavelist[i]].MPType := 2;
-            rrole[leavelist[i]].Attack := 90;
-            rrole[leavelist[i]].Aptitude := 95;
+            Rrole[leavelist[i]].IncLife := 30;
+            Rrole[leavelist[i]].MPType := 2;
+            Rrole[leavelist[i]].Attack := 90;
+            Rrole[leavelist[i]].Aptitude := 95;
           end;
         end;
       end;
-      rrole[401] := rrole[0];
-      rrole[402] := rrole[0];
-      rrole[403] := rrole[0];
-      rrole[404] := rrole[0];
+      Rrole[401] := Rrole[0];
+      Rrole[402] := Rrole[0];
+      Rrole[403] := Rrole[0];
+      Rrole[404] := Rrole[0];
     end;
 
     if MODVersion = 11 then
@@ -1552,8 +1552,8 @@ begin
         Rrole[0].Unusual := 30;
         Rrole[0].HidWeapon := 30;
 
-        rrole[0].Aptitude := 100;
-        rrole[0].Ethics := 90;
+        Rrole[0].Aptitude := 100;
+        Rrole[0].Ethics := 90;
         //rrole[0].Magic[0] := 62;
         //rrole[0].MagLevel[0] := 800;
 
@@ -1589,7 +1589,7 @@ begin
         Rrole[0].Unusual := 30;
         Rrole[0].HidWeapon := 30;
 
-        rrole[0].Aptitude := 100;
+        Rrole[0].Aptitude := 100;
 
         //rrole[0].Magic[0] := 62;
         //rrole[0].MagLevel[0] := 800;
@@ -1629,7 +1629,7 @@ begin
         Rrole[0].Unusual := 30;
         Rrole[0].HidWeapon := 30;
 
-        rrole[0].Aptitude := 100;
+        Rrole[0].Aptitude := 100;
       end;
       if Name = '見賢思齊' then
       begin
@@ -1652,7 +1652,7 @@ begin
         Rrole[0].Unusual := 30;
         Rrole[0].HidWeapon := 30;
 
-        rrole[0].Aptitude := 45;
+        Rrole[0].Aptitude := 45;
       end;
     end;
 
@@ -1679,8 +1679,8 @@ begin
         Rrole[0].Unusual := 30;
         Rrole[0].HidWeapon := 300;
 
-        rrole[0].Aptitude := 100;
-        rrole[0].Ethics := 95;
+        Rrole[0].Aptitude := 100;
+        Rrole[0].Ethics := 95;
       end;
     end;
 
@@ -1707,7 +1707,7 @@ begin
         Rrole[0].Unusual := 30;
         Rrole[0].HidWeapon := 30;
 
-        rrole[0].Aptitude := 100;
+        Rrole[0].Aptitude := 100;
       end;
     end;
 
@@ -1723,7 +1723,7 @@ begin
 
     ShowStatus(0);
     DrawShadowText(screen, @str[1], 30, CENTER_Y + 111, ColColor($23), ColColor($21));
-    str0 := format('%4d', [RRole[0].Aptitude]);
+    str0 := format('%4d', [Rrole[0].Aptitude]);
     DrawEngShadowText(screen, @str0[1], 150, CENTER_Y + 111, ColColor($66), ColColor($63));
     SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
 
@@ -1782,10 +1782,10 @@ begin
   end;
   fileread(grp, Ritemlist[0], sizeof(Titemlist) * max_item_amount);
 
-  fileread(grp, RRole[0], ItemOffset - RoleOffset);
-  fileread(grp, RItem[0], ScenceOffset - ItemOffset);
-  fileread(grp, RScence[0], MagicOffset - ScenceOffset);
-  fileread(grp, RMagic[0], WeiShopOffset - MagicOffset);
+  fileread(grp, Rrole[0], ItemOffset - RoleOffset);
+  fileread(grp, Ritem[0], ScenceOffset - ItemOffset);
+  fileread(grp, Rscence[0], MagicOffset - ScenceOffset);
+  fileread(grp, Rmagic[0], WeiShopOffset - MagicOffset);
   fileread(grp, Rshop[0], len - WeiShopOffset);
   fileclose(idx);
   fileclose(grp);
@@ -1795,13 +1795,13 @@ begin
   ScenceAmount := (MagicOffset - ScenceOffset) div 52;
   for i := 0 to ScenceAmount - 1 do
   begin
-    if (RScence[i].MainEntranceX1 >= 0) and (RScence[i].MainEntranceX1 < 480) and
-      (RScence[i].MainEntranceY1 >= 0) and (RScence[i].MainEntranceY1 < 480) and
-      (RScence[i].MainEntranceX2 >= 0) and (RScence[i].MainEntranceX2 < 480) and
-      (RScence[i].MainEntranceY2 >= 0) and (RScence[i].MainEntranceY2 < 480) then
+    if (Rscence[i].MainEntranceX1 >= 0) and (Rscence[i].MainEntranceX1 < 480) and
+      (Rscence[i].MainEntranceY1 >= 0) and (Rscence[i].MainEntranceY1 < 480) and
+      (Rscence[i].MainEntranceX2 >= 0) and (Rscence[i].MainEntranceX2 < 480) and
+      (Rscence[i].MainEntranceY2 >= 0) and (Rscence[i].MainEntranceY2 < 480) then
     begin
-      Entrance[RScence[i].MainEntranceX1, RScence[i].MainEntranceY1] := i;
-      Entrance[RScence[i].MainEntranceX2, RScence[i].MainEntranceY2] := i;
+      Entrance[Rscence[i].MainEntranceX1, Rscence[i].MainEntranceY1] := i;
+      Entrance[Rscence[i].MainEntranceX2, Rscence[i].MainEntranceY2] := i;
     end;
   end;
   //showmessage(inttostr(useless1));
@@ -1877,10 +1877,10 @@ begin
     fileseek(grp, 24, 1);
   filewrite(grp, Ritemlist[0], sizeof(Titemlist) * max_item_amount);
 
-  filewrite(grp, RRole[0], ItemOffset - RoleOffset);
-  filewrite(grp, RItem[0], ScenceOffset - ItemOffset);
-  filewrite(grp, RScence[0], MagicOffset - ScenceOffset);
-  filewrite(grp, RMagic[0], WeiShopOffset - MagicOffset);
+  filewrite(grp, Rrole[0], ItemOffset - RoleOffset);
+  filewrite(grp, Ritem[0], ScenceOffset - ItemOffset);
+  filewrite(grp, Rscence[0], MagicOffset - ScenceOffset);
+  filewrite(grp, Rmagic[0], WeiShopOffset - MagicOffset);
   filewrite(grp, Rshop[0], length - WeiShopOffset);
   fileclose(idx);
   fileclose(grp);
@@ -2272,10 +2272,10 @@ begin
   begin
     Result := False;
     snum := entrance[x, y];
-    if (RScence[snum].EnCondition = 0) then
+    if (Rscence[snum].EnCondition = 0) then
       Result := True;
     //是否有人轻功超过70
-    if (RScence[snum].EnCondition = 2) then
+    if (Rscence[snum].EnCondition = 2) then
       for i := 0 to 5 do
         if teamlist[i] >= 0 then
           if Rrole[teamlist[i]].Speed > 70 then
@@ -2287,8 +2287,8 @@ begin
       SFace := MFace;
       Mface := 3 - Mface;
       SStep := 0;
-      Sx := RScence[CurScence].EntranceX;
-      Sy := RScence[CurScence].EntranceY;
+      Sx := Rscence[CurScence].EntranceX;
+      Sy := Rscence[CurScence].EntranceY;
       //如达成条件, 进入场景并初始化场景坐标
       SaveR(6);
       InScence(0);
@@ -2442,30 +2442,30 @@ begin
     end;
 
     //检查是否位于出口, 如是则退出
-    if (((Sx = RScence[CurScence].ExitX[0]) and (Sy = RScence[CurScence].ExitY[0])) or
-      ((Sx = RScence[CurScence].ExitX[1]) and (Sy = RScence[CurScence].ExitY[1])) or
-      ((Sx = RScence[CurScence].ExitX[2]) and (Sy = RScence[CurScence].ExitY[2]))) then
+    if (((Sx = Rscence[CurScence].ExitX[0]) and (Sy = Rscence[CurScence].ExitY[0])) or
+      ((Sx = Rscence[CurScence].ExitX[1]) and (Sy = Rscence[CurScence].ExitY[1])) or
+      ((Sx = Rscence[CurScence].ExitX[2]) and (Sy = Rscence[CurScence].ExitY[2]))) then
     begin
       Where := 0;
       Result := -1;
       break;
     end;
     //检查是否位于跳转口, 如是则重新初始化场景
-    if ((Sx = RScence[CurScence].JumpX1) and (Sy = RScence[CurScence].JumpY1)) and
-      (RScence[CurScence].JumpScence >= 0) then
+    if ((Sx = Rscence[CurScence].JumpX1) and (Sy = Rscence[CurScence].JumpY1)) and
+      (Rscence[CurScence].JumpScence >= 0) then
     begin
       instruct_14;
       PreScence := CurScence;
       CurScence := Rscence[CurScence].JumpScence;
-      if RScence[PreScence].MainEntranceX1 <> 0 then
+      if Rscence[PreScence].MainEntranceX1 <> 0 then
       begin
-        Sx := RScence[CurScence].EntranceX;
-        Sy := RScence[CurScence].EntranceY;
+        Sx := Rscence[CurScence].EntranceX;
+        Sy := Rscence[CurScence].EntranceY;
       end
       else
       begin
-        Sx := RScence[CurScence].JumpX2;
-        Sy := RScence[CurScence].JumpY2;
+        Sx := Rscence[CurScence].JumpX2;
+        Sy := Rscence[CurScence].JumpY2;
       end;
       {if Sx = 0 then
       begin
@@ -2573,10 +2573,10 @@ begin
           speed := 0;
           if where = 0 then
           begin
-            if RScence[CurScence].ExitMusic >= 0 then
+            if Rscence[CurScence].ExitMusic >= 0 then
             begin
               StopMP3;
-              PlayMP3(RScence[CurScence].ExitMusic, -1);
+              PlayMP3(Rscence[CurScence].ExitMusic, -1);
             end;
             Redraw;
             SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
@@ -2897,9 +2897,9 @@ begin
   //显示场景名
   if snum >= 0 then
   begin
-    scencename := Big5ToUnicode(@rscence[snum].Name);
-    DrawTextWithRect(screen, @scencename[1], CENTER_X - length(PChar(@rscence[snum].Name)) * 5 + 7, 100,
-      length(PChar(@rscence[snum].Name)) * 10 + 6, ColColor(7), ColColor(5));
+    scencename := Big5ToUnicode(@Rscence[snum].Name);
+    DrawTextWithRect(screen, @scencename[1], CENTER_X - length(PChar(@Rscence[snum].Name)) * 5 + 7, 100,
+      length(PChar(@Rscence[snum].Name)) * 10 + 6, ColColor(7), ColColor(5));
 
     //改变音乐
     if Rscence[snum].EntranceMusic >= 0 then
@@ -3581,7 +3581,7 @@ begin
   begin
     if Teamlist[i] >= 0 then
     begin
-      menustring[i] := Big5ToUnicode(@RRole[Teamlist[i]].Name);
+      menustring[i] := Big5ToUnicode(@Rrole[Teamlist[i]].Name);
       if str <> '' then
       begin
         menuengstring[i] := format(str, [Rrole[teamlist[i]].Data[list1], Rrole[teamlist[i]].Data[list2]]);
@@ -4277,18 +4277,18 @@ begin
     DrawEngText(screen, @str[1], 431, 32, ColColor($64));
     DrawEngText(screen, @str[1], 430, 32, ColColor($66));
     len := length(PChar(@Ritem[item].Name));
-    DrawBig5Text(screen, @RItem[item].Name, 286 - len * 5, 32, ColColor($21));
-    DrawBig5Text(screen, @RItem[item].Name, 285 - len * 5, 32, ColColor($23));
+    DrawBig5Text(screen, @Ritem[item].Name, 286 - len * 5, 32, ColColor($21));
+    DrawBig5Text(screen, @Ritem[item].Name, 285 - len * 5, 32, ColColor($23));
     len := length(PChar(@Ritem[item].Introduction));
-    DrawBig5Text(screen, @RItem[item].Introduction, 286 - len * 5, 62, ColColor($5));
-    DrawBig5Text(screen, @RItem[item].Introduction, 285 - len * 5, 62, ColColor($7));
+    DrawBig5Text(screen, @Ritem[item].Introduction, 286 - len * 5, 62, ColColor($5));
+    DrawBig5Text(screen, @Ritem[item].Introduction, 285 - len * 5, 62, ColColor($7));
     DrawShadowText(screen, @words[Ritem[item].ItemType, 1], 97, 315, ColColor($23), ColColor($21));
     //如有人使用则显示
-    if RItem[item].User >= 0 then
+    if Ritem[item].User >= 0 then
     begin
       str := (' 使用人：');
       DrawShadowText(screen, @str[1], 187, 315, ColColor($23), ColColor($21));
-      DrawBig5ShadowText(screen, @rrole[RItem[item].User].Name, 277, 315, ColColor($66), ColColor($64));
+      DrawBig5ShadowText(screen, @Rrole[Ritem[item].User].Name, 277, 315, ColColor($66), ColColor($64));
     end;
     //如是罗盘则显示坐标
     if item = COMPASS_ID then
@@ -4300,19 +4300,19 @@ begin
     end;
   end;
 
-  if (item >= 0) and (ritem[item].ItemType > 0) then
+  if (item >= 0) and (Ritem[item].ItemType > 0) then
   begin
     len2 := 0;
     for i := 0 to 22 do
     begin
       p2[i] := 0;
-      if (ritem[item].Data[45 + i] <> 0) and (i <> 4) then
+      if (Ritem[item].Data[45 + i] <> 0) and (i <> 4) then
       begin
         p2[i] := 1;
         len2 := len2 + 1;
       end;
     end;
-    if ritem[item].ChangeMPType = 2 then
+    if Ritem[item].ChangeMPType = 2 then
     begin
       p2[4] := 1;
       len2 := len2 + 1;
@@ -4322,13 +4322,13 @@ begin
     for i := 0 to 12 do
     begin
       p3[i] := 0;
-      if (ritem[item].Data[69 + i] <> 0) and (i <> 0) then
+      if (Ritem[item].Data[69 + i] <> 0) and (i <> 0) then
       begin
         p3[i] := 1;
         len3 := len3 + 1;
       end;
     end;
-    if (ritem[item].NeedMPType in [0, 1]) and (ritem[item].ItemType <> 3) then
+    if (Ritem[item].NeedMPType in [0, 1]) and (Ritem[item].ItemType <> 3) then
     begin
       p3[0] := 1;
       len3 := len3 + 1;
@@ -4342,9 +4342,9 @@ begin
     begin
       if (p2[i] = 1) then
       begin
-        str := format('%6d', [ritem[item].Data[45 + i]]);
+        str := format('%6d', [Ritem[item].Data[45 + i]]);
         if i = 4 then
-          case ritem[item].ChangeMPType of
+          case Ritem[item].ChangeMPType of
             0: str := ('    陰');
             1: str := ('    陽');
             2: str := ('  調和');
@@ -4370,9 +4370,9 @@ begin
     begin
       if (p3[i] = 1) then
       begin
-        str := format('%6d', [ritem[item].Data[69 + i]]);
+        str := format('%6d', [Ritem[item].Data[69 + i]]);
         if i = 0 then
-          case ritem[item].NeedMPType of
+          case Ritem[item].NeedMPType of
             0: str := ('    陰');
             1: str := ('    陽');
             2: str := ('  調和');
@@ -4431,12 +4431,12 @@ var
 begin
   CurItem := inum;
   Redraw;
-  case RItem[inum].ItemType of
+  case Ritem[inum].ItemType of
     0: //剧情物品
     begin
       //如某属性大于0, 直接调用事件
-      if ritem[inum].UnKnow7 > 0 then
-        CallEvent(ritem[inum].UnKnow7)
+      if Ritem[inum].UnKnow7 > 0 then
+        CallEvent(Ritem[inum].UnKnow7)
       else
       begin
         if where = 1 then
@@ -4491,7 +4491,7 @@ begin
             if Ritem[inum].User >= 0 then
               Rrole[Ritem[inum].User].Equip[p] := -1;
             if Rrole[rnum].Equip[p] >= 0 then
-              Ritem[RRole[rnum].Equip[p]].User := -1;
+              Ritem[Rrole[rnum].Equip[p]].User := -1;
             Rrole[rnum].Equip[p] := inum;
             Ritem[inum].User := rnum;
           end
@@ -4534,7 +4534,7 @@ begin
             if Ritem[inum].User >= 0 then
               Rrole[Ritem[inum].User].PracticeBook := -1;
             if Rrole[rnum].PracticeBook >= 0 then
-              Ritem[RRole[rnum].PracticeBook].User := -1;
+              Ritem[Rrole[rnum].PracticeBook].User := -1;
             Rrole[rnum].PracticeBook := inum;
             Ritem[inum].User := rnum;
               {if (inum in [78, 93]) then
@@ -4619,8 +4619,8 @@ begin
     Result := False;
 
   //内力性质
-  if (rrole[rnum].MPType < 2) and (Ritem[inum].NeedMPType < 2) then
-    if rrole[rnum].MPType <> Ritem[inum].NeedMPType then
+  if (Rrole[rnum].MPType < 2) and (Ritem[inum].NeedMPType < 2) then
+    if Rrole[rnum].MPType <> Ritem[inum].NeedMPType then
       Result := False;
 
   //如有专用人物, 前面的都作废
@@ -4635,12 +4635,12 @@ begin
   for i := 0 to 9 do
     if Rrole[rnum].Magic[i] > 0 then
       r := r + 1;
-  if (r >= 10) and (ritem[inum].Magic > 0) then
+  if (r >= 10) and (Ritem[inum].Magic > 0) then
     Result := False;
 
   //如果已有秘籍所练出的武功且小于10级, 则为真
   for i := 0 to 9 do
-    if (Rrole[rnum].Magic[i] = ritem[inum].Magic) and (Rrole[rnum].MagLevel[i] < 900) then
+    if (Rrole[rnum].Magic[i] = Ritem[inum].Magic) and (Rrole[rnum].MagLevel[i] < 900) then
     begin
       Result := True;
       break;
@@ -4682,7 +4682,7 @@ begin
   begin
     if Teamlist[i] >= 0 then
     begin
-      menustring[i] := Big5ToUnicode(@RRole[Teamlist[i]].Name);
+      menustring[i] := Big5ToUnicode(@Rrole[Teamlist[i]].Name);
       amount := amount + 1;
     end;
   end;
@@ -4790,18 +4790,18 @@ begin
   addatk := 0;
   adddef := 0;
   addspeed := 0;
-  if rrole[rnum].Equip[0] >= 0 then
+  if Rrole[rnum].Equip[0] >= 0 then
   begin
-    addatk := addatk + ritem[rrole[rnum].Equip[0]].AddAttack;
-    adddef := adddef + ritem[rrole[rnum].Equip[0]].AddDefence;
-    addspeed := addspeed + ritem[rrole[rnum].Equip[0]].AddSpeed;
+    addatk := addatk + Ritem[Rrole[rnum].Equip[0]].AddAttack;
+    adddef := adddef + Ritem[Rrole[rnum].Equip[0]].AddDefence;
+    addspeed := addspeed + Ritem[Rrole[rnum].Equip[0]].AddSpeed;
   end;
 
-  if rrole[rnum].Equip[1] >= 0 then
+  if Rrole[rnum].Equip[1] >= 0 then
   begin
-    addatk := addatk + ritem[rrole[rnum].Equip[1]].AddAttack;
-    adddef := adddef + ritem[rrole[rnum].Equip[1]].AddDefence;
-    addspeed := addspeed + ritem[rrole[rnum].Equip[1]].AddSpeed;
+    addatk := addatk + Ritem[Rrole[rnum].Equip[1]].AddAttack;
+    adddef := adddef + Ritem[Rrole[rnum].Equip[1]].AddDefence;
+    addspeed := addspeed + Ritem[Rrole[rnum].Equip[1]].AddSpeed;
   end;
 
   //攻击, 防御, 轻功
@@ -4852,7 +4852,7 @@ begin
   str := format('%4d', [Rrole[rnum].Level]);
   DrawEngShadowText(screen, @str[1], x + 110, y + 110, ColColor($7), ColColor($5));
   //生命值, 在受伤和中毒值不同时使用不同颜色
-  case RRole[rnum].Hurt of
+  case Rrole[rnum].Hurt of
     34..66:
     begin
       color1 := ColColor($E);
@@ -4869,13 +4869,13 @@ begin
       color2 := ColColor($5);
     end;
   end;
-  str := format('%4d', [RRole[rnum].CurrentHP]);
+  str := format('%4d', [Rrole[rnum].CurrentHP]);
   DrawEngShadowText(screen, @str[1], x + 60, y + 131, color1, color2);
 
   str := '/';
   DrawEngShadowText(screen, @str[1], x + 100, y + 131, ColColor($66), ColColor($63));
 
-  case RRole[rnum].Poison of
+  case Rrole[rnum].Poison of
     34..66:
     begin
       color1 := ColColor($30);
@@ -4892,15 +4892,15 @@ begin
       color2 := ColColor($21);
     end;
   end;
-  str := format('%4d', [RRole[rnum].MaxHP]);
+  str := format('%4d', [Rrole[rnum].MaxHP]);
   DrawEngShadowText(screen, @str[1], x + 110, y + 131, color1, color2);
   //内力, 依据内力性质使用颜色
-  if rrole[rnum].MPType = 0 then
+  if Rrole[rnum].MPType = 0 then
   begin
     color1 := ColColor($50);
     color2 := ColColor($4E);
   end
-  else if rrole[rnum].MPType = 1 then
+  else if Rrole[rnum].MPType = 1 then
   begin
     color1 := ColColor($7);
     color2 := ColColor($5);
@@ -4910,10 +4910,10 @@ begin
     color1 := ColColor($66);
     color2 := ColColor($63);
   end;
-  str := format('%4d/%4d', [RRole[rnum].CurrentMP, RRole[rnum].MaxMP]);
+  str := format('%4d/%4d', [Rrole[rnum].CurrentMP, Rrole[rnum].MaxMP]);
   DrawEngShadowText(screen, @str[1], x + 60, y + 152, color1, color2);
   //体力
-  str := format('%4d/%4d', [rrole[rnum].PhyPower, MAX_PHYSICAL_POWER]);
+  str := format('%4d/%4d', [Rrole[rnum].PhyPower, MAX_PHYSICAL_POWER]);
   DrawEngShadowText(screen, @str[1], x + 60, y + 173, ColColor($7), ColColor($5));
   //经验
   str := format('%5d', [uint16(Rrole[rnum].Exp)]);
@@ -5330,10 +5330,10 @@ begin
   if minushurt > Rrole[role2].Hurt then
     minushurt := Rrole[role2].Hurt;
   Rrole[role2].Hurt := Rrole[role2].Hurt - minushurt;
-  if RRole[role2].Hurt < 0 then
-    RRole[role2].Hurt := 0;
-  if addlife > RRole[role2].MaxHP - Rrole[role2].CurrentHP then
-    addlife := RRole[role2].MaxHP - Rrole[role2].CurrentHP;
+  if Rrole[role2].Hurt < 0 then
+    Rrole[role2].Hurt := 0;
+  if addlife > Rrole[role2].MaxHP - Rrole[role2].CurrentHP then
+    addlife := Rrole[role2].MaxHP - Rrole[role2].CurrentHP;
   Rrole[role2].CurrentHP := Rrole[role2].CurrentHP + addlife;
   Result := addlife;
 
@@ -5341,7 +5341,7 @@ begin
   begin
     Redraw;
     DrawRectangle(screen, 115, 98, 155, 76, 0, ColColor(255), 30);
-    DrawBig5ShadowText(screen, @rrole[role2].Name, 100, 100, ColColor($23), ColColor($21));
+    DrawBig5ShadowText(screen, @Rrole[role2].Name, 100, 100, ColColor($23), ColColor($21));
     word := (' 增加生命');
     DrawShadowText(screen, @word[1], 100, 125, ColColor($7), ColColor($5));
     word := format('%4d', [addlife]);
@@ -5377,7 +5377,7 @@ begin
     DrawRectangle(screen, 115, 98, 155, 51, 0, ColColor(255), 30);
     word := (' 減少中毒');
     DrawShadowText(screen, @word[1], 100, 125, ColColor($7), ColColor($5));
-    DrawBig5ShadowText(screen, @rrole[role2].Name, 100, 100, ColColor($23), ColColor($21));
+    DrawBig5ShadowText(screen, @Rrole[role2].Name, 100, 100, ColColor($23), ColColor($21));
     word := format('%4d', [minuspoi]);
     DrawEngShadowText(screen, @word[1], 220, 125, ColColor($66), ColColor($64));
     ShowSimpleStatus(role2, 350, 50);
@@ -5466,47 +5466,47 @@ begin
   //减少受伤
   addvalue[23] := -(addvalue[0] div LIFE_HURT);
 
-  if -addvalue[23] > rrole[rnum].Data[19] then
-    addvalue[23] := -rrole[rnum].Data[19];
+  if -addvalue[23] > Rrole[rnum].Data[19] then
+    addvalue[23] := -Rrole[rnum].Data[19];
 
   //增加生命, 内力最大值的处理
-  if addvalue[1] + rrole[rnum].Data[18] > MAX_HP then
-    addvalue[1] := MAX_HP - rrole[rnum].Data[18];
-  if addvalue[6] + rrole[rnum].Data[42] > MAX_MP then
-    addvalue[6] := MAX_MP - rrole[rnum].Data[42];
-  if addvalue[1] + rrole[rnum].Data[18] < 0 then
-    addvalue[1] := -rrole[rnum].Data[18];
-  if addvalue[6] + rrole[rnum].Data[42] < 0 then
-    addvalue[6] := -rrole[rnum].Data[42];
+  if addvalue[1] + Rrole[rnum].Data[18] > MAX_HP then
+    addvalue[1] := MAX_HP - Rrole[rnum].Data[18];
+  if addvalue[6] + Rrole[rnum].Data[42] > MAX_MP then
+    addvalue[6] := MAX_MP - Rrole[rnum].Data[42];
+  if addvalue[1] + Rrole[rnum].Data[18] < 0 then
+    addvalue[1] := -Rrole[rnum].Data[18];
+  if addvalue[6] + Rrole[rnum].Data[42] < 0 then
+    addvalue[6] := -Rrole[rnum].Data[42];
 
   for i := 7 to 22 do
   begin
-    if addvalue[i] + rrole[rnum].Data[rolelist[i]] > maxprolist[rolelist[i]] then
-      addvalue[i] := maxprolist[rolelist[i]] - rrole[rnum].Data[rolelist[i]];
-    if addvalue[i] + rrole[rnum].Data[rolelist[i]] < 0 then
-      addvalue[i] := -rrole[rnum].Data[rolelist[i]];
+    if addvalue[i] + Rrole[rnum].Data[rolelist[i]] > maxprolist[rolelist[i]] then
+      addvalue[i] := maxprolist[rolelist[i]] - Rrole[rnum].Data[rolelist[i]];
+    if addvalue[i] + Rrole[rnum].Data[rolelist[i]] < 0 then
+      addvalue[i] := -Rrole[rnum].Data[rolelist[i]];
   end;
   //生命不能超过最大值
-  if addvalue[0] + rrole[rnum].Data[17] > addvalue[1] + rrole[rnum].Data[18] then
-    addvalue[0] := addvalue[1] + rrole[rnum].Data[18] - rrole[rnum].Data[17];
+  if addvalue[0] + Rrole[rnum].Data[17] > addvalue[1] + Rrole[rnum].Data[18] then
+    addvalue[0] := addvalue[1] + Rrole[rnum].Data[18] - Rrole[rnum].Data[17];
   //中毒不能小于0
-  if addvalue[2] + rrole[rnum].Data[20] < 0 then
-    addvalue[2] := -rrole[rnum].Data[20];
+  if addvalue[2] + Rrole[rnum].Data[20] < 0 then
+    addvalue[2] := -Rrole[rnum].Data[20];
   //体力不能超过100
-  if addvalue[3] + rrole[rnum].Data[21] > MAX_PHYSICAL_POWER then
-    addvalue[3] := MAX_PHYSICAL_POWER - rrole[rnum].Data[21];
+  if addvalue[3] + Rrole[rnum].Data[21] > MAX_PHYSICAL_POWER then
+    addvalue[3] := MAX_PHYSICAL_POWER - Rrole[rnum].Data[21];
   //内力不能超过最大值
-  if addvalue[5] + rrole[rnum].Data[41] > addvalue[6] + rrole[rnum].Data[42] then
-    addvalue[5] := addvalue[6] + rrole[rnum].Data[42] - rrole[rnum].Data[41];
+  if addvalue[5] + Rrole[rnum].Data[41] > addvalue[6] + Rrole[rnum].Data[42] then
+    addvalue[5] := addvalue[6] + Rrole[rnum].Data[42] - Rrole[rnum].Data[41];
   p := 0;
   for i := 0 to 23 do
   begin
     if (i <> 4) and (i <> 21) and (addvalue[i] <> 0) then
       p := p + 1;
   end;
-  if (addvalue[4] = 2) and (rrole[rnum].Data[40] <> 2) then
+  if (addvalue[4] = 2) and (Rrole[rnum].Data[40] <> 2) then
     p := p + 1;
-  if (addvalue[21] = 1) and (rrole[rnum].Data[58] <> 1) then
+  if (addvalue[21] = 1) and (Rrole[rnum].Data[58] <> 1) then
     p := p + 1;
 
   DrawRectangle(screen, 100, 70, 200, 25, 0, ColColor(255), 25);
@@ -5533,7 +5533,7 @@ begin
     x := 83
   else
     x := 3;
-  DrawBig5ShadowText(screen, @rrole[rnum].Data[4], x, 102, ColColor($23), ColColor($21));
+  DrawBig5ShadowText(screen, @Rrole[rnum].Data[4], x, 102, ColColor($23), ColColor($21));
   str := (' 未增加屬性');
   if p = 0 then
     DrawShadowText(screen, @str[1], 163, 102, ColColor(7), ColColor(5));
@@ -5560,7 +5560,7 @@ begin
     end;
     if (i <> 4) and (i <> 21) and (addvalue[i] <> 0) then
     begin
-      rrole[rnum].Data[rolelist[i]] := rrole[rnum].Data[rolelist[i]] + addvalue[i];
+      Rrole[rnum].Data[rolelist[i]] := Rrole[rnum].Data[rolelist[i]] + addvalue[i];
       DrawShadowText(screen, @word[i, 1], 83 + x, 124 + y + p * 22, ColColor(7), ColColor(5));
       str := format('%4d', [addvalue[i]]);
       DrawEngShadowText(screen, @str[1], 243 + x, 124 + y + p * 22, ColColor($66), ColColor($64));
@@ -5569,9 +5569,9 @@ begin
     //对内力性质特殊处理
     if (i = 4) and (addvalue[i] = 2) then
     begin
-      if rrole[rnum].Data[rolelist[i]] <> 2 then
+      if Rrole[rnum].Data[rolelist[i]] <> 2 then
       begin
-        rrole[rnum].Data[rolelist[i]] := 2;
+        Rrole[rnum].Data[rolelist[i]] := 2;
         DrawShadowText(screen, @word[i, 1], 83 + x, 124 + y + p * 22, ColColor(7), ColColor(5));
         p := p + 1;
       end;
@@ -5579,9 +5579,9 @@ begin
     //对左右互搏特殊处理
     if (i = 21) and (addvalue[i] = 1) then
     begin
-      if rrole[rnum].Data[rolelist[i]] <> 1 then
+      if Rrole[rnum].Data[rolelist[i]] <> 1 then
       begin
-        rrole[rnum].Data[rolelist[i]] := 1;
+        Rrole[rnum].Data[rolelist[i]] := 1;
         DrawShadowText(screen, @word[i, 1], 83 + x, 124 + y + p * 22, ColColor(7), ColColor(5));
         p := p + 1;
       end;

@@ -827,7 +827,7 @@ var
 begin
   n := lua_gettop(L);
   t := floor(lua_tonumber(L, -n));
-  lua_pushboolean(L, battle(t, floor(lua_tonumber(L, -1))));
+  lua_pushboolean(L, Battle(t, floor(lua_tonumber(L, -1))));
   Result := 1;
 
 end;
@@ -1278,8 +1278,8 @@ begin
   CurScence := floor(lua_tonumber(L, -n));
   if n = 1 then
   begin
-    x := RScence[CurScence].EntranceX;
-    y := RScence[CurScence].EntranceY;
+    x := Rscence[CurScence].EntranceX;
+    y := Rscence[CurScence].EntranceY;
   end
   else
   begin
@@ -1384,7 +1384,7 @@ end;
 function SelectOneAim(L: Plua_state): integer; cdecl;
 begin
   if floor(lua_tonumber(L, -1)) = 0 then
-    selectaim(floor(lua_tonumber(L, -3)), floor(lua_tonumber(L, -2)));
+    SelectAim(floor(lua_tonumber(L, -3)), floor(lua_tonumber(L, -2)));
   lua_pushnumber(L, bfield[2, Ax, Ay]);
   Result := 1;
 end;
@@ -1414,8 +1414,8 @@ begin
   bnum := floor(lua_tonumber(L, -3));
   mtype := floor(lua_tonumber(L, -2));
   enum := floor(lua_tonumber(L, -1));
-  playActionAmination(bnum, mtype);
-  playMagicAmination(bnum, mtype);
+  PlayActionAmination(bnum, mtype);
+  PlayMagicAmination(bnum, mtype);
   Result := 0;
 
 end;
@@ -1427,7 +1427,7 @@ var
   mode: integer;
 begin
   mode := floor(lua_tonumber(L, -1));
-  showhurtvalue(mode);
+  ShowHurtValue(mode);
   Result := 0;
 
 end;

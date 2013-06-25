@@ -249,7 +249,7 @@ begin
   else
     word := (' 失去物品');
   DrawShadowText(screen, @word[1], x - 100, 100, ColColor($23), ColColor($21));
-  DrawBig5ShadowText(screen, @RItem[inum].Name, x - 100, 125, ColColor($7), ColColor($5));
+  DrawBig5ShadowText(screen, @Ritem[inum].Name, x - 100, 125, ColColor($7), ColColor($5));
   word := (' 數量');
   DrawShadowText(screen, @word[1], x - 100, 150, ColColor($66), ColColor($64));
   word := format(' %5d', [amount]);
@@ -473,17 +473,17 @@ begin
   begin
     rnum := Teamlist[i];
     if rnum >= 0 then
-      if not ((RRole[rnum].Hurt > 33) or (RRole[rnum].Poison > 0)) then
+      if not ((Rrole[rnum].Hurt > 33) or (Rrole[rnum].Poison > 0)) then
       begin
-        RRole[rnum].CurrentHP := RRole[rnum].MaxHP;
-        RRole[rnum].CurrentMP := RRole[rnum].MaxMP;
-        RRole[rnum].PhyPower := MAX_PHYSICAL_POWER;
-        RRole[rnum].Hurt := RRole[rnum].Hurt - 33;
-        if (RRole[rnum].Hurt < 0) then
-          RRole[rnum].Hurt := 0;
-        RRole[rnum].Poison := RRole[rnum].Poison - 33;
-        if (RRole[rnum].Poison < 0) then
-          RRole[rnum].Poison := 0;
+        Rrole[rnum].CurrentHP := Rrole[rnum].MaxHP;
+        Rrole[rnum].CurrentMP := Rrole[rnum].MaxMP;
+        Rrole[rnum].PhyPower := MAX_PHYSICAL_POWER;
+        Rrole[rnum].Hurt := Rrole[rnum].Hurt - 33;
+        if (Rrole[rnum].Hurt < 0) then
+          Rrole[rnum].Hurt := 0;
+        Rrole[rnum].Poison := Rrole[rnum].Poison - 33;
+        if (Rrole[rnum].Poison < 0) then
+          Rrole[rnum].Poison := 0;
       end;
   end;
 
@@ -634,12 +634,12 @@ var
 begin
   for i := 0 to 5 do
     if Teamlist[i] >= 0 then
-      RRole[Teamlist[i]].CurrentMP := 0;
+      Rrole[Teamlist[i]].CurrentMP := 0;
 end;
 
 procedure instruct_23(rnum, Poision: integer);
 begin
-  RRole[rnum].UsePoi := Poision;
+  Rrole[rnum].UsePoi := Poision;
 end;
 
 //Black the screen when fail in battle.
@@ -760,17 +760,17 @@ end;
 function instruct_28(rnum, e1, e2, jump1, jump2: integer): integer;
 begin
   Result := jump2;
-  if (rrole[rnum].Ethics >= e1) and (rrole[rnum].Ethics <= e2) then
+  if (Rrole[rnum].Ethics >= e1) and (Rrole[rnum].Ethics <= e2) then
     Result := jump1;
 end;
 
 function instruct_29(rnum, r1, r2, jump1, jump2: integer): integer;
 begin
   Result := jump2;
-  if (rrole[rnum].Attack >= r1) and (rrole[rnum].Attack <= r2) then
+  if (Rrole[rnum].Attack >= r1) and (Rrole[rnum].Attack <= r2) then
     Result := jump1;
   if MODVersion = 41 then
-    if (rrole[rnum].Attack >= r1) then
+    if (Rrole[rnum].Attack >= r1) then
       Result := jump1;
 end;
 
@@ -883,13 +883,13 @@ var
 begin
   for i := 0 to 9 do
   begin
-    if (RRole[rnum].Magic[i] <= 0) or (RRole[rnum].Magic[i] = magicnum) then
+    if (Rrole[rnum].Magic[i] <= 0) or (Rrole[rnum].Magic[i] = magicnum) then
     begin
-      if RRole[rnum].Magic[i] > 0 then
-        RRole[rnum].Maglevel[i] := RRole[rnum].Maglevel[i] + 100;
-      RRole[rnum].Magic[i] := magicnum;
-      if RRole[rnum].MagLevel[i] > 999 then
-        RRole[rnum].Maglevel[i] := 999;
+      if Rrole[rnum].Magic[i] > 0 then
+        Rrole[rnum].Maglevel[i] := Rrole[rnum].Maglevel[i] + 100;
+      Rrole[rnum].Magic[i] := magicnum;
+      if Rrole[rnum].MagLevel[i] > 999 then
+        Rrole[rnum].Maglevel[i] := 999;
       break;
     end;
   end;
@@ -899,7 +899,7 @@ begin
     DrawRectangle(screen, CENTER_X - 75, 98, 145, 76, 0, ColColor(255), 30);
     word := (' 學會');
     DrawShadowText(screen, @word[1], CENTER_X - 90, 125, ColColor($7), ColColor($5));
-    DrawBig5ShadowText(screen, @rrole[rnum].Name, CENTER_X - 90, 100, ColColor($23), ColColor($21));
+    DrawBig5ShadowText(screen, @Rrole[rnum].Name, CENTER_X - 90, 100, ColColor($23), ColColor($21));
     DrawBig5ShadowText(screen, @Rmagic[magicnum].Name, CENTER_X - 90, 150, ColColor($66), ColColor($64));
     SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
     WaitAnyKey;
@@ -911,21 +911,21 @@ procedure instruct_34(rnum, iq: integer);
 var
   word: WideString;
 begin
-  if RRole[rnum].Aptitude + iq <= 100 then
+  if Rrole[rnum].Aptitude + iq <= 100 then
   begin
-    RRole[rnum].Aptitude := RRole[rnum].Aptitude + iq;
+    Rrole[rnum].Aptitude := Rrole[rnum].Aptitude + iq;
   end
   else
   begin
-    iq := 100 - RRole[rnum].Aptitude;
-    RRole[rnum].Aptitude := 100;
+    iq := 100 - Rrole[rnum].Aptitude;
+    Rrole[rnum].Aptitude := 100;
   end;
   if iq > 0 then
   begin
     DrawRectangle(screen, CENTER_X - 75, 98, 145, 51, 0, ColColor(255), 30);
     word := (' 資質增加');
     DrawShadowText(screen, @word[1], CENTER_X - 90, 125, ColColor($7), ColColor($5));
-    DrawBig5ShadowText(screen, @rrole[rnum].Name, CENTER_X - 90, 100, ColColor($23), ColColor($21));
+    DrawBig5ShadowText(screen, @Rrole[rnum].Name, CENTER_X - 90, 100, ColColor($23), ColColor($21));
     word := format('%3d', [iq]);
     DrawEngShadowText(screen, @word[1], CENTER_X + 30, 125, ColColor($66), ColColor($64));
     SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
@@ -942,30 +942,30 @@ begin
   begin
     for i := 0 to 9 do
     begin
-      if RRole[rnum].Magic[i] <= 0 then
+      if Rrole[rnum].Magic[i] <= 0 then
       begin
-        RRole[rnum].Magic[i] := magicnum;
-        RRole[rnum].MagLevel[i] := exp;
+        Rrole[rnum].Magic[i] := magicnum;
+        Rrole[rnum].MagLevel[i] := exp;
         break;
       end;
     end;
     if i = 10 then
     begin
-      RRole[rnum].Magic[0] := magicnum;
-      RRole[rnum].MagLevel[i] := exp;
+      Rrole[rnum].Magic[0] := magicnum;
+      Rrole[rnum].MagLevel[i] := exp;
     end;
   end
   else
   begin
-    RRole[rnum].Magic[magiclistnum] := magicnum;
-    RRole[rnum].MagLevel[magiclistnum] := exp;
+    Rrole[rnum].Magic[magiclistnum] := magicnum;
+    Rrole[rnum].MagLevel[magiclistnum] := exp;
   end;
 end;
 
 function instruct_36(sexual, jump1, jump2: integer): integer;
 begin
   Result := jump2;
-  if rrole[0].Sexual = sexual then
+  if Rrole[0].Sexual = sexual then
     Result := jump1;
   if sexual > 255 then
     if x50[$7000] = 0 then
@@ -976,11 +976,11 @@ end;
 
 procedure instruct_37(Ethics: integer);
 begin
-  RRole[0].Ethics := RRole[0].Ethics + ethics;
-  if RRole[0].Ethics > 100 then
-    RRole[0].Ethics := 100;
-  if RRole[0].Ethics < 0 then
-    RRole[0].Ethics := 0;
+  Rrole[0].Ethics := Rrole[0].Ethics + ethics;
+  if Rrole[0].Ethics > 100 then
+    Rrole[0].Ethics := 100;
+  if Rrole[0].Ethics < 0 then
+    Rrole[0].Ethics := 0;
 end;
 
 procedure instruct_38(snum, layernum, oldpic, newpic: integer);
@@ -1130,11 +1130,11 @@ procedure instruct_45(rnum, speed: integer);
 var
   word: WideString;
 begin
-  RRole[rnum].Speed := RRole[rnum].Speed + speed;
+  Rrole[rnum].Speed := Rrole[rnum].Speed + speed;
   DrawRectangle(screen, CENTER_X - 75, 98, 145, 51, 0, ColColor(255), 30);
   word := (' 輕功增加');
   DrawShadowText(screen, @word[1], CENTER_X - 90, 125, ColColor($7), ColColor($5));
-  DrawBig5ShadowText(screen, @rrole[rnum].Name, CENTER_X - 90, 100, ColColor($23), ColColor($21));
+  DrawBig5ShadowText(screen, @Rrole[rnum].Name, CENTER_X - 90, 100, ColColor($23), ColColor($21));
   word := format('%4d', [speed]);
   DrawEngShadowText(screen, @word[1], CENTER_X + 20, 125, ColColor($66), ColColor($64));
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
@@ -1146,12 +1146,12 @@ procedure instruct_46(rnum, mp: integer);
 var
   word: WideString;
 begin
-  RRole[rnum].MaxMP := RRole[rnum].MaxMP + mp;
-  RRole[rnum].CurrentMP := RRole[rnum].MaxMP;
+  Rrole[rnum].MaxMP := Rrole[rnum].MaxMP + mp;
+  Rrole[rnum].CurrentMP := Rrole[rnum].MaxMP;
   DrawRectangle(screen, CENTER_X - 75, 98, 145, 51, 0, ColColor(255), 30);
   word := (' 內力增加');
   DrawShadowText(screen, @word[1], CENTER_X - 90, 125, ColColor($7), ColColor($5));
-  DrawBig5ShadowText(screen, @rrole[rnum].Name, CENTER_X - 90, 100, ColColor($23), ColColor($21));
+  DrawBig5ShadowText(screen, @Rrole[rnum].Name, CENTER_X - 90, 100, ColColor($23), ColColor($21));
   word := format('%4d', [mp]);
   DrawEngShadowText(screen, @word[1], CENTER_X + 20, 125, ColColor($66), ColColor($64));
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
@@ -1163,11 +1163,11 @@ procedure instruct_47(rnum, Attack: integer);
 var
   word: WideString;
 begin
-  RRole[rnum].Attack := RRole[rnum].Attack + Attack;
+  Rrole[rnum].Attack := Rrole[rnum].Attack + Attack;
   DrawRectangle(screen, CENTER_X - 75, 98, 145, 51, 0, ColColor(255), 30);
   word := (' 武力增加');
   DrawShadowText(screen, @word[1], CENTER_X - 90, 125, ColColor($7), ColColor($5));
-  DrawBig5ShadowText(screen, @rrole[rnum].Name, CENTER_X - 90, 100, ColColor($23), ColColor($21));
+  DrawBig5ShadowText(screen, @Rrole[rnum].Name, CENTER_X - 90, 100, ColColor($23), ColColor($21));
   word := format('%4d', [Attack]);
   DrawEngShadowText(screen, @word[1], CENTER_X + 20, 125, ColColor($66), ColColor($64));
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
@@ -1179,12 +1179,12 @@ procedure instruct_48(rnum, hp: integer);
 var
   word: WideString;
 begin
-  RRole[rnum].MaxHP := RRole[rnum].MaxHP + hp;
-  RRole[rnum].CurrentHP := RRole[rnum].MaxHP;
+  Rrole[rnum].MaxHP := Rrole[rnum].MaxHP + hp;
+  Rrole[rnum].CurrentHP := Rrole[rnum].MaxHP;
   DrawRectangle(screen, CENTER_X - 75, 98, 145, 51, 0, ColColor(255), 30);
   word := (' 生命增加');
   DrawShadowText(screen, @word[1], CENTER_X - 90, 125, ColColor($7), ColColor($5));
-  DrawBig5ShadowText(screen, @rrole[rnum].Name, CENTER_X - 90, 100, ColColor($23), ColColor($21));
+  DrawBig5ShadowText(screen, @Rrole[rnum].Name, CENTER_X - 90, 100, ColColor($23), ColColor($21));
   word := format('%4d', [hp]);
   DrawEngShadowText(screen, @word[1], CENTER_X + 20, 125, ColColor($66), ColColor($64));
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
@@ -1194,7 +1194,7 @@ end;
 
 procedure instruct_49(rnum, MPpro: integer);
 begin
-  RRole[rnum].MPType := MPpro;
+  Rrole[rnum].MPType := MPpro;
 end;
 
 function instruct_50(list: array of integer): integer;
@@ -1232,7 +1232,7 @@ begin
   DrawRectangle(screen, CENTER_X - 110, 98, 220, 26, 0, ColColor(255), 30);
   word := (' 你的品德指數為：');
   DrawShadowText(screen, @word[1], CENTER_X - 125, 100, ColColor($7), ColColor($5));
-  word := format('%3d', [rrole[0].Ethics]);
+  word := format('%3d', [Rrole[0].Ethics]);
   DrawEngShadowText(screen, @word[1], CENTER_X + 65, 100, ColColor($66), ColColor($64));
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
   WaitAnyKey;
@@ -1246,7 +1246,7 @@ begin
   DrawRectangle(screen, CENTER_X - 110, 98, 220, 26, 0, ColColor(255), 30);
   word := (' 你的聲望指數為：');
   DrawShadowText(screen, @word[1], CENTER_X - 125, 100, ColColor($7), ColColor($5));
-  word := format('%3d', [rrole[0].Repute]);
+  word := format('%3d', [Rrole[0].Repute]);
   DrawEngShadowText(screen, @word[1], CENTER_X + 65, 100, ColColor($66), ColColor($64));
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
   WaitAnyKey;
@@ -1284,8 +1284,8 @@ end;
 
 procedure instruct_56(Repute: integer);
 begin
-  RRole[0].Repute := RRole[0].Repute + repute;
-  if (RRole[0].Repute > 200) and (RRole[0].Repute - repute <= 200) then
+  Rrole[0].Repute := Rrole[0].Repute + repute;
+  if (Rrole[0].Repute > 200) and (Rrole[0].Repute - repute <= 200) then
   begin
     //showmessage('');
     instruct_3([70, 11, 0, 11, $3A4, -1, -1, $1F20, $1F20, $1F20, 0, 18, 21]);
@@ -1463,7 +1463,7 @@ end;
 
 procedure instruct_63(rnum, sexual: integer);
 begin
-  RRole[rnum].Sexual := sexual;
+  Rrole[rnum].Sexual := sexual;
 end;
 
 //韦小宝的商店
@@ -1914,14 +1914,14 @@ begin
     begin
       e2 := e_GetValue(0, e1, e2);
       e3 := e_GetValue(1, e1, e3);
-      x50[e4] := brole[e2].Data[e3 div 2];
+      x50[e4] := Brole[e2].Data[e3 div 2];
     end;
     31: //Write battle properties.
     begin
       e2 := e_GetValue(0, e1, e2);
       e3 := e_GetValue(1, e1, e3);
       e4 := e_GetValue(2, e1, e4);
-      brole[e2].Data[e3 div 2] := e4;
+      Brole[e2].Data[e3 div 2] := e4;
     end;
     32: //Modify next instruct.
     begin
@@ -2251,8 +2251,8 @@ var
 begin
   Result := False;
   for i := 0 to 9 do
-    if (RRole[person].Magic[i] = mnum) then
-      if (RRole[person].MagLevel[i] >= lv) then
+    if (Rrole[person].Magic[i] = mnum) then
+      if (Rrole[person].MagLevel[i] >= lv) then
         Result := True;
 end;
 
@@ -2263,13 +2263,13 @@ var
 begin
   for i := 0 to 9 do
   begin
-    if (RRole[rnum].Magic[i] = magicnum) or (RRole[rnum].Magic[i] = newmagicnum) then
+    if (Rrole[rnum].Magic[i] = magicnum) or (Rrole[rnum].Magic[i] = newmagicnum) then
     begin
       if level <> -2 then
-        RRole[rnum].Maglevel[i] := RRole[rnum].Maglevel[i] + level * 100;
-      RRole[rnum].Magic[i] := newmagicnum;
-      if RRole[rnum].MagLevel[i] > 999 then
-        RRole[rnum].Maglevel[i] := 999;
+        Rrole[rnum].Maglevel[i] := Rrole[rnum].Maglevel[i] + level * 100;
+      Rrole[rnum].Magic[i] := newmagicnum;
+      if Rrole[rnum].MagLevel[i] > 999 then
+        Rrole[rnum].Maglevel[i] := 999;
       break;
     end;
   end;
@@ -2279,7 +2279,7 @@ begin
     DrawRectangle(screen, CENTER_X - 75, 98, 145, 76, 0, ColColor(255), 30);
     word := (' 學會');
     DrawShadowText(screen, @word[1], CENTER_X - 90, 125, ColColor($7), ColColor($5));
-    DrawBig5ShadowText(screen, @rrole[rnum].Name, CENTER_X - 90, 100, ColColor($23), ColColor($21));
+    DrawBig5ShadowText(screen, @Rrole[rnum].Name, CENTER_X - 90, 100, ColColor($23), ColColor($21));
     DrawBig5ShadowText(screen, @Rmagic[newmagicnum].Name, CENTER_X - 90, 150, ColColor($66), ColColor($64));
     SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
     WaitAnyKey;
@@ -2387,7 +2387,7 @@ begin
   end
   else if namenum = -2 then
   begin
-    for i := 0 to length(rrole) - 1 do
+    for i := 0 to length(Rrole) - 1 do
     begin
       if Rrole[i].HeadNum = headnum then
       begin
@@ -2580,7 +2580,7 @@ begin
       DrawRectangle(screen, hx, hy, hw, hh, frame, ColColor($FF), 40);
       if headnum = 0 then
       begin
-        DrawHeadPic(RRole[0].HeadNum, hx, hy + 68);
+        DrawHeadPic(Rrole[0].HeadNum, hx, hy + 68);
       end
       else
       begin
@@ -2630,8 +2630,7 @@ begin
         begin
           SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
           k := WaitAnyKey;
-          while (k = SDLK_RIGHT) or (k = SDLK_LEFT) or (k = SDLK_UP) or
-            (k = SDLK_DOWN) do
+          while (k = SDLK_RIGHT) or (k = SDLK_LEFT) or (k = SDLK_UP) or (k = SDLK_DOWN) do
           begin
             k := WaitAnyKey;
           end;
@@ -2659,8 +2658,7 @@ begin
               begin
                 SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
                 k := WaitAnyKey;
-                while (k = SDLK_RIGHT) or (k = SDLK_LEFT) or
-                  (k = SDLK_UP) or (k = SDLK_DOWN) do
+                while (k = SDLK_RIGHT) or (k = SDLK_LEFT) or (k = SDLK_UP) or (k = SDLK_DOWN) do
                 begin
                   k := WaitAnyKey;
                 end;
@@ -2673,7 +2671,7 @@ begin
                   DrawRectangle(screen, hx, hy, hw, hh, frame, ColColor($FF), 40);
                   if headnum = 0 then
                   begin
-                    DrawHeadPic(RRole[0].HeadNum, hx, hy + 68);
+                    DrawHeadPic(Rrole[0].HeadNum, hx, hy + 68);
                   end
                   else
                   begin
