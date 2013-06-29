@@ -30,7 +30,9 @@ uses
   kys_engine in 'kys_engine.pas',
   kys_script in 'kys_script.pas',
   kys_draw in 'kys_draw.pas',
-  lua52 in 'lua52.pas';
+  lua52 in 'lib/lua52.pas',
+  bass in 'lib/bass.pas',
+  bassmidi in 'lib/bassmidi.pas';
 
 {$R *.res}
 
