@@ -12,7 +12,7 @@ uses
   Windows,
 {$ENDIF}
   Math, Dialogs,
-  SDL_TTF, SDL_mixer, SDL_image, SDL_gfx, SDL,
+  SDL_TTF, SDL_image, SDL_gfx, SDL,
   glext, gl,
   bassmidi, bass,
   ziputils, unzip,
