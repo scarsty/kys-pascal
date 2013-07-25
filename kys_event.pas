@@ -13,7 +13,6 @@ uses
 {$ENDIF}
   StrUtils,
   SDL_TTF,
-  SDL_mixer,
   SDL_image,
   SDL,
   Math,
