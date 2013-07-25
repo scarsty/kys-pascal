@@ -14,7 +14,6 @@ uses
   kys_type,
   StrUtils,
   SDL_TTF,
-  SDL_mixer,
   SDL_image,
   sdl_gfx,
   SDL,
