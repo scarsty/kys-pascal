@@ -16,7 +16,7 @@ uses
   glext, gl,
   bassmidi, bass,
   ziputils, unzip,
-  kys_main;
+  kys_main, kys_type;
 
 //音频子程
 procedure InitialMusic;
@@ -1924,4 +1924,4 @@ begin
 end;}
 {$ENDIF}
 
-end.
+end.

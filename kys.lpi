@@ -1,4 +1,4 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
   <ProjectOptions>
     <Version Value="9"/>
@@ -95,7 +95,7 @@
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
-      <Libraries Value=".;\usr\local\lib;\sw\lib;\usr\X11R6\lib"/>
+      <Libraries Value=".;\usr\local\lib\;\sw\lib\;\usr\X11R6\lib\"/>
     </SearchPaths>
     <Parsing>
       <SyntaxOptions>
@@ -119,11 +119,6 @@
         <StripSymbols Value="True"/>
       </Debugging>
       <LinkSmart Value="True"/>
-      <Options>
-        <Win32>
-          <GraphicApplication Value="True"/>
-        </Win32>
-      </Options>
     </Linking>
     <Other>
       <CompilerMessages>
@@ -145,4 +140,4 @@
       </Item3>
     </Exceptions>
   </Debugging>
-</CONFIG>
+</CONFIG>
