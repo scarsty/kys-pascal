@@ -1061,7 +1061,7 @@ begin
       Dec(Brole[bnum].Step);
       Redraw;
       SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-      SDL_Delay(30);
+      SDL_Delay(BATTLE_SPEED);
     end;
 
     Brole[bnum].X := Bx;
@@ -2063,7 +2063,7 @@ begin
     CheckBasicEvent;
     DrawBFieldWithEft(i, beginpic, endpic, min, bnum, forteam, 1, $FFFFFFFF);
     SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-    SDL_Delay(20);
+    SDL_Delay(BATTLE_SPEED);
     i := i + 1;
     if i > endpic + max - min then
       break;
@@ -2320,7 +2320,7 @@ begin
         DrawEngShadowText(screen, @word[i, 1], x, y - i1 * 2, color1, color2);
       //showmessage(word[i]);
     end;
-    SDL_Delay(20);
+    SDL_Delay(BATTLE_SPEED);
     SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
     i1 := i1 + 1;
     if i1 > 10 then
@@ -2360,9 +2360,47 @@ end;
 
 procedure ClearDeadRolePic;
 var
-  i: integer;
+  i,i1, i2, rnum: integer;
   pos: TPosition;
+  needeffect: boolean;
 begin
+    //检测是否需要效果
+  needeffect := False;
+  for i := 0 to BRoleAmount - 1 do
+  begin
+    if (Rrole[Brole[i].rnum].CurrentHP <= 0) and (Brole[i].Dead = 0) then
+    begin
+      needeffect := True;
+      break;
+    end;
+  end;
+  //撤退渐变效果
+  i := 0;
+  while (SDL_PollEvent(@event) >= 0) and needeffect do
+  begin
+    CheckBasicEvent;
+    DrawBfieldWithoutRole(Bx, By);
+    for i1 := 0 to 63 do
+      for i2 := 0 to 63 do
+      begin
+        if (Bfield[2, i1, i2] >= 0) and (Brole[Bfield[2, i1, i2]].Dead = 0) then
+        begin
+          rnum := Brole[Bfield[2, i1, i2]].rnum;
+          if Rrole[rnum].CurrentHP <= 0 then
+          begin
+            DrawRoleOnBfield(i1, i2, 0, i, i shl 8+75);
+          end
+          else
+            DrawRoleOnBfield(i1, i2);
+        end;
+      end;
+    DrawProgress;
+    UpdateAllScreen;
+    SDL_Delay(BATTLE_SPEED div 2);
+    i := i + 5;
+    if i > 100 then
+      break;
+  end;
   for i := 0 to broleamount - 1 do
   begin
     if Rrole[Brole[i].rnum].CurrentHP <= 0 then
@@ -2871,7 +2909,7 @@ begin
       if (i = spic) and (mnum >= 0) then
         PlaySoundA(Rmagic[mnum].SoundNum, 0);
       SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-      SDL_Delay(20);
+      SDL_Delay(BATTLE_SPEED);
       i := i + 1;
       if i > endpic then
         break;

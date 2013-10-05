@@ -59,7 +59,7 @@ procedure UpdateScence(xs, ys: integer);
 procedure LoadScencePart(x, y: integer);
 procedure DrawWholeBField(needProgress: integer = 1);
 procedure DrawBfieldWithoutRole(x, y: integer);
-procedure DrawRoleOnBfield(x, y: integer; MixColor: Uint32 = 0; MixAlpha: integer = 0);
+procedure DrawRoleOnBfield(x, y: integer; MixColor: Uint32 = 0; MixAlpha: integer = 0;Alpha:integer=75);
 procedure InitialWholeBField;
 procedure InitialBFieldPosition(i1, i2, depth: integer);
 procedure LoadBfieldPart(x, y: integer);
@@ -1247,7 +1247,7 @@ end;
 
 //画战场上人物, 需更新人物身前的遮挡
 
-procedure DrawRoleOnBfield(x, y: integer; MixColor: Uint32 = 0; MixAlpha: integer = 0);
+procedure DrawRoleOnBfield(x, y: integer; MixColor: Uint32 = 0; MixAlpha: integer = 0; Alpha: integer = 75);
 var
   i1, i2, xpoint, ypoint, depth: integer;
   pos, pos1: Tposition;
@@ -1264,11 +1264,11 @@ begin
   if MODVersion = 62 then
   begin
     DrawBPic(Rrole[Brole[Bfield[2, x, y]].rnum].ListNum * 4 + Brole[Bfield[2, x, y]].Face + BEGIN_BATTLE_ROLE_PIC,
-      pos.x, pos.y, 0, 75, depth, MixColor, MixAlpha);
+      pos.x, pos.y, 0, Alpha, depth, MixColor, MixAlpha);
     exit;
   end;
   DrawBPic(Rrole[Brole[Bfield[2, x, y]].rnum].HeadNum * 4 + Brole[Bfield[2, x, y]].Face + BEGIN_BATTLE_ROLE_PIC,
-    pos.x, pos.y, 0, 75, depth, MixColor, MixAlpha);
+    pos.x, pos.y, 0, Alpha, depth, MixColor, MixAlpha);
 
   //if (Bfield[1, i1, i2] > 0) then
   {begin
@@ -1644,4 +1644,4 @@ begin
 
 end;
 
-end.
+end.

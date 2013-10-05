@@ -32,18 +32,29 @@ interface
 uses
 
 {$IFDEF fpc}
-  LMessages, LConvEncoding, LCLType, LCLIntf, FileUtil,
+  LMessages,
+  LConvEncoding,
+  LCLType,
+  LCLIntf,
+  FileUtil,
 {$ELSE}
   Windows,
 {$ENDIF}
   kys_type,
-  SysUtils, Dialogs, Math,
-  SDL_TTF, SDL_image, SDL,
+  SysUtils,
+  Dialogs,
+  Math,
+  SDL_TTF,
+  SDL_image,
+  SDL,
   lua52,
   iniFiles,
-  gl, glext,
+  gl,
+  glext,
   bass,
-  zlib, ziputils, unzip;
+  zlib,
+  ziputils,
+  unzip;
 
 //程序重要子程
 procedure Run;
@@ -62,7 +73,7 @@ procedure Walk;
 function CanWalk(x, y: integer): boolean;
 function CheckEntrance: boolean;
 procedure UpdateScenceAmi;
-function InScence(Open: integer): integer;
+function WalkInScence(Open: integer): integer;
 procedure findway(x1, y1: integer);
 procedure Moveman(x1, y1, x2, y2: integer);
 procedure ShowScenceName(snum: integer);
@@ -127,11 +138,18 @@ function IsCave(snum: integer): boolean;
 
 function round(x: real): integer;
 procedure swap(var x, y: uint32); overload;
-
+procedure UpdateAllScreen;
+procedure CleanKeyValue;
+procedure GetMousePosition(var x, y: integer; x0, y0: integer; yp: integer = 0);
 
 implementation
 
-uses kys_script, kys_event, kys_engine, kys_battle, kys_draw;
+uses
+  kys_script,
+  kys_event,
+  kys_engine,
+  kys_battle,
+  kys_draw;
 
 //初始化字体, 音效, 视频, 启动游戏
 
@@ -307,7 +325,7 @@ begin
     22:
     begin
       TitleString := 'Why I have to go after a pineapple in the period of Three Kingdoms??';
-      Max_Item_Amount := 456;
+      MAX_ITEM_AMOUNT := 456;
       Setlength(Music, 38);
       StartMusic := 37;
       CENTER_Y := 240;
@@ -344,7 +362,7 @@ begin
     62:
     begin
       TitleString := 'All Heros in Kam Yung''s Stories - All for You';
-      Max_Item_Amount := 968;
+      MAX_ITEM_AMOUNT := 968;
       CENTER_Y := 240;
       Setlength(Music, 195);
       BEGIN_WALKPIC := 5697;
@@ -409,6 +427,7 @@ begin
     NOVEL_BOOK := Kys_ini.ReadInteger('constant', 'NOVEL_BOOK', 144);
     MAX_ADD_PRO := Kys_ini.ReadInteger('constant', 'MAX_ADD_PRO', 0);
 
+    BATTLE_SPEED := Kys_ini.ReadInteger('system', 'BATTLE_SPEED', 10);
     WALK_SPEED := Kys_ini.ReadInteger('system', 'WALK_SPEED', 10);
     WALK_SPEED2 := Kys_ini.ReadInteger('system', 'WALK_SPEED2', WALK_SPEED);
     HARDWARE_BLIT := Kys_ini.ReadInteger('system', 'HARDWARE_BLIT', 1);
@@ -433,8 +452,8 @@ begin
     PNG_TILE := Kys_ini.ReadInteger('system', 'PNG_TILE', 0);
     TRY_FIND_GRP := Kys_ini.ReadInteger('system', 'TRY_FIND_GRP', 0);
 
-    if (not fileexists(AppPath + 'resource/mmap/index.ka')) and
-      (not fileexists(AppPath + 'resource/mmap.imz')) then
+    if (not FileExists(AppPath + 'resource/mmap/index.ka')) and
+      (not FileExists(AppPath + 'resource/mmap.imz')) then
       PNG_TILE := 0;
 
     for i := 43 to 58 do
@@ -485,7 +504,7 @@ begin
   where := 3;
   Redraw;
 
-  if PNG_Tile > 0 then
+  if PNG_TILE > 0 then
   begin
     LoadPNGTiles('resource/title', TitlePNGIndex, TitlePNGTile, 1);
   end;
@@ -503,7 +522,7 @@ begin
 
   SDL_EnableKeyRepeat(0, 10);
   MStep := 0;
-  fullscreen := 0;
+  FULLSCREEN := 0;
   menu := 0;
   SetLength(Cloud, CLOUD_AMOUNT);
   for i := 0 to CLOUD_AMOUNT - 1 do
@@ -595,7 +614,7 @@ begin
             CurEvent := -1; //when CurEvent=-1, Draw scence by Sx, Sy. Or by Cx, Cy.
             if where = 1 then
             begin
-              InScence(0);
+              WalkInScence(0);
             end;
             Walk;
             //menu := -1;
@@ -608,7 +627,7 @@ begin
           begin
             CurScence := BEGIN_SCENCE;
             CurEvent := -1;
-            InScence(1);
+            WalkInScence(1);
             Walk;
             //menu := -1;
           end;
@@ -634,12 +653,12 @@ var
 begin
   instruct_14;
   Redraw;
-  i := fileopen(PChar(AppPath + 'list/start.txt'), fmOpenRead);
-  len := fileseek(i, 0, 2);
-  fileseek(i, 0, 0);
+  i := FileOpen(PChar(AppPath + 'list/start.txt'), fmOpenRead);
+  len := FileSeek(i, 0, 2);
+  FileSeek(i, 0, 0);
   setlength(str, len + 1);
-  fileread(i, str[1], len);
-  fileclose(i);
+  FileRead(i, str[1], len);
+  FileClose(i);
   p := 1;
   x := 30;
   y := 80;
@@ -1485,32 +1504,32 @@ begin
 
   if num = 0 then
     filename := 'ranger';
-  idx := fileopen(AppPath + 'save/ranger.idx', fmopenread);
-  grp := fileopen(AppPath + 'save/' + filename + '.grp', fmopenread);
+  idx := FileOpen(AppPath + 'save/ranger.idx', fmopenread);
+  grp := FileOpen(AppPath + 'save/' + filename + '.grp', fmopenread);
 
-  fileread(idx, RoleOffset, 4);
-  fileread(idx, ItemOffset, 4);
-  fileread(idx, ScenceOffset, 4);
-  fileread(idx, MagicOffset, 4);
-  fileread(idx, WeiShopOffset, 4);
-  fileread(idx, len, 4);
-  fileseek(grp, 0, 0);
+  FileRead(idx, RoleOffset, 4);
+  FileRead(idx, ItemOffset, 4);
+  FileRead(idx, ScenceOffset, 4);
+  FileRead(idx, MagicOffset, 4);
+  FileRead(idx, WeiShopOffset, 4);
+  FileRead(idx, len, 4);
+  FileSeek(grp, 0, 0);
 
-  fileread(grp, Inship, 2);
-  fileread(grp, UseLess1, 2);
-  fileread(grp, My, 2);
-  fileread(grp, Mx, 2);
-  fileread(grp, Sy, 2);
-  fileread(grp, Sx, 2);
-  fileread(grp, Mface, 2);
-  fileread(grp, shipx, 2);
-  fileread(grp, shipy, 2);
-  fileread(grp, shipx1, 2);
-  fileread(grp, shipy1, 2);
-  fileread(grp, shipface, 2);
-  fileread(grp, teamlist[0], 2 * 6);
+  FileRead(grp, Inship, 2);
+  FileRead(grp, UseLess1, 2);
+  FileRead(grp, My, 2);
+  FileRead(grp, Mx, 2);
+  FileRead(grp, Sy, 2);
+  FileRead(grp, Sx, 2);
+  FileRead(grp, Mface, 2);
+  FileRead(grp, shipx, 2);
+  FileRead(grp, shipy, 2);
+  FileRead(grp, shipx1, 2);
+  FileRead(grp, shipy1, 2);
+  FileRead(grp, shipface, 2);
+  FileRead(grp, teamlist[0], 2 * 6);
   if MODVersion = 62 then
-    fileseek(grp, 24, 1);
+    FileSeek(grp, 24, 1);
 
   Setlength(RItemlist, MAX_ITEM_AMOUNT);
   for i := 0 to MAX_ITEM_AMOUNT - 1 do
@@ -1518,15 +1537,15 @@ begin
     RItemlist[i].Number := -1;
     RItemlist[i].Amount := 0;
   end;
-  fileread(grp, Ritemlist[0], sizeof(Titemlist) * max_item_amount);
+  FileRead(grp, Ritemlist[0], sizeof(Titemlist) * MAX_ITEM_AMOUNT);
 
-  fileread(grp, Rrole[0], ItemOffset - RoleOffset);
-  fileread(grp, Ritem[0], ScenceOffset - ItemOffset);
-  fileread(grp, Rscence[0], MagicOffset - ScenceOffset);
-  fileread(grp, Rmagic[0], WeiShopOffset - MagicOffset);
-  fileread(grp, Rshop[0], len - WeiShopOffset);
-  fileclose(idx);
-  fileclose(grp);
+  FileRead(grp, Rrole[0], ItemOffset - RoleOffset);
+  FileRead(grp, Ritem[0], ScenceOffset - ItemOffset);
+  FileRead(grp, Rscence[0], MagicOffset - ScenceOffset);
+  FileRead(grp, Rmagic[0], WeiShopOffset - MagicOffset);
+  FileRead(grp, Rshop[0], len - WeiShopOffset);
+  FileClose(idx);
+  FileClose(grp);
 
   //初始化入口
 
@@ -1557,15 +1576,15 @@ begin
   filename := 's' + IntToStr(num);
   if num = 0 then
     filename := 'allsin';
-  grp := fileopen(AppPath + 'save/' + filename + '.grp', fmopenread);
-  fileread(grp, Sdata[0, 0, 0, 0], ScenceAmount * 64 * 64 * 6 * 2);
-  fileclose(grp);
+  grp := FileOpen(AppPath + 'save/' + filename + '.grp', fmopenread);
+  FileRead(grp, Sdata[0, 0, 0, 0], ScenceAmount * 64 * 64 * 6 * 2);
+  FileClose(grp);
   filename := 'd' + IntToStr(num);
   if num = 0 then
     filename := 'alldef';
-  grp := fileopen(AppPath + 'save/' + filename + '.grp', fmopenread);
-  fileread(grp, Ddata[0, 0, 0], ScenceAmount * 200 * 11 * 2);
-  fileclose(grp);
+  grp := FileOpen(AppPath + 'save/' + filename + '.grp', fmopenread);
+  FileRead(grp, Ddata[0, 0, 0], ScenceAmount * 200 * 11 * 2);
+  FileClose(grp);
 
 end;
 
@@ -1582,46 +1601,46 @@ begin
 
   if num = 0 then
     filename := 'ranger';
-  idx := fileopen(AppPath + 'save/ranger.idx', fmopenread);
+  idx := FileOpen(AppPath + 'save/ranger.idx', fmopenread);
   grp := filecreate(AppPath + 'save/' + filename + '.grp', fmopenreadwrite);
   BasicOffset := 0;
-  fileread(idx, RoleOffset, 4);
-  fileread(idx, ItemOffset, 4);
-  fileread(idx, ScenceOffset, 4);
-  fileread(idx, MagicOffset, 4);
-  fileread(idx, WeiShopOffset, 4);
-  fileread(idx, length, 4);
-  fileseek(grp, 0, 0);
-  filewrite(grp, Inship, 2);
+  FileRead(idx, RoleOffset, 4);
+  FileRead(idx, ItemOffset, 4);
+  FileRead(idx, ScenceOffset, 4);
+  FileRead(idx, MagicOffset, 4);
+  FileRead(idx, WeiShopOffset, 4);
+  FileRead(idx, length, 4);
+  FileSeek(grp, 0, 0);
+  FileWrite(grp, Inship, 2);
 
   if Where = 1 then
     UseLess1 := CurScence + 1
   else
     UseLess1 := 0;
 
-  filewrite(grp, UseLess1, 2);
-  filewrite(grp, My, 2);
-  filewrite(grp, Mx, 2);
-  filewrite(grp, Sy, 2);
-  filewrite(grp, Sx, 2);
-  filewrite(grp, Mface, 2);
-  filewrite(grp, shipx, 2);
-  filewrite(grp, shipy, 2);
-  filewrite(grp, shipx1, 2);
-  filewrite(grp, shipy1, 2);
-  filewrite(grp, shipface, 2);
-  filewrite(grp, teamlist[0], 2 * 6);
+  FileWrite(grp, UseLess1, 2);
+  FileWrite(grp, My, 2);
+  FileWrite(grp, Mx, 2);
+  FileWrite(grp, Sy, 2);
+  FileWrite(grp, Sx, 2);
+  FileWrite(grp, Mface, 2);
+  FileWrite(grp, shipx, 2);
+  FileWrite(grp, shipy, 2);
+  FileWrite(grp, shipx1, 2);
+  FileWrite(grp, shipy1, 2);
+  FileWrite(grp, shipface, 2);
+  FileWrite(grp, teamlist[0], 2 * 6);
   if MODVersion = 62 then
-    fileseek(grp, 24, 1);
-  filewrite(grp, Ritemlist[0], sizeof(Titemlist) * max_item_amount);
+    FileSeek(grp, 24, 1);
+  FileWrite(grp, Ritemlist[0], sizeof(Titemlist) * MAX_ITEM_AMOUNT);
 
-  filewrite(grp, Rrole[0], ItemOffset - RoleOffset);
-  filewrite(grp, Ritem[0], ScenceOffset - ItemOffset);
-  filewrite(grp, Rscence[0], MagicOffset - ScenceOffset);
-  filewrite(grp, Rmagic[0], WeiShopOffset - MagicOffset);
-  filewrite(grp, Rshop[0], length - WeiShopOffset);
-  fileclose(idx);
-  fileclose(grp);
+  FileWrite(grp, Rrole[0], ItemOffset - RoleOffset);
+  FileWrite(grp, Ritem[0], ScenceOffset - ItemOffset);
+  FileWrite(grp, Rscence[0], MagicOffset - ScenceOffset);
+  FileWrite(grp, Rmagic[0], WeiShopOffset - MagicOffset);
+  FileWrite(grp, Rshop[0], length - WeiShopOffset);
+  FileClose(idx);
+  FileClose(grp);
 
   ScenceAmount := (MagicOffset - ScenceOffset) div 52;
 
@@ -1629,14 +1648,14 @@ begin
   if num = 0 then
     filename := 'allsin';
   grp := filecreate(AppPath + 'save/' + filename + '.grp');
-  filewrite(grp, Sdata[0, 0, 0, 0], ScenceAmount * 64 * 64 * 6 * 2);
-  fileclose(grp);
+  FileWrite(grp, Sdata[0, 0, 0, 0], ScenceAmount * 64 * 64 * 6 * 2);
+  FileClose(grp);
   filename := 'd' + IntToStr(num);
   if num = 0 then
     filename := 'alldef';
   grp := filecreate(AppPath + 'save/' + filename + '.grp');
-  filewrite(grp, Ddata[0, 0, 0], ScenceAmount * 200 * 11 * 2);
-  fileclose(grp);
+  FileWrite(grp, Ddata[0, 0, 0], ScenceAmount * 200 * 11 * 2);
+  FileClose(grp);
 
 end;
 
@@ -1668,9 +1687,11 @@ end;
 procedure Walk;
 var
   word: array[0..10] of Uint16;
-  x, y, walking, speed, Mx1, My1, Mx2, My2, i, stillcount, axp, ayp, i1, drawed: integer;
+  x, y, walking, speed, Mx1, My1, Mx2, My2, i, stillcount, axp, ayp: integer;
+  axp1, ayp1, gotoEntrance, minstep, step, i1, drawed: integer;
   now, next_time, next_time2, next_time3: uint32;
   keystate: PChar;
+  pos: Tposition;
 begin
   if where >= 3 then
     exit;
@@ -1831,15 +1852,43 @@ begin
         if event.button.button = SDL_BUTTON_LEFT then
         begin
           walking := 2;
-          Axp := Mx + (-round(event.button.x / (RealScreen.w / screen.w)) + CENTER_X + 2 *
-            round(event.button.y / (RealScreen.h / screen.h)) - 2 * CENTER_Y + 18) div 36;
-          Ayp := My + (round(event.button.x / (RealScreen.w / screen.w)) - CENTER_X + 2 *
-            round(event.button.y / (RealScreen.h / screen.h)) - 2 * CENTER_Y + 18) div 36;
+          GetMousePosition(axp, ayp, Mx, My);
           if (ayp >= 0) and (ayp <= 479) and (axp >= 0) and (axp <= 479) {and canWalk(axp, ayp)} then
           begin
-            for i := 0 to 479 do
-              for i1 := 0 to 479 do
-                Fway[i, i1] := -1;
+            FillChar(Fway[0, 0], sizeof(Fway), -1);
+            findway(Mx, My);
+            gotoEntrance := -1;
+            if Entrance[Axp, Ayp] >= 0 then
+            begin
+              minstep := 4096;
+              for i := 0 to 3 do
+              begin
+                Axp1 := Axp;
+                Ayp1 := Ayp;
+                case i of
+                  0: Axp1 := Axp - 1;
+                  1: Ayp1 := Ayp + 1;
+                  2: Ayp1 := Ayp - 1;
+                  3: Axp1 := Axp + 1;
+                end;
+                step := Fway[Axp1, Ayp1];
+                if (step >= 0) and (minstep > step) then
+                begin
+                  gotoEntrance := i;
+                  minstep := step;
+                end;
+              end;
+              if gotoEntrance >= 0 then
+              begin
+                case gotoEntrance of
+                  0: Axp := Axp - 1;
+                  1: Ayp := Ayp + 1;
+                  2: Ayp := Ayp - 1;
+                  3: Axp := Axp + 1;
+                end;
+                gotoEntrance := 3 - gotoEntrance;
+              end;
+            end;
             findway(Mx, My);
             Moveman(Mx, My, Axp, Ayp);
             nowstep := Fway[Axp, Ayp] - 1;
@@ -1883,7 +1932,14 @@ begin
         2:
         begin
           if nowstep < 0 then
-            walking := 0
+          begin
+            walking := 0;
+            if gotoEntrance >= 0 then
+            begin
+              Mface := gotoEntrance;
+              //CheckEntrance;
+            end;
+          end
           else
           begin
             still := 0;
@@ -1936,7 +1992,7 @@ begin
 
     if where = 1 then
     begin
-      InScence(0);
+      WalkInScence(0);
     end;
 
     event.key.keysym.sym := 0;
@@ -1947,6 +2003,16 @@ begin
       if MMAPAMI > 0 then
       begin
         Redraw;
+        GetMousePosition(axp, ayp, Mx, My);
+        pos := GetPositionOnScreen(axp, ayp, Mx, My);
+        DrawMPic(1, pos.x, pos.y, 0, 50, 0, 0);
+        {if not CanWalk(axp, ayp) then
+        begin
+          if Entrance[axp, ayp] >= 0 then
+            DrawMPic(2001, pos.x, pos.y, 0, 75, 0, 0)
+          else
+            DrawMPic(2001, pos.x, pos.y, 0, 50, 0, 0);
+        end;}
         SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
       end;
       SDL_Delay(40); //静止时只需刷新率与最频繁的动态效果相同即可
@@ -2029,7 +2095,7 @@ begin
       Sy := Rscence[CurScence].EntranceY;
       //如达成条件, 进入场景并初始化场景坐标
       SaveR(6);
-      InScence(0);
+      WalkInScence(0);
       event.key.keysym.sym := 0;
       event.button.button := 0;
       //waitanykey;
@@ -2066,19 +2132,20 @@ begin
 end;
 
 //Walk in a scence, the returned value is the scence number when you exit. If it is -1.
-//InScence(1) means the new game.
+//WalkInScence(1) means the new game.
 //在内场景行走, 如参数为1表示新游戏
 
-function InScence(Open: integer): integer;
+function WalkInScence(Open: integer): integer;
 var
   grp, idx, offset, just, i1, i2, x, y, haveAmi, preface, drawed: integer;
-  Sx1, Sy1, s, i, walking, Prescence, stillcount, speed, axp, ayp: integer;
+  Sx1, Sy1, s, i, walking, Prescence, stillcount, speed, axp, ayp, gotoevent, minstep, axp1, ayp1, step: integer;
   filename: string;
   scencename: WideString;
   now, next_time, next_time2: uint32;
   AmiCount: integer; //场景内动态效果计数
   keystate: PChar;
   UpDate: PSDL_Thread;
+  pos: Tposition;
 begin
 
   //LockScence := false;
@@ -2330,19 +2397,58 @@ begin
           if walking = 0 then
           begin
             walking := 2;
-            Ayp := (-(round(event.button.x / (RealScreen.w / screen.w))) + CENTER_X + 2 *
-              ((round(event.button.y / (RealScreen.h / screen.h))) + Sdata[curScence, 4, Sx, Sy]) -
-              2 * CENTER_Y + 18) div 36 + Sx;
-            Axp := ((round(event.button.x / (RealScreen.w / screen.w))) - CENTER_X + 2 *
-              ((round(event.button.y / (RealScreen.h / screen.h))) + Sdata[curScence, 4, Sx, Sy]) -
-              2 * CENTER_Y + 18) div 36 + Sy;
+            GetMousePosition(Axp, Ayp, Sx, Sy, SData[CurScence, 4, Sx, Sy]);
             if (ayp in [0..63]) and (axp in [0..63]) then
             begin
-              for i := 0 to 63 do
-                for i1 := 0 to 63 do
-                  Fway[i, i1] := -1;
-              findway(Sy, Sx);
-              Moveman(Sy, Sx, axp, ayp);
+              FillChar(Fway[0, 0], sizeof(Fway), -1);
+              findway(Sx, Sy);
+              gotoevent := -1;
+              if (SData[CurScence, 3, axp, ayp] >= 0) then
+              begin
+                if abs(Axp - Sx) + Abs(Ayp - Sy) = 1 then
+                begin
+                  if Axp < Sx then SFace := 0;
+                  if Axp > Sx then SFace := 3;
+                  if Ayp < Sy then SFace := 2;
+                  if Ayp > Sy then SFace := 1;
+                  CheckEvent1;
+                end
+                else
+                begin
+                  if (not CanWalkInScence(Axp, Ayp)) then
+                  begin
+                    minstep := 4096;
+                    for i := 0 to 3 do
+                    begin
+                      Axp1 := Axp;
+                      Ayp1 := Ayp;
+                      case i of
+                        0: Axp1 := Axp - 1;
+                        1: Ayp1 := Ayp + 1;
+                        2: Ayp1 := Ayp - 1;
+                        3: Axp1 := Axp + 1;
+                      end;
+                      step := Fway[Axp1, Ayp1];
+                      if (step >= 0) and (minstep > step) then
+                      begin
+                        gotoEvent := i;
+                        minstep := step;
+                      end;
+                    end;
+                    if gotoEvent >= 0 then
+                    begin
+                      case gotoEvent of
+                        0: Axp := Axp - 1;
+                        1: Ayp := Ayp + 1;
+                        2: Ayp := Ayp - 1;
+                        3: Axp := Axp + 1;
+                      end;
+                      gotoEvent := 3 - gotoEvent;
+                    end;
+                  end;
+                end;
+              end;
+              Moveman(Sx, Sy, axp, ayp);
               nowstep := Fway[axp, ayp] - 1;
             end
             else
@@ -2407,11 +2513,11 @@ begin
         begin
           if nowstep >= 0 then
           begin
-            if sign(linex[nowstep] - Sy) < 0 then
+            if sign(liney[nowstep] - Sy) < 0 then
               SFace := 2
-            else if sign(linex[nowstep] - Sy) > 0 then
+            else if sign(liney[nowstep] - Sy) > 0 then
               sFace := 1
-            else if sign(liney[nowstep] - Sx) > 0 then
+            else if sign(linex[nowstep] - Sx) > 0 then
               SFace := 3
             else
               sFace := 0;
@@ -2420,19 +2526,24 @@ begin
 
             if SStep >= 7 then
               SStep := 1;
-            if abs(Sy - linex[nowstep]) + abs(Sx - liney[nowstep]) = 1 then
+            if abs(Sx - linex[nowstep]) + abs(Sy - liney[nowstep]) = 1 then
             begin
-              Sy := linex[nowstep];
-              Sx := liney[nowstep];
+              Sx := linex[nowstep];
+              Sy := liney[nowstep];
             end
             else
               walking := 0;
             Dec(nowstep);
-
           end
           else
           begin
             walking := 0;
+            if gotoEvent >= 0 then
+            begin
+              Sface := gotoEvent;
+              Redraw;
+              CheckEvent1;
+            end;
           end;
         end;
       end;
@@ -2450,6 +2561,23 @@ begin
       if SCENCEAMI > 0 then
       begin
         Redraw;
+        if walking = 0 then
+        begin
+          GetMousePosition(Axp, Ayp, Sx, Sy, SData[CurScence, 4, Sx, Sy]);
+          if (axp >= 0) and (axp < 64) and (ayp >= 0) and (ayp < 64) then
+          begin
+            pos := GetPositionOnScreen(axp, ayp, Sx, Sy);
+            DrawMPic(1, pos.x, pos.y - SData[CurScence, 4, axp, ayp], 0, 50, 0, 0);
+            //DrawMPic(1, pos.x, pos.y);
+            {if not CanWalkInScence(axp, ayp) then
+            begin
+              if SData[CurScence, 3, axp, ayp] >= 0 then
+                DrawMPic(2001, pos.x, pos.y - SData[CurScence, 4, axp, ayp], 0, 75, 0, 0)
+              else
+                DrawMPic(2001, pos.x, pos.y - SData[CurScence, 4, axp, ayp], 0, 50, 0, 0);
+            end;}
+          end;
+        end;
         SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
       end;
       SDL_Delay(40);
@@ -2481,7 +2609,7 @@ var
   Ylist: array[0..4096] of smallint;
   steplist: array[0..4096] of smallint;
   curgrid, totalgrid: integer;
-  Bgrid: array[1..4] of integer; //0空位, 1不可过, 2已走过 ,3越界, 4船, 5水, 6入口, 7水边石头
+  Bgrid: array[1..4] of integer; //0空位，1可过，2已走过 ,3越界
   Xinc, Yinc: array[1..4] of integer;
   curX, curY, curstep, nextX, nextY: integer;
   i, i1, i2, i3: integer;
@@ -2496,11 +2624,11 @@ begin
   Yinc[3] := 0;
   Yinc[4] := 1;
   curgrid := 0;
-  totalgrid := 0;
-  Xlist[totalgrid] := x1;
-  Ylist[totalgrid] := y1;
-  steplist[totalgrid] := 0;
-  totalgrid := totalgrid + 1;
+  totalgrid := 1;
+  Xlist[0] := x1;
+  Ylist[0] := y1;
+  steplist[0] := 0;
+  Fway[x1, y1] := 0;
   while curgrid < totalgrid do
   begin
     curX := Xlist[curgrid];
@@ -2515,11 +2643,11 @@ begin
           nextX := curX + Xinc[i];
           nextY := curY + Yinc[i];
           if (nextX < 0) or (nextX > 63) or (nextY < 0) or (nextY > 63) then
-            Bgrid[i] := 3
+            Bgrid[i] := 3  //越界
           else if Fway[nextX, nextY] >= 0 then
-            Bgrid[i] := 2
-          else if not CanWalkInScence(cury, curx, nexty, nextx) then
-            Bgrid[i] := 1
+            Bgrid[i] := 2 //已走过
+          else if not CanWalkInScence(curx, cury, nextx, nexty) then
+            Bgrid[i] := 1   //阻碍
           else
             Bgrid[i] := 0;
         end;
@@ -2539,7 +2667,7 @@ begin
           else if buildx[nextx, nexty] > 0 then
             Bgrid[i] := 1 //阻碍
           else if ((surface[nextx, nexty] >= 1692) and (surface[nextx, nexty] <= 1700)) then
-            Bgrid[i] := 7
+            Bgrid[i] := 1
           else if (earth[nextx, nexty] = 838) or ((earth[nextx, nexty] >= 612) and (earth[nextx, nexty] <= 670)) then
             Bgrid[i] := 1
           else if ((earth[nextx, nexty] >= 358) and (earth[nextx, nexty] <= 362)) or
@@ -2591,6 +2719,7 @@ begin
     if (where = 0) and (curX - Mx > 22) and (curY - My > 22) then
       break;
   end;
+
 end;
 
 procedure Moveman(x1, y1, x2, y2: integer);
@@ -4753,7 +4882,7 @@ begin
   word[1] := (' 存檔');
   word[2] := (' 全屏');
   word[3] := (' 離開');
-  if fullscreen = 1 then
+  if FULLSCREEN = 1 then
     word[2] := (' 窗口');
 
   i := 0;
@@ -5219,8 +5348,8 @@ begin
 
   for i := 7 to 22 do
   begin
-    if addvalue[i] + Rrole[rnum].Data[rolelist[i]] > maxprolist[rolelist[i]] then
-      addvalue[i] := maxprolist[rolelist[i]] - Rrole[rnum].Data[rolelist[i]];
+    if addvalue[i] + Rrole[rnum].Data[rolelist[i]] > MaxProList[rolelist[i]] then
+      addvalue[i] := MaxProList[rolelist[i]] - Rrole[rnum].Data[rolelist[i]];
     if addvalue[i] + Rrole[rnum].Data[rolelist[i]] < 0 then
       addvalue[i] := -Rrole[rnum].Data[rolelist[i]];
   end;
@@ -5362,7 +5491,7 @@ begin
   //SDL_EnableKeyRepeat(0, 10);
 
   NeedRefreshScence := 0;
-  if (KDEF_SCRIPT = 0) or (not fileexists(AppPath + 'script/oldevent/oldevent_' + IntToStr(num) + '.lua')) then
+  if (KDEF_SCRIPT = 0) or (not FileExists(AppPath + 'script/oldevent/oldevent_' + IntToStr(num) + '.lua')) then
   begin
     len := 0;
     if num = 0 then
@@ -5819,6 +5948,29 @@ begin
   t := x;
   x := y;
   y := t;
+end;
+
+//刷新全部屏幕
+procedure UpdateAllScreen;
+begin
+  SDL_UpdateRect2(screen, 0, 0, CENTER_X * 2, CENTER_Y * 2);
+end;
+
+//清键值
+procedure CleanKeyValue;
+begin
+  event.key.keysym.sym := 0;
+  event.button.button := 0;
+end;
+
+//换算当前鼠标的位置为人物坐标
+procedure GetMousePosition(var x, y: integer; x0, y0: integer; yp: integer = 0);
+var
+  x1, y1: integer;
+begin
+  SDL_GetMouseState2(x1, y1);
+  x := (-x1 + CENTER_X + 2 * (y1 + yp) - 2 * CENTER_Y + 18) div 36 + x0;
+  y := (x1 - CENTER_X + 2 * (y1 + yp) - 2 * CENTER_Y + 18) div 36 + y0;
 end;
 
 end.
