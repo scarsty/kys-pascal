@@ -16,7 +16,7 @@ uses
   glext, gl,
   bassmidi, bass,
   ziputils, unzip,
-  kys_main;
+  kys_main, kys_type;
 
 //画单个图片的子程
 procedure DrawTitlePic(imgnum, px, py: integer);
@@ -1644,4 +1644,4 @@ begin
 
 end;
 
-end.
+end.

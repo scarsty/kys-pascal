@@ -17,7 +17,9 @@ uses
   kys_main,
   kys_event,
   kys_engine,
-  kys_battle, Dialogs,
+  kys_battle,
+  kys_type,
+  Dialogs,
   Classes;
 
 //初始化脚本配置,运行脚本
@@ -1745,4 +1747,4 @@ begin
   Result := 1;
 end;
 
-end.
+end.
