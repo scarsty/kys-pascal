@@ -16,7 +16,9 @@ uses
   SDL_image,
   SDL,
   Math,
-  kys_main, Dialogs;
+  kys_main,
+  kys_type,
+  Dialogs;
 
 //事件系统
 //在英文中, instruct通常不作为名词, swimmingfish在他的一份反汇编文件中大量使用
@@ -2717,4 +2719,4 @@ begin
   setlength(temp2, 0);
 end;
 
-end.
+end.
