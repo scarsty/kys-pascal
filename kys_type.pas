@@ -387,7 +387,7 @@ var
   CLOUD_AMOUNT: integer = 60; //云的数量
   Cloud: array of TCloud;
 
-  WALK_SPEED, WALK_SPEED2: integer; //行走时的主延时, 如果觉得行走速度慢可以修改这里.
+  WALK_SPEED, WALK_SPEED2, BATTLE_SPEED: integer; //行走时的主延时, 如果觉得行走速度慢可以修改这里.
   MMAPAMI: integer; //主地图动态效果
   SCENCEAMI: integer; //场景内动态效果的处理方式: 0-关闭, 1-打开, 2-用另一线程处理, 当明显内场景速度拖慢时可以尝试2
   //updating screen should be in main thread, so this is too complicable.
@@ -442,4 +442,4 @@ var
 
 implementation
 
-end.
+end.

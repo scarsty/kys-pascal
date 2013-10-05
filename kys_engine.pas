@@ -7,16 +7,28 @@ interface
 uses
   SysUtils,
 {$IFDEF fpc}
-  LMessages, LConvEncoding, LCLType, LCLIntf, FileUtil,
+  LMessages,
+  LConvEncoding,
+  LCLType,
+  LCLIntf,
+  FileUtil,
 {$ELSE}
   Windows,
 {$ENDIF}
-  Math, Dialogs,
-  SDL_TTF, SDL_image, SDL_gfx, SDL,
-  glext, gl,
-  bassmidi, bass,
-  ziputils, unzip,
-  kys_main, kys_type;
+  Math,
+  Dialogs,
+  SDL_TTF,
+  SDL_image,
+  SDL_gfx,
+  SDL,
+  glext,
+  gl,
+  bassmidi,
+  bass,
+  ziputils,
+  unzip,
+  kys_main,
+  kys_type;
 
 //音频子程
 procedure InitialMusic;
@@ -109,7 +121,10 @@ function FileExistsUTF8(filename: string): boolean; overload;
 
 implementation
 
-uses kys_draw, kys_battle;
+uses
+  kys_draw,
+  kys_battle;
+
 procedure InitialMusic;
 var
   i: integer;
@@ -129,7 +144,7 @@ begin
   for i := low(Music) to high(Music) do
   begin
     str := AppPath + 'music/' + IntToStr(i) + '.mp3';
-    if fileexists(PChar(str)) then
+    if FileExists(PChar(str)) then
     begin
       try
         Music[i] := BASS_StreamCreateFile(False, PChar(str), 0, 0, 0);
@@ -140,7 +155,7 @@ begin
     else
     begin
       str := AppPath + 'music/' + IntToStr(i) + '.mid';
-      if fileexists(PChar(str)) then
+      if FileExists(PChar(str)) then
       begin
         try
           Music[i] := BASS_MIDI_StreamCreateFile(False, PChar(str), 0, 0, 0, 0);
@@ -158,7 +173,7 @@ begin
   for i := low(ESound) to high(ESound) do
   begin
     str := AppPath + formatfloat('sound/e00', i) + '.wav';
-    if fileexists(PChar(str)) then
+    if FileExists(PChar(str)) then
       ESound[i] := BASS_SampleLoad(False, PChar(str), 0, 0, 1, Flag)
     else
       ESound[i] := 0;
@@ -167,7 +182,7 @@ begin
   for i := low(ASound) to high(ASound) do
   begin
     str := AppPath + formatfloat('sound/atk00', i) + '.wav';
-    if fileexists(PChar(str)) then
+    if FileExists(PChar(str)) then
       ASound[i] := BASS_SampleLoad(False, PChar(str), 0, 0, 1, Flag)
     else
       ASound[i] := 0;
@@ -472,7 +487,7 @@ begin
 
   LoadIdxGrp('resource/hdgrp.idx', 'resource/hdgrp.grp', HIdx, HPic);
 
-  if PNG_Tile > 0 then
+  if PNG_TILE > 0 then
   begin
     MPicAmount := LoadPNGTiles('resource/mmap', MPNGIndex, MPNGTile, 1);
     SPicAmount := LoadPNGTiles('resource/smap', SPNGIndex, SPNGTile, 1);
@@ -485,7 +500,7 @@ begin
     CPicAmount := LoadPNGTiles('resource/cloud', CPNGIndex, CPNGTile, 1);
   end;
 
-  if BIG_PNG_Tile > 0 then
+  if BIG_PNG_TILE > 0 then
   begin
     {MMapSurface :=  LoadSurfaceFromFile(AppPath + 'resource/bigpng/mmap.png');
     if MMapSurface <> nil then
@@ -501,11 +516,11 @@ function ReadFileToBuffer(p: PChar; filename: string; size, malloc: integer): PC
 var
   i: integer;
 begin
-  i := fileopen(filename, fmopenread);
+  i := FileOpen(filename, fmopenread);
   if i > 0 then
   begin
     if size < 0 then
-      size := fileseek(i, 0, 2);
+      size := FileSeek(i, 0, 2);
     if malloc = 1 then
     begin
       //GetMem(result, size + 4);
@@ -513,9 +528,9 @@ begin
       p := Result;
       //writeln(StrBufSize(p));
     end;
-    fileseek(i, 0, 0);
-    fileread(i, p^, size);
-    fileclose(i);
+    FileSeek(i, 0, 0);
+    FileRead(i, p^, size);
+    FileClose(i);
   end
   else
   if malloc = 1 then
@@ -533,19 +548,19 @@ function LoadIdxGrp(stridx, strgrp: string; var idxarray: TIntArray; var grparra
 var
   idx, grp, len, tnum: integer;
 begin
-  grp := fileopen(AppPath + strgrp, fmopenread);
-  len := fileseek(grp, 0, 2);
+  grp := FileOpen(AppPath + strgrp, fmopenread);
+  len := FileSeek(grp, 0, 2);
   setlength(grparray, len + 4);
-  fileseek(grp, 0, 0);
-  fileread(grp, grparray[0], len);
-  fileclose(grp);
+  FileSeek(grp, 0, 0);
+  FileRead(grp, grparray[0], len);
+  FileClose(grp);
 
-  idx := fileopen(AppPath + stridx, fmopenread);
-  tnum := fileseek(idx, 0, 2) div 4;
+  idx := FileOpen(AppPath + stridx, fmopenread);
+  tnum := FileSeek(idx, 0, 2) div 4;
   setlength(idxarray, tnum + 1);
-  fileseek(idx, 0, 0);
-  fileread(idx, idxarray[0], tnum * 4);
-  fileclose(idx);
+  FileSeek(idx, 0, 0);
+  FileRead(idx, idxarray[0], tnum * 4);
+  FileClose(idx);
 
   Result := tnum;
 
@@ -622,7 +637,7 @@ begin
 
     for i := size div 4 downto 0 do
     begin
-      if fileexists(AppPath + path + IntToStr(i) + '.png') or fileexists(AppPath + path +
+      if FileExists(AppPath + path + IntToStr(i) + '.png') or FileExists(AppPath + path +
         IntToStr(i) + '_0.png') then
       begin
         Result := i + 1;
@@ -640,7 +655,7 @@ begin
         Num := -1;
         Frame := 0;
         CurPointer := nil;
-        if fileexists(AppPath + path + IntToStr(i) + '.png') then
+        if FileExists(AppPath + path + IntToStr(i) + '.png') then
         begin
           Num := Count;
           Frame := 1;
@@ -649,7 +664,7 @@ begin
         else
         begin
           k := 0;
-          while fileexists(AppPath + path + IntToStr(i) + '_' + IntToStr(k) + '.png') do
+          while FileExists(AppPath + path + IntToStr(i) + '_' + IntToStr(k) + '.png') do
           begin
             k := k + 1;
             if k = 1 then
@@ -1027,7 +1042,7 @@ procedure DrawRLE8Pic(colorPanel: PChar; num, px, py: integer; Pidx: Pinteger; P
 var
   w, h, xs, ys, x, y, blockx, blocky: smallint;
   offset, length, p, isAlpha, lenInt: integer;
-  l, l1, ix, iy, pixdepth, curdepth: integer;
+  l, l1, ix, iy, pixdepth, curdepth, alpha1: integer;
   pix, colorin: Uint32;
   pix1, pix2, pix3, pix4, color1, color2, color3, color4: byte;
   area: TSDL_Rect;
@@ -1070,6 +1085,7 @@ begin
     blockx := pint(BlockPosition)^;
     blocky := pint(BlockPosition + 4)^;
   end;
+  alpha1 := (alpha shr 8) and $FF;
   if ((w > 1) or (h > 1)) and (px - xs + w >= area.x) and (px - xs < area.x + area.w) and
     (py - ys + h >= area.y) and (py - ys < area.y + area.h) then
   begin
@@ -1106,6 +1122,15 @@ begin
             //pix := sdl_maprgba(screen.format, pix1, pix2, pix3, pix4);
             if image = screen then
             begin
+              if mixAlpha <> 0 then
+              begin
+                SDL_GetRGBA(MixColor, screen.format, @color1, @color2, @color3, @color4);
+                pix1 := (mixAlpha * color1 + (100 - mixAlpha) * pix1) div 100;
+                pix2 := (mixAlpha * color2 + (100 - mixAlpha) * pix2) div 100;
+                pix3 := (mixAlpha * color3 + (100 - mixAlpha) * pix3) div 100;
+                pix4 := (mixAlpha * color4 + (100 - mixAlpha) * pix4) div 100;
+                //pix := pix1 + pix2 shl 8 + pix3 shl 16 + pix4 shl 24;
+              end;
               //pix := sdl_maprgb(screen.format, puint8(colorPanel + l1 * 3)^ * (4 + shadow),
               //puint8(colorPanel + l1 * 3 + 1)^ * (4 + shadow), puint8(colorPanel + l1 * 3 + 2)^ * (4 + shadow));
               if (alpha <> 0) then
@@ -1116,6 +1141,8 @@ begin
                 end
                 else
                 begin
+                  //以下表示需要遮挡
+                  //被遮挡的像素按照低位计算, 未被遮挡的按照高位计算
                   if (x < blockx + screen.w) and (y < blocky + screen.h) then
                   begin
                     pixdepth := pint(BlockImageW + ((x + blockx) * heightW + y + blocky) * sizeW)^;
@@ -1149,23 +1176,24 @@ begin
                   pix4 := (alpha * color4 + (100 - alpha) * pix4) div 100;
                   //pix := pix1 + pix2 shl 8 + pix3 shl 16 + pix4 shl 24;
                 end;
-              end;
-              if mixAlpha <> 0 then
-              begin
-                colorin := MixColor;
-                //pix1 := pix and $FF;
-                color1 := colorin and $FF;
-                //pix2 := pix shr 8 and $FF;
-                color2 := colorin shr 8 and $FF;
-                //pix3 := pix shr 16 and $FF;
-                color3 := colorin shr 16 and $FF;
-                //pix4 := pix shr 24 and $FF;
-                color4 := colorin shr 24 and $FF;
-                pix1 := (mixAlpha * color1 + (100 - mixAlpha) * pix1) div 100;
-                pix2 := (mixAlpha * color2 + (100 - mixAlpha) * pix2) div 100;
-                pix3 := (mixAlpha * color3 + (100 - mixAlpha) * pix3) div 100;
-                pix4 := (mixAlpha * color4 + (100 - mixAlpha) * pix4) div 100;
-                //pix := pix1 + pix2 shl 8 + pix3 shl 16 + pix4 shl 24;
+                if (isAlpha = 0) and (alpha1 > 0) and (Alpha1 <= 100) then
+                begin
+                  colorin := getpixel(screen, x, y);
+                  SDL_GetRGBA(colorin, screen.format, @color1, @color2, @color3, @color4);
+                  //pix1 := pix and $FF;
+                  //color1 := colorin and $FF;
+                  //pix2 := pix shr 8 and $FF;
+                  //color2 := colorin shr 8 and $FF;
+                  //pix3 := pix shr 16 and $FF;
+                  //color3 := colorin shr 16 and $FF;
+                  //pix4 := pix shr 24 and $FF;
+                  //color4 := colorin shr 24 and $FF;
+                  pix1 := (alpha1 * color1 + (100 - alpha1) * pix1) div 100;
+                  pix2 := (alpha1 * color2 + (100 - alpha1) * pix2) div 100;
+                  pix3 := (alpha1 * color3 + (100 - alpha1) * pix3) div 100;
+                  pix4 := (alpha1 * color4 + (100 - alpha1) * pix4) div 100;
+                  //pix := pix1 + pix2 shl 8 + pix3 shl 16 + pix4 shl 24;
+                end;
               end;
               pix := SDL_MapRGBA(screen.format, pix1, pix2, pix3, pix4);
               if (Alpha < 100) or (pixdepth <= curdepth) then
@@ -1219,7 +1247,7 @@ begin
 {$ELSE}
   len := MultiByteToWideChar(950, 0, PChar(str), -1, nil, 0);
   setlength(Result, len - 1);
-  MultiByteToWideChar(950, 0, PChar(str), length(str), pwidechar(Result), len + 1);
+  MultiByteToWideChar(950, 0, PChar(str), length(str), PWideChar(Result), len + 1);
 {$ENDIF}
   Result := ' ' + Result;
 
@@ -1261,7 +1289,7 @@ begin
   //此处删除这些0, 同时统计这些0的数目, 若与字串长度相同
   //即认为是一个纯英文字串, 或者是一个直接赋值的widestring,
   //需要再编码为Unicode, 否则即认为已经是Unicode
-  len := length(pwidechar(word));
+  len := length(PWideChar(word));
   setlength(word1, len * 2 + 1);
   p1 := @word1[1];
   p2 := pbyte(word);
@@ -1386,7 +1414,7 @@ begin
 {$ELSE}
   len := MultiByteToWideChar(950, 0, PChar(str), -1, nil, 0);
   setlength(words, len - 1);
-  MultiByteToWideChar(950, 0, PChar(str), length(str), pwidechar(words), len + 1);
+  MultiByteToWideChar(950, 0, PChar(str), length(str), PWideChar(words), len + 1);
 {$ENDIF}
   words := ' ' + words;
   DrawText(sur, @words[1], x_pos, y_pos, color);
@@ -1405,7 +1433,7 @@ begin
 {$ELSE}
   len := MultiByteToWideChar(950, 0, PChar(word), -1, nil, 0);
   setlength(words, len - 1);
-  MultiByteToWideChar(950, 0, PChar(word), length(word), pwidechar(words), len + 1);
+  MultiByteToWideChar(950, 0, PChar(word), length(word), PWideChar(words), len + 1);
 {$ENDIF}
   words := ' ' + words;
   DrawText(sur, @words[1], x_pos + 1, y_pos, color2);
@@ -1836,8 +1864,8 @@ end;
 
 procedure SwitchFullscreen;
 begin
-  fullscreen := 1 - fullscreen;
-  if fullscreen = 0 then
+  FULLSCREEN := 1 - FULLSCREEN;
+  if FULLSCREEN = 0 then
   begin
     RealScreen := SDL_SetVideoMode(RESOLUTIONX, RESOLUTIONY, 32, ScreenFlag);
   end
@@ -1892,9 +1920,8 @@ begin
         ResizeWindow(event.resize.w, event.resize.h);
       SDL_KEYUP:
         if (where = 2) and (event.key.keysym.sym = SDLK_ESCAPE) then
-
         begin
-          for i := 0 to BroleAmount - 1 do
+          for i := 0 to BRoleAmount - 1 do
           begin
             if Brole[i].Team = 0 then
               Brole[i].Auto := 0;
@@ -1924,4 +1951,4 @@ begin
 end;}
 {$ENDIF}
 
-end.
+end.
