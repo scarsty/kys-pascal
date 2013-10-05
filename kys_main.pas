@@ -193,18 +193,10 @@ begin
     ScreenFlag := ScreenFlag or SDL_HWSURFACE or SDL_HWACCEL;
 
   RealScreen := SDL_SetVideoMode(RESOLUTIONX, RESOLUTIONY, 32, ScreenFlag);
-  RMask := RealScreen.format.RMask;
-  GMask := RealScreen.format.GMask;
-  BMask := RealScreen.format.BMask;
+  RMask := $FF0000;
+  GMask := $FF00;
+  BMask := $FF;
   AMask := $FFFFFFFF - RMask - GMask - BMask;
-  if IsConsole then
-    writeln('The primary color masks are (RGBA): ', Rmask, ',', GMask, ',', BMask, ',', AMask);
-  {$ifdef darwin}
-    swap(RMask, GMask);
-    swap(BMask, AMask);
-    if IsConsole then
-      writeln('For Darwin, corrected them to: ', Rmask, ',', GMask, ',', BMask, ',', AMask);
-  {$endif}
   screen := SDL_CreateRGBSurface(ScreenFlag, CENTER_X * 2, CENTER_Y * 2, 32, RMask, GMask, BMask, 0);
   prescreen := SDL_CreateRGBSurface(ScreenFlag, CENTER_X * 2, CENTER_Y * 2, 32, RMask, GMask, BMask, 0);
   //prescreen := SDL_DisplayFormat(screen);
@@ -5829,4 +5821,4 @@ begin
   y := t;
 end;
 
-end.
+end.
