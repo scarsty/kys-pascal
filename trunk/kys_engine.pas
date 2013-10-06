@@ -1131,8 +1131,6 @@ begin
                 pix4 := (mixAlpha * color4 + (100 - mixAlpha) * pix4) div 100;
                 //pix := pix1 + pix2 shl 8 + pix3 shl 16 + pix4 shl 24;
               end;
-              //pix := sdl_maprgb(screen.format, puint8(colorPanel + l1 * 3)^ * (4 + shadow),
-              //puint8(colorPanel + l1 * 3 + 1)^ * (4 + shadow), puint8(colorPanel + l1 * 3 + 2)^ * (4 + shadow));
               if (alpha <> 0) then
               begin
                 if (BlockImageW = nil) then
