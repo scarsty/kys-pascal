@@ -1587,9 +1587,9 @@ begin
         0: x50[e3] := x50[e4] + t1;
         1: x50[e3] := x50[e4] - t1;
         2: x50[e3] := x50[e4] * t1;
-        3: x50[e3] := x50[e4] div t1;
-        4: x50[e3] := x50[e4] mod t1;
-        5: x50[e3] := Uint16(x50[e4]) div t1;
+        3: if t1 <> 0 then x50[e3] := x50[e4] div t1;
+        4: if t1 <> 0 then x50[e3] := x50[e4] mod t1;
+        5: if t1 <> 0 then x50[e3] := Uint16(x50[e4]) div t1;
       end;
     end;
     4: //Judge the parameter.
@@ -2719,4 +2719,4 @@ begin
   setlength(temp2, 0);
 end;
 
-end.
+end.
