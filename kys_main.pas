@@ -4332,6 +4332,7 @@ begin
       menu := 1;
       if Ritem[inum].User >= 0 then
       begin
+        Redraw;
         setlength(menustring, 2);
         menustring[0] := (' 取消');
         menustring[1] := (' 繼續');
@@ -4341,6 +4342,7 @@ begin
       end;
       if menu = 1 then
       begin
+        Redraw;
         str := (' 誰要裝備');
         str1 := Big5ToUnicode(@Ritem[inum].Name);
         DrawTextWithRect(screen, @str[1], 80, 30, length(str1) * 22 + 80, ColColor($23), ColColor($21));
@@ -4365,7 +4367,7 @@ begin
           else
           begin
             str := (' 此人不適合裝備此物品');
-            DrawTextWithRect(screen, @str[1], 80, 30, 205, ColColor($66), ColColor($64));
+            DrawTextWithRect(screen, @str[1], 80, 230, 205, ColColor($66), ColColor($64));
             WaitAnyKey;
             Redraw;
             //SDL_UpdateRect2(screen,0,0,screen.w,screen.h);
@@ -4378,6 +4380,7 @@ begin
       menu := 1;
       if Ritem[inum].User >= 0 then
       begin
+        Redraw;
         setlength(menustring, 2);
         menustring[0] := (' 取消');
         menustring[1] := (' 繼續');
@@ -4387,6 +4390,7 @@ begin
       end;
       if menu = 1 then
       begin
+        Redraw;
         str := (' 誰要修煉');
         str1 := Big5ToUnicode(@Ritem[inum].Name);
         DrawTextWithRect(screen, @str[1], 80, 30, length(str1) * 22 + 80, ColColor($23), ColColor($21));
@@ -4410,7 +4414,7 @@ begin
           else
           begin
             str := (' 此人不適合修煉此秘笈');
-            DrawTextWithRect(screen, @str[1], 80, 30, 205, ColColor($66), ColColor($64));
+            DrawTextWithRect(screen, @str[1], 80, 230, 205, ColColor($66), ColColor($64));
             WaitAnyKey;
             Redraw;
             //SDL_UpdateRect2(screen,0,0,screen.w,screen.h);
