@@ -4520,9 +4520,10 @@ begin
   //如果以上判定为真, 且属于自宫物品, 则提问, 若选否则为假
   if (inum in [78, 93]) and (Result = True) and (Rrole[rnum].Sexual <> 2) then
   begin
+    Redraw;
     menustring[0] := (' 取消');
     menustring[1] := (' 繼續');
-    str := (' 是否自宫？');
+    str := (' 是否自宮？');
     DrawTextWithRect(screen, @str[1], 80, 30, 105, ColColor(7), ColColor(5));
     if CommonMenu(80, 65, 45, 1, menustring) = 0 then
       Result := False
