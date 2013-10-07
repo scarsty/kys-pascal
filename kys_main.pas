@@ -3626,7 +3626,7 @@ begin
     max := 5
   else
     max := 5;
-  ReadFreshScreen(27, 30, 46, max * 22 + 29);
+  ReadFreshScreen(27, 30, 47, max * 22 + 29);
   DrawRectangle(screen, 27, 30, 46, max * 22 + 28, 0, ColColor(255), 30);
   //当前所在位置用白色, 其余用黄色
   for i := 0 to max do
@@ -5079,6 +5079,7 @@ begin
       ShowScenceName(CurScence);
     SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
   end;
+  //edraw;
   ShowMenu(5);
   ShowMenuSystem(0);
 
@@ -5140,6 +5141,7 @@ begin
   menu := CommonMenu(133, 30, 67, 4, menustring);
   if menu >= 0 then
     SaveR(menu + 1);
+  //Redraw;
   ShowMenu(5);
   ShowMenuSystem(1);
 end;
