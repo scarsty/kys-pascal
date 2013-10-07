@@ -791,7 +791,7 @@ begin
   k := 0;
   widthregion := CENTER_X div 36 + 3;
   sumregion := CENTER_Y div 9 + 2;
-  for sum := -sumregion to sumregion + 10 do
+  for sum := -sumregion to sumregion + 15 do
     for i := -Widthregion to Widthregion do
     begin
       if k >= High(CenterList) then
