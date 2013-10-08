@@ -1544,7 +1544,7 @@ begin
           end;
         end;
         //行动人物的动作停留在最后一帧
-        if bnum = k then
+        if (bnum = k) and (Brole[bnum].pic > 0) then
           DrawFPic(Brole[bnum].pic, pos.x, pos.y, Brole[bnum].Bhead, 0, 75, CalBlock(i1, i2),
             mixColor, flash * (10 + random(40)))
         else
