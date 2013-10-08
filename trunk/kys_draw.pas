@@ -444,7 +444,7 @@ begin
     if PNG_TILE > 0 then
     begin
       DrawPNGTile(EPNGIndex[num], 0, nil, screen, px, py, shadow, alpha, mixColor, mixAlpha,
-        depth, @BlockImg[0], 2304, 1402, sizeof(BlockImg[0, 0]), 0, 0);
+        depth, @BlockImg[0], 2304, 1402, sizeof(BlockImg[0, 0]), BlockScreen.x, BlockScreen.y);
     end;
     if PNG_TILE = 0 then
     begin
