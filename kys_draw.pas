@@ -7,16 +7,28 @@ interface
 uses
   SysUtils,
 {$IFDEF fpc}
-  LMessages, LConvEncoding, LCLType, LCLIntf, FileUtil,
+  LMessages,
+  LConvEncoding,
+  LCLType,
+  LCLIntf,
+  FileUtil,
 {$ELSE}
   Windows,
 {$ENDIF}
-  Math, Dialogs,
-  SDL_TTF, SDL_image, SDL_gfx, SDL,
-  glext, gl,
-  bassmidi, bass,
-  ziputils, unzip,
-  kys_main, kys_type;
+  Math,
+  Dialogs,
+  SDL_TTF,
+  SDL_image,
+  SDL_gfx,
+  SDL,
+  glext,
+  gl,
+  bassmidi,
+  bass,
+  ziputils,
+  unzip,
+  kys_main,
+  kys_type;
 
 //画单个图片的子程
 procedure DrawTitlePic(imgnum, px, py: integer);
@@ -59,7 +71,7 @@ procedure UpdateScence(xs, ys: integer);
 procedure LoadScencePart(x, y: integer);
 procedure DrawWholeBField(needProgress: integer = 1);
 procedure DrawBfieldWithoutRole(x, y: integer);
-procedure DrawRoleOnBfield(x, y: integer; MixColor: Uint32 = 0; MixAlpha: integer = 0;Alpha:integer=75);
+procedure DrawRoleOnBfield(x, y: integer; MixColor: Uint32 = 0; MixAlpha: integer = 0; Alpha: integer = 75);
 procedure InitialWholeBField;
 procedure InitialBFieldPosition(i1, i2, depth: integer);
 procedure LoadBfieldPart(x, y: integer);
@@ -78,7 +90,8 @@ procedure DrawProgress;
 
 implementation
 
-uses kys_engine;
+uses
+  kys_engine;
 
 //显示title.grp的内容(即开始的选单)
 
@@ -120,7 +133,7 @@ begin
   if (num >= 0) and (num < MPicAmount) then
   begin
     NeedGRP := 0;
-    if (PNG_Tile > 0) then
+    if (PNG_TILE > 0) then
     begin
       if MPNGIndex[num].UseGRP = 0 then
       begin
@@ -136,7 +149,7 @@ begin
       else
         NeedGRP := 1;
     end;
-    if (PNG_Tile = 0) or (NeedGRP = 1) then
+    if (PNG_TILE = 0) or (NeedGRP = 1) then
     begin
       DrawRLE8Pic(@ACol[0], num, px, py, @Midx[0], @Mpic[0], nil, nil, 0, 0, 0, shadow, alpha,
         nil, nil, 0, 0, 0, 4096, mixColor, mixAlpha);
@@ -166,7 +179,7 @@ begin
       num := 0;
       py := py - 50;
     end;
-    if PNG_Tile > 0 then
+    if PNG_TILE > 0 then
       DrawPNGTile(SPNGIndex[num], 0, @Area, screen, px, py)
     else
     begin
@@ -186,7 +199,7 @@ begin
       num := 0;
       py := py - 50;
     end;
-    if PNG_Tile > 0 then
+    if PNG_TILE > 0 then
       DrawPNGTile(SPNGIndex[num], 0, nil, screen, px, py, shadow, alpha, mixColor, mixAlpha,
         depth, @BlockImg[0], 2304, 1402, sizeof(BlockImg[0, 0]), BlockScreen.x, BlockScreen.y)
     else
@@ -1508,7 +1521,7 @@ var
   pos: TPosition;
 begin
   DrawBfieldWithoutRole(Bx, By);
-
+  //ReadFreshScreen(0, 0, screen.w, screen.h);
   for i1 := 0 to 63 do
     for i2 := 0 to 63 do
     begin
@@ -1530,7 +1543,12 @@ begin
               flash := 1;
           end;
         end;
-        DrawRoleOnBfield(i1, i2, MixColor, flash * (10 + random(40)));
+        //行动人物的动作停留在最后一帧
+        if bnum = k then
+          DrawFPic(Brole[bnum].pic, pos.x, pos.y, Brole[bnum].Bhead, 0, 0, CalBlock(i1, i2),
+            mixColor, flash * (10 + random(40)))
+        else
+          DrawRoleOnBfield(i1, i2, MixColor, flash * (10 + random(40)));
       end;
       if Bfield[4, i1, i2] > 0 then
       begin
@@ -1602,8 +1620,8 @@ begin
     DrawRectangleWithoutFrame(screen, 0, CENTER_Y * 2 - 50, CENTER_X * 2, 50, 0, 50);
     if length(BHead) = BRoleAmount then
     begin
-      setlength(range, BroleAmount);
-      setlength(p, BroleAmount);
+      setlength(range, BRoleAmount);
+      setlength(p, BRoleAmount);
       curHead := 0;
       for i := 0 to BRoleAmount - 1 do
       begin
