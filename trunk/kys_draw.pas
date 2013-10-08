@@ -1550,7 +1550,7 @@ begin
         else
           DrawRoleOnBfield(i1, i2, MixColor, flash * (10 + random(40)));
       end;
-      if Bfield[4, i1, i2] > 0 then
+      if (Bfield[4, i1, i2] > 0) and (Bfield[1, i1, i2] = 0) then
       begin
         k := Epicnum + curlevel - Bfield[4, i1, i2];
         if (k >= beginpic) and (k <= endpic) then
