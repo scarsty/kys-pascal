@@ -2984,7 +2984,7 @@ begin
       Brole[bnum1].ShowNumber := addpoi;
       SetAminationPosition(0, 0);
       PlayActionAmination(bnum, 0);
-      PlayMagicAmination(bnum, 30);
+      PlayMagicAmination(bnum, 30, 0, 2);
       ShowHurtValue(2);
     end;
   end;
@@ -3043,7 +3043,7 @@ begin
       Brole[bnum1].ShowNumber := addlife;
       SetAminationPosition(0, 0);
       PlayActionAmination(bnum, 0);
-      PlayMagicAmination(bnum, 0);
+      PlayMagicAmination(bnum, 0, 1, 3);
       ShowHurtValue(3);
     end;
   end;
@@ -3084,7 +3084,7 @@ begin
       Brole[bnum1].ShowNumber := minuspoi;
       SetAminationPosition(0, 0);
       PlayActionAmination(bnum, 0);
-      PlayMagicAmination(bnum, 36);
+      PlayMagicAmination(bnum, 36, 1, 4);
       ShowHurtValue(4);
     end;
   end;
