@@ -7,8 +7,10 @@ interface
 uses
   SysUtils,
 {$IFDEF fpc}
-  LMessages, LConvEncoding,
-  LCLType, LCLIntf, {$ELSE}
+  LMessages,
+  LConvEncoding,
+  LCLType,
+  LCLIntf, {$ELSE}
   Windows,
 {$ENDIF}
   kys_type,
@@ -18,7 +20,8 @@ uses
   sdl_gfx,
   SDL,
   Math,
-  kys_main, Dialogs;
+  kys_main,
+  Dialogs;
 
 //战斗
 //从游戏文件的命名来看, 应是'war'这个词的缩写,
@@ -95,7 +98,10 @@ var
 
 implementation
 
-uses kys_event, kys_engine, kys_draw;
+uses
+  kys_event,
+  kys_engine,
+  kys_draw;
 
 //Battle.
 //战斗, 返回值为是否胜利
@@ -149,7 +155,7 @@ begin
   if SEMIREAL = 1 then
   begin
     setlength(BHead, BRoleAmount);
-    for i := 0 to broleamount - 1 do
+    for i := 0 to BRoleAmount - 1 do
     begin
       BHead[i] := LoadSurfaceFromFile(AppPath + 'head/' + IntToStr(Rrole[Brole[i].rnum].HeadNum) + '.png');
       if BHead[i] = nil then
@@ -167,7 +173,7 @@ begin
   begin
     setlength(FPNGIndex, BRoleAmount);
     setlength(FPNGTile, BRoleAmount);
-    for i := 0 to broleamount - 1 do
+    for i := 0 to BRoleAmount - 1 do
     begin
       path := formatfloat('resource/fight/fight000', Rrole[Brole[i].rnum].HeadNum);
       LoadPNGTiles(path, FPNGIndex[i], FPNGTile[i], 1);
@@ -198,7 +204,7 @@ begin
   //释放额外贴图
   if SEMIREAL = 1 then
   begin
-    for i := 0 to broleamount - 1 do
+    for i := 0 to BRoleAmount - 1 do
     begin
       SDL_FreeSurface(BHead[i]);
     end;
@@ -207,7 +213,7 @@ begin
 
   if PNG_TILE = 1 then
   begin
-    for i := 0 to broleamount - 1 do
+    for i := 0 to BRoleAmount - 1 do
     begin
       for j := Low(FPNGTile[i]) to High(FPNGTile[i]) do
       begin
@@ -249,26 +255,26 @@ function InitialBField: boolean;
 var
   sta, grp, idx, offset, i, i1, i2, x, y, fieldnum: integer;
 begin
-  sta := fileopen(AppPath + 'resource/war.sta', fmopenread);
+  sta := FileOpen(AppPath + 'resource/war.sta', fmopenread);
   offset := currentbattle * sizeof(TWarData);
-  fileseek(sta, offset, 0);
-  fileread(sta, warsta, sizeof(TWarData));
-  fileclose(sta);
+  FileSeek(sta, offset, 0);
+  FileRead(sta, warsta, sizeof(TWarData));
+  FileClose(sta);
   fieldnum := warsta.BFieldNum;
 
   if fieldnum = 0 then
     offset := 0
   else
   begin
-    idx := fileopen(AppPath + 'resource/warfld.idx', fmopenread);
-    fileseek(idx, (fieldnum - 1) * 4, 0);
-    fileread(idx, offset, 4);
-    fileclose(idx);
+    idx := FileOpen(AppPath + 'resource/warfld.idx', fmopenread);
+    FileSeek(idx, (fieldnum - 1) * 4, 0);
+    FileRead(idx, offset, 4);
+    FileClose(idx);
   end;
-  grp := fileopen(AppPath + 'resource/warfld.grp', fmopenread);
-  fileseek(grp, offset, 0);
-  fileread(grp, Bfield[0, 0, 0], 2 * 64 * 64 * 2);
-  fileclose(grp);
+  grp := FileOpen(AppPath + 'resource/warfld.grp', fmopenread);
+  FileSeek(grp, offset, 0);
+  FileRead(grp, Bfield[0, 0, 0], 2 * 64 * 64 * 2);
+  FileClose(grp);
 
   for i1 := 0 to 63 do
     for i2 := 0 to 63 do
@@ -481,7 +487,7 @@ begin
     ClearDeadRolePic; //清除阵亡角色
 
     //是否已行动, 显示数字清空
-    for i := 0 to broleamount - 1 do
+    for i := 0 to BRoleAmount - 1 do
     begin
       Brole[i].Acted := 0;
       Brole[i].ShowNumber := 0;
@@ -498,7 +504,7 @@ begin
       act := 0;
       while SDL_PollEvent(@event) >= 0 do
       begin
-        for i := 0 to broleamount - 1 do
+        for i := 0 to BRoleAmount - 1 do
         begin
           Brole[i].RealProgress := Brole[i].RealProgress + Brole[i].RealSpeed;
           if Brole[i].RealProgress >= 10000 then
@@ -521,7 +527,7 @@ begin
     if SEMIREAL = 0 then
       i := 0;
 
-    while ((i < broleamount) and (Bstatus = 0)) do
+    while ((i < BRoleAmount) and (Bstatus = 0)) do
     begin
       while (SDL_PollEvent(@event) >= 0) do
       begin
@@ -575,7 +581,7 @@ begin
               else
               begin
                 if TeamModeMenu then
-                  for j := 0 to broleamount - 1 do
+                  for j := 0 to BRoleAmount - 1 do
                     if (Brole[j].Team = 0) and (Brole[j].Dead = 0) then
                       Brole[j].Auto := Brole[j].AutoMode;
               end;
@@ -654,7 +660,7 @@ procedure CalMoveAbility;
 var
   i, rnum, addspeed: integer;
 begin
-  for i := 0 to broleamount - 1 do
+  for i := 0 to BRoleAmount - 1 do
   begin
     rnum := Brole[i].rnum;
     addspeed := 0;
@@ -668,7 +674,7 @@ begin
 
     if SEMIREAL = 1 then
     begin
-      Brole[i].RealSpeed := trunc((Rrole[rnum].Speed + addspeed) / (log10(MaxProlist[44]) - 1)) -
+      Brole[i].RealSpeed := trunc((Rrole[rnum].Speed + addspeed) / (log10(MaxProList[44]) - 1)) -
         Rrole[rnum].Hurt div 10 - Rrole[rnum].Poison div 30;
       if Brole[i].RealSpeed > 200 then
         Brole[i].RealSpeed := 200 + (Brole[i].RealSpeed - 200) div 3;
@@ -689,7 +695,7 @@ var
 begin
   sum0 := 0;
   sum1 := 0;
-  for i := 0 to broleamount - 1 do
+  for i := 0 to BRoleAmount - 1 do
   begin
     if (Brole[i].Team = 0) and (Brole[i].Dead = 0) then
       sum0 := sum0 + 1;
@@ -2068,7 +2074,7 @@ begin
     if i > endpic + max - min then
       break;
   end;
-  brole[bnum].Pic:=0;
+  Brole[bnum].Pic := 0;
 end;
 
 //判断是否有非行动方角色在攻击范围之内
@@ -2084,7 +2090,7 @@ begin
   if level > 10 then
     level := 10;
   Rrole[rnum].CurrentMP := Rrole[rnum].CurrentMP - Rmagic[mnum].NeedMP * ((level + 1) div 2);
-  for i := 0 to broleamount - 1 do
+  for i := 0 to BRoleAmount - 1 do
   begin
     Brole[i].ShowNumber := -1;
     if (Bfield[4, Brole[i].X, Brole[i].Y] <> 0) and (Brole[bnum].Team <> Brole[i].Team) and (Brole[i].Dead = 0) then
@@ -2145,7 +2151,7 @@ begin
   //计算双方武学常识
   k1 := 0;
   k2 := 0;
-  for i := 0 to broleamount - 1 do
+  for i := 0 to BRoleAmount - 1 do
   begin
     if (Brole[i].Team = Brole[bnum1].Team) and (Brole[i].Dead = 0) and
       (Rrole[Brole[i].rnum].Knowledge > MIN_KNOWLEDGE) then
@@ -2296,8 +2302,8 @@ var
   pos: TPosition;
 begin
   SelectModeColor(mode, color1, color2, str);
-  setlength(word, broleamount);
-  for i := 0 to broleamount - 1 do
+  setlength(word, BRoleAmount);
+  for i := 0 to BRoleAmount - 1 do
   begin
     if Brole[i].ShowNumber > 0 then
     begin
@@ -2312,7 +2318,7 @@ begin
   begin
     CheckBasicEvent;
     Redraw;
-    for i := 0 to broleamount - 1 do
+    for i := 0 to BRoleAmount - 1 do
     begin
       x := -(Brole[i].X - Bx) * 18 + (Brole[i].Y - By) * 18 + CENTER_X - 10;
       y := (Brole[i].X - Bx) * 9 + (Brole[i].Y - By) * 9 + CENTER_Y - 40;
@@ -2338,7 +2344,7 @@ var
   p: boolean;
 begin
   p := False;
-  for i := 0 to broleamount - 1 do
+  for i := 0 to BRoleAmount - 1 do
   begin
     Brole[i].ShowNumber := -1;
     if (Rrole[Brole[i].rnum].Poison > 0) and (Brole[i].Dead = 0) and (Brole[i].Acted = 1) then
@@ -2360,11 +2366,11 @@ end;
 
 procedure ClearDeadRolePic;
 var
-  i,i1, i2, rnum: integer;
+  i, i1, i2, rnum: integer;
   pos: TPosition;
   needeffect: boolean;
 begin
-    //检测是否需要效果
+  //检测是否需要效果
   needeffect := False;
   for i := 0 to BRoleAmount - 1 do
   begin
@@ -2388,7 +2394,7 @@ begin
           rnum := Brole[Bfield[2, i1, i2]].rnum;
           if Rrole[rnum].CurrentHP <= 0 then
           begin
-            DrawRoleOnBfield(i1, i2, 0, i, i shl 8+75);
+            DrawRoleOnBfield(i1, i2, 0, i, i shl 8 + 75);
           end
           else
             DrawRoleOnBfield(i1, i2);
@@ -2401,7 +2407,7 @@ begin
     if i > 100 then
       break;
   end;
-  for i := 0 to broleamount - 1 do
+  for i := 0 to BRoleAmount - 1 do
   begin
     if Rrole[Brole[i].rnum].CurrentHP <= 0 then
     begin
@@ -2414,7 +2420,7 @@ begin
   end;
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
   //sdl_delay(1000);
-  for i := 0 to broleamount - 1 do
+  for i := 0 to BRoleAmount - 1 do
     if Brole[i].Dead = 0 then
       bfield[2, Brole[i].X, Brole[i].Y] := i;
 
@@ -2521,7 +2527,7 @@ var
   i, i1, i2, x: integer;
 begin
   Brole[bnum].Acted := 0;
-  Brole[BroleAmount] := Brole[bnum];
+  Brole[BRoleAmount] := Brole[bnum];
 
   for i := bnum to BRoleAmount - 1 do
   begin
@@ -2674,7 +2680,7 @@ begin
   end;
   for i := 43 to 58 do
   begin
-    Rrole[rnum].Data[i] := min(Rrole[rnum].Data[i], maxprolist[i]);
+    Rrole[rnum].Data[i] := min(Rrole[rnum].Data[i], MaxProList[i]);
   end;
 
   Rrole[rnum].PhyPower := MAX_PHYSICAL_POWER;
@@ -2806,7 +2812,7 @@ var
   i: integer;
 begin
   Result := 0;
-  for i := 0 to broleamount - 1 do
+  for i := 0 to BRoleAmount - 1 do
   begin
     if (Brole[i].Team = team) and (Brole[i].Dead = 0) then
       Result := Result + 1;
@@ -2914,7 +2920,7 @@ begin
       if i > endpic then
       begin
         //WriteFreshScreen(0, 0, screen.w, screen.h);
-        brole[bnum].Pic:=endpic;
+        Brole[bnum].Pic := endpic;
         break;
       end;
     end;
@@ -3208,7 +3214,7 @@ begin
   //SDL_EnableKeyRepeat(20, 100);
   Result := True;
   amount := 0;
-  for i := 0 to broleamount - 1 do
+  for i := 0 to BRoleAmount - 1 do
   begin
     if (Brole[i].Team = 0) and (Brole[i].Dead = 0) then
     begin
@@ -3218,7 +3224,7 @@ begin
     end;
   end;
   setlength(tempmode, length(Brole));
-  for i := 0 to broleamount - 1 do
+  for i := 0 to BRoleAmount - 1 do
   begin
     tempmode[i] := Brole[i].AutoMode;
   end;
@@ -3322,7 +3328,7 @@ begin
   //SDL_EnableKeyRepeat(30,35);
   Redraw;
   if Result = False then
-    for i := 0 to broleamount - 1 do
+    for i := 0 to BRoleAmount - 1 do
       Brole[i].AutoMode := tempmode[i];
 
 end;
@@ -3342,7 +3348,7 @@ begin
   modestring[1] := ' 自動';
   modestring[0] := ' 手動';
   str := '  确定';
-  for i := 0 to broleamount - 1 do
+  for i := 0 to BRoleAmount - 1 do
   begin
     if (Brole[i].Team = 0) and (Brole[i].Dead = 0) then
     begin
@@ -3915,7 +3921,7 @@ begin
     for j := curY - m to curY + m do
     begin
       temphurt := 0;
-      for k := 0 to broleamount - 1 do
+      for k := 0 to BRoleAmount - 1 do
       begin
         if (myteam <> Brole[k].Team) and (Brole[k].Dead = 0) then
         begin
@@ -4101,7 +4107,7 @@ begin
     for j := curY - m to curY + m do
     begin
       temphurt := 0;
-      for k := 0 to broleamount - 1 do
+      for k := 0 to BRoleAmount - 1 do
       begin
         if (myteam <> Brole[k].Team) and (Brole[k].Dead = 0) then
         begin
@@ -4209,7 +4215,7 @@ begin
 
   if (MaxMinPro <> 0) and (Prolist >= low(Rrole[0].Data)) and (Prolist <= high(Rrole[0].Data)) then
   begin
-    for i := 0 to broleamount - 1 do
+    for i := 0 to BRoleAmount - 1 do
     begin
       rnum := Brole[i].rnum;
       if (((TeamMate = 0) and (myteam <> Brole[i].Team)) or ((TeamMate <> 0) and (myteam = Brole[i].Team))) and
@@ -4244,7 +4250,7 @@ begin
   //若按属性寻找失败(未指定最大最小, 或者全部在安全距离之外), 则按距离找最近
   if (not select) and (mode = 0) then
   begin
-    for i := 0 to broleamount - 1 do
+    for i := 0 to BRoleAmount - 1 do
     begin
       if (((TeamMate = 0) and (myteam <> Brole[i].Team)) or ((TeamMate <> 0) and (myteam = Brole[i].Team))) and
         (Brole[i].Dead = 0) then
