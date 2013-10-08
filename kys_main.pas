@@ -3626,7 +3626,8 @@ begin
     max := 5
   else
     max := 5;
-  ReadFreshScreen(27, 30, 47, max * 22 + 29);
+  //ReadFreshScreen(27, 30, 47, max * 22 + 29);
+  Redraw;
   DrawRectangle(screen, 27, 30, 46, max * 22 + 28, 0, ColColor(255), 30);
   //当前所在位置用白色, 其余用黄色
   for i := 0 to max do
@@ -3730,7 +3731,6 @@ begin
       menustring[6] := (' 整理物品');
       xm := 80;
       ym := 30;
-
     end;
     2:
     begin
@@ -3740,7 +3740,6 @@ begin
       menustring[1] := (' 傷人暗器');
       xm := 150;
       ym := 150;
-
     end;
   end;
 
@@ -3756,7 +3755,6 @@ begin
           i := 100
         else
           i := menu - 1;
-
       end;
       2:
       begin
