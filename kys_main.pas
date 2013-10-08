@@ -4129,7 +4129,7 @@ begin
         if (i1 = y) and (i2 = x) then
           DrawMPic(ITEM_BEGIN_PIC + RItemlist[listnum].Number, i2 * 42 + 115, i1 * 42 + 95, 0, 0, 0, 0)
         else
-          DrawMPic(ITEM_BEGIN_PIC + RItemlist[listnum].Number, i2 * 42 + 115, i1 * 42 + 95, 0, 50, 0, 0);
+          DrawMPic(ITEM_BEGIN_PIC + RItemlist[listnum].Number, i2 * 42 + 115, i1 * 42 + 95, 0, 25, 0, 15);
       end;
     end;
   listnum := itemlist[y * col + x + atlu];
