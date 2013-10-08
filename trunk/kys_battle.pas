@@ -2068,7 +2068,7 @@ begin
     if i > endpic + max - min then
       break;
   end;
-
+  brole[bnum].Pic:=0;
 end;
 
 //判断是否有非行动方角色在攻击范围之内
@@ -2912,7 +2912,11 @@ begin
       SDL_Delay(BATTLE_SPEED);
       i := i + 1;
       if i > endpic then
+      begin
+        //WriteFreshScreen(0, 0, screen.w, screen.h);
+        brole[bnum].Pic:=endpic;
         break;
+      end;
     end;
   end;
 
