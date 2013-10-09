@@ -205,6 +205,10 @@ begin
     SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+  end
+  else
+  begin
+    HARDWARE_BLIT := 0;
   end;
 
   if HARDWARE_BLIT = 1 then
@@ -484,7 +488,7 @@ begin
   ReadFileToBuffer(@effectlist[0], AppPath + 'list/effect.bin', 200, 0);
   ReadFileToBuffer(@leveluplist[0], AppPath + 'list/levelup.bin', 200, 0);
 
-  ReadFileToBuffer(@matchlist[0], AppPath + 'list/mach.bin', MAX_WEAPON_MATCH * 3 * 2, 0);
+  ReadFileToBuffer(@matchlist[0], AppPath + 'list/match.bin', MAX_WEAPON_MATCH * 3 * 2, 0);
 
   LoadIdxGrp('resource/kdef.idx', 'resource/kdef.grp', KIdx, KDef);
   LoadIdxGrp('resource/talk.idx', 'resource/talk.grp', TIdx, TDef);
@@ -507,8 +511,9 @@ begin
   if PNG_TILE > 0 then
   begin
     LoadPNGTiles('resource/title', TitlePNGIndex, TitlePNGTile, 1);
+    DrawTitlePic(8, TitlePosition.x, TitlePosition.y + 20);
   end;
-  DrawTitlePic(8, TitlePosition.x, TitlePosition.y + 20);
+
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
 
   ReadTiles;
@@ -1705,7 +1710,6 @@ begin
   Where := 0;
   walking := 0;
   speed := 0;
-
   DrawMMap;
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
   SDL_EnableKeyRepeat(50, 30);

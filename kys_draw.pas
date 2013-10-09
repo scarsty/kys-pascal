@@ -116,8 +116,6 @@ end;
 
 //显示主地图贴图
 
-//显示主地图贴图
-
 procedure DrawMPic(num, px, py: integer; Framenum: integer = -1); overload;
 begin
   DrawMPic(num, px, py, 0, 0, 0, 0, Framenum);
