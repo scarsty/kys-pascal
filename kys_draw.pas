@@ -442,12 +442,12 @@ begin
     if PNG_TILE > 0 then
     begin
       DrawPNGTile(EPNGIndex[num], 0, nil, screen, px, py, shadow, alpha, mixColor, mixAlpha,
-        depth, @BlockImg[0], 2304, 1402, sizeof(BlockImg[0, 0]), BlockScreen.x, BlockScreen.y);
+        depth, nil, 0, 0, 0, 0, 0);
     end;
     if PNG_TILE = 0 then
     begin
       DrawRLE8Pic(@ACol[0], num, px, py, @EIdx[0], @EPic[0], nil, nil, 0, 0, 0, shadow, alpha,
-        @BlockImg[0], @BlockScreen, 2304, 1402, sizeof(BlockImg[0, 0]), depth, mixColor, mixAlpha);
+        nil, nil, 0, 0, 0, depth, mixColor, mixAlpha);
     end;
   end;
 end;
@@ -1553,7 +1553,7 @@ begin
         k := Epicnum + curlevel - Bfield[4, i1, i2];
         if (k >= beginpic) and (k <= endpic) then
         begin
-          DrawEPic(k, pos.x, pos.y, 0, 25 shl 8 + 75, CalBlock(i1, i2), 0, 0);
+          DrawEPic(k, pos.x, pos.y, 0, 25{ shl 8 + 75}, CalBlock(i1, i2), 0, 0);
         end;
       end;
     end;
