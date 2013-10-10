@@ -5902,6 +5902,7 @@ begin
   if NeedRefreshScence = 1 then
   begin
     InitialScence(0);
+    NeedRefreshScence := 0;
   end;
   //if where <> 2 then CurEvent := -1;
   if MMAPAMI * SCENCEAMI = 0 then

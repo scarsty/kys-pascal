@@ -108,10 +108,13 @@ uses kys_script, kys_engine, kys_battle, kys_draw;
 
 procedure instruct_0;
 begin
-
   Redraw;
   //SDL_UpdateRect2(screen,0,0,screen.w,screen.h);
-
+  if NeedRefreshScence = 1 then
+  begin
+    InitialScence(0);
+    NeedRefreshScence := 0;
+  end;
 end;
 
 procedure instruct_1(talknum, headnum, dismode: integer);
