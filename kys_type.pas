@@ -380,7 +380,7 @@ var
   KDEF_SCRIPT: integer = 0; //使用脚本处理事件
   lua_script: Plua_state; //lua脚本
   CurScenceRolePic: integer; //主角场景内当前贴图编号, 引入该常量主要用途是25指令事件号为-1的情况
-  NeedRefreshScence: integer = 0; //事件是否改写了贴图
+  NeedRefreshScence: integer = 1; //是否需要刷新场景, 用于事件中和副线程
 
 
   //游戏体验设置
