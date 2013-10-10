@@ -7,8 +7,10 @@ interface
 uses
   SysUtils,
 {$IFDEF fpc}
-  LMessages, LConvEncoding,
-  LCLType, LCLIntf, {$ELSE}
+  LMessages,
+  LConvEncoding,
+  LCLType,
+  LCLIntf, {$ELSE}
   Windows,
 {$ENDIF}
   StrUtils,
@@ -101,20 +103,25 @@ procedure NewTalk(headnum, talknum, namenum, place, showhead, color, frame: inte
 
 implementation
 
-uses kys_script, kys_engine, kys_battle, kys_draw;
+uses
+  kys_script,
+  kys_engine,
+  kys_battle,
+  kys_draw;
 
 //事件系统
 //事件指令含义请参阅其他相关文献
 
 procedure instruct_0;
 begin
-  Redraw;
-  //SDL_UpdateRect2(screen,0,0,screen.w,screen.h);
   if NeedRefreshScence = 1 then
   begin
     InitialScence(0);
     NeedRefreshScence := 0;
   end;
+  Redraw;
+  //SDL_UpdateRect2(screen,0,0,screen.w,screen.h);
+
 end;
 
 procedure instruct_1(talknum, headnum, dismode: integer);
@@ -1411,12 +1418,12 @@ var
 begin
   instruct_14;
   Redraw;
-  i := fileopen(AppPath + 'list/end.txt', fmOpenRead);
-  len := fileseek(i, 0, 2);
-  fileseek(i, 0, 0);
+  i := FileOpen(AppPath + 'list/end.txt', fmOpenRead);
+  len := FileSeek(i, 0, 2);
+  FileSeek(i, 0, 0);
   setlength(str, len + 1);
-  fileread(i, str[1], len);
-  fileclose(i);
+  FileRead(i, str[1], len);
+  FileClose(i);
   p := 1;
   x := 30;
   y := 80;
