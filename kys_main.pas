@@ -2111,27 +2111,15 @@ begin
 end;
 
 procedure UpdateScenceAmi;
-var
-  now, next_time: uint32;
 begin
-
-  next_time := SDL_GetTicks;
-  now := SDL_GetTicks;
-  while True do
-  begin
-    now := SDL_GetTicks;
-    if now > next_time then
+    while True do
     begin
-      if (where = 1) and (CurEvent = -1) and (not LoadingScence) then
-      begin
+      if (where = 1) and (CurEvent < 0) and (not LoadingScence) and (NeedRefreshScence = 1) then
         InitialScence(2);
-      end;
-      next_time := next_time + 200;
+      if (where < 1) or (where > 2) then
+        break;
       SDL_Delay(200);
     end;
-    if (where < 1) or (where > 2) then
-      break;
-  end;
 
 end;
 
@@ -5902,8 +5890,8 @@ begin
   if NeedRefreshScence = 1 then
   begin
     InitialScence(0);
-    NeedRefreshScence := 0;
   end;
+  NeedRefreshScence:=1;
   //if where <> 2 then CurEvent := -1;
   if MMAPAMI * SCENCEAMI = 0 then
   begin
