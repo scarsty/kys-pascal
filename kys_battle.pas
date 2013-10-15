@@ -2901,7 +2901,7 @@ begin
       endpic := 0;
     end;
     filename := formatfloat('fight/fight000', Rrole[rnum].HeadNum);
-    LoadIdxGrp(filename + '.idx', filename + '.grp', FIdx, FPic);
+    FPicAmount := LoadIdxGrp(filename + '.idx', filename + '.grp', FIdx, FPic);
     //if PNG_TILE = 1 then
     //LoadPNGTiles('resource/' + filename + '/', FPNGIndex, FPNGTile, 1);
 
