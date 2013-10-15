@@ -3645,8 +3645,8 @@ begin
   str := (' 隊員醫療能力');
   DrawTextWithRect(screen, @str[1], 80, 30, 132, ColColor($23), ColColor($21));
   menu := SelectOneTeamMember(80, 65, '%4d', 46, 0);
-  ShowMenu(0);
-  SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+  //ShowMenu(0);
+  //SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
   if menu >= 0 then
   begin
     role1 := TeamList[menu];
@@ -3673,8 +3673,8 @@ begin
   str := (' 隊員解毒能力');
   DrawTextWithRect(screen, @str[1], 80, 30, 132, ColColor($23), ColColor($21));
   menu := SelectOneTeamMember(80, 65, '%4d', 48, 0);
-  ShowMenu(1);
-  SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+  //ShowMenu(1);
+  //SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
   if menu >= 0 then
   begin
     role1 := TeamList[menu];
@@ -5511,6 +5511,13 @@ begin
     end;}
     i := 0;
     len := length(e);
+    if IsConsole then
+    begin
+      Write('Pointer: ', i, ', Run instruct ', e[i], ' ');
+      if e[i] = 50 then
+        Write(e[i + 1], ',', e[i + 2], ',', e[i + 3], ',', e[i + 4], ',', e[i + 5], ',', e[i + 6], ',', e[i + 7]);
+      writeln;
+    end;
     //普通事件写成子程, 需跳转事件写成函数
     while SDL_PollEvent(@event) >= 0 do
     begin
