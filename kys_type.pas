@@ -333,7 +333,7 @@ var
   BlockScreen: TPosition;
   //场景和战场的遮挡信息, 前者不会记录地板数据, 该值实际由绘图顺序决定
 
-  MPicAmount, SPicAmount, BPicAmount, EPicAmount, CPicAmount, FPicAmount: integer;
+  MPicAmount, SPicAmount, BPicAmount, EPicAmount, CPicAmount, FPicAmount, HPicAmount: integer;
 
   //以下是各类贴图内容与索引
   //云的贴图内容及索引
@@ -393,7 +393,7 @@ var
   //updating screen should be in main thread, so this is too complicable.
   SEMIREAL: integer = 0; //半即時
   NIGHT_EFFECT: integer = 0; //是否使用白昼和黑夜效果
-  EXIT_GAME: integer = 0; //退出时的提问方式
+  EXIT_GAME: integer = 1; //退出时的提问方式
 
   //其他
   mutex: PSDL_Mutex;

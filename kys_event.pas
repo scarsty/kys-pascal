@@ -2398,14 +2398,14 @@ begin
   end
   else if namenum = -2 then
   begin
+    namelen := 10;
+    setlength(namearray, namelen);
+    np := @namearray[0];
     for i := 0 to length(Rrole) - 1 do
     begin
       if Rrole[i].HeadNum = headnum then
       begin
         p1 := @Rrole[i].Name;
-        namelen := 10;
-        setlength(namearray, namelen);
-        np := @namearray[0];
         for n := 0 to namelen - 1 do
         begin
           (np + n)^ := (p1 + n)^;
@@ -2598,11 +2598,13 @@ begin
         DrawHeadPic(headnum, hx, hy + 68);
       end;
     end;
+
     if namenum <> 0 then
     begin
       DrawRectangle(screen, nx, ny, nw, nh, frame, ColColor($FF), 40);
       namelen := length(np);
-      DrawBig5ShadowText(screen, np, nx + 20 - namelen * 9 div 2, ny + 4, ColColor($63), ColColor($70));
+      if namelen > 0 then
+        DrawBig5ShadowText(screen, np, nx + 20 - namelen * 9 div 2, ny + 4, ColColor($63), ColColor($70));
     end;
 
     while r1 < row do
@@ -2693,7 +2695,8 @@ begin
                 begin
                   DrawRectangle(screen, nx, ny, nw, nh, frame, ColColor($FF), 40);
                   namelen := length(np);
-                  DrawBig5ShadowText(screen, np, nx + 20 - namelen * 9 div 2, ny + 4, ColColor($63), ColColor($70));
+                  if namelen > 0 then
+                    DrawBig5ShadowText(screen, np, nx + 20 - namelen * 9 div 2, ny + 4, ColColor($63), ColColor($70));
                 end;
               end;
             end;
@@ -2701,7 +2704,7 @@ begin
         end
         else //显示文字
         begin
-          DrawBig5ShadowText(screen, @pword, x - 14 + CHINESE_FONT_SIZE * c1, y + 4 +
+          DrawBig5ShadowText(screen, @pword[0], x - 14 + CHINESE_FONT_SIZE * c1, y + 4 +
             CHINESE_FONT_SIZE * r1, ColColor(color1), ColColor(color2));
           Inc(c1);
           if c1 = cell then
