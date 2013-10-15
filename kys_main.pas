@@ -323,7 +323,7 @@ begin
     begin
       TitleString := 'All Heros in Kam Yung''s Stories - Books';
       TitlePosition.x := 275;
-      TitlePosition.y := 325;
+      TitlePosition.y := 285;
       Setlength(Esound, 59);
     end;
     22:
@@ -1558,13 +1558,11 @@ begin
   for i := 0 to ScenceAmount - 1 do
   begin
     if (Rscence[i].MainEntranceX1 >= 0) and (Rscence[i].MainEntranceX1 < 480) and
-      (Rscence[i].MainEntranceY1 >= 0) and (Rscence[i].MainEntranceY1 < 480) and
-      (Rscence[i].MainEntranceX2 >= 0) and (Rscence[i].MainEntranceX2 < 480) and
-      (Rscence[i].MainEntranceY2 >= 0) and (Rscence[i].MainEntranceY2 < 480) then
-    begin
+      (Rscence[i].MainEntranceY1 >= 0) and (Rscence[i].MainEntranceY1 < 480) then
       Entrance[Rscence[i].MainEntranceX1, Rscence[i].MainEntranceY1] := i;
+    if (Rscence[i].MainEntranceX2 >= 0) and (Rscence[i].MainEntranceX2 < 480) and
+      (Rscence[i].MainEntranceY2 >= 0) and (Rscence[i].MainEntranceY2 < 480) then
       Entrance[Rscence[i].MainEntranceX2, Rscence[i].MainEntranceY2] := i;
-    end;
   end;
   //showmessage(inttostr(useless1));
   if UseLess1 > 0 then
@@ -2112,14 +2110,14 @@ end;
 
 procedure UpdateScenceAmi;
 begin
-    while True do
-    begin
-      if (where = 1) and (CurEvent < 0) and (not LoadingScence) and (NeedRefreshScence = 1) then
-        InitialScence(2);
-      if (where < 1) or (where > 2) then
-        break;
-      SDL_Delay(200);
-    end;
+  while True do
+  begin
+    if (where = 1) and (CurEvent < 0) and (not LoadingScence) and (NeedRefreshScence = 1) then
+      InitialScence(2);
+    if (where < 1) or (where > 2) then
+      break;
+    SDL_Delay(200);
+  end;
 
 end;
 
@@ -5891,7 +5889,7 @@ begin
   begin
     InitialScence(0);
   end;
-  NeedRefreshScence:=1;
+  NeedRefreshScence := 1;
   //if where <> 2 then CurEvent := -1;
   if MMAPAMI * SCENCEAMI = 0 then
   begin
