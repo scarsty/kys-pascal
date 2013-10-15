@@ -315,8 +315,9 @@ begin
       offset := HIdx[num - 1];
     y := Psmallint(@HPic[offset + 6])^;
     //showmessage(inttostr(y));
-    DrawRLE8Pic(@ACol1[0], num, px, py + y, @HIdx[0], @HPic[0], @Area, scr, scr.w, scr.h, 0,
-      0, 0, nil, nil, 0, 0, 0, 0, 0, 0);
+    if (num >= 0) and (num < HPicAmount) then
+      DrawRLE8Pic(@ACol1[0], num, px, py + y, @HIdx[0], @HPic[0], @Area, scr, scr.w, scr.h, 0,
+        0, 0, nil, nil, 0, 0, 0, 0, 0, 0);
   end;
 end;
 
@@ -330,8 +331,9 @@ begin
     display_img(@str[1], px, py - 60)
   else
   begin
-    DrawRLE8Pic(@ACol1[0], num, px, py, @HIdx[0], @HPic[0], nil, nil, 0, 0, 0, shadow, alpha,
-      nil, nil, 0, 0, 0, depth, mixColor, mixAlpha);
+    if (num >= 0) and (num < HPicAmount) then
+      DrawRLE8Pic(@ACol1[0], num, px, py, @HIdx[0], @HPic[0], nil, nil, 0, 0, 0, shadow, alpha,
+        nil, nil, 0, 0, 0, depth, mixColor, mixAlpha);
   end;
 
 end;
