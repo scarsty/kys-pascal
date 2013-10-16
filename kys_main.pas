@@ -2786,27 +2786,14 @@ begin
     (SData[CurScence, 0, x, y] = 1348) then
     Result := False;
   //if SData[CurScence, 0, x, y] = 1358 * 2 then result := true;
+  if (MODVersion = 23) and ((SData[CurScence, 1, x, y] = 1358 * 2) or (SData[CurScence, 1, x, y] = 1269 * 2)) then
+    Result := True;
 
 end;
 
 function CanWalkInScence(x1, y1, x, y: integer): boolean; overload;
 begin
-  Result := True;
-  if (SData[CurScence, 1, x, y] <= 0) and (SData[CurScence, 1, x, y] >= -2) then
-    Result := True
-  else
-    Result := False;
-  if (abs(SData[CurScence, 4, x, y] - SData[CurScence, 4, x1, y1]) > 10) then
-    Result := False;
-  if (SData[CurScence, 3, x, y] >= 0) and (Result) and (DData[CurScence, SData[CurScence, 3, x, y], 0] = 1) then
-    Result := False;
-  //直接判定贴图范围
-  if ((SData[CurScence, 0, x, y] >= 358) and (SData[CurScence, 0, x, y] <= 362)) or
-    (SData[CurScence, 0, x, y] = 522) or (SData[CurScence, 0, x, y] = 1022) or
-    ((SData[CurScence, 0, x, y] >= 1324) and (SData[CurScence, 0, x, y] <= 1330)) or
-    (SData[CurScence, 0, x, y] = 1348) then
-    Result := False;
-  //if SData[CurScence, 0, x, y] = 1358 * 2 then result := true;
+  Result := (abs(SData[CurScence, 4, x, y] - SData[CurScence, 4, x1, y1]) <= 10) and CanWalkInScence(x, y);
 
 end;
 
