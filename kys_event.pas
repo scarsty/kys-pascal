@@ -863,26 +863,29 @@ procedure instruct_32(inum, amount: integer);
 var
   i: integer;
 begin
-  i := 0;
-  while (RItemList[i].Number >= 0) and (i < MAX_ITEM_AMOUNT) do
+  if Amount <> 0 then
   begin
-    if (RItemList[i].Number = inum) then
+    i := 0;
+    while (RItemList[i].Number >= 0) and (i < MAX_ITEM_AMOUNT) do
     begin
-      RItemList[i].Amount := RItemList[i].Amount + amount;
-      if (RItemList[i].Amount < 0) and (amount >= 0) then
-        RItemList[i].Amount := 32767;
-      if (RItemList[i].Amount < 0) and (amount < 0) then
-        RItemList[i].Amount := 0;
-      break;
+      if (RItemList[i].Number = inum) then
+      begin
+        RItemList[i].Amount := RItemList[i].Amount + amount;
+        if (RItemList[i].Amount < 0) and (amount >= 0) then
+          RItemList[i].Amount := 32767;
+        if (RItemList[i].Amount < 0) and (amount < 0) then
+          RItemList[i].Amount := 0;
+        break;
+      end;
+      i := i + 1;
     end;
-    i := i + 1;
+    if RItemList[i].Number < 0 then
+    begin
+      RItemList[i].Number := inum;
+      RItemList[i].Amount := amount;
+    end;
+    ReArrangeItem;
   end;
-  if RItemList[i].Number < 0 then
-  begin
-    RItemList[i].Number := inum;
-    RItemList[i].Amount := amount;
-  end;
-  ReArrangeItem;
 end;
 
 //学到武功, 如果已有武功则升级, 如果已满10个不会洗武功
