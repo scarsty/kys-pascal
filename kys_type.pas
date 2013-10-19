@@ -440,7 +440,8 @@ var
   //RegionRect: TSDL_Rect; //全局重画范围, 无用
   RMask, GMask, BMask, AMask: uint32; //色值蒙版, 注意透明蒙版在创建RGB表面时需设为0
 
-  RefineGround: array[-64..127, -64..127] of smallint;  //用来使场景边缘的显示效果改善
+  EXPAND_GROUND: integer = 1;
+  ExGround: array[-64..127, -64..127] of smallint;  //用来使场景边缘的显示效果改善
   ImageWidth, ImageHeight: smallint;
 
 implementation

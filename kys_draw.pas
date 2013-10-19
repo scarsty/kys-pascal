@@ -63,7 +63,7 @@ procedure DrawMMap;
 procedure DrawScence;
 procedure DrawScenceWithoutRole(x, y: integer);
 procedure DrawRoleOnScence(x, y: integer);
-procedure RefineImgGround();
+procedure ExpandGroundOnImg();
 procedure InitialScence(); overload;
 procedure InitialScence(Visible: integer); overload;
 function CalBlock(x, y: integer): integer;
@@ -955,49 +955,52 @@ begin
 
 end;
 
-procedure RefineImgGround();
+procedure ExpandGroundOnImg();
 var
   i1, i2, x, y, num: integer;
 begin
-  fillchar(RefineGround, sizeof(RefineGround), 0);
-  for i1 := 0 to 63 do
-    for i2 := 0 to 63 do
-    begin
-      case where of
-        1: RefineGround[i1, i2] := SData[CurScence, 0, i1, i2];
-        2: RefineGround[i1, i2] := Bfield[0, i1, i2];
+  if EXPAND_GROUND <> 0 then
+  begin
+    fillchar(ExGround, sizeof(ExGround), 0);
+    for i1 := 0 to 63 do
+      for i2 := 0 to 63 do
+      begin
+        case where of
+          1: ExGround[i1, i2] := SData[CurScence, 0, i1, i2];
+          2: ExGround[i1, i2] := Bfield[0, i1, i2];
+        end;
       end;
-    end;
-  for i1 := 31 downto -64 do
-    for i2 := 0 to 63 do
-    begin
-      if RefineGround[i1, i2] <= 0 then RefineGround[i1, i2] := RefineGround[i1 + 1, i2];
-    end;
-  for i1 := 32 to 127 do
-    for i2 := 0 to 63 do
-    begin
-      if RefineGround[i1, i2] <= 0 then RefineGround[i1, i2] := RefineGround[i1 - 1, i2];
-    end;
-  for i1 := -64 to 127 do
-    for i2 := 31 downto -64 do
-    begin
-      if RefineGround[i1, i2] <= 0 then RefineGround[i1, i2] := RefineGround[i1, i2 + 1];
-    end;
-  for i1 := -64 to 127 do
-    for i2 := 32 to 127 do
-    begin
-      if RefineGround[i1, i2] <= 0 then RefineGround[i1, i2] := RefineGround[i1, i2 - 1];
-    end;
-  for i1 := -64 to 127 do
-    for i2 := -64 to 127 do
-    begin
-      CalPosOnImage(i1, i2, x, y);
-      num := RefineGround[i1, i2] div 2;
-      case where of
-        1: InitialSPic(num, x, y, 0, 0, ImageWidth, ImageHeight, 0, 0, 0);
-        2: InitialBPic(num, x, y, 0, 0);
+    for i1 := 31 downto -64 do
+      for i2 := 0 to 63 do
+      begin
+        if ExGround[i1, i2] <= 0 then ExGround[i1, i2] := ExGround[i1 + 1, i2];
       end;
-    end;
+    for i1 := 32 to 127 do
+      for i2 := 0 to 63 do
+      begin
+        if ExGround[i1, i2] <= 0 then ExGround[i1, i2] := ExGround[i1 - 1, i2];
+      end;
+    for i1 := -64 to 127 do
+      for i2 := 31 downto -64 do
+      begin
+        if ExGround[i1, i2] <= 0 then ExGround[i1, i2] := ExGround[i1, i2 + 1];
+      end;
+    for i1 := -64 to 127 do
+      for i2 := 32 to 127 do
+      begin
+        if ExGround[i1, i2] <= 0 then ExGround[i1, i2] := ExGround[i1, i2 - 1];
+      end;
+    for i1 := -64 to 127 do
+      for i2 := -64 to 127 do
+      begin
+        CalPosOnImage(i1, i2, x, y);
+        num := ExGround[i1, i2] div 2;
+        case where of
+          1: InitialSPic(num, x, y, 0, 0, ImageWidth, ImageHeight, 0, 0, 0);
+          2: InitialBPic(num, x, y, 0, 0);
+        end;
+      end;
+  end;
 end;
 
 //Save the image informations of the whole scence.
@@ -1028,7 +1031,7 @@ begin
     h := ImageHeight;
     SDL_FillRect(ImgScence, nil, 0);
     SDL_FillRect(ImgScenceBack, nil, 1);
-    RefineImgGround();
+    ExpandGroundOnImg();
   end
   else
   begin
@@ -1321,7 +1324,7 @@ begin
   FillChar(BlockImg2[0], sizeof(BlockImg2[0]) * length(BlockImg2), -1);
   SDL_FillRect(ImgBField, nil, 0);
   SDL_FillRect(ImgBBuild, nil, 1);
-  RefineImgGround();
+  ExpandGroundOnImg();
   for sumi := 0 to 126 do
   begin
     //InitialBFieldPosition(mini, mini, CalBlock(mini, mini));
@@ -1347,10 +1350,11 @@ begin
   end
   else
   begin
-    //InitialBPic(bfield[0, i1, i2] div 2, x, y, 0, 0);
+    CalPosOnImage(i1, i2, x, y);
+    if EXPAND_GROUND = 0 then
+      InitialBPic(bfield[0, i1, i2] div 2, x, y, 0, 0);
     if (bfield[1, i1, i2] > 0) then
     begin
-      CalPosOnImage(i1, i2, x, y);
       InitialBPic(bfield[1, i1, i2] div 2, x, y, 1, depth);
     end;
   end;
