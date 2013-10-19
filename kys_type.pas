@@ -329,7 +329,7 @@ var
   ImgScence, ImgScenceBack, ImgBField, ImgBBuild: PSDL_Surface;
   //重画场景和战场的图形映像. 实时重画场景效率较低, 故首先生成映像, 需要时载入
   //Img1在场景中用于副线程动态效果, Img2在战场用于仅保存建筑层以方便快速载入
-  BlockImg, BlockImg2: array[0..2303, 0..1401] of integer;
+  BlockImg, BlockImg2: array of smallint;
   BlockScreen: TPosition;
   //场景和战场的遮挡信息, 前者不会记录地板数据, 该值实际由绘图顺序决定
 
@@ -439,6 +439,9 @@ var
 
   //RegionRect: TSDL_Rect; //全局重画范围, 无用
   RMask, GMask, BMask, AMask: uint32; //色值蒙版, 注意透明蒙版在创建RGB表面时需设为0
+
+  RefineGround: array[-64..127, -64..127] of smallint;  //用来使场景边缘的显示效果改善
+  ImageWidth, ImageHeight: smallint;
 
 implementation
 
