@@ -63,16 +63,19 @@ procedure DrawMMap;
 procedure DrawScence;
 procedure DrawScenceWithoutRole(x, y: integer);
 procedure DrawRoleOnScence(x, y: integer);
+procedure RefineImgGround();
 procedure InitialScence(); overload;
 procedure InitialScence(Visible: integer); overload;
 function CalBlock(x, y: integer): integer;
+procedure CalPosOnImage(i1, i2: integer; var x, y: integer);
+procedure CalLTPosOnImageByCenter(i1, i2: integer; var x, y: integer);
 procedure InitialScenceOnePosition(i1, i2, x1, y1, w, h, depth, temp: integer);
 procedure UpdateScence(xs, ys: integer);
 procedure LoadScencePart(x, y: integer);
 procedure DrawWholeBField(needProgress: integer = 1);
 procedure DrawBfieldWithoutRole(x, y: integer);
 procedure DrawRoleOnBfield(x, y: integer; MixColor: Uint32 = 0; MixAlpha: integer = 0; Alpha: integer = 75);
-procedure InitialWholeBField;
+procedure InitialBFieldImage;
 procedure InitialBFieldPosition(i1, i2, depth: integer);
 procedure LoadBfieldPart(x, y: integer);
 procedure LoadBFieldPart2(x, y, alpha: integer);
@@ -199,11 +202,11 @@ begin
     end;
     if PNG_TILE > 0 then
       DrawPNGTile(SPNGIndex[num], 0, nil, screen, px, py, shadow, alpha, mixColor, mixAlpha,
-        depth, @BlockImg[0], 2304, 1402, sizeof(BlockImg[0, 0]), BlockScreen.x, BlockScreen.y)
+        depth, @BlockImg[0], ImageWidth, ImageHeight, sizeof(BlockImg[0]), BlockScreen.x, BlockScreen.y)
     else
     begin
       DrawRLE8Pic(@ACol[0], num, px, py, @SIdx[0], @SPic[0], nil, nil, 0, 0, 0, shadow, alpha,
-        @BlockImg[0], @BlockScreen, 2304, 1402, sizeof(BlockImg[0, 0]), depth, mixColor, mixAlpha);
+        @BlockImg[0], @BlockScreen, ImageWidth, ImageHeight, sizeof(BlockImg[0]), depth, mixColor, mixAlpha);
     end;
   end;
 
@@ -243,10 +246,10 @@ begin
   end;
   if (num >= 0) and (num < SPicAmount) then
   begin
-    if x + w > 2303 then
-      w := 2303 - x;
-    if y + h > 1401 then
-      h := 1401 - y;
+    if x + w > ImageWidth then
+      w := ImageWidth - x - 1;
+    if y + h > ImageHeight then
+      h := ImageHeight - y - 1;
     Area.x := x;
     Area.y := y;
     Area.w := w;
@@ -263,18 +266,19 @@ begin
       DrawPNGTile(SPNGIndex[num], SDL_GetTicks div 300, @Area, pImg, px, py);
       if needBlock <> 0 then
       begin
-        SetPNGTileBlock(SPNGIndex[num], px, py, depth, pBlock, 2304, 1402, sizeof(BlockImg[0, 0]));
+        SetPNGTileBlock(SPNGIndex[num], px, py, depth, pBlock, ImageWidth, ImageHeight, sizeof(BlockImg[0]));
       end;
     end
     else
     begin
       if needBlock <> 0 then
       begin
-        DrawRLE8Pic(@ACol[0], num, px, py, @SIdx[0], @SPic[0], @Area, pImg, 2304, 1402,
-          sizeof(BlockImg[0, 0]), 0, 0, pBlock, nil, 0, 0, 0, depth, 0, 0);
+        DrawRLE8Pic(@ACol[0], num, px, py, @SIdx[0], @SPic[0], @Area, pImg, ImageWidth, ImageHeight,
+          sizeof(BlockImg[0]), 0, 0, pBlock, nil, 0, 0, 0, depth, 0, 0);
       end
       else
-        DrawRLE8Pic(@ACol[0], num, px, py, @SIdx[0], @SPic[0], @Area, pImg, 2304, 1402, sizeof(BlockImg[0, 0]), 0);
+        DrawRLE8Pic(@ACol[0], num, px, py, @SIdx[0], @SPic[0], @Area, pImg, ImageWidth,
+          ImageHeight, sizeof(BlockImg[0]), 0);
     end;
   end;
 end;
@@ -356,12 +360,12 @@ begin
     begin
       //LoadOnePNGTile('resource/wmap/', num, BPNGIndex[num], @BPNGTile[0]);
       DrawPNGTile(BPNGIndex[num], 0, nil, screen, px, py, shadow, alpha, mixColor, mixAlpha,
-        depth, @BlockImg[0], 2304, 1402, sizeof(BlockImg[0, 0]), BlockScreen.x, BlockScreen.y);
+        depth, @BlockImg2[0], ImageWidth, ImageHeight, sizeof(BlockImg2[0]), BlockScreen.x, BlockScreen.y);
     end
     else
     begin
       DrawRLE8Pic(@ACol[0], num, px, py, @WIdx[0], @WPic[0], nil, nil, 0, 0, 0, shadow, alpha,
-        @BlockImg[0], @BlockScreen, 2304, 1402, sizeof(BlockImg[0, 0]), depth, mixColor, mixAlpha);
+        @BlockImg2[0], @BlockScreen, ImageWidth, ImageHeight, sizeof(BlockImg2[0]), depth, mixColor, mixAlpha);
     end;
   end;
 
@@ -411,7 +415,7 @@ begin
       LoadOnePNGTile('resource/wmap/', nil, num, BPNGIndex[num], @BPNGTile[0]);
       if needBlock <> 0 then
       begin
-        SetPNGTileBlock(BPNGIndex[num], px, py, depth, @BlockImg[0], 2304, 1402, sizeof(BlockImg[0, 0]));
+        SetPNGTileBlock(BPNGIndex[num], px, py, depth, @BlockImg[0], ImageWidth, ImageHeight, sizeof(BlockImg[0]));
         pImg := ImgBBuild;
       end
       else
@@ -421,10 +425,11 @@ begin
     else
     begin
       if needBlock <> 0 then
-        DrawRLE8Pic(@ACol[0], num, px, py, @WIdx[0], @WPic[0], nil, ImgBBuild, 2304, 1402,
-          sizeof(BlockImg[0, 0]), 0, 0, @BlockImg[0], nil, 0, 0, 0, depth, 0, 0)
+        DrawRLE8Pic(@ACol[0], num, px, py, @WIdx[0], @WPic[0], nil, ImgBBuild, ImageWidth, ImageHeight,
+          sizeof(BlockImg2[0]), 0, 0, @BlockImg2[0], nil, 0, 0, 0, depth, 0, 0)
       else
-        DrawRLE8Pic(@ACol[0], num, px, py, @WIdx[0], @WPic[0], nil, ImgBfield, 2304, 1402, sizeof(BlockImg[0, 0]), 0);
+        DrawRLE8Pic(@ACol[0], num, px, py, @WIdx[0], @WPic[0], nil, ImgBfield, ImageWidth,
+          ImageHeight, sizeof(BlockImg2[0]), 0);
     end;
   end;
 end;
@@ -472,13 +477,14 @@ begin
       if (index >= 0) and (index < BRoleAmount) then
         if (num >= Low(FPNGIndex[index])) and (num <= High(FPNGIndex[index])) then
           DrawPNGTile(FPNGIndex[index][num], 0, nil, screen, px, py, shadow, alpha, mixColor, mixAlpha,
-            depth, @BlockImg[0], 2304, 1402, sizeof(BlockImg[0, 0]), BlockScreen.x, BlockScreen.y);
+            depth, @BlockImg2[0], ImageWidth, ImageHeight, sizeof(BlockImg2[0]), BlockScreen.x, BlockScreen.y);
     end;
     0:
     begin
       if num < FPicAmount then
         DrawRLE8Pic(@ACol[0], num, px, py, @FIdx[0], @FPic[0], nil, nil, 0, 0, 0, shadow,
-          alpha, @BlockImg[0], @BlockScreen, 2304, 1402, sizeof(BlockImg[0, 0]), depth, mixColor, mixAlpha);
+          alpha, @BlockImg2[0], @BlockScreen, ImageWidth, ImageHeight, sizeof(BlockImg2[0]),
+          depth, mixColor, mixAlpha);
     end;
   end;
 end;
@@ -931,36 +937,10 @@ end;
 
 procedure DrawScenceWithoutRole(x, y: integer);
 var
-  i1, i2, sumi, i: integer;
-  pos: TPosition;
+  x1, y1: integer;
 begin
-  LoadScencePart(-x * 18 + y * 18 + 1151 - CENTER_X, x * 9 + y * 9 + 9 - CENTER_Y + 250);
-
-  {for i1 := 0 to 63 do
-    for i2 := 0 to 63 do
-    begin
-      pos := GetPositionOnScreen(i1, i2, Sx, Sy);
-      if SData[CurScence, 4, i1, i2] <= 0 then
-        DrawSPic(SData[CurScence, 0, i1, i2] div 2, pos.x, pos.y);
-    end;}
-  {for sumi := 0 to 63 * 2 do
-    for i1 := 0 to 63 do
-    begin
-      i2 := sumi - i1;
-      if (i2 >= 0) and (i2 < 64) then
-      begin
-        pos := GetPositionOnScreen(i1, i2, Sx, Sy);
-        {if SData[CurScence, 4, i1, i2] > 0 then
-          DrawSPic(SData[CurScence, 0, i1, i2] div 2, pos.x, pos.y);
-        if (SData[CurScence, 1, i1, i2] > 0) then
-          DrawSPic(SData[CurScence, 1, i1, i2] div 2, pos.x, pos.y);
-        if (SData[CurScence, 2, i1, i2] > 0) then
-          DrawSPic(SData[CurScence, 2, i1, i2] div 2, pos.x, pos.y);}
-        {if (SData[CurScence, 3, i1, i2] >= 0) and (DData[CurScence, SData[CurScence, 3, i1, i2], 5] > 0) then
-          DrawSPic(DData[CurScence, SData[CurScence, 3, i1, i2], 5] div 2, pos.x, pos.y - SData[CurScence, 4, Sx, Sy], 0, 100, i1 + i2, 0, 0);
-      end;
-    end;}
-
+  CalLTPosOnImageByCenter(x, y, x1, y1);
+  LoadScencePart(x1, y1);
 end;
 
 //画主角于场景
@@ -973,6 +953,51 @@ begin
   pos := GetPositionOnScreen(Sx, Sy, x, y);
   DrawSPic(CurScenceRolePic, pos.x, pos.y - SData[CurScence, 4, Sx, Sy], 0, 100, CalBlock(Sx, Sy), 0, 0);
 
+end;
+
+procedure RefineImgGround();
+var
+  i1, i2, x, y, num: integer;
+begin
+  fillchar(RefineGround, sizeof(RefineGround), 0);
+  for i1 := 0 to 63 do
+    for i2 := 0 to 63 do
+    begin
+      case where of
+        1: RefineGround[i1, i2] := SData[CurScence, 0, i1, i2];
+        2: RefineGround[i1, i2] := Bfield[0, i1, i2];
+      end;
+    end;
+  for i1 := 31 downto -64 do
+    for i2 := 0 to 63 do
+    begin
+      if RefineGround[i1, i2] <= 0 then RefineGround[i1, i2] := RefineGround[i1 + 1, i2];
+    end;
+  for i1 := 32 to 127 do
+    for i2 := 0 to 63 do
+    begin
+      if RefineGround[i1, i2] <= 0 then RefineGround[i1, i2] := RefineGround[i1 - 1, i2];
+    end;
+  for i1 := -64 to 127 do
+    for i2 := 31 downto -64 do
+    begin
+      if RefineGround[i1, i2] <= 0 then RefineGround[i1, i2] := RefineGround[i1, i2 + 1];
+    end;
+  for i1 := -64 to 127 do
+    for i2 := 32 to 127 do
+    begin
+      if RefineGround[i1, i2] <= 0 then RefineGround[i1, i2] := RefineGround[i1, i2 - 1];
+    end;
+  for i1 := -64 to 127 do
+    for i2 := -64 to 127 do
+    begin
+      CalPosOnImage(i1, i2, x, y);
+      num := RefineGround[i1, i2] div 2;
+      case where of
+        1: InitialSPic(num, x, y, 0, 0, ImageWidth, ImageHeight, 0, 0, 0);
+        2: InitialBPic(num, x, y, 0, 0);
+      end;
+    end;
 end;
 
 //Save the image informations of the whole scence.
@@ -999,22 +1024,21 @@ begin
   begin
     x1 := 0;
     y1 := 0;
-    w := 2304;
-    h := 1402;
+    w := ImageWidth;
+    h := ImageHeight;
     SDL_FillRect(ImgScence, nil, 0);
     SDL_FillRect(ImgScenceBack, nil, 1);
+    RefineImgGround();
   end
   else
   begin
     if CurEvent >= 0 then
     begin
-      x1 := -Cx * 18 + Cy * 18 + 1151 - CENTER_X;
-      y1 := Cx * 9 + Cy * 9 + 9 - CENTER_Y + 250;
+      CalLTPosOnImageByCenter(Cx, Cy, x1, y1);
     end
     else
     begin
-      x1 := -Sx * 18 + Sy * 18 + 1151 - CENTER_X;
-      y1 := Sx * 9 + Sy * 9 + 9 - CENTER_Y + 250;
+      CalLTPosOnImageByCenter(Sx, Sy, x1, y1);
     end;
     w := screen.w;
     h := screen.h;
@@ -1028,12 +1052,12 @@ begin
   for i1 := 0 to 63 do
     for i2 := 0 to 63 do
     begin
-      x := -i1 * 18 + i2 * 18 + 1151;
-      y := i1 * 9 + i2 * 9 + 9 + 250;
+      CalPosOnImage(i1, i2, x, y);
       if SData[CurScence, 4, i1, i2] <= 0 then
       begin
         num := SData[CurScence, 0, i1, i2] div 2;
-        InitialSPic(num, x, y, x1, y1, w, h, 1, 0, onback);
+        if num > 0 then
+          InitialSPic(num, x, y, x1, y1, w, h, 1, 0, onback);
       end;
     end;
   for mini := 0 to 63 do
@@ -1046,11 +1070,20 @@ begin
     end;
   end;
 
-  if (Visible > 0) and (where = 1) and (x1 >= 0) and (y1 >= 0) {and (x1 < 2304 - w) and (y1 < 1402 - h)} then
+  if (Visible > 0) and (where = 1) and (x1 >= 0) and (y1 >= 0) then
   begin
-    if x1 + w >= 2304 then
-      w := 2303 - x1;
-    Move(BlockImg2[x1, 0], BlockImg[x1, 0], w * sizeof(BlockImg[x1]));
+    //遮挡值仅更新主角附近的即可
+    CalPosOnImage(Sx, Sy, x, y);
+    x := x - 36;
+    y := y - 100;
+    for i1 := x to x + 72 do
+      //for i2:=y to y+100 do
+    begin
+      num := i1 * ImageHeight + y;
+      //blockImg[num]:=blockImg2[num];
+      move(BlockImg2[num], BlockImg[num], 200);
+    end;
+    //Move(BlockImg2[0], BlockImg[0], sizeof(BlockImg[0])*length(BlockImg));
     dest.x := x1;
     dest.y := y1;
     dest.w := w;
@@ -1068,14 +1101,26 @@ begin
   Result := 128 * (x + y) + y;
 end;
 
+procedure CalPosOnImage(i1, i2: integer; var x, y: integer);
+begin
+  x := -i1 * 18 + i2 * 18 + ImageWidth div 2;
+  y := i1 * 9 + i2 * 9 + 9 + CENTER_Y;
+end;
+
+procedure CalLTPosOnImageByCenter(i1, i2: integer; var x, y: integer);
+begin
+  x := -i1 * 18 + i2 * 18 + ImageWidth div 2 - CENTER_X;
+  y := i1 * 9 + i2 * 9 + 9;
+end;
+
+
 //上面函数的子程
 
 procedure InitialScenceOnePosition(i1, i2, x1, y1, w, h, depth, temp: integer);
 var
   i, x, y, num: integer;
 begin
-  x := -i1 * 18 + i2 * 18 + 1151;
-  y := i1 * 9 + i2 * 9 + 9 + 250;
+  CalPosOnImage(i1, i2, x, y);
   //InitialSPic2(SData[CurScence, 0, i1, i2] div 2, x, y, x1, y1, w, h, 1);
   if SData[CurScence, 4, i1, i2] > 0 then
   begin
@@ -1184,20 +1229,8 @@ begin
   dest2.h := screen.h;
   BlockScreen.x := x;
   BlockScreen.y := y;
-  {for i1 := 0 to screen.w - 1 do
-    for i2 := 0 to screen.h - 1 do
-      if (x + i1 >= 0) and (y + i2 >= 0) and (x + i1 < 2304) and (y + i2 < 1402) then
-      begin
-        //putpixel(screen, i1, i2, scenceimg[x + i1, y + i2]);
-        BlockScreen[i1 * screen.h + i2] := BlockImg[x + i1, y + i2];
-      end
-      else
-      begin
-        //putpixel(screen, i1, i2, 0);
-        BlockScreen[i1 * screen.h + i2] := 0;
-      end;}
-  if (x < 0) or (x >= 2304 - CENTER_X * 2) then
-    SDL_FillRect(screen, nil, 0);
+  //if (x < 0) or (x >= 2304 - CENTER_X * 2) then
+  //SDL_FillRect(screen, nil, 0);
   SDL_BlitSurface(ImgScence, @dest, screen, nil);
 
 end;
@@ -1238,25 +1271,10 @@ end;
 
 procedure DrawBfieldWithoutRole(x, y: integer);
 var
-  i1, i2, xpoint, ypoint: integer;
+  x1, y1: integer;
 begin
-  {if (SDL_MustLock(screen)) then
-  begin
-    if (SDL_LockSurface(screen) < 0) then
-    begin
-      MessageBox(0, PChar(Format('Can''t lock screen : %s', [SDL_GetError])), 'Error', MB_OK or MB_ICONHAND);
-      exit;
-    end;
-  end;}
-  //BFieldDrawn := 0;
-  LoadBfieldPart(-x * 18 + y * 18 + 1151 - CENTER_X, x * 9 + y * 9 + 9 - CENTER_Y + 250);
-
-  {if (SDL_MustLock(screen)) then
-  begin
-    SDL_UnlockSurface(screen);
-  end;}
-  //SDL_UpdateRect2(screen, 0,0,screen.w,screen.h);
-
+  CalLTPosOnImageByCenter(x, y, x1, y1);
+  LoadBfieldPart(x1, y1);
 end;
 
 //画战场上人物, 需更新人物身前的遮挡
@@ -1296,21 +1314,24 @@ end;
 
 //初始化战场映像
 
-procedure InitialWholeBField;
+procedure InitialBFieldImage;
 var
-  mini, maxi: integer;
+  sumi, i1, i2: integer;
 begin
-  FillChar(BlockImg[0, 0], sizeof(BlockImg), -1);
+  FillChar(BlockImg2[0], sizeof(BlockImg2[0]) * length(BlockImg2), -1);
   SDL_FillRect(ImgBField, nil, 0);
   SDL_FillRect(ImgBBuild, nil, 1);
-
-  for mini := 0 to 63 do
+  RefineImgGround();
+  for sumi := 0 to 126 do
   begin
-    InitialBFieldPosition(mini, mini, CalBlock(mini, mini));
-    for maxi := mini + 1 to 63 do
+    //InitialBFieldPosition(mini, mini, CalBlock(mini, mini));
+    for i1 := 63 downto 0 do
     begin
-      InitialBFieldPosition(maxi, mini, CalBlock(maxi, mini));
-      InitialBFieldPosition(mini, maxi, CalBlock(mini, maxi));
+      //InitialBFieldPosition(maxi, mini, CalBlock(maxi, mini));
+      //InitialBFieldPosition(mini, maxi, CalBlock(mini, maxi));
+      i2 := sumi - i1;
+      if (i2 >= 0) and (i2 <= 63) then
+        InitialBFieldPosition(i1, i2, CalBlock(i1, i2));
     end;
   end;
 
@@ -1320,17 +1341,16 @@ procedure InitialBFieldPosition(i1, i2, depth: integer);
 var
   x, y: integer;
 begin
-  x := -i1 * 18 + i2 * 18 + 1151;
-  y := i1 * 9 + i2 * 9 + 9 + 250;
   if (i1 < 0) or (i2 < 0) or (i1 > 63) or (i2 > 63) then
   begin
-    InitialBPic(0, x, y, 0, 0);
+    //InitialBPic(0, x, y, 0, 0);
   end
   else
   begin
-    InitialBPic(bfield[0, i1, i2] div 2, x, y, 0, 0);
+    //InitialBPic(bfield[0, i1, i2] div 2, x, y, 0, 0);
     if (bfield[1, i1, i2] > 0) then
     begin
+      CalPosOnImage(i1, i2, x, y);
       InitialBPic(bfield[1, i1, i2] div 2, x, y, 1, depth);
     end;
   end;
@@ -1349,21 +1369,8 @@ begin
   dest.h := screen.h;
   BlockScreen.x := x;
   BlockScreen.y := y;
-  {for i1 := 0 to screen.w - 1 do
-    for i2 := 0 to screen.h - 1 do
-      if (x + i1 >= 0) and (y + i2 >= 0) and (x + i1 < 2304) and (y + i2 < 1402) then
-      begin
-        //putpixel(screen, i1, i2, Bfieldimg[x + i1, y + i2]);
-        BlockScreen[i1 * screen.h + i2] := BlockImg[x + i1, y + i2];
-        //showmessage(inttostr(BlockScreen[i1, i2]));
-      end
-      else
-      begin
-        //putpixel(screen, i1, i2, 0);
-        BlockScreen[i1 * screen.h + i2] := 0;
-      end;}
-  if (x < 0) or (x >= 2304 - CENTER_X * 2) then
-    SDL_FillRect(screen, nil, 0);
+  //if (x < 0) or (x >= 2304 - CENTER_X * 2) then
+  //SDL_FillRect(screen, nil, 0);
   SDL_BlitSurface(ImgBfield, @dest, screen, nil);
   LoadBFieldPart2(x, y, 0);
   //SDL_BlitSurface(ImgBBuild, @dest, screen, nil);
@@ -1418,7 +1425,7 @@ end;
 
 procedure DrawBFieldWithCursor(step: integer);
 var
-  i, i1, i2, bnum, depth: integer;
+  i, i1, i2, bnum, depth, x, y: integer;
   pos: TPosition;
 begin
   for i1 := 0 to 63 do
@@ -1436,8 +1443,8 @@ begin
         {if (i1 = Ax) and (i2 = Ay) then
           DrawMPic(1, pos.x, pos.y);}
       end;
-
-  LoadBFieldPart2(-Bx * 18 + By * 18 + 1151 - CENTER_X, Bx * 9 + By * 9 + 9 - CENTER_Y + 250, 35);
+  CalLTPosOnImageByCenter(Bx, By, x, y);
+  LoadBFieldPart2(x, y, 35);
 
   for i1 := 0 to 63 do
     for i2 := 0 to 63 do

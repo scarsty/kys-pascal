@@ -57,8 +57,7 @@ procedure FreeAllSurface;
 
 //基本绘图子程
 function getpixel(surface: PSDL_Surface; x: integer; y: integer): Uint32;
-procedure putpixel(surface_: PSDL_Surface; x: integer; y: integer; pixel: Uint32);
-procedure drawscreenpixel(x, y: integer; color: Uint32);
+procedure putpixel(surface: PSDL_Surface; x: integer; y: integer; pixel: Uint32);
 procedure display_bmp(file_name: PChar; x, y: integer);
 procedure display_img(file_name: PChar; x, y: integer);
 function ColColor(num: byte): Uint32;
@@ -826,7 +825,7 @@ var
   bpp: integer;
   p: PInteger;
 begin
-  if (x >= 0) and (x < screen.w) and (y >= 0) and (y < screen.h) then
+  if (x >= 0) and (x < surface.w) and (y >= 0) and (y < surface.h) then
   begin
     bpp := surface.format.BytesPerPixel;
     // Here p is the address to the pixel we want to retrieve
@@ -852,7 +851,7 @@ end;
 
 //画像素
 
-procedure putpixel(surface_: PSDL_Surface; x: integer; y: integer; pixel: Uint32);
+procedure putpixel(surface: PSDL_Surface; x: integer; y: integer; pixel: Uint32);
 type
   TByteArray = array[0..2] of byte;
   PByteArray = ^TByteArray;
@@ -860,9 +859,11 @@ var
   bpp: integer;
   p: PInteger;
 begin
-  bpp := surface_.format.BytesPerPixel;
+  if (x >= 0) and (x < surface.w) and (y >= 0) and (y < surface.h) then
+  begin
+  bpp := surface.format.BytesPerPixel;
   // Here p is the address to the pixel we want to set
-  p := Pointer(Uint32(surface_.pixels) + y * surface_.pitch + x * bpp);
+  p := Pointer(Uint32(surface.pixels) + y * surface.pitch + x * bpp);
 
   case bpp of
     1:
@@ -885,34 +886,9 @@ begin
     4:
       PUint32(p)^ := pixel;
   end;
-
+  end;
 end;
 
-//画一个点
-
-procedure drawscreenpixel(x, y: integer; color: Uint32);
-begin
-  (* Map the color yellow to this display (R := $ff, G := $FF, B := $00)
-     Note:  If the display is palettized, you must set the palette first.
-  *)
-  if (SDL_MUSTLOCK(screen)) then
-  begin
-    if (SDL_LockSurface(screen) < 0) then
-    begin
-      MessageBox(0, PChar(Format('Can''t lock screen : %s', [SDL_GetError])), 'Error', MB_OK or MB_ICONHAND);
-      exit;
-    end;
-  end;
-
-  putpixel(screen, x, y, color);
-
-  if (SDL_MUSTLOCK(screen)) then
-  begin
-    SDL_UnlockSurface(screen);
-  end;
-  // Update just the part of the display that we've changed
-  SDL_UpdateRect2(screen, x, y, 1, 1);
-end;
 
 //显示bmp文件
 
@@ -1142,7 +1118,7 @@ begin
                   //被遮挡的像素按照低位计算, 未被遮挡的按照高位计算
                   if (x < blockx + screen.w) and (y < blocky + screen.h) then
                   begin
-                    pixdepth := pint(BlockImageW + ((x + blockx) * heightW + y + blocky) * sizeW)^;
+                    pixdepth := psmallint(BlockImageW + ((x + blockx) * heightW + y + blocky) * sizeW)^;
                     curdepth := depth;
                     //if where = 1 then
                     //curdepth := depth - (w - xs - 1) div 18;
@@ -1204,7 +1180,7 @@ begin
                 begin
                   //if (depth < 0) then
                   //depth := (py div 9 - 1);
-                  Pint(BlockImageW + (x * heightI + y) * sizeI)^ := depth;
+                  Psmallint(BlockImageW + (x * heightI + y) * sizeI)^ := depth;
                 end;
                 pix := SDL_MapRGBA(screen.format, pix1, pix2, pix3, pix4);
                 putpixel(Image, x, y, pix);
@@ -1755,7 +1731,7 @@ begin
             if ((getpixel(CurSurface, i1, i2) and CurSurface.format.AMask) <> 0) and
               (x1 + i1 >= 0) and (x1 + i1 < Width) and (y1 + i2 >= 0) and (y1 + i2 < Height) then
             begin
-              pint(BlockImageW + ((x1 + i1) * Height + y1 + i2) * size)^ := depth;
+              psmallint(BlockImageW + ((x1 + i1) * Height + y1 + i2) * size)^ := depth;
             end;
           end;
         end;

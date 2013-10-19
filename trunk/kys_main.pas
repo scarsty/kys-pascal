@@ -224,14 +224,18 @@ begin
   //prescreen := SDL_DisplayFormat(screen);
   freshscreen := SDL_CreateRGBSurface(ScreenFlag, CENTER_X * 2, CENTER_Y * 2, 32, RMask, GMask, BMask, 0);
 
-  ImgScence := SDL_CreateRGBSurface(screen.flags, 2304, 1402, 32, RMask, GMask, BMask, 0);
+  ImageWidth := (36 * 32 + CENTER_X) * 2;
+  ImageHeight := (18 * 32 + CENTER_Y) * 2;
+
+  ImgScence := SDL_CreateRGBSurface(screen.flags, ImageWidth, ImageHeight, 32, RMask, GMask, BMask, 0);
   //ImgScence := SDL_DisplayFormat(ImgScence);
-  ImgScenceBack := SDL_CreateRGBSurface(screen.flags, 2304, 1402, 32, RMask, GMask, BMask, 0);
-  ImgBField := SDL_CreateRGBSurface(screen.flags, 2304, 1402, 32, RMask, GMask, BMask, 0);
-  ImgBBuild := SDL_CreateRGBSurface(screen.flags, 2304, 1402, 32, RMask, GMask, BMask, 0);
+  ImgScenceBack := SDL_CreateRGBSurface(screen.flags, ImageWidth, ImageHeight, 32, RMask, GMask, BMask, 0);
+  ImgBField := SDL_CreateRGBSurface(screen.flags, ImageWidth, ImageHeight, 32, RMask, GMask, BMask, 0);
+  ImgBBuild := SDL_CreateRGBSurface(screen.flags, ImageWidth, ImageHeight, 32, RMask, GMask, BMask, 0);
   SDL_SetColorKey(ImgScenceBack, SDL_SRCCOLORKEY, 1);
   SDL_SetColorKey(ImgBBuild, SDL_SRCCOLORKEY, 1);
-
+  setlength(BlockImg, ImageWidth * ImageHeight);
+  setlength(BlockImg2, ImageWidth * ImageHeight);
   {if GLHR = 1 then
   begin
     glBindTexture(GL_TEXTURE_2D, TextureID);
