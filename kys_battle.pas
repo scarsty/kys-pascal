@@ -141,7 +141,7 @@ begin
   end;
   instruct_14;
   Where := 2;
-  InitialWholeBField; //初始化场景
+  InitialBFieldImage; //初始化场景
 
   PreMusic := nowmusic;
   StopMP3;
