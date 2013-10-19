@@ -102,7 +102,7 @@ function SelectOneTeamMember(x, y: integer; str: string; list1, list2: integer):
 procedure MenuEsc;
 procedure ShowMenu(menu: integer);
 procedure MenuMedcine;
-procedure MenuMedPoision;
+procedure MenuMedPoison;
 function MenuItem: boolean;
 function ReadItemList(ItemType: integer): integer;
 procedure ReSort;
@@ -2603,7 +2603,7 @@ var
   Ylist: array[0..4096] of smallint;
   steplist: array[0..4096] of smallint;
   curgrid, totalgrid: integer;
-  Bgrid: array[1..4] of integer; //0空位，1可过，2已走过 ,3越界
+  Bgrid: array[1..4] of integer; //0空位, 1可过, 2已走过 ,3越界
   Xinc, Yinc: array[1..4] of integer;
   curX, curY, curstep, nextX, nextY: integer;
   i, i1, i2, i3: integer;
@@ -3466,7 +3466,7 @@ begin
     i := CommonMenu(27, 30, 46, 5, i, word);
     case i of
       0: MenuMedcine;
-      1: MenuMedPoision;
+      1: MenuMedPoison;
       2: MenuItem;
       5: MenuSystem;
       4: MenuLeave;
@@ -3529,7 +3529,7 @@ begin
           begin
             case menu of
               0: MenuMedcine;
-              1: MenuMedPoision;
+              1: MenuMedPoison;
               2: MenuItem;
               5: MenuSystem;
               4: MenuLeave;
@@ -3554,7 +3554,7 @@ begin
               showmenu(menu);
               case menu of
                 0: MenuMedcine;
-                1: MenuMedPoision;
+                1: MenuMedPoison;
                 2: MenuItem;
                 5: MenuSystem;
                 4: MenuLeave;
@@ -3656,7 +3656,7 @@ end;
 
 //解毒选单
 
-procedure MenuMedPoision;
+procedure MenuMedPoison;
 var
   role1, role2, menu: integer;
   str: WideString;
@@ -3971,7 +3971,7 @@ begin
 end;
 
 //读物品列表, 主要是战斗中需屏蔽一部分物品
-//利用一个不可能用到的数值（100），表示读取所有物品
+//利用一个不可能用到的数值（100）, 表示读取所有物品
 
 function ReadItemList(ItemType: integer): integer;
 var
@@ -4782,7 +4782,7 @@ begin
   //中毒, 受伤
   //str := format('%4d', [RRole[rnum].Hurt]);
   //drawengshadowtext(@str[1], 150, 341, colcolor($14), colcolor($16));
-  //str := format('%4d', [RRole[rnum].Poision]);
+  //str := format('%4d', [RRole[rnum].Poison]);
   //drawengshadowtext(@str[1], 150, 362, colcolor($35), colcolor($37));
 
   //装备, 秘笈

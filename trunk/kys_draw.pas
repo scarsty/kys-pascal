@@ -955,6 +955,9 @@ begin
 
 end;
 
+//将地面扩大并绘图, 避免场景出现黑色边缘, 方法是重复边缘的贴图
+//因为有些场景自身的问题, 可能会出现较奇怪的结果
+
 procedure ExpandGroundOnImg();
 var
   i1, i2, x, y, num: integer;

@@ -974,7 +974,7 @@ begin
 
 end;
 
-//RLE8图片绘制子程，所有相关子程均对此封装. 最后一个参数为亮度, 仅在绘制战场选择对方时使用
+//RLE8图片绘制子程, 所有相关子程均对此封装. 最后一个参数为亮度, 仅在绘制战场选择对方时使用
 
 procedure DrawRLE8Pic(colorPanel: PChar; num, px, py: integer; Pidx: Pinteger; Ppic: PByte;
   RectArea: PChar; Image: PSDL_Surface; widthI, heightI, sizeI: integer; shadow: integer); overload;
@@ -1689,7 +1689,7 @@ begin
                     if (pixdepth > depth) then
                     begin
                       //替换透明通道的值
-                      //注意: 这里如果效率较低，则改用完全指针, 或者汇编编写. 设置偏移也相同
+                      //注意: 这里如果效率较低, 则改用完全指针, 或者汇编编写. 设置偏移也相同
                       putpixel(tempscr, i1, i2, (pixel and (not Mask)) or (bigtran and Mask));
                     end;
                   end;
