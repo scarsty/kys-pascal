@@ -70,10 +70,10 @@ procedure LevelUp(bnum: integer);
 procedure CheckBook;
 function CalRNum(team: integer): integer;
 procedure BattleMenuItem(bnum: integer);
-procedure UsePoision(bnum: integer);
+procedure UsePoison(bnum: integer);
 procedure PlayActionAmination(bnum, mode: integer; mnum: integer = -1);
 procedure Medcine(bnum: integer);
-procedure MedPoision(bnum: integer);
+procedure MedPoison(bnum: integer);
 procedure UseHiddenWeapon(bnum, inum: integer);
 procedure Rest(bnum: integer);
 
@@ -554,13 +554,13 @@ begin
         begin
           if Brole[i].Acted = 0 then
           begin
-            tempBrole := Brole[i]; //记录一个临时人物信息，用于恢复位置
+            tempBrole := Brole[i]; //记录一个临时人物信息, 用于恢复位置
           end;
           case BattleMenu(i) of
             0: MoveRole(i);
             1: Attack(i);
-            2: UsePoision(i);
-            3: MedPoision(i);
+            2: UsePoison(i);
+            3: MedPoison(i);
             4: Medcine(i);
             5: BattleMenuItem(i);
             6:
@@ -1251,7 +1251,7 @@ begin
     end;
     if (Bfield[2, AX, AY] >= 0) and (Brole[Bfield[2, AX, AY]].Dead = 0) then
     begin
-      if (rrole[brole[Bfield[2, AX, AY]].rnum].Poision > 0) or (rrole[brole[Bfield[2, AX, AY]].rnum].Hurt > 0) then
+      if (rrole[brole[Bfield[2, AX, AY]].rnum].Poison > 0) or (rrole[brole[Bfield[2, AX, AY]].rnum].Hurt > 0) then
       begin
         showsimpleStatus(Brole[Bfield[2, AX, AY]].rnum, 330, 330);
         SDL_UpdateRect2(screen, 352, 394 - 77, 58, 60);
@@ -1402,7 +1402,7 @@ begin
 
 end;}
 
-//寻找某一地点坐标是否在移动范围之内，递归算法
+//寻找某一地点坐标是否在移动范围之内, 递归算法
 
 {function SeekPath2(x, y, step: integer): integer;
 var
@@ -1468,7 +1468,7 @@ end;}
 
 //计算可以被选中的位置
 //利用队列
-//移动过程中，旁边有敌人，则不能继续移动
+//移动过程中, 旁边有敌人, 则不能继续移动
 
 procedure SeekPath2(x, y, step, myteam, mode: integer);
 var
@@ -1545,8 +1545,8 @@ begin
       end;
 
       //移动的情况
-      //若为初始位置，不考虑旁边是敌军的情况
-      //在移动过程中，旁边没有敌军的情况下才继续移动
+      //若为初始位置, 不考虑旁边是敌军的情况
+      //在移动过程中, 旁边没有敌军的情况下才继续移动
       if mode = 0 then
       begin
         if (curstep = 0) or ((Bgrid[1] <> 3) and (Bgrid[2] <> 3) and (Bgrid[3] <> 3) and (Bgrid[4] <> 3)) then
@@ -1567,7 +1567,7 @@ begin
         end;
       end
       else
-        //非移动的情况，攻击、医疗等
+        //非移动的情况, 攻击, 医疗等
       begin
         for i := 1 to 4 do
         begin
@@ -2930,7 +2930,7 @@ end;
 
 //用毒
 
-procedure UsePoision(bnum: integer);
+procedure UsePoison(bnum: integer);
 var
   rnum, bnum1, rnum1, poi, step, addpoi, i, minDefPoi: integer;
   select: boolean;
@@ -3052,7 +3052,7 @@ end;
 
 //解毒
 
-procedure MedPoision(bnum: integer);
+procedure MedPoison(bnum: integer);
 var
   rnum, bnum1, rnum1, medpoi, step, minuspoi: integer;
   select: boolean;
@@ -3452,7 +3452,6 @@ begin
     if random(100) < 50 then
     begin
       //showmessage(inttostr(rrole[rnum].UsePoi));
-      CalCanSelect(bnum, 0, Brole[bnum].step);
       NearestMoveByPro(Ax, Ay, Ax1, Ay1, bnum, 1, 0, 17, -1, 1);
       if (Ax1 <> -1) then
       begin
@@ -3470,14 +3469,13 @@ begin
     if random(100) < 50 then
     begin
       //showmessage(inttostr(rrole[rnum].UsePoi));
-      CalCanSelect(bnum, 0, Brole[bnum].step);
       NearestMoveByPro(Ax, Ay, Ax1, Ay1, bnum, 1, 0, 20, 1, 2);
       if (Ax1 <> -1) then
       begin
         MoveAmination(bnum);
         Ax := Ax1;
         Ay := Ay1;
-        MedPoision(bnum);
+        MedPoison(bnum);
       end;
     end;
   end;
@@ -3488,14 +3486,14 @@ begin
     if random(100) < 50 then
     begin
       //showmessage(inttostr(rrole[rnum].UsePoi));
-      CalCanSelect(bnum, 0, Brole[bnum].step);
+      //CalCanSelect(bnum, 0, Brole[bnum].step);
       NearestMoveByPro(Ax, Ay, Ax1, Ay1, bnum, 0, min(Rrole[rnum].UsePoi div 15 + 1, 15), 49, -1, 0);
       if (Ax1 <> -1) then
       begin
         MoveAmination(bnum);
         Ax := Ax1;
         Ay := Ay1;
-        UsePoision(bnum);
+        UsePoison(bnum);
       end;
     end;
   end;
@@ -3506,7 +3504,7 @@ begin
     if random(100) < 30 then
     begin
       //showmessage(inttostr(rrole[rnum].UsePoi));
-      CalCanSelect(bnum, 0, Brole[bnum].step);
+      //CalCanSelect(bnum, 0, Brole[bnum].step);
       NearestMoveByPro(Ax, Ay, Ax1, Ay1, bnum, 0, 1, 17, -1, 0);
       if (Ax1 <> -1) then
       begin
@@ -3902,7 +3900,7 @@ begin
 
 end;
 
-//目标系点十菱，原地系菱
+//目标系点十菱, 原地系菱
 
 procedure calpoint(var Mx1, My1, Ax1, Ay1, tempmaxhurt: integer; curX, curY, bnum, mnum, level: integer);
 var
@@ -3945,7 +3943,7 @@ begin
   end;
 end;
 
-//线型攻击的情况，分四个方向考虑，分别计算伤血量
+//线型攻击的情况, 分四个方向考虑, 分别计算伤血量
 
 procedure calline(var Mx1, My1, Ax1, Ay1, tempmaxhurt: integer; curX, curY, bnum, mnum, level: integer);
 var
@@ -4195,6 +4193,7 @@ var
   curX, curY: integer;
   select, check: boolean;
 begin
+  CalCanSelect(bnum, 0, Brole[bnum].step);
   myteam := Brole[bnum].Team;
   mindis := 9999;
   step := Brole[bnum].Step;

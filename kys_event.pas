@@ -48,7 +48,7 @@ procedure instruct_19(x, y: integer);
 function instruct_20(jump1, jump2: integer): integer;
 procedure instruct_21(rnum: integer);
 procedure instruct_22;
-procedure instruct_23(rnum, Poision: integer);
+procedure instruct_23(rnum, Poison: integer);
 procedure instruct_24;
 procedure instruct_25(x1, y1, x2, y2: integer);
 procedure instruct_26(snum, enum, add1, add2, add3: integer);
@@ -648,9 +648,9 @@ begin
       Rrole[Teamlist[i]].CurrentMP := 0;
 end;
 
-procedure instruct_23(rnum, Poision: integer);
+procedure instruct_23(rnum, Poison: integer);
 begin
-  Rrole[rnum].UsePoi := Poision;
+  Rrole[rnum].UsePoi := Poison;
 end;
 
 //Black the screen when fail in battle.
