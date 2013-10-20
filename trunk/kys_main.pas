@@ -74,7 +74,7 @@ function CanWalk(x, y: integer): boolean;
 function CheckEntrance: boolean;
 procedure UpdateScenceAmi;
 function WalkInScence(Open: integer): integer;
-procedure findway(x1, y1: integer);
+procedure FindWay(x1, y1: integer);
 procedure Moveman(x1, y1, x2, y2: integer);
 procedure ShowScenceName(snum: integer);
 function CanWalkInScence(x, y: integer): boolean; overload;
@@ -83,21 +83,21 @@ procedure CheckEvent1;
 procedure CheckEvent3;
 
 //选单子程
-function CommonMenu(x, y, w, max: integer; menustring: array of WideString): integer; overload;
-function CommonMenu(x, y, w, max, default: integer; menustring: array of WideString): integer; overload;
-function CommonMenu(x, y, w, max: integer; menustring, menuengstring: array of WideString): integer; overload;
-function CommonMenu(x, y, w, max, default: integer; menustring, menuengstring: array of WideString): integer; overload;
-function CommonMenu(x, y, w, max, default: integer; menustring, menuengstring: array of WideString;
+function CommonMenu(x, y, w, max: integer; menuString: array of WideString): integer; overload;
+function CommonMenu(x, y, w, max, default: integer; menuString: array of WideString): integer; overload;
+function CommonMenu(x, y, w, max: integer; menuString, menuEngString: array of WideString): integer; overload;
+function CommonMenu(x, y, w, max, default: integer; menuString, menuEngString: array of WideString): integer; overload;
+function CommonMenu(x, y, w, max, default: integer; menuString, menuEngString: array of WideString;
   fn: TPInt1): integer; overload;
-procedure ShowCommonMenu(x, y, w, max, menu: integer; menustring: array of WideString); overload;
-procedure ShowCommonMenu(x, y, w, max, menu: integer; menustring, menuengstring: array of WideString); overload;
-function CommonScrollMenu(x, y, w, max, maxshow: integer; menustring: array of WideString): integer; overload;
-function CommonScrollMenu(x, y, w, max, maxshow: integer; menustring, menuengstring: array of WideString): integer;
+procedure ShowCommonMenu(x, y, w, max, menu: integer; menuString: array of WideString); overload;
+procedure ShowCommonMenu(x, y, w, max, menu: integer; menuString, menuEngString: array of WideString); overload;
+function CommonScrollMenu(x, y, w, max, maxshow: integer; menuString: array of WideString): integer; overload;
+function CommonScrollMenu(x, y, w, max, maxshow: integer; menuString, menuEngString: array of WideString): integer;
   overload;
 procedure ShowCommonScrollMenu(x, y, w, max, maxshow, menu, menutop: integer;
-  menustring, menuengstring: array of WideString);
-function CommonMenu2(x, y, w: integer; menustring: array of WideString): integer;
-procedure ShowCommonMenu2(x, y, w, menu: integer; menustring: array of WideString);
+  menuString, menuEngString: array of WideString);
+function CommonMenu2(x, y, w: integer; menuString: array of WideString): integer;
+procedure ShowCommonMenu2(x, y, w, menu: integer; menuString: array of WideString);
 function SelectOneTeamMember(x, y: integer; str: string; list1, list2: integer): integer;
 procedure MenuEsc;
 procedure ShowMenu(menu: integer);
@@ -712,7 +712,7 @@ var
 {$ELSE}
   Name, homename: WideString;
 {$ENDIF}
-  p0, p1: PChar;
+  p0, p1: pchar;
   named: boolean;
 begin
   LoadR(0);
@@ -1693,11 +1693,11 @@ end;
 
 procedure Walk;
 var
-  word: array[0..10] of Uint16;
+  word: array[0..10] of uint16;
   x, y, walking, speed, Mx1, My1, Mx2, My2, i, stillcount, axp, ayp: integer;
   axp1, ayp1, gotoEntrance, minstep, step, i1, drawed: integer;
   now, next_time, next_time2, next_time3: uint32;
-  keystate: PChar;
+  keystate: pchar;
   pos: Tposition;
 begin
   if where >= 3 then
@@ -1862,7 +1862,7 @@ begin
           if (ayp >= 0) and (ayp <= 479) and (axp >= 0) and (axp <= 479) {and canWalk(axp, ayp)} then
           begin
             FillChar(Fway[0, 0], sizeof(Fway), -1);
-            findway(Mx, My);
+            FindWay(Mx, My);
             gotoEntrance := -1;
             if Entrance[Axp, Ayp] >= 0 then
             begin
@@ -1895,7 +1895,7 @@ begin
                 gotoEntrance := 3 - gotoEntrance;
               end;
             end;
-            findway(Mx, My);
+            FindWay(Mx, My);
             Moveman(Mx, My, Axp, Ayp);
             nowstep := Fway[Axp, Ayp] - 1;
           end
@@ -2137,7 +2137,7 @@ var
   scencename: WideString;
   now, next_time, next_time2: uint32;
   AmiCount: integer; //场景内动态效果计数
-  keystate: PChar;
+  keystate: pchar;
   UpDate: PSDL_Thread;
   pos: Tposition;
 begin
@@ -2395,7 +2395,7 @@ begin
             if (ayp in [0..63]) and (axp in [0..63]) then
             begin
               FillChar(Fway[0, 0], sizeof(Fway), -1);
-              findway(Sx, Sy);
+              FindWay(Sx, Sy);
               gotoevent := -1;
               if (SData[CurScence, 3, axp, ayp] >= 0) then
               begin
@@ -2597,7 +2597,7 @@ begin
 
 end;
 
-procedure findway(x1, y1: integer);
+procedure FindWay(x1, y1: integer);
 var
   Xlist: array[0..4096] of smallint;
   Ylist: array[0..4096] of smallint;
@@ -2845,31 +2845,31 @@ end;
 //通用选单, (位置(x, y), 宽度, 最大选项(编号均从0开始))
 //使用前必须设置选单使用的字符串组才有效, 字符串组不可越界使用
 
-function CommonMenu(x, y, w, max, default: integer; menustring: array of WideString): integer; overload;
+function CommonMenu(x, y, w, max, default: integer; menuString: array of WideString): integer; overload;
 var
-  menuengstring: array of WideString;
+  menuEngString: array of WideString;
 begin
-  setlength(menuengstring, 0);
-  Result := CommonMenu(x, y, w, max, default, menustring, menuengstring);
+  setlength(menuEngString, 0);
+  Result := CommonMenu(x, y, w, max, default, menuString, menuEngString);
 end;
 
-function CommonMenu(x, y, w, max: integer; menustring: array of WideString): integer; overload;
+function CommonMenu(x, y, w, max: integer; menuString: array of WideString): integer; overload;
 begin
-  Result := CommonMenu(x, y, w, max, 0, menustring);
+  Result := CommonMenu(x, y, w, max, 0, menuString);
 end;
 
-function CommonMenu(x, y, w, max: integer; menustring, menuengstring: array of WideString): integer; overload;
+function CommonMenu(x, y, w, max: integer; menuString, menuEngString: array of WideString): integer; overload;
 begin
-  Result := CommonMenu(x, y, w, max, 0, menustring, menuengstring);
+  Result := CommonMenu(x, y, w, max, 0, menuString, menuEngString);
 end;
 
-function CommonMenu(x, y, w, max, default: integer; menustring, menuengstring: array of WideString): integer; overload;
+function CommonMenu(x, y, w, max, default: integer; menuString, menuEngString: array of WideString): integer; overload;
 var
   menu, menup: integer;
 begin
   menu := default;
   WriteFreshScreen(x, y, w + 1, max * 22 + 29);
-  ShowCommonMenu(x, y, w, max, menu, menustring, menuengstring);
+  ShowCommonMenu(x, y, w, max, menu, menuString, menuEngString);
   SDL_UpdateRect2(screen, x, y, w + 1, max * 22 + 29);
   while (SDL_WaitEvent(@event) >= 0) do
   begin
@@ -2882,7 +2882,7 @@ begin
           menu := menu + 1;
           if menu > max then
             menu := 0;
-          ShowCommonMenu(x, y, w, max, menu, menustring, menuengstring);
+          ShowCommonMenu(x, y, w, max, menu, menuString, menuEngString);
           SDL_UpdateRect2(screen, x, y, w + 1, max * 22 + 29);
         end;
         if (event.key.keysym.sym = SDLK_UP) then
@@ -2890,7 +2890,7 @@ begin
           menu := menu - 1;
           if menu < 0 then
             menu := max;
-          ShowCommonMenu(x, y, w, max, menu, menustring, menuengstring);
+          ShowCommonMenu(x, y, w, max, menu, menuString, menuEngString);
           SDL_UpdateRect2(screen, x, y, w + 1, max * 22 + 29);
         end;
         if ((event.key.keysym.sym = SDLK_ESCAPE)) {and (where <= 2)} then
@@ -2946,7 +2946,7 @@ begin
             menu := 0;
           if menup <> menu then
           begin
-            ShowCommonMenu(x, y, w, max, menu, menustring, menuengstring);
+            ShowCommonMenu(x, y, w, max, menu, menuString, menuEngString);
             SDL_UpdateRect2(screen, x, y, w + 1, max * 22 + 29);
           end;
         end;
@@ -2962,7 +2962,7 @@ end;
 
 //该选单即时产生显示效果, 由函数指定
 
-function CommonMenu(x, y, w, max, default: integer; menustring, menuengstring: array of WideString;
+function CommonMenu(x, y, w, max, default: integer; menuString, menuEngString: array of WideString;
   fn: TPInt1): integer; overload;
 var
   menu, menup: integer;
@@ -2970,7 +2970,7 @@ begin
   menu := default;
   //SDL_EnableKeyRepeat(0,10);
   //DrawMMap;
-  ShowCommonMenu(x, y, w, max, menu, menustring, menuengstring);
+  ShowCommonMenu(x, y, w, max, menu, menuString, menuEngString);
   SDL_UpdateRect2(screen, x, y, w + 1, max * 22 + 29);
   fn(menu);
   while (SDL_WaitEvent(@event) >= 0) do
@@ -2984,7 +2984,7 @@ begin
           menu := menu + 1;
           if menu > max then
             menu := 0;
-          ShowCommonMenu(x, y, w, max, menu, menustring, menuengstring);
+          ShowCommonMenu(x, y, w, max, menu, menuString, menuEngString);
           SDL_UpdateRect2(screen, x, y, w + 1, max * 22 + 29);
           fn(menu);
         end;
@@ -2993,7 +2993,7 @@ begin
           menu := menu - 1;
           if menu < 0 then
             menu := max;
-          ShowCommonMenu(x, y, w, max, menu, menustring, menuengstring);
+          ShowCommonMenu(x, y, w, max, menu, menuString, menuEngString);
           SDL_UpdateRect2(screen, x, y, w + 1, max * 22 + 29);
           fn(menu);
         end;
@@ -3030,7 +3030,7 @@ begin
             menu := 0;
           if menup <> menu then
           begin
-            ShowCommonMenu(x, y, w, max, menu, menustring, menuengstring);
+            ShowCommonMenu(x, y, w, max, menu, menuString, menuEngString);
             SDL_UpdateRect2(screen, x, y, w + 1, max * 22 + 29);
             fn(menu);
           end;
@@ -3046,52 +3046,52 @@ end;
 //显示通用选单(位置, 宽度, 最大值)
 //这个通用选单包含两个字符串组, 可分别显示中文和英文
 
-procedure ShowCommonMenu(x, y, w, max, menu: integer; menustring: array of WideString); overload;
+procedure ShowCommonMenu(x, y, w, max, menu: integer; menuString: array of WideString); overload;
 var
-  menuengstring: array of WideString;
+  menuEngString: array of WideString;
 begin
-  setlength(menuengstring, 0);
-  ShowCommonMenu(x, y, w, max, menu, menustring, menuengstring);
+  setlength(menuEngString, 0);
+  ShowCommonMenu(x, y, w, max, menu, menuString, menuEngString);
 end;
 
-procedure ShowCommonMenu(x, y, w, max, menu: integer; menustring, menuengstring: array of WideString); overload;
+procedure ShowCommonMenu(x, y, w, max, menu: integer; menuString, menuEngString: array of WideString); overload;
 var
   i, p: integer;
   temp: PSDL_Surface;
 begin
   ReadFreshScreen(x, y, w + 1, max * 22 + 29);
   DrawRectangle(screen, x, y, w, max * 22 + 28, 0, ColColor(255), 30);
-  if (length(Menuengstring) > 0) and (length(Menustring) = length(Menuengstring)) then
+  if (length(menuEngString) > 0) and (length(menuString) = length(menuEngString)) then
     p := 1
   else
     p := 0;
-  for i := 0 to min(max, length(Menustring) - 1) do
+  for i := 0 to min(max, length(menuString) - 1) do
     if i = menu then
     begin
-      DrawShadowText(screen, @menustring[i][1], x - 17, y + 2 + 22 * i, ColColor($66), ColColor($64));
+      DrawShadowText(screen, @menuString[i][1], x - 17, y + 2 + 22 * i, ColColor($66), ColColor($64));
       if p = 1 then
-        DrawEngShadowText(screen, @menuengstring[i][1], x + 93, y + 2 + 22 * i, ColColor($66), ColColor($64));
+        DrawEngShadowText(screen, @menuEngString[i][1], x + 93, y + 2 + 22 * i, ColColor($66), ColColor($64));
     end
     else
     begin
-      DrawShadowText(screen, @menustring[i][1], x - 17, y + 2 + 22 * i, ColColor($7), ColColor($5));
+      DrawShadowText(screen, @menuString[i][1], x - 17, y + 2 + 22 * i, ColColor($7), ColColor($5));
       if p = 1 then
-        DrawEngShadowText(screen, @menuengstring[i][1], x + 93, y + 2 + 22 * i, ColColor($7), ColColor($5));
+        DrawEngShadowText(screen, @menuEngString[i][1], x + 93, y + 2 + 22 * i, ColColor($7), ColColor($5));
     end;
 
 end;
 
 //卷动选单
 
-function CommonScrollMenu(x, y, w, max, maxshow: integer; menustring: array of WideString): integer; overload;
+function CommonScrollMenu(x, y, w, max, maxshow: integer; menuString: array of WideString): integer; overload;
 var
-  menuengstring: array of WideString;
+  menuEngString: array of WideString;
 begin
-  setlength(menuengstring, 0);
-  Result := CommonScrollMenu(x, y, w, max, maxshow, menustring, menuengstring);
+  setlength(menuEngString, 0);
+  Result := CommonScrollMenu(x, y, w, max, maxshow, menuString, menuEngString);
 end;
 
-function CommonScrollMenu(x, y, w, max, maxshow: integer; menustring, menuengstring: array of WideString): integer;
+function CommonScrollMenu(x, y, w, max, maxshow: integer; menuString, menuEngString: array of WideString): integer;
   overload;
 var
   menu, menup, menutop: integer;
@@ -3101,7 +3101,7 @@ begin
   //SDL_EnableKeyRepeat(0,10);
   //DrawMMap;
   WriteFreshScreen(x, y, w + 1, max * 22 + 29);
-  ShowCommonScrollMenu(x, y, w, max, maxshow, menu, menutop, menustring, menuengstring);
+  ShowCommonScrollMenu(x, y, w, max, maxshow, menu, menutop, menuString, menuEngString);
   SDL_UpdateRect2(screen, x, y, w + 1, maxshow * 22 + 29);
   while (SDL_WaitEvent(@event) >= 0) do
   begin
@@ -3121,7 +3121,7 @@ begin
             menu := 0;
             menutop := 0;
           end;
-          ShowCommonScrollMenu(x, y, w, max, maxshow, menu, menutop, menustring, menuengstring);
+          ShowCommonScrollMenu(x, y, w, max, maxshow, menu, menutop, menuString, menuEngString);
           SDL_UpdateRect2(screen, x, y, w + 1, maxshow * 22 + 29);
         end;
         if (event.key.keysym.sym = SDLK_UP) then
@@ -3136,7 +3136,7 @@ begin
             menu := max;
             menutop := menu - maxshow + 1;
           end;
-          ShowCommonScrollMenu(x, y, w, max, maxshow, menu, menutop, menustring, menuengstring);
+          ShowCommonScrollMenu(x, y, w, max, maxshow, menu, menutop, menuString, menuEngString);
           SDL_UpdateRect2(screen, x, y, w + 1, maxshow * 22 + 29);
         end;
         if (event.key.keysym.sym = SDLK_PAGEDOWN) then
@@ -3151,7 +3151,7 @@ begin
           begin
             menutop := max - maxshow + 1;
           end;
-          ShowCommonScrollMenu(x, y, w, max, maxshow, menu, menutop, menustring, menuengstring);
+          ShowCommonScrollMenu(x, y, w, max, maxshow, menu, menutop, menuString, menuEngString);
           SDL_UpdateRect2(screen, x, y, w + 1, maxshow * 22 + 29);
         end;
         if (event.key.keysym.sym = SDLK_PAGEUP) then
@@ -3166,7 +3166,7 @@ begin
           begin
             menutop := 0;
           end;
-          ShowCommonScrollMenu(x, y, w, max, maxshow, menu, menutop, menustring, menuengstring);
+          ShowCommonScrollMenu(x, y, w, max, maxshow, menu, menutop, menuString, menuEngString);
           SDL_UpdateRect2(screen, x, y, w + 1, maxshow * 22 + 29);
         end;
         if ((event.key.keysym.sym = SDLK_ESCAPE)) and (where <= 2) then
@@ -3218,7 +3218,7 @@ begin
             menu := 0;
             menutop := 0;
           end;
-          ShowCommonScrollMenu(x, y, w, max, maxshow, menu, menutop, menustring, menuengstring);
+          ShowCommonScrollMenu(x, y, w, max, maxshow, menu, menutop, menuString, menuEngString);
           SDL_UpdateRect2(screen, x, y, w + 1, maxshow * 22 + 29);
         end;
         if (event.button.button = sdl_button_wheelup) then
@@ -3233,7 +3233,7 @@ begin
             menu := max;
             menutop := menu - maxshow + 1;
           end;
-          ShowCommonScrollMenu(x, y, w, max, maxshow, menu, menutop, menustring, menuengstring);
+          ShowCommonScrollMenu(x, y, w, max, maxshow, menu, menutop, menuString, menuEngString);
           SDL_UpdateRect2(screen, x, y, w + 1, maxshow * 22 + 29);
         end;
       end;
@@ -3252,7 +3252,7 @@ begin
             menu := 0;
           if menup <> menu then
           begin
-            ShowCommonScrollMenu(x, y, w, max, maxshow, menu, menutop, menustring, menuengstring);
+            ShowCommonScrollMenu(x, y, w, max, maxshow, menu, menutop, menuString, menuEngString);
             SDL_UpdateRect2(screen, x, y, w + 1, maxshow * 22 + 29);
           end;
         end;
@@ -3266,7 +3266,7 @@ begin
 end;
 
 procedure ShowCommonScrollMenu(x, y, w, max, maxshow, menu, menutop: integer;
-  menustring, menuengstring: array of WideString);
+  menuString, menuEngString: array of WideString);
 var
   i, p: integer;
 begin
@@ -3274,23 +3274,23 @@ begin
   if max + 1 < maxshow then
     maxshow := max + 1;
   DrawRectangle(screen, x, y, w, maxshow * 22 + 6, 0, ColColor(255), 30);
-  if (length(Menuengstring) > 0) and (length(Menustring) = length(Menuengstring)) then
+  if (length(menuEngString) > 0) and (length(menuString) = length(menuEngString)) then
     p := 1
   else
     p := 0;
   for i := menutop to menutop + maxshow - 1 do
-    if (i = menu) and (i < length(menustring)) then
+    if (i = menu) and (i < length(menuString)) then
     begin
-      DrawShadowText(screen, @menustring[i][1], x - 17, y + 2 + 22 * (i - menutop), ColColor($66), ColColor($64));
+      DrawShadowText(screen, @menuString[i][1], x - 17, y + 2 + 22 * (i - menutop), ColColor($66), ColColor($64));
       if p = 1 then
-        DrawEngShadowText(screen, @menuengstring[i][1], x + 93, y + 2 + 22 * (i - menutop),
+        DrawEngShadowText(screen, @menuEngString[i][1], x + 93, y + 2 + 22 * (i - menutop),
           ColColor($66), ColColor($64));
     end
     else
     begin
-      DrawShadowText(screen, @menustring[i][1], x - 17, y + 2 + 22 * (i - menutop), ColColor($7), ColColor($5));
+      DrawShadowText(screen, @menuString[i][1], x - 17, y + 2 + 22 * (i - menutop), ColColor($7), ColColor($5));
       if p = 1 then
-        DrawEngShadowText(screen, @menuengstring[i][1], x + 93, y + 2 + 22 * (i - menutop),
+        DrawEngShadowText(screen, @menuEngString[i][1], x + 93, y + 2 + 22 * (i - menutop),
           ColColor($7), ColColor($5));
     end;
 
@@ -3299,7 +3299,7 @@ end;
 //仅有两个选项的横排选单, 为美观使用横排
 //此类选单中每个选项限制为两个中文字, 仅适用于提问'继续', '取消'的情况
 
-function CommonMenu2(x, y, w: integer; menustring: array of WideString): integer;
+function CommonMenu2(x, y, w: integer; menuString: array of WideString): integer;
 var
   menu, menup: integer;
 begin
@@ -3307,7 +3307,7 @@ begin
   //SDL_EnableKeyRepeat(0,10);
   //DrawMMap;
   WriteFreshScreen(x, y, w + 1, 29);
-  ShowCommonMenu2(x, y, w, menu, menustring);
+  ShowCommonMenu2(x, y, w, menu, menuString);
   SDL_UpdateRect2(screen, x, y, w + 1, 29);
   while (SDL_WaitEvent(@event) >= 0) do
   begin
@@ -3321,7 +3321,7 @@ begin
             menu := 0
           else
             menu := 1;
-          ShowCommonMenu2(x, y, w, menu, menustring);
+          ShowCommonMenu2(x, y, w, menu, menuString);
           SDL_UpdateRect2(screen, x, y, w + 1, 29);
         end;
         if ((event.key.keysym.sym = SDLK_ESCAPE)) and (where <= 2) then
@@ -3377,7 +3377,7 @@ begin
             menu := 0;
           if menup <> menu then
           begin
-            ShowCommonMenu2(x, y, w, menu, menustring);
+            ShowCommonMenu2(x, y, w, menu, menuString);
             SDL_UpdateRect2(screen, x, y, w + 1, 29);
           end;
         end;
@@ -3392,7 +3392,7 @@ end;
 
 //显示仅有两个选项的横排选单
 
-procedure ShowCommonMenu2(x, y, w, menu: integer; menustring: array of WideString);
+procedure ShowCommonMenu2(x, y, w, menu: integer; menuString: array of WideString);
 var
   i, p: integer;
 begin
@@ -3402,11 +3402,11 @@ begin
   for i := 0 to 1 do
     if i = menu then
     begin
-      DrawShadowText(screen, @menustring[i][1], x - 17 + i * 50, y + 2, ColColor($66), ColColor($64));
+      DrawShadowText(screen, @menuString[i][1], x - 17 + i * 50, y + 2, ColColor($66), ColColor($64));
     end
     else
     begin
-      DrawShadowText(screen, @menustring[i][1], x - 17 + i * 50, y + 2, ColColor($7), ColColor($5));
+      DrawShadowText(screen, @menuString[i][1], x - 17 + i * 50, y + 2, ColColor($7), ColColor($5));
     end;
 
 end;
@@ -3416,31 +3416,31 @@ end;
 function SelectOneTeamMember(x, y: integer; str: string; list1, list2: integer): integer;
 var
   i, amount: integer;
-  menustring, menuengstring: array of WideString;
+  menuString, menuEngString: array of WideString;
 begin
-  setlength(Menustring, 6);
+  setlength(menuString, 6);
   if str <> '' then
-    setlength(Menuengstring, 6)
+    setlength(menuEngString, 6)
   else
-    setlength(Menuengstring, 0);
+    setlength(menuEngString, 0);
   amount := 0;
 
   for i := 0 to 5 do
   begin
     if Teamlist[i] >= 0 then
     begin
-      menustring[i] := Big5ToUnicode(@Rrole[Teamlist[i]].Name);
+      menuString[i] := Big5ToUnicode(@Rrole[Teamlist[i]].Name);
       if str <> '' then
       begin
-        menuengstring[i] := format(str, [Rrole[teamlist[i]].Data[list1], Rrole[teamlist[i]].Data[list2]]);
+        menuEngString[i] := format(str, [Rrole[teamlist[i]].Data[list1], Rrole[teamlist[i]].Data[list2]]);
       end;
       amount := amount + 1;
     end;
   end;
   if str = '' then
-    Result := CommonMenu(x, y, 105, amount - 1, menustring, menuengstring)
+    Result := CommonMenu(x, y, 105, amount - 1, menuString, menuEngString)
   else
-    Result := CommonMenu(x, y, 105 + length(menuengstring[0]) * 10, amount - 1, menustring, menuengstring);
+    Result := CommonMenu(x, y, 105 + length(menuEngString[0]) * 10, amount - 1, menuString, menuEngString);
 
 end;
 
@@ -3690,7 +3690,7 @@ var
   point, atlu, x, y, col, row, xp, yp, iamount, menu, max, i, xm, ym: integer;
   //point似乎未使用, atlu为处于左上角的物品在列表中的序号, x, y为光标位置
   //col, row为总列数和行数
-  menustring: array of WideString;
+  menuString: array of WideString;
 begin
   col := 9;
   row := 5;
@@ -3702,23 +3702,23 @@ begin
     0, 1:
     begin
       max := 6;
-      setlength(menustring, max + 1);
-      menustring[0] := (' 全部物品');
-      menustring[1] := (' 劇情物品');
-      menustring[2] := (' 神兵寶甲');
-      menustring[3] := (' 武功秘笈');
-      menustring[4] := (' 靈丹妙藥');
-      menustring[5] := (' 傷人暗器');
-      menustring[6] := (' 整理物品');
+      setlength(menuString, max + 1);
+      menuString[0] := (' 全部物品');
+      menuString[1] := (' 劇情物品');
+      menuString[2] := (' 神兵寶甲');
+      menuString[3] := (' 武功秘笈');
+      menuString[4] := (' 靈丹妙藥');
+      menuString[5] := (' 傷人暗器');
+      menuString[6] := (' 整理物品');
       xm := 80;
       ym := 30;
     end;
     2:
     begin
       max := 1;
-      setlength(menustring, max + 1);
-      menustring[0] := (' 靈丹妙藥');
-      menustring[1] := (' 傷人暗器');
+      setlength(menuString, max + 1);
+      menuString[0] := (' 靈丹妙藥');
+      menuString[1] := (' 傷人暗器');
       xm := 150;
       ym := 150;
     end;
@@ -3727,7 +3727,7 @@ begin
   menu := 0;
   while menu >= 0 do
   begin
-    menu := CommonMenu(xm, ym, 87, max, menu, menustring);
+    menu := CommonMenu(xm, ym, 87, max, menu, menuString);
 
     case where of
       0, 1:
@@ -4259,10 +4259,10 @@ begin
   for i := 0 to 39 do
   begin
     t := 250 - i * 3;
-    putpixel(screen, x * d + 6 + i + xp, y * d + 36 + yp, SDL_MapRGB(screen.format, t, t, t));
-    putpixel(screen, x * d + 6 + 39 - i + xp, y * d + 36 + 39 + yp, SDL_MapRGB(screen.format, t, t, t));
-    putpixel(screen, x * d + 6 + xp, y * d + 36 + i + yp, SDL_MapRGB(screen.format, t, t, t));
-    putpixel(screen, x * d + 6 + 39 + xp, y * d + 36 + 39 - i + yp, SDL_MapRGB(screen.format, t, t, t));
+    PutPixel(screen, x * d + 6 + i + xp, y * d + 36 + yp, SDL_MapRGB(screen.format, t, t, t));
+    PutPixel(screen, x * d + 6 + 39 - i + xp, y * d + 36 + 39 + yp, SDL_MapRGB(screen.format, t, t, t));
+    PutPixel(screen, x * d + 6 + xp, y * d + 36 + i + yp, SDL_MapRGB(screen.format, t, t, t));
+    PutPixel(screen, x * d + 6 + 39 + xp, y * d + 36 + 39 - i + yp, SDL_MapRGB(screen.format, t, t, t));
   end;
 
 end;
@@ -4273,7 +4273,7 @@ procedure UseItem(inum: integer);
 var
   x, y, menu, rnum, p: integer;
   str, str1: WideString;
-  menustring: array of WideString;
+  menuString: array of WideString;
 begin
   CurItem := inum;
   Redraw;
@@ -4312,12 +4312,12 @@ begin
       if Ritem[inum].User >= 0 then
       begin
         Redraw;
-        setlength(menustring, 2);
-        menustring[0] := (' 取消');
-        menustring[1] := (' 繼續');
+        setlength(menuString, 2);
+        menuString[0] := (' 取消');
+        menuString[1] := (' 繼續');
         str := (' 此物品正有人裝備，是否繼續？');
         DrawTextWithRect(screen, @str[1], 80, 30, 285, ColColor(7), ColColor(5));
-        menu := CommonMenu(80, 65, 45, 1, menustring);
+        menu := CommonMenu(80, 65, 45, 1, menuString);
       end;
       if menu = 1 then
       begin
@@ -4360,12 +4360,12 @@ begin
       if Ritem[inum].User >= 0 then
       begin
         Redraw;
-        setlength(menustring, 2);
-        menustring[0] := (' 取消');
-        menustring[1] := (' 繼續');
+        setlength(menuString, 2);
+        menuString[0] := (' 取消');
+        menuString[1] := (' 繼續');
         str := (' 此秘笈正有人修煉，是否繼續？');
         DrawTextWithRect(screen, @str[1], 80, 30, 285, ColColor(7), ColColor(5));
-        menu := CommonMenu(80, 65, 45, 1, menustring);
+        menu := CommonMenu(80, 65, 45, 1, menuString);
       end;
       if menu = 1 then
       begin
@@ -4434,7 +4434,7 @@ end;
 function CanEquip(rnum, inum: integer): boolean;
 var
   i, r: integer;
-  menustring: array[0..2] of WideString;
+  menuString: array[0..2] of WideString;
   str: WideString;
 begin
 
@@ -4500,11 +4500,11 @@ begin
   if (inum in [78, 93]) and (Result = True) and (Rrole[rnum].Sexual <> 2) then
   begin
     Redraw;
-    menustring[0] := (' 取消');
-    menustring[1] := (' 繼續');
+    menuString[0] := (' 取消');
+    menuString[1] := (' 繼續');
     str := (' 是否自宮？');
     DrawTextWithRect(screen, @str[1], 80, 30, 105, ColColor(7), ColColor(5));
-    if CommonMenu(80, 65, 45, 1, menustring) = 0 then
+    if CommonMenu(80, 65, 45, 1, menuString) = 0 then
       Result := False
     else
       Rrole[rnum].Sexual := 2;
@@ -4518,27 +4518,27 @@ procedure MenuStatus;
 var
   str: WideString;
   menu, amount, i: integer;
-  menustring, menuengstring: array of WideString;
+  menuString, menuEngString: array of WideString;
 begin
   str := (' 查看隊員狀態');
   Redraw;
   WriteFreshScreen(0, 0, screen.w, screen.h);
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
   DrawTextWithRect(screen, @str[1], 10, 30, 132, ColColor($23), ColColor($21));
-  setlength(Menustring, 6);
-  setlength(Menuengstring, 0);
+  setlength(menuString, 6);
+  setlength(menuEngString, 0);
   amount := 0;
 
   for i := 0 to 5 do
   begin
     if Teamlist[i] >= 0 then
     begin
-      menustring[i] := Big5ToUnicode(@Rrole[Teamlist[i]].Name);
+      menuString[i] := Big5ToUnicode(@Rrole[Teamlist[i]].Name);
       amount := amount + 1;
     end;
   end;
 
-  menu := CommonMenu(10, 65, 85, amount - 1, 0, menustring, menuengstring, @ShowStatusByTeam);
+  menu := CommonMenu(10, 65, 85, amount - 1, 0, menuString, menuEngString, @ShowStatusByTeam);
   Redraw;
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
   //menu := SelectOneTeamMember(27, 65, '%3d', 15, 0);
@@ -5032,18 +5032,18 @@ end;
 procedure MenuLoad;
 var
   menu, nowwhere: integer;
-  menustring: array[0..5] of WideString;
+  menuString: array[0..5] of WideString;
 begin
   nowwhere := where;
   //setlength(menustring, 6);
   //setlength(Menuengstring, 0);
-  menustring[0] := (' 進度一');
-  menustring[1] := (' 進度二');
-  menustring[2] := (' 進度三');
-  menustring[3] := (' 進度四');
-  menustring[4] := (' 進度五');
-  menustring[5] := (' 自動檔');
-  menu := CommonMenu(133, 30, 67, 5, menustring);
+  menuString[0] := (' 進度一');
+  menuString[1] := (' 進度二');
+  menuString[2] := (' 進度三');
+  menuString[3] := (' 進度四');
+  menuString[4] := (' 進度五');
+  menuString[5] := (' 自動檔');
+  menu := CommonMenu(133, 30, 67, 5, menuString);
   if menu >= 0 then
   begin
     LoadR(menu + 1);
@@ -5069,29 +5069,29 @@ end;
 function MenuLoadAtBeginning: integer;
 var
   menu: integer;
-  menustring: array[0..5] of WideString;
+  menuString: array[0..5] of WideString;
 begin
   Redraw;
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
   //setlength(menustring, 6);
   //setlength(Menuengstring, 0);
-  menustring[0] := (' 載入進度一');
-  menustring[1] := (' 載入進度二');
-  menustring[2] := (' 載入進度三');
-  menustring[3] := (' 載入進度四');
-  menustring[4] := (' 載入進度五');
-  menustring[5] := (' 載入自動檔');
+  menuString[0] := (' 載入進度一');
+  menuString[1] := (' 載入進度二');
+  menuString[2] := (' 載入進度三');
+  menuString[3] := (' 載入進度四');
+  menuString[4] := (' 載入進度五');
+  menuString[5] := (' 載入自動檔');
   if MODVersion = 23 then
   begin
-    menustring[0] := (' 載入夢境一');
-    menustring[1] := (' 載入夢境二');
-    menustring[2] := (' 載入夢境三');
-    menustring[3] := (' 載入夢境四');
-    menustring[4] := (' 載入夢境五');
-    menustring[5] := (' 最近的夢境');
+    menuString[0] := (' 載入夢境一');
+    menuString[1] := (' 載入夢境二');
+    menuString[2] := (' 載入夢境三');
+    menuString[3] := (' 載入夢境四');
+    menuString[4] := (' 載入夢境五');
+    menuString[5] := (' 最近的夢境');
   end;
   //writeln(pword(@menustring[0][2])^);
-  menu := CommonMenu(TitlePosition.x - 10, TitlePosition.y - 20, 107, 5, menustring);
+  menu := CommonMenu(TitlePosition.x - 10, TitlePosition.y - 20, 107, 5, menuString);
   if menu >= 0 then
   begin
     LoadR(menu + 1);
@@ -5108,16 +5108,16 @@ end;
 procedure MenuSave;
 var
   menu: integer;
-  menustring: array[0..4] of WideString;
+  menuString: array[0..4] of WideString;
 begin
   //setlength(menustring, 5);
   //setlength(menuengstring, 0);
-  menustring[0] := (' 進度一');
-  menustring[1] := (' 進度二');
-  menustring[2] := (' 進度三');
-  menustring[3] := (' 進度四');
-  menustring[4] := (' 進度五');
-  menu := CommonMenu(133, 30, 67, 4, menustring);
+  menuString[0] := (' 進度一');
+  menuString[1] := (' 進度二');
+  menuString[2] := (' 進度三');
+  menuString[3] := (' 進度四');
+  menuString[4] := (' 進度五');
+  menu := CommonMenu(133, 30, 67, 4, menuString);
   if menu >= 0 then
     SaveR(menu + 1);
   //Redraw;
@@ -5132,14 +5132,14 @@ var
   menu: integer;
   str1, str2: string;
   str: WideString;
-  menustring: array[0..2] of WideString;
+  menuString: array[0..2] of WideString;
 begin
   //setlength(menustring, 3);
   //setlength(menuengstring, 0);
-  menustring[0] := (' 取消');
-  menustring[1] := (' 確認');
-  menustring[2] := (' 腳本');
-  menu := CommonMenu(133, 30, 45, 2, menustring);
+  menuString[0] := (' 取消');
+  menuString[1] := (' 確認');
+  menuString[2] := (' 腳本');
+  menu := CommonMenu(133, 30, 45, 2, menuString);
   if menu = 1 then
   begin
     Where := 3;
@@ -5914,7 +5914,7 @@ begin
       Picnum := random(CPicAmount);
       Shadow := 0;
       Alpha := 10 + random(50);
-      MixColor := random(256) + random(256) shl 8 + random(256) shl 16 + random(256) shl 24;
+      mixColor := random(256) + random(256) shl 8 + random(256) shl 16 + random(256) shl 24;
       mixAlpha := 10 + random(50);
       Positionx := 0;
       Positiony := random(8640);
