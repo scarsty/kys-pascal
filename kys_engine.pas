@@ -1552,6 +1552,9 @@ begin
 
 end;
 
+//绘制PNG贴图相关的代码
+//这里的可能较旧, 可以参照水浒的
+
 procedure DrawPNGTile(PNGIndex: TPNGIndex; FrameNum: integer; RectArea: PChar; scr: PSDL_Surface;
   px, py: integer); overload;
 begin
@@ -1681,7 +1684,7 @@ begin
               begin
                 for i2 := 0 to tempscr.h - 1 do
                 begin
-                  pixdepth := pint(BlockImgR + ((dest.x + leftupx + i1) * Height + dest.y + leftupy + i2) * size)^;
+                  pixdepth := psmallint(BlockImgR + ((dest.x + leftupx + i1) * Height + dest.y + leftupy + i2) * size)^;
                   pixel := getpixel(tempscr, i1, i2);
                   AlphaValue := pixel and Mask;
                   if AlphaValue > 0 then
