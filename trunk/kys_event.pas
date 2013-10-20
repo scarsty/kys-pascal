@@ -121,7 +121,7 @@ begin
   end;
   Redraw;
   //SDL_UpdateRect2(screen,0,0,screen.w,screen.h);
-
+  //EndAmi;
 end;
 
 procedure instruct_1(talknum, headnum, dismode: integer);
@@ -1418,6 +1418,8 @@ var
   x, y, i, len: integer;
   str: WideString;
   p: integer;
+  tempscr: PSDL_Surface;
+  dest: TSDL_Rect;
 begin
   instruct_14;
   Redraw;
@@ -1456,19 +1458,23 @@ begin
   instruct_14;
 
   i := 0;
+  tempscr := img_load(PChar(AppPath + 'resource/end.png'));
   while SDL_PollEvent(@event) >= 0 do
   begin
     CheckBasicEvent;
     if i mod 5 = 0 then
     begin
-      display_img(PChar(AppPath + 'resource/end.png'), 0, i);
+      dest.x := 0;
+      dest.y := i;
+      SDL_BlitSurface(tempscr, nil, screen, @dest);
       SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
       SDL_Delay(20);
     end;
     i := i - 1;
-    if i < 440 - 794 then
+    if i < CENTER_Y * 2 - tempscr.h then
       break;
   end;
+  SDL_FreeSurface(tempscr);
   WaitAnyKey;
 
 end;
