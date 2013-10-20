@@ -30,7 +30,7 @@ function Battle(battlenum, getexp: integer): boolean;
 function InitialBField: boolean;
 procedure InitialBRole(i, rnum, team, x, y: integer);
 function SelectTeamMembers: integer;
-procedure ShowMultiMenu(max, menu, status: integer; menustring: array of WideString);
+procedure ShowMultiMenu(max, menu, status: integer; menuString: array of WideString);
 procedure BattleMainControl;
 procedure CalMoveAbility;
 procedure ReArrangeBRole;
@@ -50,7 +50,7 @@ procedure AttackAction(bnum, i, mnum, level: integer); overload;
 procedure AttackAction(bnum, mnum, level: integer); overload;
 procedure ShowMagicName(mnum: integer; mode: integer = 0);
 function SelectMagic(rnum: integer): integer;
-procedure ShowMagicMenu(MenuStatus, menu, max: integer; menustring, menuengstring: array of WideString);
+procedure ShowMagicMenu(MenuStatus, menu, max: integer; menuString, menuEngString: array of WideString);
 procedure SetAminationPosition(mode, step: integer; range: integer = 0); overload;
 procedure SetAminationPosition(Bx, By, Ax, Ay, mode, step: integer; range: integer = 0); overload;
 procedure PlayMagicAmination(bnum, enum: integer; ForTeam: integer = 0; mode: integer = 0);
@@ -85,8 +85,8 @@ procedure AutoUseItem(bnum, list: integer);
 
 procedure TryMoveAttack(var Mx1, My1, Ax1, Ay1, tempmaxhurt: integer; bnum, mnum, level: integer);
 procedure calline(var Mx1, My1, Ax1, Ay1, tempmaxhurt: integer; curX, curY, bnum, mnum, level: integer);
-procedure calarea(var Mx1, My1, Ax1, Ay1, tempmaxhurt: integer; curX, curY, bnum, mnum, level: integer);
-procedure calpoint(var Mx1, My1, Ax1, Ay1, tempmaxhurt: integer; curX, curY, bnum, mnum, level: integer);
+procedure CalArea(var Mx1, My1, Ax1, Ay1, tempmaxhurt: integer; curX, curY, bnum, mnum, level: integer);
+procedure CalPoint(var Mx1, My1, Ax1, Ay1, tempmaxhurt: integer; curX, curY, bnum, mnum, level: integer);
 procedure calcross(var Mx1, My1, Ax1, Ay1, tempmaxhurt: integer; curX, curY, bnum, mnum, level: integer);
 procedure NearestMove(var Mx1, My1: integer; bnum: integer);
 procedure NearestMoveByPro(var Mx1, My1, Ax1, Ay1: integer; bnum, TeamMate, KeepDis, Prolist, MaxMinPro: integer;
@@ -335,7 +335,7 @@ end;
 function SelectTeamMembers: integer;
 var
   i, menu, max, menup: integer;
-  menustring: array[0..8] of WideString;
+  menuString: array[0..8] of WideString;
 begin
   Result := 0;
   max := 1;
@@ -345,13 +345,13 @@ begin
   begin
     if Teamlist[i] >= 0 then
     begin
-      menustring[i + 1] := Big5ToUnicode(@Rrole[Teamlist[i]].Name);
+      menuString[i + 1] := Big5ToUnicode(@Rrole[Teamlist[i]].Name);
       max := max + 1;
     end;
   end;
-  menustring[0] := ('    全員參戰');
-  menustring[max] := ('    開始戰鬥');
-  ShowMultiMenu(max, 0, 0, menustring);
+  menuString[0] := ('    全員參戰');
+  menuString[max] := ('    開始戰鬥');
+  ShowMultiMenu(max, 0, 0, menuString);
   //sdl_enablekeyrepeat(50, 30);
   while (SDL_WaitEvent(@event) >= 0) do
   begin
@@ -368,7 +368,7 @@ begin
             Result := round(power(2, (max - 1)) - 1)
           else
             Result := 0;
-          ShowMultiMenu(max, menu, Result, menustring);
+          ShowMultiMenu(max, menu, Result, menuString);
         end;
         if ((event.key.keysym.sym = SDLK_RETURN) or (event.key.keysym.sym = SDLK_SPACE)) and (menu = max) then
         begin
@@ -380,14 +380,14 @@ begin
           menu := menu - 1;
           if menu < 0 then
             menu := max;
-          ShowMultiMenu(max, menu, Result, menustring);
+          ShowMultiMenu(max, menu, Result, menuString);
         end;
         if (event.key.keysym.sym = SDLK_DOWN) then
         begin
           menu := menu + 1;
           if menu > max then
             menu := 0;
-          ShowMultiMenu(max, menu, Result, menustring);
+          ShowMultiMenu(max, menu, Result, menuString);
         end;
       end;
       SDL_MOUSEBUTTONUP:
@@ -405,7 +405,7 @@ begin
               Result := round(power(2, (max - 1)) - 1)
             else
               Result := 0;
-            ShowMultiMenu(max, menu, Result, menustring);
+            ShowMultiMenu(max, menu, Result, menuString);
           end;
           if (event.button.button = SDL_BUTTON_LEFT) and (menu = max) then
           begin
@@ -424,7 +424,7 @@ begin
           menup := menu;
           menu := (round(event.button.y / (RealScreen.h / screen.h)) - 152) div 22;
           if menup <> menu then
-            ShowMultiMenu(max, menu, Result, menustring);
+            ShowMultiMenu(max, menu, Result, menuString);
         end;
       end;
     end;
@@ -434,7 +434,7 @@ end;
 
 //显示选择参战人物选单
 
-procedure ShowMultiMenu(max, menu, status: integer; menustring: array of WideString);
+procedure ShowMultiMenu(max, menu, status: integer; menuString: array of WideString);
 var
   i, x, y: integer;
   str, str1, str2: WideString;
@@ -449,13 +449,13 @@ begin
   for i := 0 to max do
     if i = menu then
     begin
-      DrawShadowText(screen, @menustring[i][1], x + 13, y + 3 + 22 * i, ColColor($66), ColColor($64));
+      DrawShadowText(screen, @menuString[i][1], x + 13, y + 3 + 22 * i, ColColor($66), ColColor($64));
       if ((status and (1 shl (i - 1))) > 0) and (i > 0) and (i < max) then
         DrawShadowText(screen, @str1[1], x + 113, y + 3 + 22 * i, ColColor($66), ColColor($64));
     end
     else
     begin
-      DrawShadowText(screen, @menustring[i][1], x + 13, y + 3 + 22 * i, ColColor($7), ColColor($5));
+      DrawShadowText(screen, @menuString[i][1], x + 13, y + 3 + 22 * i, ColColor($7), ColColor($5));
       if ((status and (1 shl (i - 1))) > 0) and (i > 0) and (i < max) then
         DrawShadowText(screen, @str1[1], x + 113, y + 3 + 22 * i, ColColor($23), ColColor($21));
     end;
@@ -468,7 +468,7 @@ procedure BattleMainControl;
 var
   i, j, act: integer;
   tempBrole: TBattleRole;
-  delaytime: Uint32;
+  delaytime: uint32;
   ProgressThread: PSDL_Thread;
 begin
 
@@ -1825,7 +1825,7 @@ end;
 function SelectMagic(rnum: integer): integer;
 var
   i, p, MenuStatus, max, menu, menup: integer;
-  menustring, menuengstring: array[0..9] of WideString;
+  menuString, menuEngString: array[0..9] of WideString;
 begin
   MenuStatus := 0;
   max := 0;
@@ -1836,8 +1836,8 @@ begin
     if Rrole[rnum].Magic[i] > 0 then
     begin
       MenuStatus := MenuStatus or (1 shl i);
-      menustring[i] := Big5ToUnicode(@Rmagic[Rrole[rnum].Magic[i]].Name);
-      menuengstring[i] := format('%3d', [Rrole[rnum].MagLevel[i] div 100 + 1]);
+      menuString[i] := Big5ToUnicode(@Rmagic[Rrole[rnum].Magic[i]].Name);
+      menuEngString[i] := format('%3d', [Rrole[rnum].MagLevel[i] div 100 + 1]);
       max := max + 1;
     end;
   end;
@@ -1846,7 +1846,7 @@ begin
   Redraw;
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
   menu := 0;
-  ShowMagicMenu(MenuStatus, menu, max, menustring, menuengstring);
+  ShowMagicMenu(MenuStatus, menu, max, menuString, menuEngString);
   //SDL_UpdateRect2(screen,0,0,screen.w,screen.h);
   Result := 0;
   while (SDL_WaitEvent(@event) >= 0) do
@@ -1869,14 +1869,14 @@ begin
           menu := menu - 1;
           if menu < 0 then
             menu := max;
-          ShowMagicMenu(MenuStatus, menu, max, menustring, menuengstring);
+          ShowMagicMenu(MenuStatus, menu, max, menuString, menuEngString);
         end;
         if (event.key.keysym.sym = SDLK_DOWN) then
         begin
           menu := menu + 1;
           if menu > max then
             menu := 0;
-          ShowMagicMenu(MenuStatus, menu, max, menustring, menuengstring);
+          ShowMagicMenu(MenuStatus, menu, max, menuString, menuEngString);
         end;
       end;
       SDL_MOUSEBUTTONUP:
@@ -1905,7 +1905,7 @@ begin
           if menu < 0 then
             menu := 0;
           if menup <> menu then
-            ShowMagicMenu(MenuStatus, menu, max, menustring, menuengstring);
+            ShowMagicMenu(MenuStatus, menu, max, menuString, menuEngString);
         end;
       end;
     end;
@@ -1930,7 +1930,7 @@ end;
 
 //显示武功选单
 
-procedure ShowMagicMenu(MenuStatus, menu, max: integer; menustring, menuengstring: array of WideString);
+procedure ShowMagicMenu(MenuStatus, menu, max: integer; menuString, menuEngString: array of WideString);
 var
   i, p: integer;
 begin
@@ -1941,14 +1941,14 @@ begin
   begin
     if (p = menu) and ((MenuStatus and (1 shl i) > 0)) then
     begin
-      DrawShadowText(screen, @menustring[i][1], 83, 53 + 22 * p, ColColor($66), ColColor($64));
-      DrawEngShadowText(screen, @menuengstring[i][1], 223, 53 + 22 * p, ColColor($66), ColColor($64));
+      DrawShadowText(screen, @menuString[i][1], 83, 53 + 22 * p, ColColor($66), ColColor($64));
+      DrawEngShadowText(screen, @menuEngString[i][1], 223, 53 + 22 * p, ColColor($66), ColColor($64));
       p := p + 1;
     end
     else if (p <> menu) and ((MenuStatus and (1 shl i) > 0)) then
     begin
-      DrawShadowText(screen, @menustring[i][1], 83, 53 + 22 * p, ColColor($23), ColColor($21));
-      DrawEngShadowText(screen, @menuengstring[i][1], 223, 53 + 22 * p, ColColor($23), ColColor($21));
+      DrawShadowText(screen, @menuString[i][1], 83, 53 + 22 * p, ColColor($23), ColColor($21));
+      DrawEngShadowText(screen, @menuEngString[i][1], 223, 53 + 22 * p, ColColor($23), ColColor($21));
       p := p + 1;
     end;
   end;
@@ -2025,7 +2025,7 @@ procedure PlayMagicAmination(bnum, enum: integer; ForTeam: integer = 0; mode: in
 var
   beginpic, i, endpic, x, y, z, min, max, i1, i2: integer;
   posA, posB: TPosition;
-  color1, color2: Uint32;
+  color1, color2: uint32;
   str: string;
 begin
   SelectModeColor(mode, color1, color2, str, 1);
@@ -3901,7 +3901,7 @@ end;
 
 //目标系点十菱, 原地系菱
 
-procedure calpoint(var Mx1, My1, Ax1, Ay1, tempmaxhurt: integer; curX, curY, bnum, mnum, level: integer);
+procedure CalPoint(var Mx1, My1, Ax1, Ay1, tempmaxhurt: integer; curX, curY, bnum, mnum, level: integer);
 var
   i, j, k, m, n, tempX, tempY, temphurt, ebnum, ernum, tempHP: integer;
   distance, range, AttAreaType, myteam: integer;
@@ -4088,7 +4088,7 @@ end;
 
 //目标系方、原地系方
 
-procedure calarea(var Mx1, My1, Ax1, Ay1, tempmaxhurt: integer; curX, curY, bnum, mnum, level: integer);
+procedure CalArea(var Mx1, My1, Ax1, Ay1, tempmaxhurt: integer; curX, curY, bnum, mnum, level: integer);
 var
   i, j, k, m, n, tempX, tempY, temphurt: integer;
   distance, range, AttAreaType, myteam: integer;
