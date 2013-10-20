@@ -120,8 +120,8 @@ begin
     SelectTeamList := SelectTeamMembers;
     for i := 0 to 5 do
     begin
-      y := warsta.TeamY[i];
       x := warsta.TeamX[i];
+      y := warsta.TeamY[i];
       if SelectTeamList and (1 shl i) > 0 then
       begin
         InitialBRole(BRoleAmount, TeamList[i], 0, x, y);
@@ -130,8 +130,8 @@ begin
     end;
     for i := 0 to 5 do
     begin
-      y := warsta.TeamY[i] + 1;
       x := warsta.TeamX[i];
+      y := warsta.TeamY[i] + 1;
       if (warsta.TeamMate[i] > 0) and (instruct_16(warsta.TeamMate[i], 1, 0) = 0) then
       begin
         InitialBRole(BRoleAmount, warsta.TeamMate[i], 0, x, y);
@@ -284,8 +284,8 @@ begin
   //我方自动参战数据
   for i := 0 to 5 do
   begin
-    y := warsta.TeamY[i];
     x := warsta.TeamX[i];
+    y := warsta.TeamY[i];
     if warsta.AutoTeamMate[i] >= 0 then
     begin
       InitialBRole(BRoleAmount, warsta.AutoTeamMate[i], 0, x, y);
@@ -297,8 +297,8 @@ begin
     Result := False;
   for i := 0 to 19 do
   begin
-    y := warsta.EnemyY[i];
     x := warsta.EnemyX[i];
+    y := warsta.EnemyY[i];
     if warsta.Enemy[i] >= 0 then
     begin
       InitialBRole(BRoleAmount, warsta.Enemy[i], 1, x, y);
@@ -473,7 +473,6 @@ var
 begin
 
   delaytime := 5; //毫秒
-
   //ProgressThread := SDL_CreateThread(@ShowProgress, nil);
   //战斗未分出胜负则继续
   Bx := Brole[0].X;
@@ -4182,7 +4181,7 @@ end;
 //KeepDis: keep steps to the aim. It minimun value is 1. But 0 means itself.
 //Prolist: the properties of role.
 //MaxMinPro: 1-search max, -1-search min, 0-any.
-//mode: 0-nearest only, 1-medcine, 2-
+//mode: 0-nearest only, 1-medcine, 2-解毒
 
 procedure NearestMoveByPro(var Mx1, My1, Ax1, Ay1: integer; bnum, TeamMate, KeepDis, Prolist, MaxMinPro: integer;
   mode: integer);
