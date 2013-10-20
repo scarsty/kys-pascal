@@ -6,7 +6,11 @@ interface
 
 uses
 {$IFDEF fpc}
-  LMessages, LConvEncoding, LCLType, LCLIntf, FileUtil,
+  LMessages,
+  LConvEncoding,
+  LCLType,
+  LCLIntf,
+  FileUtil,
 {$ELSE}
   Windows,
 {$ENDIF}
@@ -25,7 +29,7 @@ uses
 //初始化脚本配置,运行脚本
 procedure InitialScript;
 procedure DestroyScript;
-function ExecScript(filename, functionname: PChar): integer;
+function ExecScript(filename, functionname: pchar): integer;
 
 //具体指令,封装基本指令
 function Blank(L: Plua_state): integer; cdecl;
@@ -157,7 +161,9 @@ function SelectOneTeamMemberScript(L: Plua_state): integer; cdecl;
 
 implementation
 
-uses kys_draw;
+uses
+  kys_draw;
+
 procedure InitialScript;
 begin
   //LoadLua;
@@ -340,7 +346,7 @@ begin
   //UnloadLua;
 end;
 
-function ExecScript(filename, functionname: PChar): integer;
+function ExecScript(filename, functionname: pchar): integer;
 var
   Script: string;
   //Data: string;
@@ -350,12 +356,12 @@ var
 begin
   if FileExistsUTF8(filename) { *Converted from FileExists*  } then
   begin
-    h := fileopen(filename, fmopenread);
-    len := fileseek(h, 0, 2);
+    h := FileOpen(filename, fmopenread);
+    len := FileSeek(h, 0, 2);
     setlength(Script, len);
-    fileseek(h, 0, 0);
-    fileread(h, Script[1], len);
-    fileclose(h);
+    FileSeek(h, 0, 0);
+    FileRead(h, Script[1], len);
+    FileClose(h);
 {$IFDEF UNIX}
     Script := LowerCase(Script);
 {$ELSE}
@@ -671,11 +677,11 @@ function Menu(L: Plua_state): integer; cdecl;
 var
   x, y, w, n, i, len: integer;
   p: WideString;
-  menustring: array of WideString;
+  menuString: array of WideString;
 begin
 
   n := floor(lua_tonumber(L, -5));
-  setlength(menustring, n);
+  setlength(menuString, n);
   //setlength(menuengstring, 0);
   len := luaL_len(L, -1);
   //showmessage(inttostr(len));
@@ -686,16 +692,16 @@ begin
     lua_gettable(L, -2);
     p := UTF8Decode(lua_tostring(L, -1));
     if p[1] = ' ' then
-      menustring[i] := p
+      menuString[i] := p
     else
-      menustring[i] := ' ' + p;
+      menuString[i] := ' ' + p;
     lua_pop(L, 1);
   end;
 
   w := floor(lua_tonumber(L, -2));
   y := floor(lua_tonumber(L, -3));
   x := floor(lua_tonumber(L, -4));
-  lua_pushnumber(L, CommonScrollMenu(x, y, w, n - 1, 10, menustring));
+  lua_pushnumber(L, CommonScrollMenu(x, y, w, n - 1, 10, menuString));
   Result := 1;
 
 end;
@@ -703,14 +709,14 @@ end;
 function AskYesOrNo(L: Plua_state): integer; cdecl;
 var
   x, y: integer;
-  menustring: array[0..1] of WideString;
+  menuString: array[0..1] of WideString;
 begin
   //setlength(menustring, 2);
-  menustring[0] := (' 否');
-  menustring[1] := (' 是');
+  menuString[0] := (' 否');
+  menuString[1] := (' 是');
   y := floor(lua_tonumber(L, -2));
   x := floor(lua_tonumber(L, -1));
-  lua_pushnumber(L, CommonMenu2(x, y, 78, menustring));
+  lua_pushnumber(L, CommonMenu2(x, y, 78, menuString));
   Result := 1;
   //writeln(result);
 
@@ -1252,7 +1258,7 @@ function GetNameAsString(L: Plua_state): integer; cdecl;
 var
   str: string;
   typenum, num: integer;
-  p1: PChar;
+  p1: pchar;
 begin
   typenum := floor(lua_tonumber(L, -2));
   num := floor(lua_tonumber(L, -1));
@@ -1367,7 +1373,7 @@ begin
   begin
     rnum := floor(lua_tonumber(L, -1));
     t := -1;
-    for i := 0 to broleamount - 1 do
+    for i := 0 to BRoleAmount - 1 do
     begin
       if Brole[i].rnum = rnum then
       begin
@@ -1466,8 +1472,8 @@ function AddRoleIntoBattle(L: Plua_state): integer; cdecl;
 var
   rnum, team, x, y, bnum: integer;
 begin
-  bnum := broleamount;
-  broleamount := broleamount + 1;
+  bnum := BRoleAmount;
+  BRoleAmount := BRoleAmount + 1;
   team := floor(lua_tonumber(L, -4));
   rnum := floor(lua_tonumber(L, -3));
   x := floor(lua_tonumber(L, -2));
@@ -1747,4 +1753,4 @@ begin
   Result := 1;
 end;
 
-end.
+end.

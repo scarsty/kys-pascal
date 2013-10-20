@@ -33,27 +33,27 @@ uses
 //画单个图片的子程
 procedure DrawTitlePic(imgnum, px, py: integer);
 procedure DrawMPic(num, px, py: integer; Framenum: integer = -1); overload;
-procedure DrawMPic(num, px, py, shadow, alpha: integer; mixColor: Uint32; mixAlpha: integer;
+procedure DrawMPic(num, px, py, shadow, alpha: integer; mixColor: uint32; mixAlpha: integer;
   Framenum: integer = -1); overload;
 procedure DrawSPic(num, px, py: integer); overload;
 procedure DrawSPic(num, px, py, x, y, w, h: integer); overload;
-procedure DrawSPic(num, px, py, shadow, alpha, depth: integer; mixColor: Uint32; mixAlpha: integer); overload;
+procedure DrawSPic(num, px, py, shadow, alpha, depth: integer; mixColor: uint32; mixAlpha: integer); overload;
 procedure InitialSPic(num, px, py, x, y, w, h: integer); overload;
 procedure InitialSPic(num, px, py, x, y, w, h, needBlock, depth: integer); overload;
 procedure InitialSPic(num, px, py, x, y, w, h, needBlock, depth, temp: integer); overload;
 procedure DrawHeadPic(num, px, py: integer); overload;
 procedure DrawHeadPic(num, px, py: integer; scr: PSDL_Surface); overload;
-procedure DrawHeadPic(num, px, py, shadow, alpha, depth: integer; mixColor: Uint32; mixAlpha: integer); overload;
+procedure DrawHeadPic(num, px, py, shadow, alpha, depth: integer; mixColor: uint32; mixAlpha: integer); overload;
 procedure DrawBPic(num, px, py, shadow: integer); overload;
-procedure DrawBPic(num, px, py, shadow, alpha, depth: integer; mixColor: Uint32; mixAlpha: integer); overload;
+procedure DrawBPic(num, px, py, shadow, alpha, depth: integer; mixColor: uint32; mixAlpha: integer); overload;
 procedure DrawBPicInRect(num, px, py, shadow, x, y, w, h: integer);
 procedure InitialBPic(num, px, py: integer); overload;
 procedure InitialBPic(num, px, py, needBlock, depth: integer); overload;
 procedure DrawEPic(num, px, py: integer); overload;
-procedure DrawEPic(num, px, py, shadow, alpha, depth: integer; mixColor: Uint32; mixAlpha: integer); overload;
+procedure DrawEPic(num, px, py, shadow, alpha, depth: integer; mixColor: uint32; mixAlpha: integer); overload;
 procedure DrawFPic(num, px, py, index: integer); overload;
-procedure DrawFPic(num, px, py, index, shadow, alpha, depth: integer; mixColor: Uint32; mixAlpha: integer); overload;
-procedure DrawCPic(num, px, py, shadow, alpha: integer; mixColor: Uint32; mixAlpha: integer);
+procedure DrawFPic(num, px, py, index, shadow, alpha, depth: integer; mixColor: uint32; mixAlpha: integer); overload;
+procedure DrawCPic(num, px, py, shadow, alpha: integer; mixColor: uint32; mixAlpha: integer);
 
 //绘制整个屏幕的子程
 procedure Redraw(WriteFresh: integer = 0);
@@ -74,16 +74,16 @@ procedure UpdateScence(xs, ys: integer);
 procedure LoadScencePart(x, y: integer);
 procedure DrawWholeBField(needProgress: integer = 1);
 procedure DrawBfieldWithoutRole(x, y: integer);
-procedure DrawRoleOnBfield(x, y: integer; MixColor: Uint32 = 0; MixAlpha: integer = 0; Alpha: integer = 75);
+procedure DrawRoleOnBfield(x, y: integer; mixColor: uint32 = 0; mixAlpha: integer = 0; Alpha: integer = 75);
 procedure InitialBFieldImage;
 procedure InitialBFieldPosition(i1, i2, depth: integer);
 procedure LoadBfieldPart(x, y: integer);
 procedure LoadBFieldPart2(x, y, alpha: integer);
 procedure DrawBFieldWithCursor(step: integer);
 procedure DrawBFieldWithEft(Epicnum: integer); overload;
-procedure DrawBFieldWithEft(Epicnum, beginpic, endpic, bnum: integer; MixColor: Uint32); overload;
+procedure DrawBFieldWithEft(Epicnum, beginpic, endpic, bnum: integer; mixColor: uint32); overload;
 procedure DrawBFieldWithEft(Epicnum, beginpic, endpic, curlevel, bnum, forteam, flash: integer;
-  MixColor: Uint32); overload;
+  mixColor: uint32); overload;
 procedure DrawBFieldWithAction(bnum, Apicnum: integer);
 
 procedure DrawClouds;
@@ -126,7 +126,7 @@ end;
 
 //显示主地图贴图
 
-procedure DrawMPic(num, px, py, shadow, alpha: integer; mixColor: Uint32; mixAlpha: integer;
+procedure DrawMPic(num, px, py, shadow, alpha: integer; mixColor: uint32; mixAlpha: integer;
   Framenum: integer = -1); overload;
 var
   NeedGRP: integer;
@@ -191,7 +191,7 @@ end;
 
 //画考虑遮挡的内场景
 
-procedure DrawSPic(num, px, py, shadow, alpha, depth: integer; mixColor: Uint32; mixAlpha: integer); overload;
+procedure DrawSPic(num, px, py, shadow, alpha, depth: integer; mixColor: uint32; mixAlpha: integer); overload;
 begin
   if (num >= 0) and (num < SPicAmount) then
   begin
@@ -232,7 +232,7 @@ procedure InitialSPic(num, px, py, x, y, w, h, needBlock, depth, temp: integer);
 var
   Area: TSDL_Rect;
   pImg: PSDL_Surface;
-  pBlock: PChar;
+  pBlock: pchar;
 begin
   if temp = 0 then
   begin
@@ -325,7 +325,7 @@ begin
   end;
 end;
 
-procedure DrawHeadPic(num, px, py, shadow, alpha, depth: integer; mixColor: Uint32; mixAlpha: integer); overload;
+procedure DrawHeadPic(num, px, py, shadow, alpha, depth: integer; mixColor: uint32; mixAlpha: integer); overload;
 var
   len, grp, idx: integer;
   str: string;
@@ -352,7 +352,7 @@ end;
 
 //用于画带透明度和遮挡的战场图
 
-procedure DrawBPic(num, px, py, shadow, alpha, depth: integer; mixColor: Uint32; mixAlpha: integer); overload;
+procedure DrawBPic(num, px, py, shadow, alpha, depth: integer; mixColor: uint32; mixAlpha: integer); overload;
 begin
   if (num > 0) and (num < BPicAmount) then
   begin
@@ -442,7 +442,7 @@ begin
 
 end;
 
-procedure DrawEPic(num, px, py, shadow, alpha, depth: integer; mixColor: Uint32; mixAlpha: integer); overload;
+procedure DrawEPic(num, px, py, shadow, alpha, depth: integer; mixColor: uint32; mixAlpha: integer); overload;
 begin
   if (num >= 0) and (num < EPicAmount) then
   begin
@@ -469,7 +469,7 @@ end;
 
 //用于画带透明度和遮挡的人物动作图片
 
-procedure DrawFPic(num, px, py, index, shadow, alpha, depth: integer; mixColor: Uint32; mixAlpha: integer); overload;
+procedure DrawFPic(num, px, py, index, shadow, alpha, depth: integer; mixColor: uint32; mixAlpha: integer); overload;
 begin
   case PNG_TILE of
     1, 2:
@@ -491,11 +491,11 @@ end;
 
 //主地图上画云
 
-procedure DrawCPic(num, px, py, shadow, alpha: integer; mixColor: Uint32; mixAlpha: integer);
+procedure DrawCPic(num, px, py, shadow, alpha: integer; mixColor: uint32; mixAlpha: integer);
 begin
   if PNG_TILE > 0 then
   begin
-    DrawPNGTile(CPNGIndex[num], 0, nil, screen, px, py, shadow, alpha, mixColor, MixAlpha);
+    DrawPNGTile(CPNGIndex[num], 0, nil, screen, px, py, shadow, alpha, mixColor, mixAlpha);
   end;
   if PNG_TILE = 0 then
   begin
@@ -862,9 +862,9 @@ begin
           end
           else
           begin
-            Width := smallint(Mpic[MIdx[num - 1]]);
-            Height := smallint(Mpic[MIdx[num - 1] + 2]);
-            yoffset := smallint(Mpic[MIdx[num - 1] + 6]);
+            Width := SmallInt(Mpic[MIdx[num - 1]]);
+            Height := SmallInt(Mpic[MIdx[num - 1] + 2]);
+            yoffset := SmallInt(Mpic[MIdx[num - 1] + 6]);
           end;
           //根据图片的宽度计算图的中点的坐标和作为排序依据
           CenterList[k] := (i1 + i2) - (Width + 35) div 36 - (yoffset - Height + 1) div 9;
@@ -1285,7 +1285,7 @@ end;
 
 //画战场上人物, 需更新人物身前的遮挡
 
-procedure DrawRoleOnBfield(x, y: integer; MixColor: Uint32 = 0; MixAlpha: integer = 0; Alpha: integer = 75);
+procedure DrawRoleOnBfield(x, y: integer; mixColor: uint32 = 0; mixAlpha: integer = 0; Alpha: integer = 75);
 var
   i1, i2, xpoint, ypoint, depth: integer;
   pos, pos1: Tposition;
@@ -1302,11 +1302,11 @@ begin
   if MODVersion = 62 then
   begin
     DrawBPic(Rrole[Brole[Bfield[2, x, y]].rnum].ListNum * 4 + Brole[Bfield[2, x, y]].Face + BEGIN_BATTLE_ROLE_PIC,
-      pos.x, pos.y, 0, Alpha, depth, MixColor, MixAlpha);
+      pos.x, pos.y, 0, Alpha, depth, mixColor, mixAlpha);
     exit;
   end;
   DrawBPic(Rrole[Brole[Bfield[2, x, y]].rnum].HeadNum * 4 + Brole[Bfield[2, x, y]].Face + BEGIN_BATTLE_ROLE_PIC,
-    pos.x, pos.y, 0, Alpha, depth, MixColor, MixAlpha);
+    pos.x, pos.y, 0, Alpha, depth, mixColor, mixAlpha);
 
   //if (Bfield[1, i1, i2] > 0) then
   {begin
@@ -1389,7 +1389,7 @@ end;
 procedure LoadBFieldPart2(x, y, alpha: integer);
 var
   i1, i2: integer;
-  pix, colorin: Uint32;
+  pix, colorin: uint32;
   pix1, pix2, pix3, pix4, color1, color2, color3, color4: byte;
   dest: TSDL_Rect;
 begin
@@ -1508,7 +1508,7 @@ begin
 
 end;
 
-procedure DrawBFieldWithEft(Epicnum, beginpic, endpic, bnum: integer; MixColor: Uint32); overload;
+procedure DrawBFieldWithEft(Epicnum, beginpic, endpic, bnum: integer; mixColor: uint32); overload;
 var
   i, i1, i2: integer;
   pos: TPosition;
@@ -1530,7 +1530,7 @@ begin
 end;
 
 procedure DrawBFieldWithEft(Epicnum, beginpic, endpic, curlevel, bnum, forteam, flash: integer;
-  MixColor: Uint32); overload;
+  mixColor: uint32); overload;
 var
   k, i1, i2: integer;
   pos: TPosition;
@@ -1563,7 +1563,7 @@ begin
           DrawFPic(Brole[bnum].pic, pos.x, pos.y, Brole[bnum].Bhead, 0, 75, CalBlock(i1, i2),
             mixColor, flash * (10 + random(40)))
         else
-          DrawRoleOnBfield(i1, i2, MixColor, flash * (10 + random(40)));
+          DrawRoleOnBfield(i1, i2, mixColor, flash * (10 + random(40)));
       end;
       if (Bfield[4, i1, i2] > 0) {and (Bfield[1, i1, i2] = 0)} then
       begin
@@ -1613,7 +1613,7 @@ begin
   begin
     x := Cloud[i].Positionx - (-Mx * 18 + My * 18 + 8640 - CENTER_X);
     y := Cloud[i].Positiony - (Mx * 9 + My * 9 + 9 - CENTER_Y);
-    DrawCPic(Cloud[i].Picnum, x, y, Cloud[i].Shadow, Cloud[i].Alpha, Cloud[i].MixColor, Cloud[i].MixAlpha);
+    DrawCPic(Cloud[i].Picnum, x, y, Cloud[i].Shadow, Cloud[i].Alpha, Cloud[i].mixColor, Cloud[i].mixAlpha);
   end;
 
 end;

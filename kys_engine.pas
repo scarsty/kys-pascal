@@ -33,7 +33,7 @@ uses
 //音频子程
 procedure InitialMusic;
 procedure PlayMP3(MusicNum, times: integer); overload;
-procedure PlayMP3(filename: PChar; times: integer); overload;
+procedure PlayMP3(filename: pchar; times: integer); overload;
 procedure StopMP3;
 procedure PlaySoundE(SoundNum, times: integer); overload;
 procedure PlaySoundE(SoundNum: integer); overload;
@@ -43,62 +43,62 @@ procedure PlaySoundA(SoundNum, times: integer);
 
 //用于读取的子程
 procedure ReadTiles;
-function ReadFileToBuffer(p: PChar; filename: string; size, malloc: integer): PChar;
-procedure FreeFileBuffer(var p: PChar);
+function ReadFileToBuffer(p: pchar; filename: string; size, malloc: integer): pchar;
+procedure FreeFileBuffer(var p: pchar);
 function LoadIdxGrp(stridx, strgrp: string; var idxarray: TIntArray; var grparray: TByteArray): integer;
 function LoadPNGTiles(path: string; var PNGIndexArray: TPNGIndexArray; var SurfaceArray: TSurfaceArray;
   LoadPic: integer = 1): integer;
-procedure LoadOnePNGTile(path: string; p: PChar; filenum: integer; var PNGIndex: TPNGIndex;
+procedure LoadOnePNGTile(path: string; p: pchar; filenum: integer; var PNGIndex: TPNGIndex;
   SurfacePointer: PPSDL_Surface; forceLoad: integer = 0);
 function LoadSurfaceFromFile(filename: string): PSDL_Surface;
-function LoadSurfaceFromMem(p: PChar; len: integer): PSDL_Surface;
+function LoadSurfaceFromMem(p: pchar; len: integer): PSDL_Surface;
 function LoadSurfaceFromZIPFile(zipFile: unzFile; filename: string): PSDL_Surface;
 procedure FreeAllSurface;
 
 //基本绘图子程
-function getpixel(surface: PSDL_Surface; x: integer; y: integer): Uint32;
-procedure putpixel(surface: PSDL_Surface; x: integer; y: integer; pixel: Uint32);
-procedure display_bmp(file_name: PChar; x, y: integer);
-procedure display_img(file_name: PChar; x, y: integer);
-function ColColor(num: byte): Uint32;
-procedure DrawRectangle(sur: PSDL_Surface; x, y, w, h: integer; colorin, colorframe: Uint32; alpha: integer);
-procedure DrawRectangleWithoutFrame(sur: PSDL_Surface; x, y, w, h: integer; colorin: Uint32; alpha: integer);
+function GetPixel(surface: PSDL_Surface; x: integer; y: integer): uint32;
+procedure PutPixel(surface: PSDL_Surface; x: integer; y: integer; pixel: uint32);
+procedure display_bmp(file_name: pchar; x, y: integer);
+procedure display_img(file_name: pchar; x, y: integer);
+function ColColor(num: byte): uint32;
+procedure DrawRectangle(sur: PSDL_Surface; x, y, w, h: integer; colorin, colorframe: uint32; alpha: integer);
+procedure DrawRectangleWithoutFrame(sur: PSDL_Surface; x, y, w, h: integer; colorin: uint32; alpha: integer);
 
 //画RLE8图片的子程
 function JudgeInScreen(px, py, w, h, xs, ys: integer): boolean; overload;
 function JudgeInScreen(px, py, w, h, xs, ys, xx, yy, xw, yh: integer): boolean; overload;
-procedure DrawRLE8Pic(colorPanel: PChar; num, px, py: integer; Pidx: Pinteger; Ppic: PByte;
-  RectArea: PChar; Image: PSDL_Surface; widthI, heightI, sizeI: integer; shadow: integer); overload;
-procedure DrawRLE8Pic(colorPanel: PChar; num, px, py: integer; Pidx: Pinteger; Ppic: PByte;
-  RectArea: PChar; Image: PSDL_Surface; widthI, heightI, sizeI: integer; shadow, alpha: integer); overload;
-procedure DrawRLE8Pic(colorPanel: PChar; num, px, py: integer; Pidx: Pinteger; Ppic: PByte;
-  RectArea: PChar; Image: PSDL_Surface; widthI, heightI, sizeI: integer; shadow, alpha: integer;
-  BlockImageW: PChar; BlockPosition: PChar; widthW, heightW, sizeW: integer; depth: integer;
-  mixColor: Uint32; mixAlpha: integer); overload;
+procedure DrawRLE8Pic(colorPanel: pchar; num, px, py: integer; Pidx: Pinteger; Ppic: PByte;
+  RectArea: pchar; Image: PSDL_Surface; widthI, heightI, sizeI: integer; shadow: integer); overload;
+procedure DrawRLE8Pic(colorPanel: pchar; num, px, py: integer; Pidx: Pinteger; Ppic: PByte;
+  RectArea: pchar; Image: PSDL_Surface; widthI, heightI, sizeI: integer; shadow, alpha: integer); overload;
+procedure DrawRLE8Pic(colorPanel: pchar; num, px, py: integer; Pidx: Pinteger; Ppic: PByte;
+  RectArea: pchar; Image: PSDL_Surface; widthI, heightI, sizeI: integer; shadow, alpha: integer;
+  BlockImageW: pchar; BlockPosition: pchar; widthW, heightW, sizeW: integer; depth: integer;
+  mixColor: uint32; mixAlpha: integer); overload;
 function GetPositionOnScreen(x, y, CenterX, CenterY: integer): TPosition;
 
 
 //显示文字的子程
-function Big5ToUnicode(str: PChar): WideString;
-function UnicodeToBig5(str: PWideChar): string;
-procedure DrawText(sur: PSDL_Surface; word: PUint16; x_pos, y_pos: integer; color: Uint32);
-procedure DrawEngText(sur: PSDL_Surface; word: PUint16; x_pos, y_pos: integer; color: Uint32);
-procedure DrawShadowText(sur: PSDL_Surface; word: PUint16; x_pos, y_pos: integer; color1, color2: Uint32);
-procedure DrawEngShadowText(sur: PSDL_Surface; word: PUint16; x_pos, y_pos: integer; color1, color2: Uint32);
-procedure DrawBig5Text(sur: PSDL_Surface; str: PChar; x_pos, y_pos: integer; color: Uint32);
-procedure DrawBig5ShadowText(sur: PSDL_Surface; word: PChar; x_pos, y_pos: integer; color1, color2: Uint32);
+function Big5ToUnicode(str: pchar): WideString;
+function UnicodeToBig5(str: pWideChar): string;
+procedure DrawText(sur: PSDL_Surface; word: puint16; x_pos, y_pos: integer; color: uint32);
+procedure DrawEngText(sur: PSDL_Surface; word: puint16; x_pos, y_pos: integer; color: uint32);
+procedure DrawShadowText(sur: PSDL_Surface; word: puint16; x_pos, y_pos: integer; color1, color2: uint32);
+procedure DrawEngShadowText(sur: PSDL_Surface; word: puint16; x_pos, y_pos: integer; color1, color2: uint32);
+procedure DrawBig5Text(sur: PSDL_Surface; str: pchar; x_pos, y_pos: integer; color: uint32);
+procedure DrawBig5ShadowText(sur: PSDL_Surface; word: pchar; x_pos, y_pos: integer; color1, color2: uint32);
 procedure DrawTextWithRect(sur: PSDL_Surface; word: puint16; x, y, w: integer; color1, color2: uint32);
 
 
 //PNG贴图相关的子程
-procedure DrawPNGTile(PNGIndex: TPNGIndex; FrameNum: integer; RectArea: PChar; scr: PSDL_Surface;
+procedure DrawPNGTile(PNGIndex: TPNGIndex; FrameNum: integer; RectArea: pchar; scr: PSDL_Surface;
   px, py: integer); overload;
-procedure DrawPNGTile(PNGIndex: TPNGIndex; FrameNum: integer; RectArea: PChar; scr: PSDL_Surface;
-  px, py: integer; shadow, alpha: integer; MixColor: Uint32; MixAlpha: integer); overload;
-procedure DrawPNGTile(PNGIndex: TPNGIndex; FrameNum: integer; RectArea: PChar; scr: PSDL_Surface;
-  px, py: integer; shadow, alpha: integer; MixColor: Uint32; MixAlpha: integer; depth: integer;
-  BlockImgR: PChar; Width, Height, size, leftupx, leftupy: integer); overload;
-procedure SetPNGTileBlock(PNGIndex: TPNGIndex; px, py, depth: integer; BlockImageW: PChar;
+procedure DrawPNGTile(PNGIndex: TPNGIndex; FrameNum: integer; RectArea: pchar; scr: PSDL_Surface;
+  px, py: integer; shadow, alpha: integer; mixColor: uint32; mixAlpha: integer); overload;
+procedure DrawPNGTile(PNGIndex: TPNGIndex; FrameNum: integer; RectArea: pchar; scr: PSDL_Surface;
+  px, py: integer; shadow, alpha: integer; mixColor: uint32; mixAlpha: integer; depth: integer;
+  BlockImgR: pchar; Width, Height, size, leftupx, leftupy: integer); overload;
+procedure SetPNGTileBlock(PNGIndex: TPNGIndex; px, py, depth: integer; BlockImageW: pchar;
   Width, Height, size: integer);
 
 //用于系统响应的子程
@@ -113,7 +113,7 @@ procedure CheckBasicEvent;
 {$IFDEF fpc}
 
 {$ELSE}
-function FileExistsUTF8(filename: PChar): boolean; overload;
+function FileExistsUTF8(filename: pchar): boolean; overload;
 function FileExistsUTF8(filename: string): boolean; overload;
 //function UTF8Decode(str: widestring): widestring;
 {$ENDIF}
@@ -232,7 +232,7 @@ begin
 
 end;
 
-procedure PlayMP3(filename: PChar; times: integer); overload;
+procedure PlayMP3(filename: pchar; times: integer); overload;
 begin
   //if fileexists(filename) then
   //begin
@@ -510,7 +510,7 @@ end;
 //当读入的位置并非变长数据时, 务必设置 malloc = 0!
 //size小于0时, 则读整个文件.
 
-function ReadFileToBuffer(p: PChar; filename: string; size, malloc: integer): PChar;
+function ReadFileToBuffer(p: pchar; filename: string; size, malloc: integer): pchar;
 var
   i: integer;
 begin
@@ -535,7 +535,7 @@ begin
     Result := nil;
 end;
 
-procedure FreeFileBuffer(var p: PChar);
+procedure FreeFileBuffer(var p: pchar);
 begin
   if p <> nil then
     StrDispose(p);
@@ -573,7 +573,7 @@ var
   zipFile: unzFile;
   info: unz_file_info;
   offset: array of smallint;
-  p: PChar;
+  p: pchar;
 begin
   //载入偏移值文件, 计算贴图的最大数量
   size := 0;
@@ -697,7 +697,7 @@ begin
 
 end;
 
-procedure LoadOnePNGTile(path: string; p: PChar; filenum: integer; var PNGIndex: TPNGIndex;
+procedure LoadOnePNGTile(path: string; p: pchar; filenum: integer; var PNGIndex: TPNGIndex;
   SurfacePointer: PPSDL_Surface; forceLoad: integer = 0);
 var
   j, k, index, len, off: integer;
@@ -765,7 +765,7 @@ begin
   end;
 end;
 
-function LoadSurfaceFromMem(p: PChar; len: integer): PSDL_Surface;
+function LoadSurfaceFromMem(p: pchar; len: integer): PSDL_Surface;
 var
   tempscr: PSDL_Surface;
   tempRWops: PSDL_RWops;
@@ -783,7 +783,7 @@ function LoadSurfaceFromZIPFile(zipFile: unzFile; filename: string): PSDL_Surfac
 var
   archiver: unzFile;
   info: unz_file_info;
-  buffer: PChar;
+  buffer: pchar;
 begin
 
 end;
@@ -817,7 +817,7 @@ end;
 
 //获取某像素信息
 
-function getpixel(surface: PSDL_Surface; x: integer; y: integer): Uint32;
+function GetPixel(surface: PSDL_Surface; x: integer; y: integer): uint32;
 type
   TByteArray = array[0..2] of byte;
   PByteArray = ^TByteArray;
@@ -829,19 +829,19 @@ begin
   begin
     bpp := surface.format.BytesPerPixel;
     // Here p is the address to the pixel we want to retrieve
-    p := Pointer(Uint32(surface.pixels) + y * surface.pitch + x * bpp);
+    p := Pointer(uint32(surface.pixels) + y * surface.pitch + x * bpp);
     case bpp of
       1:
         Result := longword(p^);
       2:
-        Result := PUint16(p)^;
+        Result := puint16(p)^;
       3:
         if (SDL_BYTEORDER = SDL_BIG_ENDIAN) then
           Result := PByteArray(p)[0] shl 16 or PByteArray(p)[1] shl 8 or PByteArray(p)[2]
         else
           Result := PByteArray(p)[0] or PByteArray(p)[1] shl 8 or PByteArray(p)[2] shl 16;
       4:
-        Result := PUint32(p)^;
+        Result := puint32(p)^;
       else
         Result := 0; // shouldn't happen, but avoids warnings
     end;
@@ -851,7 +851,7 @@ end;
 
 //画像素
 
-procedure putpixel(surface: PSDL_Surface; x: integer; y: integer; pixel: Uint32);
+procedure PutPixel(surface: PSDL_Surface; x: integer; y: integer; pixel: uint32);
 type
   TByteArray = array[0..2] of byte;
   PByteArray = ^TByteArray;
@@ -861,38 +861,38 @@ var
 begin
   if (x >= 0) and (x < surface.w) and (y >= 0) and (y < surface.h) then
   begin
-  bpp := surface.format.BytesPerPixel;
-  // Here p is the address to the pixel we want to set
-  p := Pointer(Uint32(surface.pixels) + y * surface.pitch + x * bpp);
+    bpp := surface.format.BytesPerPixel;
+    // Here p is the address to the pixel we want to set
+    p := Pointer(uint32(surface.pixels) + y * surface.pitch + x * bpp);
 
-  case bpp of
-    1:
-      longword(p^) := pixel;
-    2:
-      PUint16(p)^ := pixel;
-    3:
-      if (SDL_BYTEORDER = SDL_BIG_ENDIAN) then
-      begin
-        PByteArray(p)[0] := (pixel shr 16) and $FF;
-        PByteArray(p)[1] := (pixel shr 8) and $FF;
-        PByteArray(p)[2] := pixel and $FF;
-      end
-      else
-      begin
-        PByteArray(p)[0] := pixel and $FF;
-        PByteArray(p)[1] := (pixel shr 8) and $FF;
-        PByteArray(p)[2] := (pixel shr 16) and $FF;
-      end;
-    4:
-      PUint32(p)^ := pixel;
-  end;
+    case bpp of
+      1:
+        longword(p^) := pixel;
+      2:
+        puint16(p)^ := pixel;
+      3:
+        if (SDL_BYTEORDER = SDL_BIG_ENDIAN) then
+        begin
+          PByteArray(p)[0] := (pixel shr 16) and $FF;
+          PByteArray(p)[1] := (pixel shr 8) and $FF;
+          PByteArray(p)[2] := pixel and $FF;
+        end
+        else
+        begin
+          PByteArray(p)[0] := pixel and $FF;
+          PByteArray(p)[1] := (pixel shr 8) and $FF;
+          PByteArray(p)[2] := (pixel shr 16) and $FF;
+        end;
+      4:
+        puint32(p)^ := pixel;
+    end;
   end;
 end;
 
 
 //显示bmp文件
 
-procedure display_bmp(file_name: PChar; x, y: integer);
+procedure display_bmp(file_name: pchar; x, y: integer);
 var
   image: PSDL_Surface;
   dest: TSDL_Rect;
@@ -916,7 +916,7 @@ end;
 
 //显示tif, png, jpg等格式图片
 
-procedure display_img(file_name: PChar; x, y: integer);
+procedure display_img(file_name: pchar; x, y: integer);
 var
   image: PSDL_Surface;
   dest: TSDL_Rect;
@@ -940,7 +940,7 @@ end;
 
 //取调色板的颜色, 视频系统为32位色, 但很多时候仍需要原调色板的颜色
 
-function ColColor(num: byte): Uint32;
+function ColColor(num: byte): uint32;
 begin
   //{$IFDEF darwin}
   //colcolor := SDL_mapRGB(screen.format, Acol[num * 3 + 0] * 4, Acol[num * 3 + 1] * 4, Acol[num * 3 + 2] * 4);
@@ -976,8 +976,8 @@ end;
 
 //RLE8图片绘制子程, 所有相关子程均对此封装. 最后一个参数为亮度, 仅在绘制战场选择对方时使用
 
-procedure DrawRLE8Pic(colorPanel: PChar; num, px, py: integer; Pidx: Pinteger; Ppic: PByte;
-  RectArea: PChar; Image: PSDL_Surface; widthI, heightI, sizeI: integer; shadow: integer); overload;
+procedure DrawRLE8Pic(colorPanel: pchar; num, px, py: integer; Pidx: Pinteger; Ppic: PByte;
+  RectArea: pchar; Image: PSDL_Surface; widthI, heightI, sizeI: integer; shadow: integer); overload;
 begin
   DrawRLE8Pic(colorPanel, num, px, py, Pidx, Ppic, RectArea, Image, widthI, heightI, sizeI, Shadow, 0);
 
@@ -985,8 +985,8 @@ end;
 
 //增加透明度选项
 
-procedure DrawRLE8Pic(colorPanel: PChar; num, px, py: integer; Pidx: Pinteger; Ppic: PByte;
-  RectArea: PChar; Image: PSDL_Surface; widthI, heightI, sizeI: integer; shadow, alpha: integer); overload;
+procedure DrawRLE8Pic(colorPanel: pchar; num, px, py: integer; Pidx: Pinteger; Ppic: PByte;
+  RectArea: pchar; Image: PSDL_Surface; widthI, heightI, sizeI: integer; shadow, alpha: integer); overload;
 begin
   DrawRLE8Pic(colorPanel, num, px, py, Pidx, Ppic, RectArea, Image, widthI, heightI, sizeI,
     Shadow, alpha, nil, nil, 0, 0, 0, 0, 0, 0);
@@ -1010,15 +1010,15 @@ end;
 //如果在画到屏幕时避免该值起作用, 可以设为一个很大的值
 //MixColor: Uint32; MixAlpha: integer 图片的混合颜色和混合度, 仅在画到屏幕上时有效
 
-procedure DrawRLE8Pic(colorPanel: PChar; num, px, py: integer; Pidx: Pinteger; Ppic: PByte;
-  RectArea: PChar; Image: PSDL_Surface; widthI, heightI, sizeI: integer; shadow, alpha: integer;
-  BlockImageW: PChar; BlockPosition: PChar; widthW, heightW, sizeW: integer; depth: integer;
-  MixColor: Uint32; MixAlpha: integer); overload;
+procedure DrawRLE8Pic(colorPanel: pchar; num, px, py: integer; Pidx: Pinteger; Ppic: PByte;
+  RectArea: pchar; Image: PSDL_Surface; widthI, heightI, sizeI: integer; shadow, alpha: integer;
+  BlockImageW: pchar; BlockPosition: pchar; widthW, heightW, sizeW: integer; depth: integer;
+  mixColor: uint32; mixAlpha: integer); overload;
 var
   w, h, xs, ys, x, y, blockx, blocky: smallint;
   offset, length, p, isAlpha, lenInt: integer;
   l, l1, ix, iy, pixdepth, curdepth, alpha1: integer;
-  pix, colorin: Uint32;
+  pix, colorin: uint32;
   pix1, pix2, pix3, pix4, color1, color2, color3, color4: byte;
   area: TSDL_Rect;
 begin
@@ -1099,7 +1099,7 @@ begin
             begin
               if mixAlpha <> 0 then
               begin
-                SDL_GetRGBA(MixColor, screen.format, @color1, @color2, @color3, @color4);
+                SDL_GetRGBA(mixColor, screen.format, @color1, @color2, @color3, @color4);
                 pix1 := (mixAlpha * color1 + (100 - mixAlpha) * pix1) div 100;
                 pix2 := (mixAlpha * color2 + (100 - mixAlpha) * pix2) div 100;
                 pix3 := (mixAlpha * color3 + (100 - mixAlpha) * pix3) div 100;
@@ -1133,7 +1133,7 @@ begin
                 end;
                 if (isAlpha = 1) and (Alpha < 100) then
                 begin
-                  colorin := getpixel(screen, x, y);
+                  colorin := GetPixel(screen, x, y);
                   SDL_GetRGBA(colorin, screen.format, @color1, @color2, @color3, @color4);
                   //pix1 := pix and $FF;
                   //color1 := colorin and $FF;
@@ -1151,7 +1151,7 @@ begin
                 end;
                 if (isAlpha = 0) and (alpha1 > 0) and (Alpha1 <= 100) then
                 begin
-                  colorin := getpixel(screen, x, y);
+                  colorin := GetPixel(screen, x, y);
                   SDL_GetRGBA(colorin, screen.format, @color1, @color2, @color3, @color4);
                   //pix1 := pix and $FF;
                   //color1 := colorin and $FF;
@@ -1170,7 +1170,7 @@ begin
               end;
               pix := SDL_MapRGBA(screen.format, pix1, pix2, pix3, pix4);
               if (Alpha < 100) or (pixdepth <= curdepth) then
-                putpixel(screen, x, y, pix);
+                PutPixel(screen, x, y, pix);
             end
             else
             begin
@@ -1183,7 +1183,7 @@ begin
                   Psmallint(BlockImageW + (x * heightI + y) * sizeI)^ := depth;
                 end;
                 pix := SDL_MapRGBA(screen.format, pix1, pix2, pix3, pix4);
-                putpixel(Image, x, y, pix);
+                PutPixel(Image, x, y, pix);
               end;
             end;
           end;
@@ -1211,7 +1211,7 @@ end;
 
 //big5转为unicode
 
-function Big5ToUnicode(str: PChar): WideString;
+function Big5ToUnicode(str: pchar): WideString;
 var
   len: integer;
 begin
@@ -1220,7 +1220,7 @@ begin
 {$ELSE}
   len := MultiByteToWideChar(950, 0, PChar(str), -1, nil, 0);
   setlength(Result, len - 1);
-  MultiByteToWideChar(950, 0, PChar(str), length(str), PWideChar(Result), len + 1);
+  MultiByteToWideChar(950, 0, PChar(str), length(str), pWideChar(Result), len + 1);
 {$ENDIF}
   Result := ' ' + Result;
 
@@ -1228,28 +1228,28 @@ end;
 
 //unicode转为big5, 仅用于输入姓名
 
-function UnicodeToBig5(str: PWideChar): string;
+function UnicodeToBig5(str: pWideChar): string;
 var
   len: integer;
 begin
 {$IFDEF fpc}
   Result := UTF8ToCP950((str));
 {$ELSE}
-  len := WideCharToMultiByte(950, 0, PWideChar(str), -1, nil, 0, nil, nil);
+  len := WideCharToMultiByte(950, 0, pWideChar(str), -1, nil, 0, nil, nil);
   setlength(Result, len + 1);
-  WideCharToMultiByte(950, 0, PWideChar(str), -1, PChar(Result), len + 1, nil, nil);
+  WideCharToMultiByte(950, 0, pWideChar(str), -1, PChar(Result), len + 1, nil, nil);
 {$ENDIF}
 
 end;
 
 //显示unicode文字
 
-procedure DrawText(sur: PSDL_Surface; word: PUint16; x_pos, y_pos: integer; color: Uint32);
+procedure DrawText(sur: PSDL_Surface; word: puint16; x_pos, y_pos: integer; color: uint32);
 var
   dest: TSDL_Rect;
   tempcolor: TSDL_Color;
   len, i, k: integer;
-  pword: array[0..2] of Uint16;
+  pword: array[0..2] of uint16;
   word1: ansistring;
   word2: WideString;
   p1: pbyte;
@@ -1262,7 +1262,7 @@ begin
   //此处删除这些0, 同时统计这些0的数目, 若与字串长度相同
   //即认为是一个纯英文字串, 或者是一个直接赋值的widestring,
   //需要再编码为Unicode, 否则即认为已经是Unicode
-  len := length(PWideChar(word));
+  len := length(pWideChar(word));
   setlength(word1, len * 2 + 1);
   p1 := @word1[1];
   p2 := pbyte(word);
@@ -1336,7 +1336,7 @@ end;
 
 //显示英文
 
-procedure DrawEngText(sur: PSDL_Surface; word: PUint16; x_pos, y_pos: integer; color: Uint32);
+procedure DrawEngText(sur: PSDL_Surface; word: puint16; x_pos, y_pos: integer; color: uint32);
 var
   dest: TSDL_Rect;
   a: Uint8;
@@ -1359,7 +1359,7 @@ end;
 
 //显示unicode中文阴影文字, 即将同样内容显示2次, 间隔1像素
 
-procedure DrawShadowText(sur: PSDL_Surface; word: PUint16; x_pos, y_pos: integer; color1, color2: Uint32);
+procedure DrawShadowText(sur: PSDL_Surface; word: puint16; x_pos, y_pos: integer; color1, color2: uint32);
 begin
   DrawText(sur, word, x_pos + 1, y_pos, color2);
   DrawText(sur, word, x_pos, y_pos, color1);
@@ -1368,7 +1368,7 @@ end;
 
 //显示英文阴影文字
 
-procedure DrawEngShadowText(sur: PSDL_Surface; word: PUint16; x_pos, y_pos: integer; color1, color2: Uint32);
+procedure DrawEngShadowText(sur: PSDL_Surface; word: puint16; x_pos, y_pos: integer; color1, color2: uint32);
 begin
   DrawEngText(sur, word, x_pos + 1, y_pos, color2);
   DrawEngText(sur, word, x_pos, y_pos, color1);
@@ -1377,7 +1377,7 @@ end;
 
 //显示big5文字
 
-procedure DrawBig5Text(sur: PSDL_Surface; str: PChar; x_pos, y_pos: integer; color: Uint32);
+procedure DrawBig5Text(sur: PSDL_Surface; str: pchar; x_pos, y_pos: integer; color: uint32);
 var
   len: integer;
   words: WideString;
@@ -1387,7 +1387,7 @@ begin
 {$ELSE}
   len := MultiByteToWideChar(950, 0, PChar(str), -1, nil, 0);
   setlength(words, len - 1);
-  MultiByteToWideChar(950, 0, PChar(str), length(str), PWideChar(words), len + 1);
+  MultiByteToWideChar(950, 0, PChar(str), length(str), pWideChar(words), len + 1);
 {$ENDIF}
   words := ' ' + words;
   DrawText(sur, @words[1], x_pos, y_pos, color);
@@ -1396,7 +1396,7 @@ end;
 
 //显示big5阴影文字
 
-procedure DrawBig5ShadowText(sur: PSDL_Surface; word: PChar; x_pos, y_pos: integer; color1, color2: Uint32);
+procedure DrawBig5ShadowText(sur: PSDL_Surface; word: pchar; x_pos, y_pos: integer; color1, color2: uint32);
 var
   len: integer;
   words: WideString;
@@ -1406,7 +1406,7 @@ begin
 {$ELSE}
   len := MultiByteToWideChar(950, 0, PChar(word), -1, nil, 0);
   setlength(words, len - 1);
-  MultiByteToWideChar(950, 0, PChar(word), length(word), PWideChar(words), len + 1);
+  MultiByteToWideChar(950, 0, PChar(word), length(word), pWideChar(words), len + 1);
 {$ENDIF}
   words := ' ' + words;
   DrawText(sur, @words[1], x_pos + 1, y_pos, color2);
@@ -1419,7 +1419,7 @@ end;
 procedure DrawTextWithRect(sur: PSDL_Surface; word: puint16; x, y, w: integer; color1, color2: uint32);
 var
   len: integer;
-  p: PChar;
+  p: pchar;
 begin
   DrawRectangle(sur, x, y, w, 28, 0, ColColor(255), 30);
   DrawShadowText(sur, word, x - 17, y + 2, color1, color2);
@@ -1429,7 +1429,7 @@ end;
 
 //画带边框矩形, (x坐标, y坐标, 宽度, 高度, 内部颜色, 边框颜色, 透明度）
 
-procedure DrawRectangle(sur: PSDL_Surface; x, y, w, h: integer; colorin, colorframe: Uint32; alpha: integer);
+procedure DrawRectangle(sur: PSDL_Surface; x, y, w, h: integer; colorin, colorframe: uint32; alpha: integer);
 var
   i1, i2, l1, l2, l3, l4: integer;
   tempscr: PSDL_Surface;
@@ -1458,7 +1458,7 @@ begin
       //4边角
       if not ((l1 >= 4) and (l2 >= 4) and (l3 >= 4) and (l4 >= 4)) then
       begin
-        putpixel(tempscr, i1, i2, 0);
+        PutPixel(tempscr, i1, i2, 0);
       end;
       //框线
       if (((l1 >= 4) and (l2 >= 4) and (l3 >= 4) and (l4 >= 4) and ((i1 = 0) or (i1 = w) or
@@ -1467,7 +1467,7 @@ begin
         //a := round(200 - min(abs(i1/w-0.5),abs(i2/h-0.5))*2 * 100);
         a := round(250 - abs(i1 / w + i2 / h - 1) * 150);
         //writeln(a);
-        putpixel(tempscr, i1, i2, SDL_MapRGBA(tempscr.format, r1, g1, b1, a));
+        PutPixel(tempscr, i1, i2, SDL_MapRGBA(tempscr.format, r1, g1, b1, a));
       end;
     end;
   SDL_BlitSurface(tempscr, nil, sur, @dest);
@@ -1481,7 +1481,7 @@ end;
 
 //画不含边框的矩形, 用于对话和黑屏
 
-procedure DrawRectangleWithoutFrame(sur: PSDL_Surface; x, y, w, h: integer; colorin: Uint32; alpha: integer);
+procedure DrawRectangleWithoutFrame(sur: PSDL_Surface; x, y, w, h: integer; colorin: uint32; alpha: integer);
 var
   tempscr: PSDL_Surface;
   dest: TSDL_Rect;
@@ -1555,22 +1555,22 @@ end;
 //绘制PNG贴图相关的代码
 //这里的可能较旧, 可以参照水浒的
 
-procedure DrawPNGTile(PNGIndex: TPNGIndex; FrameNum: integer; RectArea: PChar; scr: PSDL_Surface;
+procedure DrawPNGTile(PNGIndex: TPNGIndex; FrameNum: integer; RectArea: pchar; scr: PSDL_Surface;
   px, py: integer); overload;
 begin
   DrawPNGTile(PNGIndex, FrameNum, RectArea, scr, px, py, 0, 0, 0, 0);
 end;
 
-procedure DrawPNGTile(PNGIndex: TPNGIndex; FrameNum: integer; RectArea: PChar; scr: PSDL_Surface;
-  px, py: integer; shadow, alpha: integer; MixColor: Uint32; MixAlpha: integer); overload;
+procedure DrawPNGTile(PNGIndex: TPNGIndex; FrameNum: integer; RectArea: pchar; scr: PSDL_Surface;
+  px, py: integer; shadow, alpha: integer; mixColor: uint32; mixAlpha: integer); overload;
 begin
-  DrawPNGTile(PNGIndex, FrameNum, RectArea, scr, px, py, shadow, alpha, MixColor, MixAlpha, 0, nil, 0, 0, 0, 0, 0);
+  DrawPNGTile(PNGIndex, FrameNum, RectArea, scr, px, py, shadow, alpha, mixColor, mixAlpha, 0, nil, 0, 0, 0, 0, 0);
 
 end;
 
-procedure DrawPNGTile(PNGIndex: TPNGIndex; FrameNum: integer; RectArea: PChar; scr: PSDL_Surface;
-  px, py: integer; shadow, alpha: integer; MixColor: Uint32; MixAlpha: integer; depth: integer;
-  BlockImgR: PChar; Width, Height, size, leftupx, leftupy: integer); overload;
+procedure DrawPNGTile(PNGIndex: TPNGIndex; FrameNum: integer; RectArea: pchar; scr: PSDL_Surface;
+  px, py: integer; shadow, alpha: integer; mixColor: uint32; mixAlpha: integer; depth: integer;
+  BlockImgR: pchar; Width, Height, size, leftupx, leftupy: integer); overload;
 var
   dest, area: TSDL_Rect;
   tempscr, tempscrfront, tempscrback, CurSurface: PSDL_Surface;
@@ -1613,15 +1613,15 @@ begin
         begin
           if shadow > 0 then
           begin
-            MixColor := $FFFFFFFF;
-            MixAlpha := shadow * 25;
+            mixColor := $FFFFFFFF;
+            mixAlpha := shadow * 25;
           end
           else if shadow < 0 then
           begin
-            MixColor := 0;
-            MixAlpha := -shadow * 25;
+            mixColor := 0;
+            mixAlpha := -shadow * 25;
           end;
-          if (MixAlpha = 0) and (BlockImgR = nil) then
+          if (mixAlpha = 0) and (BlockImgR = nil) then
           begin
             if (alpha > 0) then
             begin
@@ -1642,14 +1642,14 @@ begin
           begin
             tempscr := SDL_DisplayFormatAlpha(CurSurface);
             //SDL_BlitSurface(tempscr, nil, scr, @dest);
-            if (MixAlpha > 0) then
+            if (mixAlpha > 0) then
             begin
               //mixalpha := 100;
-              tran := MixAlpha * 255 div 100;
+              tran := mixAlpha * 255 div 100;
               bigtran := tran * $01010101;
               Mask := tempscr.format.AMask;
               tempscrfront := SDL_DisplayFormatAlpha(CurSurface);
-              SDL_FillRect(tempscrfront, nil, (MixColor and (not Mask)) or (bigtran and Mask));
+              SDL_FillRect(tempscrfront, nil, (mixColor and (not Mask)) or (bigtran and Mask));
               SDL_BlitSurface(tempscrfront, nil, tempscr, nil);
               if (BlockImgR = nil) then
               begin
@@ -1684,8 +1684,9 @@ begin
               begin
                 for i2 := 0 to tempscr.h - 1 do
                 begin
-                  pixdepth := psmallint(BlockImgR + ((dest.x + leftupx + i1) * Height + dest.y + leftupy + i2) * size)^;
-                  pixel := getpixel(tempscr, i1, i2);
+                  pixdepth := psmallint(BlockImgR + ((dest.x + leftupx + i1) * Height + dest.y +
+                    leftupy + i2) * size)^;
+                  pixel := GetPixel(tempscr, i1, i2);
                   AlphaValue := pixel and Mask;
                   if AlphaValue > 0 then
                   begin
@@ -1693,7 +1694,7 @@ begin
                     begin
                       //替换透明通道的值
                       //注意: 这里如果效率较低, 则改用完全指针, 或者汇编编写. 设置偏移也相同
-                      putpixel(tempscr, i1, i2, (pixel and (not Mask)) or (bigtran and Mask));
+                      PutPixel(tempscr, i1, i2, (pixel and (not Mask)) or (bigtran and Mask));
                     end;
                   end;
                 end;
@@ -1708,7 +1709,7 @@ begin
   end;
 end;
 
-procedure SetPNGTileBlock(PNGIndex: TPNGIndex; px, py, depth: integer; BlockImageW: PChar;
+procedure SetPNGTileBlock(PNGIndex: TPNGIndex; px, py, depth: integer; BlockImageW: pchar;
   Width, Height, size: integer);
 var
   i, i1, i2, x1, y1: integer;
@@ -1731,7 +1732,7 @@ begin
             //游戏中的遮挡实际上可由绘图顺序决定, 即绘图顺序靠后的应有最大遮挡值
             //绘图顺序比较的优先级为: x, y的最小值; 坐标差绝对值; y较小(或x较大)
             //保存遮挡需要一个数组, 但是如果利用Surface可能会更快
-            if ((getpixel(CurSurface, i1, i2) and CurSurface.format.AMask) <> 0) and
+            if ((GetPixel(CurSurface, i1, i2) and CurSurface.format.AMask) <> 0) and
               (x1 + i1 >= 0) and (x1 + i1 < Width) and (y1 + i2 >= 0) and (y1 + i2 < Height) then
             begin
               psmallint(BlockImageW + ((x1 + i1) * Height + y1 + i2) * size)^ := depth;
@@ -1753,7 +1754,7 @@ procedure SDL_UpdateRect2(scr1: PSDL_Surface; x, y, w, h: integer);
 var
   realx, realy, realw, realh, ZoomType: integer;
   tempscr: PSDL_Surface;
-  now, Next: Uint32;
+  now, Next: uint32;
   dest: TSDL_Rect;
   TextureID: GLUint;
 begin
@@ -1855,7 +1856,7 @@ end;
 procedure QuitConfirm;
 var
   tempscr: PSDL_Surface;
-  menustring: array[0..1] of WideString;
+  menuString: array[0..1] of WideString;
 begin
   if (EXIT_GAME = 0) or (AskingQuit = True) then
   begin
@@ -1871,9 +1872,9 @@ begin
     SDL_BlitSurface(tempscr, nil, screen, nil);
     DrawRectangleWithoutFrame(screen, 0, 0, screen.w, screen.h, 0, 50);
     SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-    menustring[0] := ' 取消';
-    menustring[1] := ' 確認';
-    if CommonMenu(CENTER_X * 2 - 50, 2, 45, 1, menustring) = 1 then
+    menuString[0] := ' 取消';
+    menuString[1] := ' 確認';
+    if CommonMenu(CENTER_X * 2 - 50, 2, 45, 1, menuString) = 1 then
       Quit;
     Redraw(1);
     SDL_BlitSurface(tempscr, nil, screen, nil);
@@ -1911,7 +1912,7 @@ end;
 
 {$ELSE}
 
-function FileExistsUTF8(filename: PChar): boolean; overload;
+function FileExistsUTF8(filename: pchar): boolean; overload;
 begin
   Result := FileExists(filename);
 end;

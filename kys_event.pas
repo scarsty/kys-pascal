@@ -368,14 +368,14 @@ end;
 function instruct_5(jump1, jump2: integer): integer;
 var
   menu: integer;
-  menustring: array[0..2] of WideString;
+  menuString: array[0..2] of WideString;
 begin
   //setlength(menustring, 3);
-  menustring[0] := (' 取消');
-  menustring[1] := (' 戰鬥');
-  menustring[2] := (' 是否與之戰鬥？');
-  DrawTextWithRect(screen, @menustring[2][1], CENTER_X - 75, CENTER_Y - 85, 150, ColColor(7), ColColor(5));
-  menu := CommonMenu2(CENTER_X - 49, CENTER_Y - 50, 98, menustring);
+  menuString[0] := (' 取消');
+  menuString[1] := (' 戰鬥');
+  menuString[2] := (' 是否與之戰鬥？');
+  DrawTextWithRect(screen, @menuString[2][1], CENTER_X - 75, CENTER_Y - 85, 150, ColColor(7), ColColor(5));
+  menu := CommonMenu2(CENTER_X - 49, CENTER_Y - 50, 98, menuString);
   if menu = 1 then
     Result := jump1
   else
@@ -405,14 +405,14 @@ end;
 function instruct_9(jump1, jump2: integer): integer;
 var
   menu: integer;
-  menustring: array[0..2] of WideString;
+  menuString: array[0..2] of WideString;
 begin
   //setlength(menustring, 3);
-  menustring[0] := (' 取消');
-  menustring[1] := (' 要求');
-  menustring[2] := (' 是否要求加入？');
-  DrawTextWithRect(screen, @menustring[2][1], CENTER_X - 75, CENTER_Y - 85, 150, ColColor(7), ColColor(5));
-  menu := CommonMenu2(CENTER_X - 49, CENTER_Y - 50, 98, menustring);
+  menuString[0] := (' 取消');
+  menuString[1] := (' 要求');
+  menuString[2] := (' 是否要求加入？');
+  DrawTextWithRect(screen, @menuString[2][1], CENTER_X - 75, CENTER_Y - 85, 150, ColColor(7), ColColor(5));
+  menu := CommonMenu2(CENTER_X - 49, CENTER_Y - 50, 98, menuString);
   if menu = 1 then
     Result := jump1
   else
@@ -455,16 +455,16 @@ end;
 function instruct_11(jump1, jump2: integer): integer;
 var
   menu: integer;
-  menustring: array[0..2] of WideString;
+  menuString: array[0..2] of WideString;
 begin
   //setlength(menustring, 3);
-  menustring[0] := ('  否');
-  menustring[1] := ('  是');
-  menustring[2] := (' 是否需要住宿？');
+  menuString[0] := ('  否');
+  menuString[1] := ('  是');
+  menuString[2] := (' 是否需要住宿？');
   if MODVersion <> 0 then
-    menustring[2] := (' 请選擇是或者否');
-  DrawTextWithRect(screen, @menustring[2][1], CENTER_X - 75, CENTER_Y - 85, 150, ColColor(7), ColColor(5));
-  menu := CommonMenu2(CENTER_X - 49, CENTER_Y - 50, 98, menustring);
+    menuString[2] := (' 请選擇是或者否');
+  DrawTextWithRect(screen, @menuString[2][1], CENTER_X - 75, CENTER_Y - 85, 150, ColColor(7), ColColor(5));
+  menu := CommonMenu2(CENTER_X - 49, CENTER_Y - 50, 98, menuString);
   if menu = 1 then
     Result := jump1
   else
@@ -1492,7 +1492,7 @@ procedure instruct_64;
 var
   i, amount, shopnum, menu, price: integer;
   list: array[0..4] of integer;
-  menustring, menuengstring: array[0..4] of WideString;
+  menuString, menuEngString: array[0..4] of WideString;
 begin
   //setlength(Menustring, 5);
   //setlength(Menuengstring, 5);
@@ -1504,8 +1504,8 @@ begin
   begin
     if Rshop[shopnum].Amount[i] > 0 then
     begin
-      menustring[amount] := Big5ToUnicode(@Ritem[Rshop[shopnum].Item[i]].Name);
-      menuengstring[amount] := format('%10d', [Rshop[shopnum].Price[i]]);
+      menuString[amount] := Big5ToUnicode(@Ritem[Rshop[shopnum].Item[i]].Name);
+      menuEngString[amount] := format('%10d', [Rshop[shopnum].Price[i]]);
       list[amount] := i;
       amount := amount + 1;
     end;
@@ -1513,8 +1513,8 @@ begin
   instruct_1($B9E, $6F, 0);
   if amount >= 1 then
   begin
-    menu := CommonMenu(CENTER_X - 120, 150, 105 + length(menuengstring[0]) * 10, amount - 1,
-      menustring, menuengstring);
+    menu := CommonMenu(CENTER_X - 120, 150, 105 + length(menuEngString[0]) * 10, amount - 1,
+      menuString, menuEngString);
     Redraw;
     if menu >= 0 then
     begin
@@ -1571,11 +1571,11 @@ end;
 function instruct_50e(code, e1, e2, e3, e4, e5, e6: integer): integer;
 var
   i, t1, grp, idx, offset, len, i1, i2: integer;
-  p, p1: PChar;
+  p, p1: pchar;
   //ps :pstring;
   str: string;
   word, word1: WideString;
-  menustring, menuengstring: array of WideString;
+  menuString, menuEngString: array of WideString;
 begin
   Result := 0;
   case code of
@@ -1608,7 +1608,7 @@ begin
         2: x50[e3] := x50[e4] * t1;
         3: if t1 <> 0 then x50[e3] := x50[e4] div t1;
         4: if t1 <> 0 then x50[e3] := x50[e4] mod t1;
-        5: if t1 <> 0 then x50[e3] := Uint16(x50[e4]) div t1;
+        5: if t1 <> 0 then x50[e3] := uint16(x50[e4]) div t1;
       end;
     end;
     4: //Judge the parameter.
@@ -2071,29 +2071,29 @@ begin
       e2 := e_GetValue(0, e1, e2);
       e5 := e_GetValue(1, e1, e5);
       e6 := e_GetValue(2, e1, e6);
-      setlength(menustring, e2);
-      setlength(menuengstring, 0);
+      setlength(menuString, e2);
+      setlength(menuEngString, 0);
       t1 := 0;
       for i := 0 to e2 - 1 do
       begin
-        menustring[i] := Big5ToUnicode(@x50[x50[e3 + i]]);
+        menuString[i] := Big5ToUnicode(@x50[x50[e3 + i]]);
         i1 := length(PChar(@x50[x50[e3 + i]]));
         if i1 > t1 then
           t1 := i1;
       end;
-      x50[e4] := CommonMenu(e5, e6, t1 * 10 + 5, e2 - 1, menustring) + 1;
+      x50[e4] := CommonMenu(e5, e6, t1 * 10 + 5, e2 - 1, menuString) + 1;
     end;
     40: //Show a menu to select. The 40th instruct is too complicable, just use the 30th.
     begin
       e2 := e_GetValue(0, e1, e2);
       e5 := e_GetValue(1, e1, e5);
       e6 := e_GetValue(2, e1, e6);
-      setlength(menustring, e2);
-      setlength(menuengstring, 0);
+      setlength(menuString, e2);
+      setlength(menuEngString, 0);
       i2 := 0;
       for i := 0 to e2 - 1 do
       begin
-        menustring[i] := Big5ToUnicode(@x50[x50[e3 + i]]);
+        menuString[i] := Big5ToUnicode(@x50[x50[e3 + i]]);
         i1 := length(PChar(@x50[x50[e3 + i]]));
         if i1 > i2 then
           i2 := i1;
@@ -2102,7 +2102,7 @@ begin
       if t1 = 0 then
         t1 := 5;
       //showmessage(inttostr(t1));
-      x50[e4] := CommonScrollMenu(e5, e6, i2 * 10 + 5, e2 - 1, t1, menustring) + 1;
+      x50[e4] := CommonScrollMenu(e5, e6, i2 * 10 + 5, e2 - 1, t1, menuString) + 1;
     end;
     41: //Draw a picture.
     begin
@@ -2311,9 +2311,9 @@ procedure NewTalk(headnum, talknum, namenum, place, showhead, color, frame: inte
 var
   k, alen, newcolor, color1, color2, nh, nw, ch, c1, r1, n, namelen, i, t1, grp, idx: integer;
   offset, len, i1, i2, face, c, nx, ny, hx, hy, hw, hh, x, y, w, h, cell, row: integer;
-  np3, np, np1, np2, tp, p1, ap: PChar;
+  np3, np, np1, np2, tp, p1, ap: pchar;
   actorarray, talkarray, namearray, name1, name2: array of byte;
-  pword: array[0..1] of Uint16;
+  pword: array[0..1] of uint16;
   {wd,} str: string;
   temp2: WideString;
   wd: string;
@@ -2624,7 +2624,7 @@ begin
         ch := ch + 2;
         if (pword[0] and $FF) = $5E then //^^改变文字颜色
         begin
-          case smallint((pword[0] and $FF00) shr 8) - $30 of
+          case SmallInt((pword[0] and $FF00) shr 8) - $30 of
             0: newcolor := 28515;
             1: newcolor := 28421;
             2: newcolor := 28435;

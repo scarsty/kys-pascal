@@ -127,8 +127,8 @@ type
     Picnum: integer;
     Shadow: integer;
     Alpha: integer;
-    MixColor: Uint32;
-    MixAlpha: integer;
+    mixColor: uint32;
+    mixAlpha: integer;
     Positionx, Positiony, Speedx, Speedy: integer;
   end;
 
@@ -316,14 +316,14 @@ var
   PNG_TILE: integer = 1; //使用PNG贴图
   TRY_FIND_GRP: integer = 1; //当找不到PNG贴图时, 会试图寻找GRP中的图
   BIG_PNG_TILE: integer = 0;
-  fullscreen: integer; //是否全屏
+  FULLSCREEN: integer; //是否全屏
   RESOLUTIONX, RESOLUTIONY: integer;
   HARDWARE_BLIT: integer; //是否使用硬件绘图
   GLHR: integer = 1; //是否使用OPENGL拉伸
   SMOOTH: integer = 1; //平滑设置 0-完全不平滑, 1-仅标准分辨率不平滑, 2-任何时候都使用平滑
   GL_TEXTURE: integer = 0; //全部使用gl纹理, 仅在使用png贴图时有效
 
-  ScreenFlag: Uint32;
+  ScreenFlag: uint32;
   screen, prescreen, freshscreen, RealScreen: PSDL_Surface;
   //主画面, 手动双缓冲画面, 用于菜单/事件中快速重画的画面, 实际屏幕
   ImgScence, ImgScenceBack, ImgBField, ImgBBuild: PSDL_Surface;
@@ -397,7 +397,7 @@ var
 
   //其他
   mutex: PSDL_Mutex;
-  ChangeColorList: array[0..1, 0..20] of Uint32; //替换色表, 无用
+  ChangeColorList: array[0..1, 0..20] of uint32; //替换色表, 无用
   AskingQuit: boolean = False; //是否正在提问退出
   begin_time: integer; //游戏开始时间, 单位为分钟, 0~1439
   now_time: real;
