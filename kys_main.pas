@@ -500,7 +500,7 @@ begin
   ReadFileToBuffer(@Buildy[0, 0], AppPath + 'resource/Buildy.002', 480 * 480 * 2, 0);
 
   ReadFileToBuffer(@leavelist[0], AppPath + 'list/leave.bin', 200, 0);
-  ReadFileToBuffer(@effectlist[0], AppPath + 'list/effect.bin', 200, 0);
+  ReadFileToBuffer(@effectlist[0], AppPath + 'list/effect.bin', 400, 0);
   ReadFileToBuffer(@leveluplist[0], AppPath + 'list/levelup.bin', 200, 0);
 
   ReadFileToBuffer(@matchlist[0], AppPath + 'list/match.bin', MAX_WEAPON_MATCH * 3 * 2, 0);
