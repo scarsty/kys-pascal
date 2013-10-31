@@ -383,6 +383,8 @@ begin
       TitlePosition.y := 270;
       OpenPicPosition.y := OpenPicPosition.y + 20;
       MAX_ITEM_AMOUNT := 400;
+      Setlength(Esound, 207);
+      Setlength(Asound, 37);
     end;
   end;
 
