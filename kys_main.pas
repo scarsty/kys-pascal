@@ -303,6 +303,7 @@ begin
   //41-PTT
   //51-魏征
   //62-红颜录解密
+  //71-天书劫
 
   case MODVersion of
     0:
@@ -374,6 +375,14 @@ begin
       CENTER_Y := 240;
       Setlength(Music, 195);
       BEGIN_WALKPIC := 5697;
+    end;
+    71:
+    begin
+      TitleString := 'All Heros in Kam Yung''s Stories - Books from Heaven';
+      TitlePosition.x := 60;
+      TitlePosition.y := 270;
+      OpenPicPosition.y := OpenPicPosition.y + 20;
+      MAX_ITEM_AMOUNT := 400;
     end;
   end;
 
