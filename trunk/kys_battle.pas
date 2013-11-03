@@ -61,7 +61,6 @@ procedure ShowHurtValue(mode: integer);
 procedure SelectModeColor(mode: integer; var color1, color2: uint32; var str: string; trans: integer = 0);
 procedure CalPoiHurtLife;
 procedure ClearDeadRolePic;
-procedure ShowSimpleStatus(rnum, x, y: integer);
 procedure Wait(bnum: integer);
 procedure RestoreRoleStatus;
 procedure AddExp;
@@ -76,8 +75,6 @@ procedure Medcine(bnum: integer);
 procedure MedPoison(bnum: integer);
 procedure UseHiddenWeapon(bnum, inum: integer);
 procedure Rest(bnum: integer);
-
-procedure ShowTeamModeMenu(menu: integer);
 function TeamModeMenu: boolean;
 
 procedure AutoBattle(bnum: integer);
@@ -2431,99 +2428,6 @@ begin
 
 end;
 
-//显示简单状态(x, y表示位置)
-
-procedure ShowSimpleStatus(rnum, x, y: integer);
-var
-  i, magicnum: integer;
-  p: array[0..10] of integer;
-  str: WideString;
-  strs: array[0..3] of WideString;
-  color1, color2: uint32;
-begin
-  strs[0] := (' 等級');
-  strs[1] := (' 生命');
-  strs[2] := (' 內力');
-  strs[3] := (' 體力');
-
-  DrawRectangle(screen, x, y, 145, 173, 0, ColColor(255), 30);
-  DrawHeadPic(Rrole[rnum].HeadNum, x + 50, y + 63);
-  str := Big5ToUnicode(@Rrole[rnum].Name);
-  DrawShadowText(screen, @str[1], x + 60 - length(PChar(@Rrole[rnum].Name)) * 5, y + 65, ColColor($66), ColColor($63));
-  for i := 0 to 3 do
-    DrawShadowText(screen, @strs[i, 1], x - 17, y + 86 + 21 * i, ColColor($23), ColColor($21));
-
-  str := format('%9d', [Rrole[rnum].Level]);
-  DrawEngShadowText(screen, @str[1], x + 50, y + 86, ColColor($7), ColColor($5));
-
-  case Rrole[rnum].Hurt of
-    34..66:
-    begin
-      color1 := ColColor($E);
-      color2 := ColColor($10);
-    end;
-    67..1000:
-    begin
-      color1 := ColColor($14);
-      color2 := ColColor($16);
-    end;
-    else
-    begin
-      color1 := ColColor($7);
-      color2 := ColColor($5);
-    end;
-  end;
-  str := format('%4d', [Rrole[rnum].CurrentHP]);
-  DrawEngShadowText(screen, @str[1], x + 50, y + 107, color1, color2);
-
-  str := '/';
-  DrawEngShadowText(screen, @str[1], x + 90, y + 107, ColColor($66), ColColor($63));
-
-  case Rrole[rnum].Poison of
-    34..66:
-    begin
-      color1 := ColColor($30);
-      color2 := ColColor($32);
-    end;
-    67..1000:
-    begin
-      color1 := ColColor($35);
-      color2 := ColColor($37);
-    end;
-    else
-    begin
-      color1 := ColColor($23);
-      color2 := ColColor($21);
-    end;
-  end;
-  str := format('%4d', [Rrole[rnum].MaxHP]);
-  DrawEngShadowText(screen, @str[1], x + 100, y + 107, color1, color2);
-
-  //str:=format('%4d/%4d', [Rrole[rnum,17],Rrole[rnum,18]]);
-  //drawengshadowtext(@str[1],x+50,y+107,colcolor($7),colcolor($5));
-  if Rrole[rnum].MPType = 0 then
-  begin
-    color1 := ColColor($50);
-    color2 := ColColor($4E);
-  end
-  else if Rrole[rnum].MPType = 1 then
-  begin
-    color1 := ColColor($7);
-    color2 := ColColor($5);
-  end
-  else
-  begin
-    color1 := ColColor($66);
-    color2 := ColColor($63);
-  end;
-  str := format('%4d/%4d', [Rrole[rnum].CurrentMP, Rrole[rnum].MaxMP]);
-  DrawEngShadowText(screen, @str[1], x + 50, y + 128, color1, color2);
-  str := format('%9d', [Rrole[rnum].PhyPower]);
-  DrawEngShadowText(screen, @str[1], x + 50, y + 149, ColColor($7), ColColor($5));
-
-  //SDL_UpdateRect2(screen, x, y, 146, 174);
-  SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-end;
 
 //等待, 似乎不太完善
 
@@ -3239,13 +3143,45 @@ end;
 
 function TeamModeMenu: boolean;
 var
-  menup, x, y, w, menu, i, amount: integer;
+  menup, x, y, w, h, menu, i, amount, xm, ym: integer;
   a: array of smallint;
   tempmode: array of integer;
+  modestring: array[0..3] of WideString;
+  namestr: array of WideString;
+  str: WideString;
+
+  procedure ShowTeamModeMenu();
+  var
+    i: integer;
+  begin
+    redraw;
+    DrawRectangle(screen, x, y, w, h, 0, ColColor(255), 30);
+    for i := 0 to amount - 1 do
+    begin
+      if (i = menu) then
+      begin
+        DrawShadowText(@namestr[i][1], x - 17, y + 3 + 22 * i, ColColor($64), ColColor($66));
+        DrawShadowText(@modestring[Brole[a[i]].AutoMode][1], x + 100 - 17, y + 3 + 22 * i,
+          ColColor($64), ColColor($66));
+      end
+      else
+      begin
+        DrawShadowText(@namestr[i][1], x - 17, y + 3 + 22 * i, ColColor($21), ColColor($23));
+        DrawShadowText(@modestring[Brole[a[i]].AutoMode][1], x + 100 - 17, y + 3 + 22 * i,
+          ColColor($21), ColColor($23));
+      end;
+    end;
+    if menu = -2 then
+      DrawShadowText(@str[1], x - 17, y + 3 + 22 * amount, ColColor($64), ColColor($66))
+    else
+      DrawShadowText(@str[1], x - 17, y + 3 + 22 * amount, ColColor($21), ColColor($23));
+    SDL_UpdateRect2(screen, x, y, w + 1, h + 1);
+  end;
+
 begin
   x := 160;
-  y := 90;
-  w := 190;
+  y := 82;
+  w := 160;
   //SDL_EnableKeyRepeat(20, 100);
   Result := True;
   amount := 0;
@@ -3254,19 +3190,28 @@ begin
     if (Brole[i].Team = 0) and (Brole[i].Dead = 0) then
     begin
       amount := amount + 1;
+      setlength(namestr, amount);
       setlength(a, amount);
+      namestr[amount - 1] := ' ' + Big5ToUnicode(@Rrole[Brole[i].rnum].Name[0]);
       a[amount - 1] := i;
     end;
   end;
-  setlength(tempmode, length(Brole));
+  h := amount * 22 + 28;
+  modestring[1] := ' 疯子';
+  modestring[2] := ' 傻子';
+  modestring[3] := ' 呆子';
+  modestring[0] := ' 手動';
+  str := '  確認';
+
+  //RecordFreshScreen(x, y, w + 1, h + 1);
+  setlength(tempmode, BRoleAmount);
   for i := 0 to BRoleAmount - 1 do
   begin
     tempmode[i] := Brole[i].AutoMode;
   end;
-  //for i := 0 to length(a) - 1 do
-  //AutoMode[a[i]] := 0;
+
   menu := 0;
-  ShowTeamModeMenu(menu);
+  ShowTeamModeMenu;
   while (SDL_WaitEvent(@event) >= 0) do
   begin
     CheckBasicEvent;
@@ -3282,6 +3227,9 @@ begin
           Result := False;
           break;
         end;
+        //end;
+        //SDL_KEYDOWN:
+        //begin
         if (event.key.keysym.sym = SDLK_UP) then
         begin
           menu := menu - 1;
@@ -3289,7 +3237,7 @@ begin
             menu := -2;
           if menu = -3 then
             menu := amount - 1;
-          ShowTeamModeMenu(menu);
+          ShowTeamModeMenu;
         end;
         if (event.key.keysym.sym = SDLK_DOWN) then
         begin
@@ -3298,21 +3246,21 @@ begin
             menu := -2;
           if menu = -1 then
             menu := 0;
-          ShowTeamModeMenu(menu);
+          ShowTeamModeMenu;
         end;
         if (event.key.keysym.sym = SDLK_LEFT) then
         begin
           Brole[a[menu]].AutoMode := Brole[a[menu]].AutoMode - 1;
           if Brole[a[menu]].AutoMode < 0 then
             Brole[a[menu]].AutoMode := 3;
-          ShowTeamModeMenu(menu);
+          ShowTeamModeMenu;
         end;
         if (event.key.keysym.sym = SDLK_RIGHT) then
         begin
           Brole[a[menu]].AutoMode := Brole[a[menu]].AutoMode + 1;
           if Brole[a[menu]].AutoMode > 3 then
             Brole[a[menu]].AutoMode := 0;
-          ShowTeamModeMenu(menu);
+          ShowTeamModeMenu;
         end;
       end;
       SDL_MOUSEBUTTONUP:
@@ -3324,7 +3272,7 @@ begin
             Brole[a[menu]].AutoMode := Brole[a[menu]].AutoMode + 1;
             if Brole[a[menu]].AutoMode > 3 then
               Brole[a[menu]].AutoMode := 0;
-            ShowTeamModeMenu(menu);
+            ShowTeamModeMenu;
           end
           else if (menu = -2) then
           begin
@@ -3339,19 +3287,16 @@ begin
       end;
       SDL_MOUSEMOTION:
       begin
-        if (round(event.button.x / (RealScreen.w / screen.w)) >= x) and
-          (round(event.button.x / (RealScreen.w / screen.w)) < x + w) and
-          (round(event.button.y / (RealScreen.h / screen.h)) >= y) and
-          (round(event.button.y / (RealScreen.h / screen.h)) < amount * 22 + y + 28) then
+        if MouseInRegion(x, y, w, amount * 22 + 28, xm, ym) then
         begin
           menup := menu;
-          menu := (round(event.button.y / (RealScreen.h / screen.h)) - y) div 22;
+          menu := (ym - y) div 22;
           if menu < 0 then
             menu := 0;
           if menu >= amount then
             menu := -2;
           if menup <> menu then
-            ShowTeamModeMenu(menu);
+            ShowTeamModeMenu;
         end
         else
           menu := -1;
@@ -3360,7 +3305,7 @@ begin
     event.key.keysym.sym := 0;
     event.button.button := 0;
   end;
-  //SDL_EnableKeyRepeat(30,35);
+  //SDL_EnableKeyRepeat(30,30);
   Redraw;
   if Result = False then
     for i := 0 to BRoleAmount - 1 do
@@ -3368,59 +3313,6 @@ begin
 
 end;
 
-procedure ShowTeamModeMenu(menu: integer);
-var
-  i, amount, x, y, w, h: integer;
-  modestring: array[0..3] of WideString;
-  namestr: array of WideString;
-  str: WideString;
-  a: array of smallint;
-begin
-  amount := 0;
-  x := 160;
-  y := 90;
-  w := 190;
-  modestring[0] := ' 手動';
-  modestring[1] := ' 疯子';
-  modestring[2] := ' 傻子';
-  modestring[3] := ' 呆子';
-  str := '  確認';
-  for i := 0 to BRoleAmount - 1 do
-  begin
-    if (Brole[i].Team = 0) and (Brole[i].Dead = 0) then
-    begin
-      amount := amount + 1;
-      setlength(namestr, amount);
-      setlength(a, amount);
-      namestr[amount - 1] := ' ' + Big5ToUnicode(@Rrole[Brole[i].rnum].Name[0]);
-      a[amount - 1] := Brole[i].AutoMode;
-    end;
-  end;
-  h := amount * 22 + 32;
-
-  Redraw;
-  DrawRectangle(screen, x, y, w, h, 0, ColColor(255), 30);
-  for i := 0 to amount - 1 do
-  begin
-    if (i = menu) then
-    begin
-      DrawShadowText(screen, @namestr[i][1], x - 17, y + 3 + 22 * i, ColColor($64), ColColor($66));
-      DrawShadowText(screen, @modestring[a[i]][1], x + 100 - 17, y + 3 + 22 * i, ColColor($64), ColColor($66));
-    end
-    else
-    begin
-      DrawShadowText(screen, @namestr[i][1], x - 17, y + 3 + 22 * i, ColColor($21), ColColor($23));
-      DrawShadowText(screen, @modestring[a[i]][1], x + 100 - 17, y + 3 + 22 * i, ColColor($21), ColColor($23));
-    end;
-
-  end;
-  if menu = -2 then
-    DrawShadowText(screen, @str[1], x - 17, y + 3 + 22 * amount, ColColor($64), ColColor($66))
-  else
-    DrawShadowText(screen, @str[1], x - 17, y + 3 + 22 * amount, ColColor($21), ColColor($23));
-  SDL_UpdateRect2(screen, x, y, w + 2, h + 2);
-
-end;
 
 //The AI. Some codes were written by little samll pig.
 
