@@ -79,7 +79,7 @@ procedure Moveman(x1, y1, x2, y2: integer);
 procedure ShowScenceName(snum: integer);
 function CanWalkInScence(x, y: integer): boolean; overload;
 function CanWalkInScence(x1, y1, x, y: integer): boolean; overload;
-procedure CheckEvent1;
+function CheckEvent1: boolean;
 procedure CheckEvent3;
 
 //选单子程
@@ -114,6 +114,7 @@ procedure MenuStatus;
 procedure ShowStatusByTeam(tnum: integer);
 procedure ShowStatus(rnum: integer); overload;
 procedure ShowStatus(rnum, x, y: integer); overload;
+procedure ShowSimpleStatus(rnum, x, y: integer);
 procedure MenuLeave;
 procedure MenuSystem;
 procedure ShowMenuSystem(menu: integer);
@@ -141,6 +142,9 @@ procedure swap(var x, y: uint32); overload;
 procedure UpdateAllScreen;
 procedure CleanKeyValue;
 procedure GetMousePosition(var x, y: integer; x0, y0: integer; yp: integer = 0);
+
+function MouseInRegion(x, y, w, h: integer): boolean; overload;
+function MouseInRegion(x, y, w, h: integer; var x1, y1: integer): boolean; overload;
 
 implementation
 
@@ -2410,13 +2414,14 @@ begin
               gotoevent := -1;
               if (SData[CurScence, 3, axp, ayp] >= 0) then
               begin
-                if abs(Axp - Sx) + Abs(Ayp - Sy) = 1 then
+                if Abs(Axp - Sx) + Abs(Ayp - Sy) = 1 then
                 begin
                   if Axp < Sx then SFace := 0;
                   if Axp > Sx then SFace := 3;
                   if Ayp < Sy then SFace := 2;
                   if Ayp > Sy then SFace := 1;
-                  CheckEvent1;
+                  if CheckEvent1 then
+                    walking := 0;
                 end
                 else
                 begin
@@ -2814,7 +2819,7 @@ end;
 
 //检查是否有第1类事件, 如有则调用
 
-procedure CheckEvent1;
+function CheckEvent1: boolean;
 var
   x, y: integer;
 begin
@@ -2826,12 +2831,16 @@ begin
     2: y := y - 1;
     3: x := x + 1;
   end;
+  Result := False;
   //如有则调用事件
   if SData[CurScence, 3, x, y] >= 0 then
   begin
     CurEvent := SData[CurScence, 3, x, y];
     if DData[CurScence, CurEvent, 2] >= 0 then
+    begin
       CallEvent(DData[CurScence, SData[CurScence, 3, x, y], 2]);
+      Result := True;
+    end;
   end;
   CurEvent := -1;
 end;
@@ -3462,6 +3471,7 @@ var
   word: array[0..5] of WideString;
   i: integer;
 begin
+  NeedRefreshScence := 0;
   word[0] := (' 醫療');
   word[1] := (' 解毒');
   word[2] := (' 物品');
@@ -3501,7 +3511,7 @@ begin
   end;
   Redraw;
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-
+  NeedRefreshScence := 1;
   {SDL_EnableKeyRepeat(0, 0);
   //DrawMMap;
   showMenu(menu);
@@ -4086,16 +4096,25 @@ begin
 
   if MODVersion = 22 then
   begin
+    words2[4] := (' 靈力');
+    words2[5] := (' 靈力');
+    words2[6] := (' 靈力');
     words2[7] := (' 武力');
     words2[8] := (' 移動');
+    words2[10] := (' 仙術');
+    words2[11] := (' 毒術');
     words2[14] := (' 火系');
     words2[15] := (' 水系');
     words2[16] := (' 雷系');
     words2[17] := (' 土系');
     words2[18] := (' 射擊');
 
+    words3[0] := (' 靈力');
+    words3[1] := (' 靈力');
     words3[2] := (' 武力');
     words3[3] := (' 移動');
+    words3[4] := (' 毒術');
+    words3[5] := (' 仙術');
     words3[7] := (' 火系');
     words3[8] := (' 水系');
     words3[9] := (' 雷系');
@@ -4611,13 +4630,17 @@ begin
 
   if MODVersion = 22 then
   begin
+    strs[2] := (' 靈力');
     strs[6] := (' 武力');
     strs[8] := (' 移動');
+    strs[9] := (' 仙術能力');
+    strs[10] := (' 毒術能力');
     strs[12] := (' 火系能力');
     strs[13] := (' 水系能力');
     strs[14] := (' 雷系能力');
     strs[15] := (' 土系能力');
     strs[16] := (' 射擊能力');
+    strs[19] := (' 所會法術');
   end;
 
   p[0] := 43;
@@ -4826,6 +4849,104 @@ begin
 
   SDL_UpdateRect2(screen, x, y, 536, 316);
 
+end;
+
+//显示简单状态(x, y表示位置)
+
+procedure ShowSimpleStatus(rnum, x, y: integer);
+var
+  i, magicnum: integer;
+  p: array[0..10] of integer;
+  str: WideString;
+  strs: array[0..3] of WideString;
+  color1, color2: uint32;
+begin
+  strs[0] := (' 等級');
+  strs[1] := (' 生命');
+  strs[2] := (' 內力');
+  strs[3] := (' 體力');
+  if MODVersion = 22 then
+  begin
+    strs[2] := (' 靈力');
+  end;
+
+  DrawRectangle(screen, x, y, 145, 173, 0, ColColor(255), 30);
+  DrawHeadPic(Rrole[rnum].HeadNum, x + 50, y + 63);
+  str := Big5ToUnicode(@Rrole[rnum].Name);
+  DrawShadowText(screen, @str[1], x + 60 - length(PChar(@Rrole[rnum].Name)) * 5, y + 65, ColColor($66), ColColor($63));
+  for i := 0 to 3 do
+    DrawShadowText(screen, @strs[i, 1], x - 17, y + 86 + 21 * i, ColColor($23), ColColor($21));
+
+  str := format('%9d', [Rrole[rnum].Level]);
+  DrawEngShadowText(screen, @str[1], x + 50, y + 86, ColColor($7), ColColor($5));
+
+  case Rrole[rnum].Hurt of
+    34..66:
+    begin
+      color1 := ColColor($E);
+      color2 := ColColor($10);
+    end;
+    67..1000:
+    begin
+      color1 := ColColor($14);
+      color2 := ColColor($16);
+    end;
+    else
+    begin
+      color1 := ColColor($7);
+      color2 := ColColor($5);
+    end;
+  end;
+  str := format('%4d', [Rrole[rnum].CurrentHP]);
+  DrawEngShadowText(screen, @str[1], x + 50, y + 107, color1, color2);
+
+  str := '/';
+  DrawEngShadowText(screen, @str[1], x + 90, y + 107, ColColor($66), ColColor($63));
+
+  case Rrole[rnum].Poison of
+    34..66:
+    begin
+      color1 := ColColor($30);
+      color2 := ColColor($32);
+    end;
+    67..1000:
+    begin
+      color1 := ColColor($35);
+      color2 := ColColor($37);
+    end;
+    else
+    begin
+      color1 := ColColor($23);
+      color2 := ColColor($21);
+    end;
+  end;
+  str := format('%4d', [Rrole[rnum].MaxHP]);
+  DrawEngShadowText(screen, @str[1], x + 100, y + 107, color1, color2);
+
+  //str:=format('%4d/%4d', [Rrole[rnum,17],Rrole[rnum,18]]);
+  //drawengshadowtext(@str[1],x+50,y+107,colcolor($7),colcolor($5));
+  if Rrole[rnum].MPType = 0 then
+  begin
+    color1 := ColColor($50);
+    color2 := ColColor($4E);
+  end
+  else if Rrole[rnum].MPType = 1 then
+  begin
+    color1 := ColColor($7);
+    color2 := ColColor($5);
+  end
+  else
+  begin
+    color1 := ColColor($66);
+    color2 := ColColor($63);
+  end;
+  str := format('%4d/%4d', [Rrole[rnum].CurrentMP, Rrole[rnum].MaxMP]);
+  DrawEngShadowText(screen, @str[1], x + 50, y + 128, color1, color2);
+  str := format('%9d', [Rrole[rnum].PhyPower]);
+  DrawEngShadowText(screen, @str[1], x + 50, y + 149, ColColor($7), ColColor($5));
+
+  //SDL_UpdateRect2(screen, x, y, 146, 174);
+  SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
 end;
 
 //离队选单
@@ -5262,7 +5383,6 @@ var
   addvalue, rolelist: array[0..23] of integer;
   str: WideString;
 begin
-
   rolelist[0] := 17;
   rolelist[1] := 18;
   rolelist[2] := 20;
@@ -5290,10 +5410,10 @@ begin
   //rolelist:=(17,18,20,21,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,58,57);
   for i := 0 to 22 do
   begin
-    if (i<>4) and (i<>21) then
+    if (i <> 4) and (i <> 21) then
       addvalue[i] := Ritem[inum].Data[45 + i] * times
     else
-      addvalue[i] := Ritem[inum].Data[45 + i] ;
+      addvalue[i] := Ritem[inum].Data[45 + i];
   end;
   //减少受伤
   addvalue[23] := -(addvalue[0] div LIFE_HURT);
@@ -5311,12 +5431,16 @@ begin
   if addvalue[6] + Rrole[rnum].Data[42] < 0 then
     addvalue[6] := -Rrole[rnum].Data[42];
 
+  //仅控制不为零的项目
   for i := 7 to 22 do
   begin
-    if addvalue[i] + Rrole[rnum].Data[rolelist[i]] > MaxProList[rolelist[i]] then
-      addvalue[i] := MaxProList[rolelist[i]] - Rrole[rnum].Data[rolelist[i]];
-    if addvalue[i] + Rrole[rnum].Data[rolelist[i]] < 0 then
-      addvalue[i] := -Rrole[rnum].Data[rolelist[i]];
+    if addvalue[i] <> 0 then
+    begin
+      if addvalue[i] + Rrole[rnum].Data[rolelist[i]] > MaxProList[rolelist[i]] then
+        addvalue[i] := MaxProList[rolelist[i]] - Rrole[rnum].Data[rolelist[i]];
+      if addvalue[i] + Rrole[rnum].Data[rolelist[i]] < 0 then
+        addvalue[i] := -Rrole[rnum].Data[rolelist[i]];
+    end;
   end;
   //生命不能超过最大值
   if addvalue[0] + Rrole[rnum].Data[17] > addvalue[1] + Rrole[rnum].Data[18] then
@@ -5388,8 +5512,13 @@ begin
 
     if MODVersion = 22 then
     begin
+      word[4] := (' 靈力陰陽合一');
+      word[5] := (' 增加靈力');
+      word[6] := (' 增加靈力最大值');
       word[7] := (' 增加武力');
       word[8] := (' 增加移動');
+      word[10] := (' 增加仙術能力');
+      word[11] := (' 增加用毒術能力');
       word[14] := (' 增加火系能力');
       word[15] := (' 增加水系能力');
       word[16] := (' 增加雷系能力');
@@ -6004,6 +6133,22 @@ begin
   SDL_GetMouseState2(x1, y1);
   x := (-x1 + CENTER_X + 2 * (y1 + yp) - 2 * CENTER_Y + 18) div 36 + x0;
   y := (x1 - CENTER_X + 2 * (y1 + yp) - 2 * CENTER_Y + 18) div 36 + y0;
+end;
+
+//判断鼠标是否在区域内, 以画布的坐标为准
+//第二个函数会返回鼠标的画布位置
+function MouseInRegion(x, y, w, h: integer): boolean; overload;
+var
+  x1, y1: integer;
+begin
+  SDL_GetMouseState2(x1, y1);
+  Result := (x1 >= x) and (y1 >= y) and (x1 < x + w) and (y1 < y + h);
+end;
+
+function MouseInRegion(x, y, w, h: integer; var x1, y1: integer): boolean; overload;
+begin
+  SDL_GetMouseState2(x1, y1);
+  Result := (x1 >= x) and (y1 >= y) and (x1 < x + w) and (y1 < y + h);
 end;
 
 end.
