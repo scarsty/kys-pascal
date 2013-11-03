@@ -111,12 +111,13 @@ uses
 
 //事件系统
 //事件指令含义请参阅其他相关文献
+//场景重绘一般来说仅重绘可见部分, 当事件中转移了画面位置需要全重绘
 
 procedure instruct_0;
 begin
   if NeedRefreshScence = 1 then
   begin
-    InitialScence(0);
+    InitialScence(1);
     NeedRefreshScence := 0;
   end;
   Redraw;
@@ -340,12 +341,12 @@ begin
   //if list[0] = CurScence then
   Sdata[list[0], 3, Ddata[list[0], list[1], 10], Ddata[list[0], list[1], 9]] := list[1];
 
-  if DData[CurScence, CurEvent, 5] <> curPic then
+  {if DData[CurScence, CurEvent, 5] <> curPic then
   begin
     InitialScence(1);
     Redraw;
     //SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-  end;
+  end;}
   if (list[0] = CurScence) and (preEventPic <> DData[list[0], list[1], 5]) then
   begin
     NeedRefreshScence := 1;
@@ -600,6 +601,7 @@ begin
   Sy := x;
   Cx := Sx;
   Cy := Sy;
+  InitialScence(0);
   Redraw;
 end;
 
@@ -662,6 +664,7 @@ end;
 
 //Note: never display the leading role.
 //This will be improved when I have a better method.
+//场景移动
 
 procedure instruct_25(x1, y1, x2, y2: integer);
 var
@@ -669,7 +672,8 @@ var
 begin
   s := sign(x2 - x1);
   i := x1 + s;
-  //showmessage(inttostr(ssx*100+ssy));
+  InitialScence(0);
+  NeedRefreshScence := 0;
   if s <> 0 then
     while (SDL_PollEvent(@event) >= 0) do
     begin
@@ -715,8 +719,10 @@ begin
   ddata[snum, enum, 3] := ddata[snum, enum, 3] + add2;
   ddata[snum, enum, 4] := ddata[snum, enum, 4] + add3;
   if snum = CurScence then
-    InitialScence(1);
-
+  begin
+    InitialScence(0);
+    NeedRefreshScence := 0;
+  end;
 end;
 
 //Note: of course an more effective engine can take place of it.
@@ -785,10 +791,14 @@ begin
       Result := jump1;
 end;
 
+//主角走动
+
 procedure instruct_30(x1, y1, x2, y2: integer);
 var
   s: integer;
 begin
+  InitialScence(0);
+  NeedRefreshScence := 0;
   s := sign(x2 - x1);
   Sy := x1 + s;
   if s > 0 then
@@ -1010,7 +1020,10 @@ begin
         Sdata[snum, layernum, i1, i2] := newpic;
     end;
   if snum = CurScence then
-    NeedRefreshScence := 1;
+  begin
+    InitialScence(0);
+    NeedRefreshScence := 0;
+  end;
 end;
 
 procedure instruct_39(snum: integer);
