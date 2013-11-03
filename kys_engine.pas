@@ -83,7 +83,8 @@ function Big5ToUnicode(str: pchar): WideString;
 function UnicodeToBig5(str: pWideChar): string;
 procedure DrawText(sur: PSDL_Surface; word: puint16; x_pos, y_pos: integer; color: uint32);
 procedure DrawEngText(sur: PSDL_Surface; word: puint16; x_pos, y_pos: integer; color: uint32);
-procedure DrawShadowText(sur: PSDL_Surface; word: puint16; x_pos, y_pos: integer; color1, color2: uint32);
+procedure DrawShadowText(sur: PSDL_Surface; word: puint16; x_pos, y_pos: integer; color1, color2: uint32); overload;
+procedure DrawShadowText(word: puint16; x_pos, y_pos: integer; color1, color2: uint32); overload;
 procedure DrawEngShadowText(sur: PSDL_Surface; word: puint16; x_pos, y_pos: integer; color1, color2: uint32);
 procedure DrawBig5Text(sur: PSDL_Surface; str: pchar; x_pos, y_pos: integer; color: uint32);
 procedure DrawBig5ShadowText(sur: PSDL_Surface; word: pchar; x_pos, y_pos: integer; color1, color2: uint32);
@@ -1356,10 +1357,17 @@ end;
 
 //显示unicode中文阴影文字, 即将同样内容显示2次, 间隔1像素
 
-procedure DrawShadowText(sur: PSDL_Surface; word: puint16; x_pos, y_pos: integer; color1, color2: uint32);
+procedure DrawShadowText(sur: PSDL_Surface; word: puint16; x_pos, y_pos: integer; color1, color2: uint32); overload;
 begin
   DrawText(sur, word, x_pos + 1, y_pos, color2);
   DrawText(sur, word, x_pos, y_pos, color1);
+
+end;
+
+procedure DrawShadowText(word: puint16; x_pos, y_pos: integer; color1, color2: uint32); overload;
+begin
+  DrawText(screen, word, x_pos + 1, y_pos, color2);
+  DrawText(screen, word, x_pos, y_pos, color1);
 
 end;
 
