@@ -113,7 +113,7 @@ var
 begin
   Bstatus := 0;
   CurrentBattle := battlenum;
-
+  BattleRound := 1;
   if InitialBField then
   begin
     //如果未发现自动战斗设定, 则选择人物
@@ -616,6 +616,7 @@ begin
           break;
       end;
     end;
+    BattleRound := BattleRound + 1;
     CalPoiHurtLife; //计算中毒损血
   end;
 
@@ -718,6 +719,7 @@ function BattleMenu(bnum: integer): integer;
 var
   i, p, MenuStatus, menu, max, rnum, menup: integer;
   realmenu: array[0..9] of integer;
+  str: WideString;
 begin
   MenuStatus := $3E0;
   max := 4;
@@ -777,6 +779,8 @@ begin
 
   Redraw;
   ShowSimpleStatus(Brole[bnum].rnum, CENTER_X + 100, 50);
+  str := utf8decode(format(' 回合%d', [BattleRound]));
+  DrawTextWithRect(screen, puint16(str), 160, 50, DrawLength(str) * 10 - 4, ColColor($21), ColColor($23));
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
   menu := 0;
 
@@ -3239,8 +3243,8 @@ var
   a: array of smallint;
   tempmode: array of integer;
 begin
-  x := 154;
-  y := 50;
+  x := 160;
+  y := 90;
   w := 190;
   //SDL_EnableKeyRepeat(20, 100);
   Result := True;
@@ -3338,7 +3342,7 @@ begin
         if (round(event.button.x / (RealScreen.w / screen.w)) >= x) and
           (round(event.button.x / (RealScreen.w / screen.w)) < x + w) and
           (round(event.button.y / (RealScreen.h / screen.h)) >= y) and
-          (round(event.button.y / (RealScreen.h / screen.h)) < amount * 22 + 78) then
+          (round(event.button.y / (RealScreen.h / screen.h)) < amount * 22 + y + 28) then
         begin
           menup := menu;
           menu := (round(event.button.y / (RealScreen.h / screen.h)) - y) div 22;
@@ -3373,8 +3377,8 @@ var
   a: array of smallint;
 begin
   amount := 0;
-  x := 154;
-  y := 50;
+  x := 160;
+  y := 90;
   w := 190;
   modestring[0] := ' 手動';
   modestring[1] := ' 疯子';
@@ -3395,30 +3399,25 @@ begin
   h := amount * 22 + 32;
 
   Redraw;
-
   DrawRectangle(screen, x, y, w, h, 0, ColColor(255), 30);
   for i := 0 to amount - 1 do
   begin
     if (i = menu) then
     begin
-      DrawShadowText(screen, @namestr[i][1], x - 17, 53 + 22 * i, ColColor($64), ColColor($66));
-      //SDL_UpdateRect2(screen, x, y,w+2, h+2);
-      DrawShadowText(screen, @modestring[a[i]][1], x + 100 - 17, 53 + 22 * i, ColColor($64), ColColor($66));
-      //SDL_UpdateRect2(screen, x, y,w+2, h+2);
+      DrawShadowText(screen, @namestr[i][1], x - 17, y + 3 + 22 * i, ColColor($64), ColColor($66));
+      DrawShadowText(screen, @modestring[a[i]][1], x + 100 - 17, y + 3 + 22 * i, ColColor($64), ColColor($66));
     end
     else
     begin
-      DrawShadowText(screen, @namestr[i][1], x - 17, 53 + 22 * i, ColColor($21), ColColor($23));
-      //SDL_UpdateRect2(screen, x, y,w+2, h+2);
-      DrawShadowText(screen, @modestring[a[i]][1], x + 100 - 17, 53 + 22 * i, ColColor($21), ColColor($23));
-      //SDL_UpdateRect2(screen, x, y,w+2, h+2);
+      DrawShadowText(screen, @namestr[i][1], x - 17, y + 3 + 22 * i, ColColor($21), ColColor($23));
+      DrawShadowText(screen, @modestring[a[i]][1], x + 100 - 17, y + 3 + 22 * i, ColColor($21), ColColor($23));
     end;
 
   end;
   if menu = -2 then
-    DrawShadowText(screen, @str[1], x - 17, 53 + 22 * amount, ColColor($64), ColColor($66))
+    DrawShadowText(screen, @str[1], x - 17, y + 3 + 22 * amount, ColColor($64), ColColor($66))
   else
-    DrawShadowText(screen, @str[1], x - 17, 53 + 22 * amount, ColColor($21), ColColor($23));
+    DrawShadowText(screen, @str[1], x - 17, y + 3 + 22 * amount, ColColor($21), ColColor($23));
   SDL_UpdateRect2(screen, x, y, w + 2, h + 2);
 
 end;

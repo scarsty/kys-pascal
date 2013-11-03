@@ -354,7 +354,7 @@ var
   h: integer;
   len: integer;
 begin
-  if FileExistsUTF8(filename) { *Converted from FileExists*  } then
+  if FileExists(filename) { *Converted from FileExists*  } then
   begin
     h := FileOpen(filename, fmopenread);
     len := FileSeek(h, 0, 2);
