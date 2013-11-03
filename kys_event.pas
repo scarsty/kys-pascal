@@ -510,8 +510,11 @@ begin
   //for i1:=0 to 199 do
   //for i2:=0 to 10 do
   //DData[CurScence, [i1,i2]:=Ddata[CurScence,i1,i2];
-  InitialScence;
-  NeedRefreshScence := 0;
+  if NeedRefreshScence = 1 then
+  begin
+    InitialScence(0);
+    NeedRefreshScence := 0;
+  end;
   for i := 0 to 5 do
   begin
     //Sdl_Delay(5);
@@ -670,10 +673,13 @@ procedure instruct_25(x1, y1, x2, y2: integer);
 var
   i, s: integer;
 begin
+  if NeedRefreshScence = 1 then
+  begin
+    InitialScence(0);
+    NeedRefreshScence := 0;
+  end;
   s := sign(x2 - x1);
   i := x1 + s;
-  InitialScence(0);
-  NeedRefreshScence := 0;
   if s <> 0 then
     while (SDL_PollEvent(@event) >= 0) do
     begin
@@ -797,8 +803,11 @@ procedure instruct_30(x1, y1, x2, y2: integer);
 var
   s: integer;
 begin
-  InitialScence(0);
-  NeedRefreshScence := 0;
+  if NeedRefreshScence = 1 then
+  begin
+    InitialScence(0);
+    NeedRefreshScence := 0;
+  end;
   s := sign(x2 - x1);
   Sy := x1 + s;
   if s > 0 then
