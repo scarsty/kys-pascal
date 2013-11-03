@@ -300,7 +300,7 @@ var
   y: smallint;
 begin
   str := AppPath + 'head/' + IntToStr(num) + '.png';
-  if FileExistsUTF8(str) then
+  if FileExists(str) then
   begin
     image := IMG_Load(PChar(str));
     dest.x := px;
@@ -331,7 +331,7 @@ var
   str: string;
 begin
   str := AppPath + 'head/' + IntToStr(num) + '.png';
-  if FileExistsUTF8(str) { *Converted from FileExists*  } then
+  if FileExists(str) { *Converted from FileExists*  } then
     display_img(@str[1], px, py - 60)
   else
   begin

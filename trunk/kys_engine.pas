@@ -110,13 +110,10 @@ procedure SwitchFullscreen;
 procedure QuitConfirm;
 procedure CheckBasicEvent;
 
-{$IFDEF fpc}
+function DrawLength(str: WideString): integer; overload;
+function DrawLength(p: pWideChar): integer; overload;
+function DrawLength(p: pchar): integer; overload;
 
-{$ELSE}
-function FileExistsUTF8(filename: pchar): boolean; overload;
-function FileExistsUTF8(filename: string): boolean; overload;
-//function UTF8Decode(str: widestring): widestring;
-{$ENDIF}
 
 implementation
 
@@ -368,7 +365,7 @@ begin
   for i := 0 to 23 do
   begin
     str := AppPath + 'music/' + inttostr(i) + '.mid';
-    if FileExistsUTF8(pchar(str)) then
+    if FileExists(pchar(str)) then
     begin
       Music[i] := Mix_LoadMUS(pchar(str));
     end
@@ -378,7 +375,7 @@ begin
   for i := 0 to 52 do
   begin
     str := AppPath + formatfloat('sound/e00', i) + '.wav';
-    if FileExistsUTF8(pchar(str)) then
+    if FileExists(pchar(str)) then
       ESound[i] := Mix_LoadWav(pchar(str))
     else
       ESound[i] := nil;
@@ -386,7 +383,7 @@ begin
   for i := 0 to 24 do
   begin
     str := AppPath + formatfloat('sound/atk00', i) + '.wav';
-    if FileExistsUTF8(pchar(str)) then
+    if FileExists(pchar(str)) then
       ASound[i] := Mix_LoadWav(pchar(str))
     else
       ASound[i] := nil;
@@ -757,7 +754,7 @@ var
   tempscr: PSDL_Surface;
 begin
   Result := nil;
-  if fileexistsUTF8(filename) then
+  if FileExists(filename) then
   begin
     tempscr := IMG_Load(PChar(filename));
     Result := SDL_DisplayFormatAlpha(tempscr);
@@ -897,7 +894,7 @@ var
   image: PSDL_Surface;
   dest: TSDL_Rect;
 begin
-  if FileExistsUTF8(file_name) { *Converted from FileExists*  } then
+  if FileExists(file_name) { *Converted from FileExists*  } then
   begin
     image := SDL_LoadBMP(file_name);
     if (image = nil) then
@@ -921,7 +918,7 @@ var
   image: PSDL_Surface;
   dest: TSDL_Rect;
 begin
-  if FileExistsUTF8(file_name) { *Converted from FileExists*  } then
+  if FileExists(file_name) { *Converted from FileExists*  } then
   begin
     image := IMG_Load(file_name);
     if (image = nil) then
@@ -1908,19 +1905,41 @@ begin
 
 end;
 
+function DrawLength(str: WideString): integer; overload;
+var
+  l, i: integer;
+begin
+  l := length(str);
+  Result := l;
+  for i := 0 to l do
+  begin
+    if uint16(str[i]) >= $1000 then
+      Result := Result + 1;
+  end;
+end;
+
+function DrawLength(p: pWideChar): integer; overload;
+var
+  l, i: integer;
+begin
+  l := length(p);
+  Result := l;
+  for i := 0 to l - 1 do
+  begin
+    if puint16(p)^ >= $1000 then
+      Result := Result + 1;
+    Inc(p);
+  end;
+end;
+
+function DrawLength(p: pchar): integer; overload;
+begin
+  DrawLength(pWideChar(p));
+end;
+
 {$IFDEF fpc}
 
 {$ELSE}
-
-function FileExistsUTF8(filename: pchar): boolean; overload;
-begin
-  Result := FileExists(filename);
-end;
-
-function FileExistsUTF8(filename: string): boolean; overload;
-begin
-  Result := FileExists(filename);
-end;
 
 {function UTF8Decode(str: widestring): widestring;
 begin

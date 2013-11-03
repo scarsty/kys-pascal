@@ -444,6 +444,7 @@ var
   EXPAND_GROUND: integer = 1;
   ExGround: array[-64..127, -64..127] of smallint;  //用来使场景边缘的显示效果改善
   ImageWidth, ImageHeight: smallint;
+  BattleRound: integer;
 
 implementation
 
