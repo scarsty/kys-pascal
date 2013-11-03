@@ -5290,7 +5290,10 @@ begin
   //rolelist:=(17,18,20,21,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,58,57);
   for i := 0 to 22 do
   begin
-    addvalue[i] := Ritem[inum].Data[45 + i] * times;
+    if (i<>4) and (i<>21) then
+      addvalue[i] := Ritem[inum].Data[45 + i] * times
+    else
+      addvalue[i] := Ritem[inum].Data[45 + i] ;
   end;
   //减少受伤
   addvalue[23] := -(addvalue[0] div LIFE_HURT);
