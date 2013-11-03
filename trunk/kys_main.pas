@@ -2127,7 +2127,7 @@ procedure UpdateScenceAmi;
 begin
   while True do
   begin
-    if (where = 1) and (CurEvent < 0) and (not LoadingScence) and (NeedRefreshScence = 1) then
+    if (where = 1) and (CurEvent < 0) and (not LoadingScence) and (NeedRefreshScence <> 0) then
       InitialScence(2);
     if (where < 1) or (where > 2) then
       break;
