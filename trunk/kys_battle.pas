@@ -2705,6 +2705,7 @@ var
   i, j, i1, i2, p, rnum, inum, mnum, mlevel, needexp, needitem, needitemamount, itemamount, maxtimes, times: integer;
   str: WideString;
   eat: boolean;
+  ap: integer;
 begin
   for i := 0 to BRoleAmount - 1 do
   begin
@@ -2723,15 +2724,15 @@ begin
           end;
       p := 0;
       times := 0;
-
+      ap := 7 - Rrole[rnum].Aptitude div 15;
       //如果可以练出武功则计算次数
       if mnum > 0 then
       begin
         while (mlevel < 10) do
         begin
-          needexp := mlevel * Ritem[inum].NeedExp * (7 - Rrole[rnum].Aptitude div 15);
+          needexp := mlevel * Ritem[inum].NeedExp * ap;
           if mlevel = 0 then
-            needexp := Ritem[inum].NeedExp * (7 - Rrole[rnum].Aptitude div 15);
+            needexp := Ritem[inum].NeedExp * ap;
           //writeln(Rrole[rnum].ExpForBook,',',needexp,',',mlevel,',',p);
           if (Rrole[rnum].ExpForBook >= needexp) and (mlevel < 10) then
           begin
@@ -2756,16 +2757,22 @@ begin
           else
             break;
         end;
-        if times > 0 then Redraw;
-        EatOneItem(rnum, inum, times);
-        WaitAnyKey;
+        if times > 0 then
+        begin
+          Redraw;
+          EatOneItem(rnum, inum, times);
+          WaitAnyKey;
+        end;
       end
       else
       begin
-        times := Rrole[rnum].ExpForBook div max(1, Ritem[inum].NeedExp);
-        if times > 0 then Redraw;
-        Rrole[rnum].ExpForBook := Rrole[rnum].ExpForBook - Ritem[inum].NeedExp * EatOneItem(rnum, inum, times);
-        WaitAnyKey;
+        times := Rrole[rnum].ExpForBook div max(1, Ritem[inum].NeedExp * ap);
+        if times > 0 then
+        begin
+          Redraw;
+          Rrole[rnum].ExpForBook := Rrole[rnum].ExpForBook - Ritem[inum].NeedExp * ap * EatOneItem(rnum, inum, times);
+          WaitAnyKey;
+        end;
       end;
 
       {if (Rrole[rnum].ExpForBook >= needexp) and (mlevel < 10) then
