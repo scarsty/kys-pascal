@@ -125,7 +125,7 @@ procedure MenuQuit;
 //医疗, 解毒, 使用物品的效果等
 function EffectMedcine(role1, role2: integer): integer;
 function EffectMedPoison(role1, role2: integer): integer;
-procedure EatOneItem(rnum, inum: integer);
+function EatOneItem(rnum, inum: integer; times: integer = 1; display: integer = 1): integer;
 
 //事件系统
 procedure CallEvent(num: integer);
@@ -5253,50 +5253,15 @@ end;
 
 //使用物品的效果
 //练成秘笈的效果
+//返回值: 无武学的秘笈, 如果次数可以将能力提升到顶仍有剩余时, 则返回所需的次数, 避免浪费经验
 
-procedure EatOneItem(rnum, inum: integer);
+function EatOneItem(rnum, inum: integer; times: integer = 1; display: integer = 1): integer;
 var
   i, p, l, x, y, twoline: integer;
   word: array[0..23] of WideString;
   addvalue, rolelist: array[0..23] of integer;
   str: WideString;
 begin
-
-  word[0] := (' 增加生命');
-  word[1] := (' 增加生命最大值');
-  word[2] := (' 中毒程度');
-  word[3] := (' 增加體力');
-  word[4] := (' 內力門路陰陽合一');
-  word[5] := (' 增加內力');
-  word[6] := (' 增加內力最大值');
-  word[7] := (' 增加攻擊力');
-  word[8] := (' 增加輕功');
-  word[9] := (' 增加防禦力');
-  word[10] := (' 增加醫療能力');
-  word[11] := (' 增加用毒能力');
-  word[12] := (' 增加解毒能力');
-  word[13] := (' 增加抗毒能力');
-  word[14] := (' 增加拳掌能力');
-  word[15] := (' 增加御劍能力');
-  word[16] := (' 增加耍刀能力');
-  word[17] := (' 增加特殊兵器');
-  word[18] := (' 增加暗器技巧');
-  word[19] := (' 增加武學常識');
-  word[20] := (' 增加品德指數');
-  word[21] := (' 習得左右互搏');
-  word[22] := (' 增加攻擊帶毒');
-  word[23] := (' 受傷程度');
-
-  if MODVersion = 22 then
-  begin
-    word[7] := (' 增加武力');
-    word[8] := (' 增加移動');
-    word[14] := (' 增加火系能力');
-    word[15] := (' 增加水系能力');
-    word[16] := (' 增加雷系能力');
-    word[17] := (' 增加土系能力');
-    word[18] := (' 增加射擊能力');
-  end;
 
   rolelist[0] := 17;
   rolelist[1] := 18;
@@ -5325,7 +5290,7 @@ begin
   //rolelist:=(17,18,20,21,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,58,57);
   for i := 0 to 22 do
   begin
-    addvalue[i] := Ritem[inum].Data[45 + i];
+    addvalue[i] := Ritem[inum].Data[45 + i] * times;
   end;
   //减少受伤
   addvalue[23] := -(addvalue[0] div LIFE_HURT);
@@ -5368,94 +5333,153 @@ begin
     if (i <> 4) and (i <> 21) and (addvalue[i] <> 0) then
       p := p + 1;
   end;
+  //内力属性
   if (addvalue[4] = 2) and (Rrole[rnum].Data[40] <> 2) then
     p := p + 1;
+  //左右互搏
   if (addvalue[21] = 1) and (Rrole[rnum].Data[58] <> 1) then
     p := p + 1;
 
-  DrawRectangle(screen, 100, 70, 200, 25, 0, ColColor(255), 25);
-  str := (' 服用');
-  if Ritem[inum].ItemType = 2 then
-    str := (' 練成');
-  DrawShadowText(screen, @str[1], 83, 72, ColColor($23), ColColor($21));
-  DrawBig5ShadowText(screen, @Ritem[inum].Name, 143, 72, ColColor($66), ColColor($64));
-
-  //如果增加的项超过11个, 分两列显示
-  if p < 11 then
+  if (Ritem[inum].ItemType = 2) and (Ritem[inum].Magic <= 0) then
   begin
-    l := p;
-    twoline := 0;
-    DrawRectangle(screen, 100, 100, 200, 22 * l + 25, 0, ColColor($FF), 25);
+    //对次数的修正
+    Result := 0;
+    for i := 0 to 22 do
+    begin
+      if (Ritem[inum].Data[45 + i] <> 0) and (i <> 4) and (i <> 21) then
+      begin
+        Result := max(Result, ceil(abs(addvalue[i] / Ritem[inum].Data[45 + i])));
+      end;
+    end;
+    Result := min(times, Result);
+    if p = 0 then Result := 0;
   end
   else
+    Result := times;
+  if display <> 0 then
   begin
-    l := p div 2 + p mod 2;
-    twoline := 1;
-    DrawRectangle(screen, 20, 100, 400, 22 * l + 25, 0, ColColor($FF), 25);
-  end;
-  if twoline = 0 then
-    x := 83
-  else
-    x := 3;
-  DrawBig5ShadowText(screen, @Rrole[rnum].Data[4], x, 102, ColColor($23), ColColor($21));
-  str := (' 未增加屬性');
-  if p = 0 then
-    DrawShadowText(screen, @str[1], 163, 102, ColColor(7), ColColor(5));
-  p := 0;
-  for i := 0 to 23 do
-  begin
-    if twoline = 0 then
+    word[0] := (' 增加生命');
+    word[1] := (' 增加生命最大值');
+    word[2] := (' 中毒程度');
+    word[3] := (' 增加體力');
+    word[4] := (' 內力門路陰陽合一');
+    word[5] := (' 增加內力');
+    word[6] := (' 增加內力最大值');
+    word[7] := (' 增加攻擊力');
+    word[8] := (' 增加輕功');
+    word[9] := (' 增加防禦力');
+    word[10] := (' 增加醫療能力');
+    word[11] := (' 增加用毒能力');
+    word[12] := (' 增加解毒能力');
+    word[13] := (' 增加抗毒能力');
+    word[14] := (' 增加拳掌能力');
+    word[15] := (' 增加御劍能力');
+    word[16] := (' 增加耍刀能力');
+    word[17] := (' 增加特殊兵器');
+    word[18] := (' 增加暗器技巧');
+    word[19] := (' 增加武學常識');
+    word[20] := (' 增加品德指數');
+    word[21] := (' 習得左右互搏');
+    word[22] := (' 增加攻擊帶毒');
+    word[23] := (' 受傷程度');
+
+    if MODVersion = 22 then
     begin
-      x := 0;
-      y := 0;
+      word[7] := (' 增加武力');
+      word[8] := (' 增加移動');
+      word[14] := (' 增加火系能力');
+      word[15] := (' 增加水系能力');
+      word[16] := (' 增加雷系能力');
+      word[17] := (' 增加土系能力');
+      word[18] := (' 增加射擊能力');
+    end;
+
+    DrawRectangle(screen, 100, 70, 100 + length(PChar(@Ritem[inum].Name)) * 10, 25, 0, ColColor(255), 25);
+    str := ' 服用';
+    if Ritem[inum].ItemType = 2 then
+      str := utf8decode(format(' 練成%d次', [Result]));
+    DrawShadowText(screen, @str[1], 83, 72, ColColor($23), ColColor($21));
+    DrawBig5ShadowText(screen, @Ritem[inum].Name, 173, 72, ColColor($66), ColColor($64));
+
+    //如果增加的项超过11个, 分两列显示
+    if p < 11 then
+    begin
+      l := p;
+      twoline := 0;
+      DrawRectangle(screen, 100, 100, 200, 22 * l + 25, 0, ColColor($FF), 25);
     end
     else
     begin
-      if p < l then
+      l := p div 2 + p mod 2;
+      twoline := 1;
+      DrawRectangle(screen, 20, 100, 400, 22 * l + 25, 0, ColColor($FF), 25);
+    end;
+    if twoline = 0 then
+      x := 83
+    else
+      x := 3;
+    DrawBig5ShadowText(screen, @Rrole[rnum].Data[4], x, 102, ColColor($23), ColColor($21));
+    if p = 0 then
+    begin
+      str := (' 未增加屬性');
+      DrawShadowText(screen, @str[1], 163, 102, ColColor(7), ColColor(5));
+    end;
+    p := 0;
+    for i := 0 to 23 do
+    begin
+      if twoline = 0 then
       begin
-        x := -80;
+        x := 0;
         y := 0;
       end
       else
       begin
-        x := 120;
-        y := -l * 22;
+        if p < l then
+        begin
+          x := -80;
+          y := 0;
+        end
+        else
+        begin
+          x := 120;
+          y := -l * 22;
+        end;
       end;
-    end;
-    if (i <> 4) and (i <> 21) and (addvalue[i] <> 0) then
-    begin
-      Rrole[rnum].Data[rolelist[i]] := Rrole[rnum].Data[rolelist[i]] + addvalue[i];
-      DrawShadowText(screen, @word[i, 1], 83 + x, 124 + y + p * 22, ColColor(7), ColColor(5));
-      str := format('%4d', [addvalue[i]]);
-      DrawEngShadowText(screen, @str[1], 243 + x, 124 + y + p * 22, ColColor($66), ColColor($64));
-      p := p + 1;
-    end;
-    //对内力性质特殊处理
-    if (i = 4) and (addvalue[i] = 2) then
-    begin
-      if Rrole[rnum].Data[rolelist[i]] <> 2 then
+      if (i <> 4) and (i <> 21) and (addvalue[i] <> 0) then
       begin
-        Rrole[rnum].Data[rolelist[i]] := 2;
+        Rrole[rnum].Data[rolelist[i]] := Rrole[rnum].Data[rolelist[i]] + addvalue[i];
         DrawShadowText(screen, @word[i, 1], 83 + x, 124 + y + p * 22, ColColor(7), ColColor(5));
+        str := format('%4d', [addvalue[i]]);
+        DrawEngShadowText(screen, @str[1], 243 + x, 124 + y + p * 22, ColColor($66), ColColor($64));
         p := p + 1;
       end;
-    end;
-    //对左右互搏特殊处理
-    if (i = 21) and (addvalue[i] = 1) then
-    begin
-      if Rrole[rnum].Data[rolelist[i]] <> 1 then
+      //对内力性质特殊处理
+      if (i = 4) and (addvalue[i] = 2) then
       begin
-        Rrole[rnum].Data[rolelist[i]] := 1;
-        DrawShadowText(screen, @word[i, 1], 83 + x, 124 + y + p * 22, ColColor(7), ColColor(5));
-        p := p + 1;
+        if Rrole[rnum].Data[rolelist[i]] <> 2 then
+        begin
+          Rrole[rnum].Data[rolelist[i]] := 2;
+          DrawShadowText(screen, @word[i, 1], 83 + x, 124 + y + p * 22, ColColor(7), ColColor(5));
+          p := p + 1;
+        end;
+      end;
+      //对左右互搏特殊处理
+      if (i = 21) and (addvalue[i] = 1) then
+      begin
+        if Rrole[rnum].Data[rolelist[i]] <> 1 then
+        begin
+          Rrole[rnum].Data[rolelist[i]] := 1;
+          DrawShadowText(screen, @word[i, 1], 83 + x, 124 + y + p * 22, ColColor(7), ColColor(5));
+          p := p + 1;
+        end;
       end;
     end;
+    x := 350;
+    if twoline = 1 then
+      x := 440;
+    ShowSimpleStatus(rnum, x, 50);
+    SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
   end;
-  x := 350;
-  if twoline = 1 then
-    x := 440;
-  ShowSimpleStatus(rnum, x, 50);
-  SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
 
 end;
 

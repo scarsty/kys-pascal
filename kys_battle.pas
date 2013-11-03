@@ -582,7 +582,7 @@ begin
                 if TeamModeMenu then
                   for j := 0 to BRoleAmount - 1 do
                     if (Brole[j].Team = 0) and (Brole[j].Dead = 0) then
-                      Brole[j].Auto := Brole[j].AutoMode;
+                      Brole[j].Auto := sign(Brole[j].AutoMode);
               end;
               //Brole[i].Acted := 0;
             end; -1:
@@ -628,10 +628,11 @@ var
   i, i1, i2, x: integer;
   temp: TBattleRole;
 begin
+  //随机数使轻功相同角色的可能顺序不同
   for i1 := 0 to BRoleAmount - 2 do
     for i2 := i1 + 1 to BRoleAmount - 1 do
     begin
-      if Rrole[Brole[i1].rnum].Speed < Rrole[Brole[i2].rnum].Speed then
+      if Rrole[Brole[i1].rnum].Speed * 10 + random(10) < Rrole[Brole[i2].rnum].Speed * 10 + random(10) then
       begin
         temp := Brole[i1];
         Brole[i1] := Brole[i2];
@@ -1978,7 +1979,7 @@ begin
     begin
       for i1 := max(Ax - range, 0) to min(Ax + range, 63) do
         for i2 := max(Ay - range, 0) to min(Ay + range, 63) do
-          Bfield[4, i1, i2] := (abs(i1 - Bx) + abs(i2 - By)) * 2 + random(24) + 1;
+          Bfield[4, i1, i2] := (abs(i1 - Bx) + abs(i2 - By)) * 1 + random(24) + 1;
     end;
     1:
     begin
@@ -2120,6 +2121,7 @@ begin
           Rrole[Brole[i].rnum].CurrentMP := 0;
         //增加己方内力及最大值
         Rrole[rnum].CurrentMP := Rrole[rnum].CurrentMP + hurt;
+        Brole[bnum].ExpGot := Brole[bnum].ExpGot + hurt;
         Rrole[rnum].MaxMP := Rrole[rnum].MaxMP + random(hurt div 2);
         if Rrole[rnum].MaxMP > MAX_MP then
           Rrole[rnum].MaxMP := MAX_MP;
@@ -2700,8 +2702,9 @@ end;
 
 procedure CheckBook;
 var
-  i, i1, i2, p, rnum, inum, mnum, mlevel, needexp, needitem, needitemamount, itemamount: integer;
+  i, j, i1, i2, p, rnum, inum, mnum, mlevel, needexp, needitem, needitemamount, itemamount, maxtimes, times: integer;
   str: WideString;
+  eat: boolean;
 begin
   for i := 0 to BRoleAmount - 1 do
   begin
@@ -2719,34 +2722,52 @@ begin
             break;
           end;
       p := 0;
-      while (mlevel < 10) do
+      times := 0;
+
+      //如果可以练出武功则计算次数
+      if mnum > 0 then
       begin
-        needexp := mlevel * Ritem[inum].NeedExp * (7 - Rrole[rnum].Aptitude div 15);
-        if mlevel = 0 then
-          needexp := Ritem[inum].NeedExp * (7 - Rrole[rnum].Aptitude div 15);
-        //writeln(Rrole[rnum].ExpForBook,',',needexp,',',mlevel,',',p);
-        if (Rrole[rnum].ExpForBook >= needexp) and (mlevel < 10) then
+        while (mlevel < 10) do
         begin
-          Redraw;
-          EatOneItem(rnum, inum);
-          WaitAnyKey;
-          Redraw;
-          SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-          if mnum > 0 then
+          needexp := mlevel * Ritem[inum].NeedExp * (7 - Rrole[rnum].Aptitude div 15);
+          if mlevel = 0 then
+            needexp := Ritem[inum].NeedExp * (7 - Rrole[rnum].Aptitude div 15);
+          //writeln(Rrole[rnum].ExpForBook,',',needexp,',',mlevel,',',p);
+          if (Rrole[rnum].ExpForBook >= needexp) and (mlevel < 10) then
           begin
-            instruct_33(rnum, mnum, 1);
-            mlevel := mlevel + 1;
-          end;
-          Rrole[rnum].ExpForBook := Rrole[rnum].ExpForBook - needexp;
-          p := p + 1;
-          if (p >= 10) or (mlevel > 10) then
+            Rrole[rnum].ExpForBook := Rrole[rnum].ExpForBook - needexp;
+            if mnum > 0 then
+            begin
+              instruct_33(rnum, mnum, 1);
+              mlevel := mlevel + 1;
+              times := times + 1;
+            end;
+            p := p + 1;
+            if (p >= 10) or (mlevel > 10) then
+              break;
+            {if (mnum <= 0) and not eat then
+            begin
+              WaitAnyKey;
+              break;
+            end;}
+            //ShowStatus(rnum);
+            //waitanykey;
+          end
+          else
             break;
-          //ShowStatus(rnum);
-          //waitanykey;
-        end
-        else
-          break;
+        end;
+        if times > 0 then Redraw;
+        EatOneItem(rnum, inum, times);
+        WaitAnyKey;
+      end
+      else
+      begin
+        times := Rrole[rnum].ExpForBook div max(1, Ritem[inum].NeedExp);
+        if times > 0 then Redraw;
+        Rrole[rnum].ExpForBook := Rrole[rnum].ExpForBook - Ritem[inum].NeedExp * EatOneItem(rnum, inum, times);
+        WaitAnyKey;
       end;
+
       {if (Rrole[rnum].ExpForBook >= needexp) and (mlevel < 10) then
       begin
         redraw;
@@ -2981,6 +3002,7 @@ begin
         addpoi := 99 - Rrole[rnum1].Poison;
       Rrole[rnum1].Poison := Rrole[rnum1].Poison + addpoi;
       Brole[bnum1].ShowNumber := addpoi;
+      Brole[bnum1].ExpGot := Brole[bnum1].ExpGot + addpoi;
       SetAminationPosition(0, 0);
       PlayActionAmination(bnum, 0);
       PlayMagicAmination(bnum, 30, 0, 2);
@@ -3040,6 +3062,7 @@ begin
       addlife := EffectMedcine(rnum, rnum1);
 
       Brole[bnum1].ShowNumber := addlife;
+      Brole[bnum1].ExpGot := Brole[bnum1].ExpGot + addlife;
       SetAminationPosition(0, 0);
       PlayActionAmination(bnum, 0);
       PlayMagicAmination(bnum, 0, 1, 3);
@@ -3081,6 +3104,7 @@ begin
       minuspoi := EffectMedPoison(rnum, rnum1);
 
       Brole[bnum1].ShowNumber := minuspoi;
+      Brole[bnum1].ExpGot := Brole[bnum1].ExpGot + minuspoi;
       SetAminationPosition(0, 0);
       PlayActionAmination(bnum, 0);
       PlayMagicAmination(bnum, 36, 1, 4);
@@ -3172,6 +3196,7 @@ begin
           hurt := max(hurt * (Rrole[rnum1].Hurt div 33 + 1), 1 + random(10));
           Rrole[rnum1].CurrentHP := Rrole[rnum1].CurrentHP - hurt;
           Brole[bnum1].ShowNumber := hurt;
+          Brole[bnum1].ExpGot := Brole[bnum1].ExpGot + hurt;
           Rrole[rnum1].Hurt := min(Rrole[rnum1].Hurt + hurt div LIFE_HURT, 99);
           Rrole[rnum1].Poison := min(Rrole[rnum1].Poison + Ritem[inum].AddPoi *
             (100 - Rrole[rnum1].DefPoi) div 100, 99);
@@ -3268,13 +3293,13 @@ begin
         begin
           Brole[a[menu]].AutoMode := Brole[a[menu]].AutoMode - 1;
           if Brole[a[menu]].AutoMode < 0 then
-            Brole[a[menu]].AutoMode := 1;
+            Brole[a[menu]].AutoMode := 3;
           ShowTeamModeMenu(menu);
         end;
         if (event.key.keysym.sym = SDLK_RIGHT) then
         begin
           Brole[a[menu]].AutoMode := Brole[a[menu]].AutoMode + 1;
-          if Brole[a[menu]].AutoMode > 1 then
+          if Brole[a[menu]].AutoMode > 3 then
             Brole[a[menu]].AutoMode := 0;
           ShowTeamModeMenu(menu);
         end;
@@ -3286,7 +3311,7 @@ begin
           if (menu > -1) then
           begin
             Brole[a[menu]].AutoMode := Brole[a[menu]].AutoMode + 1;
-            if Brole[a[menu]].AutoMode > 1 then
+            if Brole[a[menu]].AutoMode > 3 then
               Brole[a[menu]].AutoMode := 0;
             ShowTeamModeMenu(menu);
           end
@@ -3335,7 +3360,7 @@ end;
 procedure ShowTeamModeMenu(menu: integer);
 var
   i, amount, x, y, w, h: integer;
-  modestring: array[0..1] of WideString;
+  modestring: array[0..3] of WideString;
   namestr: array of WideString;
   str: WideString;
   a: array of smallint;
@@ -3344,9 +3369,11 @@ begin
   x := 154;
   y := 50;
   w := 190;
-  modestring[1] := ' 自動';
   modestring[0] := ' 手動';
-  str := '  确定';
+  modestring[1] := ' 疯子';
+  modestring[2] := ' 傻子';
+  modestring[3] := ' 呆子';
+  str := '  確認';
   for i := 0 to BRoleAmount - 1 do
   begin
     if (Brole[i].Team = 0) and (Brole[i].Dead = 0) then
@@ -3405,179 +3432,190 @@ begin
   //CalCanSelect(bnum, 0, Brole[bnum].step);
 
   //showmessage('');
-  //Life is less than 20%, 70% probality to medcine or eat a pill.
-  //生命低于20%, 70%可能医疗或吃药
-  if (Brole[bnum].Acted <> 1) and (Rrole[rnum].CurrentHP < Rrole[rnum].MaxHP div 5) then
+
+  //我方在AI类型为策略(傻子)时才会选择吃药
+  if ((Brole[bnum].Team = 0) and (Brole[bnum].AutoMode = 2)) or (Brole[bnum].Team <> 0) then
   begin
-    if random(100) < 70 then
+    //Life is less than 20%, 70% probality to medcine or eat a pill.
+    //生命低于20%, 70%可能医疗或吃药
+    if (Brole[bnum].Acted <> 1) and (Rrole[rnum].CurrentHP < Rrole[rnum].MaxHP div 5) then
     begin
-      //医疗大于50, 且体力大于50才对自身医疗
-      if (Rrole[rnum].Medcine >= 50) and (Rrole[rnum].PhyPower >= 50) and (random(100) < 50) then
+      if random(100) < 70 then
       begin
-        Medcine(bnum);
-      end
-      else
-      begin
-        // if can't medcine, eat the item which can add the most life on its body.
-        //无法医疗则选择身上加生命最多的药品, 我方从物品栏选择
-        AutoUseItem(bnum, 45);
-      end;
-    end;
-  end;
-
-  //MP is less than 20%, 60% probality to eat a pill.
-  //内力低于20%, 60%可能吃药
-  if (Brole[bnum].Acted <> 1) and (Rrole[rnum].CurrentMP < Rrole[rnum].MaxMP div 5) then
-  begin
-    if random(100) < 60 then
-    begin
-      AutoUseItem(bnum, 50);
-    end;
-  end;
-
-  //Physical power is less than 20%, 80% probability to eat a pill.
-  //体力低于20%, 80%可能吃药
-  if (Brole[bnum].Acted <> 1) and (Rrole[rnum].PhyPower < 20) then
-  begin
-    if random(100) < 80 then
-    begin
-      AutoUseItem(bnum, 48);
-    end;
-  end;
-
-  //When Medcine is more than 50, and physical power is more than 70, 50% probability to cure one teammate.
-  if (Brole[bnum].Acted <> 1) and (Rrole[rnum].Medcine > 50) and (Rrole[rnum].PhyPower >= 70) then
-  begin
-    if random(100) < 50 then
-    begin
-      //showmessage(inttostr(rrole[rnum].UsePoi));
-      NearestMoveByPro(Ax, Ay, Ax1, Ay1, bnum, 1, 0, 17, -1, 1);
-      if (Ax1 <> -1) then
-      begin
-        MoveAmination(bnum);
-        Ax := Ax1;
-        Ay := Ay1;
-        Medcine(bnum);
-      end;
-    end;
-  end;
-
-  //When detoxifying is more than 50, and physical power is more than 70, 50% probability to detoxify one teammate.
-  if (Brole[bnum].Acted <> 1) and (Rrole[rnum].MedPoi > 50) and (Rrole[rnum].PhyPower >= 70) then
-  begin
-    if random(100) < 50 then
-    begin
-      //showmessage(inttostr(rrole[rnum].UsePoi));
-      NearestMoveByPro(Ax, Ay, Ax1, Ay1, bnum, 1, 0, 20, 1, 2);
-      if (Ax1 <> -1) then
-      begin
-        MoveAmination(bnum);
-        Ax := Ax1;
-        Ay := Ay1;
-        MedPoison(bnum);
-      end;
-    end;
-  end;
-
-  //When using poison is more than attack, and physical power is more than 60, 50% probability to use poison.
-  if (Brole[bnum].Acted <> 1) and (Rrole[rnum].UsePoi > Rrole[rnum].Attack) and (Rrole[rnum].PhyPower >= 60) then
-  begin
-    if random(100) < 50 then
-    begin
-      //showmessage(inttostr(rrole[rnum].UsePoi));
-      //CalCanSelect(bnum, 0, Brole[bnum].step);
-      NearestMoveByPro(Ax, Ay, Ax1, Ay1, bnum, 0, min(Rrole[rnum].UsePoi div 15 + 1, 15), 49, -1, 0);
-      if (Ax1 <> -1) then
-      begin
-        MoveAmination(bnum);
-        Ax := Ax1;
-        Ay := Ay1;
-        UsePoison(bnum);
-      end;
-    end;
-  end;
-
-  //When hidden-weapon is more than attack, and physical power is more than 30, 30% probability to use hidden-weapon.
-  if (Brole[bnum].Acted <> 1) and (Rrole[rnum].HidWeapon > Rrole[rnum].Attack) and (Rrole[rnum].PhyPower >= 30) then
-  begin
-    if random(100) < 30 then
-    begin
-      //showmessage(inttostr(rrole[rnum].UsePoi));
-      //CalCanSelect(bnum, 0, Brole[bnum].step);
-      NearestMoveByPro(Ax, Ay, Ax1, Ay1, bnum, 0, 1, 17, -1, 0);
-      if (Ax1 <> -1) then
-      begin
-        MoveAmination(bnum);
-        Ax := Ax1;
-        Ay := Ay1;
-        UseHiddenWeapon(bnum, -1);
-      end;
-    end;
-  end;
-
-  //尝试攻击
-  if (Brole[bnum].Acted <> 1) and (Rrole[rnum].PhyPower >= 10) then
-  begin
-    //Calculate the positon can be reached.
-    CalCanSelect(bnum, 0, Brole[bnum].step);
-
-    //for every magic, calcualte the max total hurt.
-    //B: the position for moving, A: the positon for attacking
-    curBx1 := -1;
-    curBy1 := -1;
-    curAx1 := -1;
-    curAy1 := -1;
-    curMnum := -1;
-    curMaxHurt := 0;
-    curlevel := 0;
-    p := -1;
-    for i1 := 0 to 9 do
-    begin
-      mnum := Rrole[rnum].Magic[i1];
-      if mnum > 0 then
-      begin
-        a := a + 1;
-        level := Rrole[rnum].MagLevel[i1] div 100 + 1;
-        if Rrole[rnum].CurrentMP < Rmagic[mnum].NeedMP * ((level + 1) div 2) then
-          level := Rrole[rnum].CurrentMP div Rmagic[mnum].NeedMP * 2;
-        if level > 10 then
-          level := 10;
-        if level <= 0 then
-          level := 1;
-        TryMoveAttack(Bx1, By1, Ax1, Ay1, tempmaxhurt, bnum, mnum, level);
-        if tempmaxhurt > curMaxHurt then
+        //医疗大于50, 且体力大于50才对自身医疗
+        if (Rrole[rnum].Medcine >= 50) and (Rrole[rnum].PhyPower >= 50) and (random(100) < 50) then
         begin
-          curBx1 := Bx1;
-          curBy1 := By1;
-          curAx1 := Ax1;
-          curAy1 := Ay1;
-          curMnum := mnum;
-          curlevel := level;
-          p := i1;
-          curMaxHurt := tempmaxhurt;
+          Medcine(bnum);
+        end
+        else
+        begin
+          // if can't medcine, eat the item which can add the most life on its body.
+          //无法医疗则选择身上加生命最多的药品, 我方从物品栏选择
+          AutoUseItem(bnum, 45);
         end;
       end;
     end;
-    //if curMaxHurt = 0 then nearestmove(curBx1, curBy1, bnum);
 
-    //if have selected the postions for miving and attacking, then act
-    if curMaxHurt > 0 then
+    //MP is less than 20%, 60% probality to eat a pill.
+    //内力低于20%, 60%可能吃药
+    if (Brole[bnum].Acted <> 1) and (Rrole[rnum].CurrentMP < Rrole[rnum].MaxMP div 5) then
     begin
-      Ax := curBx1;
-      Ay := curBy1;
-      MoveAmination(bnum);
-      Ax := curAx1;
-      Ay := curAy1;
-      mnum := curMnum;
-      level := curlevel;
-      SetAminationPosition(Rmagic[Mnum].AttAreaType, Rmagic[Mnum].MoveDistance[level - 1],
-        Rmagic[Mnum].AttDistance[level - 1]);
+      if random(100) < 60 then
+      begin
+        AutoUseItem(bnum, 50);
+      end;
+    end;
 
-      Brole[bnum].Acted := 1;
-      AttackAction(bnum, p, mnum, level);
+    //Physical power is less than 20%, 80% probability to eat a pill.
+    //体力低于20%, 80%可能吃药
+    if (Brole[bnum].Acted <> 1) and (Rrole[rnum].PhyPower < 20) then
+    begin
+      if random(100) < 80 then
+      begin
+        AutoUseItem(bnum, 48);
+      end;
     end;
   end;
 
+  //我方在AI类型为策略或者辅助(傻子或呆子)时才会选择医疗, 解毒, 用毒, 暗器
+  if ((Brole[bnum].Team = 0) and ((Brole[bnum].AutoMode = 2) or (Brole[bnum].AutoMode = 3))) or
+    (Brole[bnum].Team <> 0) then
+  begin
+    //When Medcine is more than 50, and physical power is more than 70, 50% probability to cure one teammate.
+    if (Brole[bnum].Acted <> 1) and (Rrole[rnum].Medcine > 50) and (Rrole[rnum].PhyPower >= 70) then
+    begin
+      if random(100) < 50 then
+      begin
+        //showmessage(inttostr(rrole[rnum].UsePoi));
+        NearestMoveByPro(Ax, Ay, Ax1, Ay1, bnum, 1, 0, 17, -1, 1);
+        if (Ax1 <> -1) then
+        begin
+          MoveAmination(bnum);
+          Ax := Ax1;
+          Ay := Ay1;
+          Medcine(bnum);
+        end;
+      end;
+    end;
+
+    //When detoxifying is more than 50, and physical power is more than 70, 50% probability to detoxify one teammate.
+    if (Brole[bnum].Acted <> 1) and (Rrole[rnum].MedPoi > 50) and (Rrole[rnum].PhyPower >= 70) then
+    begin
+      if random(100) < 50 then
+      begin
+        //showmessage(inttostr(rrole[rnum].UsePoi));
+        NearestMoveByPro(Ax, Ay, Ax1, Ay1, bnum, 1, 0, 20, 1, 2);
+        if (Ax1 <> -1) then
+        begin
+          MoveAmination(bnum);
+          Ax := Ax1;
+          Ay := Ay1;
+          MedPoison(bnum);
+        end;
+      end;
+    end;
+
+    //When using poison is more than attack, and physical power is more than 60, 50% probability to use poison.
+    if (Brole[bnum].Acted <> 1) and (Rrole[rnum].UsePoi > Rrole[rnum].Attack) and (Rrole[rnum].PhyPower >= 60) then
+    begin
+      if random(100) < 50 then
+      begin
+        //showmessage(inttostr(rrole[rnum].UsePoi));
+        //CalCanSelect(bnum, 0, Brole[bnum].step);
+        NearestMoveByPro(Ax, Ay, Ax1, Ay1, bnum, 0, min(Rrole[rnum].UsePoi div 15 + 1, 15), 49, -1, 0);
+        if (Ax1 <> -1) then
+        begin
+          MoveAmination(bnum);
+          Ax := Ax1;
+          Ay := Ay1;
+          UsePoison(bnum);
+        end;
+      end;
+    end;
+
+    //When hidden-weapon is more than attack, and physical power is more than 30, 30% probability to use hidden-weapon.
+    if (Brole[bnum].Acted <> 1) and (Rrole[rnum].HidWeapon > Rrole[rnum].Attack) and (Rrole[rnum].PhyPower >= 30) then
+    begin
+      if random(100) < 30 then
+      begin
+        //showmessage(inttostr(rrole[rnum].UsePoi));
+        //CalCanSelect(bnum, 0, Brole[bnum].step);
+        NearestMoveByPro(Ax, Ay, Ax1, Ay1, bnum, 0, 1, 17, -1, 0);
+        if (Ax1 <> -1) then
+        begin
+          MoveAmination(bnum);
+          Ax := Ax1;
+          Ay := Ay1;
+          UseHiddenWeapon(bnum, -1);
+        end;
+      end;
+    end;
+  end;
+
+
+  if ((Brole[bnum].Team = 0) and ((Brole[bnum].AutoMode = 1) or (Brole[bnum].AutoMode = 2))) or
+    (Brole[bnum].Team <> 0) then
+  begin
+    //尝试攻击
+    if (Brole[bnum].Acted <> 1) and (Rrole[rnum].PhyPower >= 10) then
+    begin
+      //Calculate the positon can be reached.
+      CalCanSelect(bnum, 0, Brole[bnum].step);
+      //for every magic, calcualte the max total hurt.
+      //B: the position for moving, A: the positon for attacking
+      curBx1 := -1;
+      curBy1 := -1;
+      curAx1 := -1;
+      curAy1 := -1;
+      curMnum := -1;
+      curMaxHurt := 0;
+      curlevel := 0;
+      p := -1;
+      for i1 := 0 to 9 do
+      begin
+        mnum := Rrole[rnum].Magic[i1];
+        if mnum > 0 then
+        begin
+          a := a + 1;
+          level := Rrole[rnum].MagLevel[i1] div 100 + 1;
+          if Rrole[rnum].CurrentMP < Rmagic[mnum].NeedMP * ((level + 1) div 2) then
+            level := Rrole[rnum].CurrentMP div Rmagic[mnum].NeedMP * 2;
+          if level > 10 then
+            level := 10;
+          if level <= 0 then
+            level := 1;
+          TryMoveAttack(Bx1, By1, Ax1, Ay1, tempmaxhurt, bnum, mnum, level);
+          if tempmaxhurt > curMaxHurt then
+          begin
+            curBx1 := Bx1;
+            curBy1 := By1;
+            curAx1 := Ax1;
+            curAy1 := Ay1;
+            curMnum := mnum;
+            curlevel := level;
+            p := i1;
+            curMaxHurt := tempmaxhurt;
+          end;
+        end;
+      end;
+      //if curMaxHurt = 0 then nearestmove(curBx1, curBy1, bnum);
+      //if have selected the postions for miving and attacking, then act
+      if curMaxHurt > 0 then
+      begin
+        Ax := curBx1;
+        Ay := curBy1;
+        MoveAmination(bnum);
+        Ax := curAx1;
+        Ay := curAy1;
+        mnum := curMnum;
+        level := curlevel;
+        SetAminationPosition(Rmagic[Mnum].AttAreaType, Rmagic[Mnum].MoveDistance[level - 1],
+          Rmagic[Mnum].AttDistance[level - 1]);
+        Brole[bnum].Acted := 1;
+        AttackAction(bnum, p, mnum, level);
+      end;
+    end;
+  end;
   {//在敌方选择一个人物
   eneamount := Calrnum(1 - Brole[bnum].Team);
   aim := random(eneamount) + 1;
@@ -3734,11 +3772,16 @@ end;}
 
   //If all other actions fail, try to move closest to the nearest enemy and rest.
   //如果上面行动全部失败, 尽量靠近最近的敌人, 休息
+
   if Brole[bnum].Acted = 0 then
   begin
-    CalCanSelect(bnum, 0, Brole[bnum].step);
-    NearestMove(Ax, Ay, bnum);
-    MoveAmination(bnum);
+    //CalCanSelect(bnum, 0, Brole[bnum].step);
+    if ((Brole[bnum].Team = 0) and ((Brole[bnum].AutoMode = 1) or (Brole[bnum].AutoMode = 2))) or
+      (Brole[bnum].Team <> 0) then
+    begin
+      NearestMove(Ax, Ay, bnum);
+      MoveAmination(bnum);
+    end;
     Rest(bnum);
   end;
 
