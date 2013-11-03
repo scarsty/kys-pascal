@@ -3438,8 +3438,6 @@ begin
 
   //CalCanSelect(bnum, 0, Brole[bnum].step);
 
-  //showmessage('');
-
   //我方在AI类型为策略(傻子)时才会选择吃药
   if ((Brole[bnum].Team = 0) and (Brole[bnum].AutoMode = 2)) or (Brole[bnum].Team <> 0) then
   begin
@@ -3485,7 +3483,7 @@ begin
   end;
 
   //我方在AI类型为策略或者辅助(傻子或呆子)时才会选择医疗, 解毒, 用毒, 暗器
-  if ((Brole[bnum].Team = 0) and ((Brole[bnum].AutoMode = 2) or (Brole[bnum].AutoMode = 3))) or
+  if ((Brole[bnum].Team = 0) and ((Brole[bnum].AutoMode = 2) {or (Brole[bnum].AutoMode = 3)})) or
     (Brole[bnum].Team <> 0) then
   begin
     //When Medcine is more than 50, and physical power is more than 70, 50% probability to cure one teammate.

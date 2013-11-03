@@ -5539,10 +5539,11 @@ begin
     len := length(e);
     if IsConsole then
     begin
-      Write('Pointer: ', i, ', Run instruct ', e[i], ' ');
-      if e[i] = 50 then
-        Write(e[i + 1], ',', e[i + 2], ',', e[i + 3], ',', e[i + 4], ',', e[i + 5], ',', e[i + 6], ',', e[i + 7]);
-      writeln;
+      writeln('Event ', num);
+      //', Run instruct ', e[i], ' ');
+      {if e[i] = 50 then
+        Write(e[i + 1], ',', e[i + 2], ',', e[i + 3], ',', e[i + 4], ',', e[i + 5], ',', e[i + 6], ',', e[i + 7]);}
+      //writeln;
     end;
     //普通事件写成子程, 需跳转事件写成函数
     while SDL_PollEvent(@event) >= 0 do
