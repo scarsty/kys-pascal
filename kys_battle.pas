@@ -457,6 +457,7 @@ begin
         DrawShadowText(screen, @str1[1], x + 113, y + 3 + 22 * i, ColColor($23), ColColor($21));
     end;
   SDL_UpdateRect2(screen, x + 30, y, 151, max * 22 + 28 + 1);
+  //UpdateAllScreen;
 end;
 
 //战斗主控制
