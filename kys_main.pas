@@ -140,6 +140,7 @@ function IsCave(snum: integer): boolean;
 function round(x: real): integer;
 procedure swap(var x, y: uint32); overload;
 procedure UpdateAllScreen;
+procedure TransBlackScreen;
 procedure CleanKeyValue;
 procedure GetMousePosition(var x, y: integer; x0, y0: integer; yp: integer = 0);
 
@@ -2838,6 +2839,8 @@ begin
     CurEvent := SData[CurScence, 3, x, y];
     if DData[CurScence, CurEvent, 2] >= 0 then
     begin
+      Cx := Sx;
+      Cy := Sy;
       CallEvent(DData[CurScence, SData[CurScence, 3, x, y], 2]);
       Result := True;
     end;
@@ -2855,7 +2858,8 @@ begin
   if (DData[CurScence, enum, 4] > 0) and (enum >= 0) then
   begin
     CurEvent := enum;
-    //waitanykey;
+    Cx := Sx;
+    Cy := Sy;
     CallEvent(DData[CurScence, enum, 4]);
     CurEvent := -1;
   end;
@@ -4329,8 +4333,12 @@ begin
           if SData[CurScence, 3, x, y] >= 0 then
           begin
             CurEvent := SData[CurScence, 3, x, y];
-            if DData[CurScence, SData[CurScence, 3, x, y], 3] >= 0 then
-              CallEvent(DData[CurScence, SData[CurScence, 3, x, y], 3]);
+            if DData[CurScence, CurEvent, 3] >= 0 then
+            begin
+              Cx := Sx;
+              Cy := Sy;
+              CallEvent(DData[CurScence, CurEvent, 3]);
+            end;
           end;
           CurEvent := -1;
         end;
@@ -5635,8 +5643,6 @@ begin
   k[50] := 48;  k[11] := 49;  k[52] := 50;  k[15] := 51;  k[46] := 52;  k[32] := 53;  k[27] := 54;  k[6] := 55;
   k[51] := 56;  k[62] := 57;  k[35] := 58;  k[26] := 59;  k[63] := 60;  k[10] := 61;  k[29] := 62;  k[41] := 63;
   k[19] := 64;  k[54] := 65;  k[64] := 66;  k[3] := 67;}
-  Cx := Sx;
-  Cy := Sy;
   SStep := 0;
   CurScenceRolePic := BEGIN_WALKPIC + SFace * 7;
   //redraw;
@@ -6116,6 +6122,12 @@ end;
 procedure UpdateAllScreen;
 begin
   SDL_UpdateRect2(screen, 0, 0, CENTER_X * 2, CENTER_Y * 2);
+end;
+
+//屏幕整体变半透明黑
+procedure TransBlackScreen;
+begin
+  DrawRectangleWithoutFrame(screen, 0, 0, CENTER_X * 2, CENTER_Y * 2, 0, 50);
 end;
 
 //清键值

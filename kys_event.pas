@@ -510,11 +510,8 @@ begin
   //for i1:=0 to 199 do
   //for i2:=0 to 10 do
   //DData[CurScence, [i1,i2]:=Ddata[CurScence,i1,i2];
-  if NeedRefreshScence = 1 then
-  begin
-    InitialScence(0);
-    NeedRefreshScence := 0;
-  end;
+  InitialScence(0);
+  NeedRefreshScence := 0;
   for i := 0 to 5 do
   begin
     //Sdl_Delay(5);

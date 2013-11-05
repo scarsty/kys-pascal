@@ -77,7 +77,7 @@ procedure DrawBfieldWithoutRole(x, y: integer);
 procedure DrawRoleOnBfield(x, y: integer; mixColor: uint32 = 0; mixAlpha: integer = 0; Alpha: integer = 75);
 procedure InitialBFieldImage;
 procedure InitialBFieldPosition(i1, i2, depth: integer);
-procedure LoadBfieldPart(x, y: integer);
+procedure LoadBfieldPart(x, y: integer; noBuild: integer = 0);
 procedure LoadBFieldPart2(x, y, alpha: integer);
 procedure DrawBFieldWithCursor(step: integer);
 procedure DrawBFieldWithEft(Epicnum: integer); overload;
@@ -1365,7 +1365,7 @@ end;
 
 //将战场映像画到屏幕并载入遮挡数据
 
-procedure LoadBfieldPart(x, y: integer);
+procedure LoadBfieldPart(x, y: integer; noBuild: integer = 0);
 var
   i1, i2: integer;
   dest: TSDL_Rect;
@@ -1379,7 +1379,8 @@ begin
   //if (x < 0) or (x >= 2304 - CENTER_X * 2) then
   //SDL_FillRect(screen, nil, 0);
   SDL_BlitSurface(ImgBfield, @dest, screen, nil);
-  LoadBFieldPart2(x, y, 0);
+  if nobuild = 0 then
+    LoadBFieldPart2(x, y, 0);
   //SDL_BlitSurface(ImgBBuild, @dest, screen, nil);
 
 end;
@@ -1435,6 +1436,9 @@ var
   i, i1, i2, bnum, depth, x, y: integer;
   pos: TPosition;
 begin
+  CalLTPosOnImageByCenter(Bx, By, x, y);
+  LoadBfieldPart(x, y, 1);
+  TransBlackScreen;
   for i1 := 0 to 63 do
     for i2 := 0 to 63 do
       if Bfield[0, i1, i2] > 0 then
@@ -1444,9 +1448,9 @@ begin
           //DrawBPic(Bfield[0, i1, i2] div 2, pos.x, pos.y, 0, 0, 0, $FFFFFFFF, 20)
           DrawBPic(Bfield[0, i1, i2] div 2, pos.x, pos.y, 1)
         else if (BField[3, i1, i2] >= 0) and (abs(i1 - Bx) + abs(i2 - By) <= step) then
-          DrawBPic(Bfield[0, i1, i2] div 2, pos.x, pos.y, 0)
-        else
-          DrawBPic(Bfield[0, i1, i2] div 2, pos.x, pos.y, 0, 0, 0, 0, 33);
+          DrawBPic(Bfield[0, i1, i2] div 2, pos.x, pos.y, 0);
+        //else
+          //DrawBPic(Bfield[0, i1, i2] div 2, pos.x, pos.y, 0, 0, 0, 0, 33);
         {if (i1 = Ax) and (i2 = Ay) then
           DrawMPic(1, pos.x, pos.y);}
       end;
