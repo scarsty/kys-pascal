@@ -2131,10 +2131,10 @@ begin
       case e2 of
         0:
         begin
-          if where = 1 then
-            DrawSPic(e5 div 2, e3, e4, 0, 0, screen.w, screen.h)
+          if (where <> 1) or ((ModVersion = 22) and (CurEvent = -1)) then
+            DrawMPic(e5 div 2, e3, e4)
           else
-            DrawMPic(e5 div 2, e3, e4);
+            DrawSPic(e5 div 2, e3, e4, 0, 0, screen.w, screen.h);
         end;
         1: DrawHeadPic(e5, e3, e4);
         2:
