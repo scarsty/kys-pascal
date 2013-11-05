@@ -38,7 +38,7 @@ function BattleStatus: integer;
 function BattleMenu(bnum: integer): integer;
 procedure ShowBMenu(MenuStatus, menu, max: integer);
 procedure MoveRole(bnum: integer);
-procedure MoveAmination(bnum: integer);
+function MoveAmination(bnum: integer): boolean;
 function SelectAim(bnum, step: integer; AreaType: integer = 0; AreaRange: integer = 0): boolean;
 function SelectDirector(bnum, step: integer): boolean;
 //procedure SeekPath(x, y, step: integer);
@@ -1007,12 +1007,14 @@ begin
 
 end;}
 
-procedure MoveAmination(bnum: integer);
+function MoveAmination(bnum: integer): boolean;
 var
   s, i, a, tempx, tempy: integer;
   Xinc, Yinc: array[1..4] of integer;
   linebx, lineby: array[0..4096] of smallint;
+  seekError: boolean;
 begin
+  Result := abs(Ax - Bx) + abs(Ay - By) > 0;
   if Bfield[3, Ax, Ay] > 0 then
   begin
     Xinc[1] := 1;
@@ -1030,6 +1032,7 @@ begin
     a := Bfield[3, Ax, Ay] - 1;
     while a >= 0 do
     begin
+      seekError := True;
       for i := 1 to 4 do
       begin
         tempx := linebx[a + 1] + Xinc[i];
@@ -1038,17 +1041,24 @@ begin
         begin
           linebx[a] := tempx;
           lineby[a] := tempy;
+          seekError := False;
           if (Bfield[7, tempx, tempy] = 0) or ((Bfield[7, tempx, tempy] = 1) and (tempx = Ax) and (tempy = Ay)) then
             break;
         end;
       end;
+      //如果发现寻路错误则跳出
+      if seekError then
+      begin
+        Result := False;
+        exit;
+      end;
       Dec(a);
     end;
+
     a := 1;
     while (SDL_PollEvent(@event) >= 0) do
     begin
       CheckBasicEvent;
-
       if (Brole[bnum].Step = 0) or ((Bx = Ax) and (By = Ay)) then
         break;
       if sign(linebx[a] - Bx) > 0 then
@@ -1478,7 +1488,7 @@ var
   Ylist: array[0..4096] of integer;
   steplist: array[0..4096] of integer;
   curgrid, totalgrid: integer;
-  Bgrid: array[1..4] of integer; //0空位, 1建筑, 2友军, 3敌军, 4出界, 5已走过, 6水面, 7敌人身旁
+  Bgrid: array[1..4] of integer; //0空位, 1建筑, 2友军, 3敌军, 4出界, 5已走过, 6水面, 7敌人身旁, 8首次无法达到(由第6层标记)
   Xinc, Yinc: array[1..4] of integer;
   curX, curY, curstep, nextX, nextY, nextnextX, nextnextY: integer;
   i, j, minBeside: integer;
@@ -1529,6 +1539,8 @@ begin
           ((Bfield[0, nextX, nextY] div 2 >= 224) and (Bfield[0, nextX, nextY] div 2 <= 232)) or
           ((Bfield[0, nextX, nextY] div 2 >= 662) and (Bfield[0, nextX, nextY] div 2 <= 674)) then
           Bgrid[i] := 6
+        else if Bfield[6, nextX, nextY] < 0 then
+          Bgrid[i] := 8
         else
         begin
           Bgrid[i] := 0;
@@ -1663,17 +1675,19 @@ begin
   begin
     FillChar(Bfield[3, 0, 0], sizeof(Bfield[3]), -1);
     FillChar(Bfield[7, 0, 0], sizeof(Bfield[7]), 0); //第7层标记敌人身旁的位置
+    if Brole[bnum].Acted = 0 then
+      FillChar(Bfield[6, 0, 0], sizeof(Bfield[6]), 0); //第6层标记第一次不能走到的位置, 小于0表示不能到达
     Bfield[3, Brole[bnum].X, Brole[bnum].Y] := 0;
     SeekPath2(Brole[bnum].X, Brole[bnum].Y, Step, Brole[bnum].Team, mode);
     if Brole[bnum].Acted = 0 then
-      move(Bfield[3, 0, 0], Bfield[6, 0, 0], sizeof(Bfield[3])) //第6层标记第一次不能走到的位置
-    else
+      move(Bfield[3, 0, 0], Bfield[6, 0, 0], sizeof(Bfield[3])); //保存第一次可以走到的位置, 后续的移动只能在此范围
+    {else
       for i1 := 0 to 63 do
         for i2 := 0 to 63 do
         begin
           if Bfield[6, i1, i2] = -1 then
             Bfield[3, i1, i2] := -1;
-        end;
+        end;}
   end;
 
   if mode = 1 then
@@ -3060,7 +3074,6 @@ begin
         select := True;
       end;
     end;
-
     if (bfield[2, Ax, Ay] >= 0) and (select = True) and (Brole[bfield[2, Ax, Ay]].Team <> Brole[bnum].Team) then
     begin
       //如果自动, 选择伤害最大的暗器
@@ -3136,9 +3149,12 @@ var
 begin
   Brole[bnum].Acted := 1;
   rnum := Brole[bnum].rnum;
-  Rrole[rnum].CurrentHP := min(Rrole[rnum].CurrentHP + Rrole[rnum].MaxHP div 20, Rrole[rnum].MaxHP);
-  Rrole[rnum].CurrentMP := min(Rrole[rnum].CurrentMP + Rrole[rnum].MaxMP div 20, Rrole[rnum].MaxMP);
-  Rrole[rnum].PhyPower := min(Rrole[rnum].PhyPower + MAX_PHYSICAL_POWER div 20, MAX_PHYSICAL_POWER);
+  Rrole[rnum].CurrentHP := min(Rrole[rnum].CurrentHP + (5 + Brole[bnum].Step) * Rrole[rnum].MaxHP div
+    200, Rrole[rnum].MaxHP);
+  Rrole[rnum].CurrentMP := min(Rrole[rnum].CurrentMP + (5 + Brole[bnum].Step) * Rrole[rnum].MaxMP div
+    200, Rrole[rnum].MaxMP);
+  Rrole[rnum].PhyPower := min(Rrole[rnum].PhyPower + (5 + Brole[bnum].Step) * MAX_PHYSICAL_POWER div
+    200, MAX_PHYSICAL_POWER);
 
 end;
 
@@ -3155,7 +3171,7 @@ var
   var
     i: integer;
   begin
-    redraw;
+    Redraw;
     DrawRectangle(screen, x, y, w, h, 0, ColColor(255), 30);
     for i := 0 to amount - 1 do
     begin
@@ -3319,7 +3335,7 @@ end;
 
 procedure AutoBattle(bnum: integer);
 var
-  i, p, a, temp, rnum, inum, eneamount, aim, mnum, level: integer;
+  i, p, temp, rnum, inum, eneamount, aim, mnum, level: integer;
   i1, i2, step, step1, dis0, dis: integer;
   Bx1, By1, Ax1, Ay1, curBx1, curBy1, curAx1, curAy1, curMnum, curMaxHurt, curlevel, tempmaxhurt: integer;
   str: WideString;
@@ -3327,8 +3343,6 @@ begin
   rnum := Brole[bnum].rnum;
   ShowSimpleStatus(rnum, CENTER_X + 100, 50);
   SDL_Delay(450);
-
-  //CalCanSelect(bnum, 0, Brole[bnum].step);
 
   //我方在AI类型为策略(傻子)时才会选择吃药
   if ((Brole[bnum].Team = 0) and (Brole[bnum].AutoMode = 2)) or (Brole[bnum].Team <> 0) then
@@ -3433,10 +3447,8 @@ begin
     //When hidden-weapon is more than attack, and physical power is more than 30, 30% probability to use hidden-weapon.
     if (Brole[bnum].Acted <> 1) and (Rrole[rnum].HidWeapon > Rrole[rnum].Attack) and (Rrole[rnum].PhyPower >= 30) then
     begin
-      if random(100) < 30 then
+      if random(100) < 100 then
       begin
-        //showmessage(inttostr(rrole[rnum].UsePoi));
-        //CalCanSelect(bnum, 0, Brole[bnum].step);
         NearestMoveByPro(Ax, Ay, Ax1, Ay1, bnum, 0, 1, 17, -1, 0);
         if (Ax1 <> -1) then
         begin
@@ -3448,7 +3460,6 @@ begin
       end;
     end;
   end;
-
 
   if ((Brole[bnum].Team = 0) and ((Brole[bnum].AutoMode = 1) or (Brole[bnum].AutoMode = 2))) or
     (Brole[bnum].Team <> 0) then
@@ -3473,7 +3484,6 @@ begin
         mnum := Rrole[rnum].Magic[i1];
         if mnum > 0 then
         begin
-          a := a + 1;
           level := Rrole[rnum].MagLevel[i1] div 100 + 1;
           if Rrole[rnum].CurrentMP < Rmagic[mnum].NeedMP * ((level + 1) div 2) then
             level := Rrole[rnum].CurrentMP div Rmagic[mnum].NeedMP * 2;
@@ -3490,13 +3500,13 @@ begin
             curAy1 := Ay1;
             curMnum := mnum;
             curlevel := level;
-            p := i1;
             curMaxHurt := tempmaxhurt;
+            p := i1;
           end;
         end;
       end;
       //if curMaxHurt = 0 then nearestmove(curBx1, curBy1, bnum);
-      //if have selected the postions for miving and attacking, then act
+      //if have selected the postions for moving and attacking, then act
       if curMaxHurt > 0 then
       begin
         Ax := curBx1;
@@ -3506,13 +3516,14 @@ begin
         Ay := curAy1;
         mnum := curMnum;
         level := curlevel;
-        SetAminationPosition(Rmagic[Mnum].AttAreaType, Rmagic[Mnum].MoveDistance[level - 1],
-          Rmagic[Mnum].AttDistance[level - 1]);
+        SetAminationPosition(Rmagic[mnum].AttAreaType, Rmagic[mnum].MoveDistance[level - 1],
+          Rmagic[mnum].AttDistance[level - 1]);
         Brole[bnum].Acted := 1;
         AttackAction(bnum, p, mnum, level);
       end;
     end;
   end;
+
   {//在敌方选择一个人物
   eneamount := Calrnum(1 - Brole[bnum].Team);
   aim := random(eneamount) + 1;
@@ -3670,7 +3681,7 @@ end;}
   //If all other actions fail, try to move closest to the nearest enemy and rest.
   //如果上面行动全部失败, 尽量靠近最近的敌人, 休息
 
-  if Brole[bnum].Acted = 0 then
+  if Brole[bnum].Acted <> 1 then
   begin
     //CalCanSelect(bnum, 0, Brole[bnum].step);
     if ((Brole[bnum].Team = 0) and ((Brole[bnum].AutoMode = 1) or (Brole[bnum].AutoMode = 2))) or
@@ -4139,7 +4150,7 @@ begin
 
   tempPro := 0;
   if MaxMinPro < 0 then
-    tempPro := 9999;
+    tempPro := 10000;
   //CalCanSelect(bnum, 0, step);
 
   select := False;
@@ -4217,11 +4228,9 @@ begin
           tempdis := abs(curX - aimX) + abs(curY - aimY);
           if (tempdis < mindis) and (tempdis >= KeepDis) then
           begin
-            //showmessage('');
             mindis := tempdis;
             Mx1 := curX;
             My1 := curY;
-            //showmessage(inttostr(mindis));
           end;
         end;
       end;
