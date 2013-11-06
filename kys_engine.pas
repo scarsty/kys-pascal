@@ -1919,7 +1919,7 @@ var
 begin
   l := length(str);
   Result := l;
-  for i := 0 to l do
+  for i := 1 to l do
   begin
     if uint16(str[i]) >= $1000 then
       Result := Result + 1;
