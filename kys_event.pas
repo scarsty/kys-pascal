@@ -1592,8 +1592,12 @@ var
   i, t1, grp, idx, offset, len, i1, i2: integer;
   p, p1: pchar;
   //ps :pstring;
-  str: string;
+  str: ansistring;
+  {$ifdef fpc}
+  word, word1: string;
+  {$else}
   word, word1: WideString;
+  {$endif}
   menuString, menuEngString: array of WideString;
 begin
   Result := 0;
@@ -1705,7 +1709,7 @@ begin
       p := @x50[e2];
       p1 := @x50[e3];
       str := p1;
-      str := format(string(p1), [e4]);
+      str := format(str, [e4]);
       for i := 0 to length(str) do
       begin
         p^ := str[i + 1];
@@ -1744,7 +1748,7 @@ begin
     begin
       e3 := e_GetValue(0, e1, e3);
       p := @x50[e2];
-      for i := 0 to e3 do
+      for i := 0 to e3 div 2 do
       begin
         p^ := char($20);
         p := p + 1;
@@ -1798,7 +1802,6 @@ begin
           x50[e3] := RItemList[i].Amount;
           break;
         end;
-      //showmessage('rer');
     end;
     21: //Write event in scence.
     begin
@@ -1913,7 +1916,6 @@ begin
         //showmessage(inttostr(e3));
         x50[e5] := Bfield[2, i mod 64, i div 64];
       end;
-
     end;
     27: //Read name to string.
     begin
@@ -1925,14 +1927,19 @@ begin
         2: p1 := @Rscence[e3].Name;
         3: p1 := @Rmagic[e3].Name;
       end;
-      for i := 0 to 9 do
+      len := min(10, length(p1));
+      for i := 0 to len - 1 do
       begin
-        (p + i)^ := (p1 + i)^;
-        if (p1 + i)^ = char(0) then
-          break;
+        p^ := (p1 + i)^;
+        Inc(p);
       end;
-      (p + i + 1)^ := char($20);
-      (p + i + 2)^ := char(0);
+      if len mod 2 = 1 then
+      begin
+        p^ := char($20);
+        Inc(p);
+      end;
+      p^ := char(0);
+      //(p + len + 2)^ := char(0);
     end;
     28: //Get the battle number.
     begin
@@ -2085,7 +2092,7 @@ begin
       e2 := e_GetValue(0, e1, e2);
       x50[e3] := random(e2);
     end;
-    39: //Show a menu to select. The 40th instruct is too complicable, just use the 30th.
+    39: //Show a menu to select.
     begin
       e2 := e_GetValue(0, e1, e2);
       e5 := e_GetValue(1, e1, e5);
@@ -2102,7 +2109,7 @@ begin
       end;
       x50[e4] := CommonMenu(e5, e6, t1 * 10 + 5, e2 - 1, menuString) + 1;
     end;
-    40: //Show a menu to select. The 40th instruct is too complicable, just use the 30th.
+    40: //Show a scroll menu to select.
     begin
       e2 := e_GetValue(0, e1, e2);
       e5 := e_GetValue(1, e1, e5);
@@ -2120,7 +2127,7 @@ begin
       t1 := (e1 shr 8) and $FF;
       if t1 = 0 then
         t1 := 5;
-      //showmessage(inttostr(t1));
+      //某些旧MOD中, x可能需要减掉10来对齐(不处理了)
       x50[e4] := CommonScrollMenu(e5, e6, i2 * 10 + 5, e2 - 1, t1, menuString) + 1;
     end;
     41: //Draw a picture.
@@ -2216,12 +2223,13 @@ begin
     47: //Here no need to re-set the pic.
     begin
     end;
-    48: //Show some parameters.
+    51: //Show some parameters.
     begin
       str := '';
       for i := e1 to e1 + e2 - 1 do
         str := str + 'x' + IntToStr(i) + '=' + IntToStr(x50[i]) + char(13) + char(10);
-      messagebox(0, @str[1], 'KYS Windows', MB_OK);
+      if FULLSCREEN = 0 then
+        messagebox(0, @str[1], 'KYS Windows', MB_OK);
     end;
     49: //In PE files, you can't call any procedure as your wish.
     begin
@@ -2232,35 +2240,46 @@ begin
       e3 := e_GetValue(1, e1, e3);
       e4 := e_GetValue(2, e1, e4);
       e5 := e_GetValue(3, e1, e5);
-
+      //e2 := 0;
+      //e5 := 10;
       case e2 of
         0: p := @Rrole[e3].Name[0];
         1: p := @Ritem[e3].Name[0];
         2: p := @Rmagic[e3].Name[0];
         3: p := @Rscence[e3].Name[0];
       end;
-      ShowMessage(IntToStr(e4));
+      //ShowMessage(IntToStr(e4));
+      {$ifdef fpc}
+      word1 := CP950ToUTF8(p);
+      {$else}
       word1 := Big5ToUnicode(p);
       word1 := MidStr(word1, 2, length(word1) - 1);
-      word := '請輸入名稱              ';
-      word := InputBox('Enter name', word, word1);
+      {$endif}
+      word := '請輸入名字：';
+      if FULLSCREEN = 0 then
+        word := InputBox('Enter name', word, word1);
+      {$ifdef fpc}
+      str := UTF8ToCP950(word);
+      {$else}
       str := UnicodeToBig5(@word[1]);
+      {$endif}
       p1 := @str[1];
-      for i := 0 to e5 - 1 do
+      for i := 0 to min(e5, length(p1)) - 1 do
         (p + i)^ := (p1 + i)^;
     end;
-    51: //Enter a number.
+    48: //Enter a number.
     begin
-      while (True) do
-      begin
-        word := InputBox('输入数量 ', '输入数量           ', '0');
-        try
-          i := StrToInt(word);
-          break;
-        except
-          ShowMessage('输入错误，请重新输入！            ');
+      if FULLSCREEN = 0 then
+        while (True) do
+        begin
+          word := InputBox('输入数量 ', '输入数量', '0');
+          try
+            i := StrToInt(word);
+            break;
+          except
+            ShowMessage('输入错误，请重新输入!');
+          end;
         end;
-      end;
       x50[e1] := i;
     end;
     52: //Judge someone grasp some mggic.
