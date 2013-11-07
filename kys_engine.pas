@@ -1306,7 +1306,7 @@ begin
   begin
     pword[1] := word^;
     Inc(word);
-    if pword[1] > 128 then
+    if pword[1] > $1000 then
     begin
       Text := TTF_RenderUnicode_blended(font, @pword[0], tempcolor);
       //dest.x := x_pos;
