@@ -496,7 +496,7 @@ begin
     begin
       //将不含进度条的图形画入快速重载入屏幕
       DrawWholeBField(0);
-      WriteFreshScreen(0, 0, screen.w, screen.h);
+      RecordFreshScreen(0, 0, screen.w, screen.h);
       DrawProgress;
       act := 0;
       while SDL_PollEvent(@event) >= 0 do
@@ -513,7 +513,7 @@ begin
         end;
         if act = 1 then
           break;
-        ReadFreshScreen(0, 0, screen.w, screen.h);
+        LoadFreshScreen(0, 0, screen.w, screen.h);
         DrawProgress;
         SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
         SDL_Delay(delaytime);
@@ -2557,7 +2557,7 @@ procedure CheckLevelUp;
 var
   i, rnum: integer;
 begin
-  WriteFreshScreen(0, 0, screen.w, screen.h);
+  RecordFreshScreen(0, 0, screen.w, screen.h);
   for i := 0 to BRoleAmount - 1 do
   begin
     rnum := Brole[i].rnum;
@@ -2869,7 +2869,7 @@ begin
       i := i + 1;
       if i > endpic then
       begin
-        //WriteFreshScreen(0, 0, screen.w, screen.h);
+        //RecordFreshScreen(0, 0, screen.w, screen.h);
         Brole[bnum].Pic := endpic;
         break;
       end;
