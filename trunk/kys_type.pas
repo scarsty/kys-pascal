@@ -297,6 +297,7 @@ var
   //0-地面, 1-建筑, 2-人物, 3-可否被选中, 4-攻击范围, 5, 6 ,7-未使用
   //补充 6-标记第一次移动时不能到达的位置 7-标记敌人身边
   //WarSta: array[0..$5D] of smallint;
+  //WarStaList: array[0..500] of TWarData;
   WarSta: TWarData;
   //战场数据, 即war.sta文件的映像
 

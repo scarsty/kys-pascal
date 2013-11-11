@@ -101,6 +101,7 @@ function HaveMagic(person, mnum, lv: integer): boolean;
 procedure StudyMagic(rnum, magicnum, newmagicnum, level, dismode: integer);
 procedure NewTalk(headnum, talknum, namenum, place, showhead, color, frame: integer);
 function EnterNumber(MinValue, MaxValue, x, y: integer; Default: integer = 0): smallint;
+procedure SetAttribute(rnum, selecttype, modlevel, minlevel, maxlevel: integer);
 
 
 implementation
@@ -2943,6 +2944,11 @@ begin
   end;
   CleanKeyValue;
   //FreeFreshScreen;
+end;
+
+procedure SetAttribute(rnum, selecttype, modlevel, minlevel, maxlevel: integer);
+begin
+
 end;
 
 
