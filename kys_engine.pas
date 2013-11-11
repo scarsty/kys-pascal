@@ -88,7 +88,8 @@ procedure DrawShadowText(word: puint16; x_pos, y_pos: integer; color1, color2: u
 procedure DrawEngShadowText(sur: PSDL_Surface; word: puint16; x_pos, y_pos: integer; color1, color2: uint32);
 procedure DrawBig5Text(sur: PSDL_Surface; str: pchar; x_pos, y_pos: integer; color: uint32);
 procedure DrawBig5ShadowText(sur: PSDL_Surface; word: pchar; x_pos, y_pos: integer; color1, color2: uint32);
-procedure DrawTextWithRect(sur: PSDL_Surface; word: puint16; x, y, w: integer; color1, color2: uint32);
+procedure DrawTextWithRect(word: puint16; x, y, w: integer; color1, color2: uint32); overload;
+procedure DrawTextWithRect(sur: PSDL_Surface; word: puint16; x, y, w: integer; color1, color2: uint32); overload;
 
 
 //PNG贴图相关的子程
@@ -1421,7 +1422,12 @@ end;
 
 //显示带边框的文字, 仅用于unicode, 需自定义宽度
 
-procedure DrawTextWithRect(sur: PSDL_Surface; word: puint16; x, y, w: integer; color1, color2: uint32);
+procedure DrawTextWithRect(word: puint16; x, y, w: integer; color1, color2: uint32); overload;
+begin
+  DrawTextWithRect(screen, word, x, y, w, color1, color2);
+end;
+
+procedure DrawTextWithRect(sur: PSDL_Surface; word: puint16; x, y, w: integer; color1, color2: uint32); overload;
 var
   len: integer;
   p: pchar;

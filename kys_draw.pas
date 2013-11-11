@@ -57,8 +57,8 @@ procedure DrawCPic(num, px, py, shadow, alpha: integer; mixColor: uint32; mixAlp
 
 //绘制整个屏幕的子程
 procedure Redraw(WriteFresh: integer = 0);
-procedure WriteFreshScreen(x, y, w, h: integer);
-procedure ReadFreshScreen(x, y, w, h: integer);
+procedure RecordFreshScreen(x, y, w, h: integer);
+procedure LoadFreshScreen(x, y, w, h: integer);
 procedure DrawMMap;
 procedure DrawScence;
 procedure DrawScenceWithoutRole(x, y: integer);
@@ -529,7 +529,7 @@ end;
 
 //以下两个函数用于需要连续几个相同帧时的快速重绘
 
-procedure WriteFreshScreen(x, y, w, h: integer);
+procedure RecordFreshScreen(x, y, w, h: integer);
 var
   dest: TSDL_Rect;
 begin
@@ -540,7 +540,7 @@ begin
   SDL_BlitSurface(screen, @dest, freshscreen, @dest);
 end;
 
-procedure ReadFreshScreen(x, y, w, h: integer);
+procedure LoadFreshScreen(x, y, w, h: integer);
 var
   dest: TSDL_Rect;
 begin
