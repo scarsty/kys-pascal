@@ -100,6 +100,8 @@ function instruct_50e(code, e1, e2, e3, e4, e5, e6: integer): integer;
 function HaveMagic(person, mnum, lv: integer): boolean;
 procedure StudyMagic(rnum, magicnum, newmagicnum, level, dismode: integer);
 procedure NewTalk(headnum, talknum, namenum, place, showhead, color, frame: integer);
+function EnterNumber(MinValue, MaxValue, x, y: integer; Default: integer = 0): smallint;
+
 
 implementation
 
@@ -2778,5 +2780,170 @@ begin
   setlength(str, 0);
   setlength(temp2, 0);
 end;
+
+
+//输入数字, 最小值, 最大值, 坐标x, y. 当结果被范围修正时有提示.
+
+function EnterNumber(MinValue, MaxValue, x, y: integer; Default: integer = 0): smallint;
+var
+  Value, i, menu, sure, pvalue, pmenu, highButton: integer;
+  str: array[0..13] of WideString;
+  color: uint32;
+  strv, strr: WideString;
+  //tempscr: psdl_surface;
+  Button: array[0..13] of TSDL_Rect;
+begin
+  CleanKeyValue;
+  Value := Default;
+  MinValue := max(-32768, MinValue);
+  MaxValue := min(32767, MaxValue);
+  //13个按钮的位置和大小
+  for i := 0 to 9 do
+  begin
+    str[i] := IntToStr(i);
+    Button[i].x := x + (i + 2) mod 3 * 35 + 20;
+    Button[i].y := y + (3 - (i + 2) div 3) * 30 + 50;
+    Button[i].w := 25;
+    Button[i].h := 23;
+  end;
+  str[10] := '  ±';
+  Button[10].x := x + 20;
+  Button[10].y := y + 140;
+  Button[10].w := 60;
+  Button[10].h := 23;
+  str[11] := '←';
+  Button[11].x := x + 125;
+  Button[11].y := y + 50;
+  Button[11].w := 35;
+  Button[11].h := 23;
+  str[12] := 'AC';
+  Button[12].x := x + 125;
+  Button[12].y := y + 80;
+  Button[12].w := 35;
+  Button[12].h := 23;
+  str[13] := 'OK';
+  Button[13].x := x + 125;
+  Button[13].y := y + 110;
+  Button[13].w := 35;
+  Button[13].h := 53;
+  //Redraw;
+  //SetFontSize(32, 30);
+  DrawRectangle(screen, x, y, 180, 180, 0, ColColor(255), 50);
+  DrawRectangle(screen, x + 20, y + 10, 140, 23, 0, ColColor(255), 75);
+  highButton := high(Button);
+  for  i := 0 to highButton do
+  begin
+    DrawRectangle(screen, Button[i].x, Button[i].y, Button[i].w, Button[i].h, 0, ColColor(255), 50);
+  end;
+  UpdateAllScreen;
+  RecordFreshScreen(x, y, 181, 181);
+  strv := utf8decode(format(' 範圍%d~%d', [MinValue, MaxValue]));
+  DrawTextWithRect(@strv[1], x, y - 35, DrawLength(strv) * 10 + 7, ColColor($21), ColColor($27));
+  //在循环中写字体是为了字体分层模式容易处理
+  menu := -1;
+  sure := 0; //1-键盘按下, 2-鼠标按下
+  pvalue := -1;
+  pmenu := -1;
+  while SDL_PollEvent(@event) >= 0 do
+  begin
+    CheckBasicEvent;
+    case event.type_ of
+      SDL_KeyUp:
+      begin
+        case event.key.keysym.sym of
+          SDLK_0..SDLK_9: menu := event.key.keysym.sym - SDLK_0;
+          SDLK_KP0..SDLK_KP9: menu := event.key.keysym.sym - SDLK_KP0;
+          SDLK_MINUS, SDLK_KP_MINUS: menu := 10;
+          SDLK_DELETE: menu := 12;
+          SDLK_RETURN, SDLK_SPACE, SDLK_KP_ENTER: menu := highButton;
+        end;
+        sure := 1;
+      end;
+      SDL_MOUSEMOTION:
+      begin
+        menu := -1;
+        for i := 0 to high(button) do
+        begin
+          if MouseInRegion(Button[i].x, Button[i].y, Button[i].w, Button[i].h) then
+          begin
+            menu := i;
+            break;
+          end;
+        end;
+      end;
+      SDL_MOUSEBUTTONUP:
+      begin
+        case event.button.button of
+          SDL_BUTTON_LEFT:
+          begin
+            menu := -1;
+            for i := 0 to highButton do
+            begin
+              if MouseInRegion(Button[i].x, Button[i].y, Button[i].w, Button[i].h) then
+              begin
+                menu := i;
+                break;
+              end;
+            end;
+            if (menu >= 0) and (menu <= highButton) then
+              sure := 2;
+          end;
+        end;
+      end;
+    end;
+    //画界面
+    if (Value <> pvalue) or (menu <> pmenu) then
+    begin
+      LoadFreshScreen(x, y, 181, 181);
+      strv := format('%6d', [Value]);
+      DrawShadowText(@strv[1], x + 60, y + 10, ColColor($64), ColColor($66));
+      if (menu >= 0) and (menu <= highButton) then
+      begin
+        DrawRectangle(screen, Button[menu].x, Button[menu].y, Button[menu].w, Button[menu].h,
+          ColColor(20 * i + random(20)), ColColor(255), 50);
+      end;
+      for i := 0 to highButton do
+      begin
+        DrawShadowText(@str[i][1], Button[i].x - 2, Button[i].y + Button[i].h div 2 - 11, ColColor(5), ColColor(7));
+      end;
+      UpdateAllScreen;
+      pvalue := Value;
+      pmenu := menu;
+    end;
+    CleanKeyValue;
+    //计算数值变化
+    if sure > 0 then
+    begin
+      case menu of
+        0.. 9:
+          if Value * 10 < 1e5 then
+            Value := 10 * Value + menu;
+        10: Value := -Value;
+        11: Value := Value div 10;
+        12: Value := 0;
+        else
+         if menu = highButton then
+           break;
+      end;
+      if sure = 1 then
+        menu := -1;
+    end;
+    sure := 0;
+    SDL_Delay(25);
+  end;
+  Result := RegionParameter(Value, MinValue, MaxValue);
+  //Redraw;
+  if Result <> Value then
+  begin
+    Redraw;
+    UpdateAllScreen;
+    strv := utf8decode(format('  依據範圍自動調整為%d！', [Result]));
+    DrawTextWithRect(@strv[1], x, y, DrawLength(strv) * 10 + 7, ColColor($64), ColColor($66));
+    WaitAnyKey;
+  end;
+  CleanKeyValue;
+  //FreeFreshScreen;
+end;
+
 
 end.

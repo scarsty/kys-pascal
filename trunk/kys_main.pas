@@ -147,6 +147,9 @@ procedure GetMousePosition(var x, y: integer; x0, y0: integer; yp: integer = 0);
 function MouseInRegion(x, y, w, h: integer): boolean; overload;
 function MouseInRegion(x, y, w, h: integer; var x1, y1: integer): boolean; overload;
 
+function RegionParameter(x, x1, x2: integer): integer;
+
+
 implementation
 
 uses
@@ -2892,7 +2895,7 @@ var
   menu, menup: integer;
 begin
   menu := default;
-  WriteFreshScreen(x, y, w + 1, max * 22 + 29);
+  RecordFreshScreen(x, y, w + 1, max * 22 + 29);
   ShowCommonMenu(x, y, w, max, menu, menuString, menuEngString);
   SDL_UpdateRect2(screen, x, y, w + 1, max * 22 + 29);
   while (SDL_WaitEvent(@event) >= 0) do
@@ -3083,7 +3086,7 @@ var
   i, p: integer;
   temp: PSDL_Surface;
 begin
-  ReadFreshScreen(x, y, w + 1, max * 22 + 29);
+  LoadFreshScreen(x, y, w + 1, max * 22 + 29);
   DrawRectangle(screen, x, y, w, max * 22 + 28, 0, ColColor(255), 30);
   if (length(menuEngString) > 0) and (length(menuString) = length(menuEngString)) then
     p := 1
@@ -3124,7 +3127,7 @@ begin
   menutop := 0;
   //SDL_EnableKeyRepeat(0,10);
   //DrawMMap;
-  WriteFreshScreen(x, y, w + 1, max * 22 + 29);
+  RecordFreshScreen(x, y, w + 1, max * 22 + 29);
   ShowCommonScrollMenu(x, y, w, max, maxshow, menu, menutop, menuString, menuEngString);
   SDL_UpdateRect2(screen, x, y, w + 1, maxshow * 22 + 29);
   while (SDL_WaitEvent(@event) >= 0) do
@@ -3294,7 +3297,7 @@ procedure ShowCommonScrollMenu(x, y, w, max, maxshow, menu, menutop: integer;
 var
   i, p: integer;
 begin
-  ReadFreshScreen(x, y, w + 1, max * 22 + 29);
+  LoadFreshScreen(x, y, w + 1, max * 22 + 29);
   if max + 1 < maxshow then
     maxshow := max + 1;
   DrawRectangle(screen, x, y, w, maxshow * 22 + 6, 0, ColColor(255), 30);
@@ -3330,7 +3333,7 @@ begin
   menu := 0;
   //SDL_EnableKeyRepeat(0,10);
   //DrawMMap;
-  WriteFreshScreen(x, y, w + 1, 29);
+  RecordFreshScreen(x, y, w + 1, 29);
   ShowCommonMenu2(x, y, w, menu, menuString);
   SDL_UpdateRect2(screen, x, y, w + 1, 29);
   while (SDL_WaitEvent(@event) >= 0) do
@@ -3420,7 +3423,7 @@ procedure ShowCommonMenu2(x, y, w, menu: integer; menuString: array of WideStrin
 var
   i, p: integer;
 begin
-  ReadFreshScreen(x, y, w + 1, 29);
+  LoadFreshScreen(x, y, w + 1, 29);
   DrawRectangle(screen, x, y, w, 28, 0, ColColor(255), 30);
   //if length(Menuengstring) > 0 then p := 1 else p := 0;
   for i := 0 to 1 do
@@ -3632,7 +3635,7 @@ begin
     max := 5
   else
     max := 5;
-  //ReadFreshScreen(27, 30, 47, max * 22 + 29);
+  //LoadFreshScreen(27, 30, 47, max * 22 + 29);
   Redraw;
   DrawRectangle(screen, 27, 30, 46, max * 22 + 28, 0, ColColor(255), 30);
   //当前所在位置用白色, 其余用黄色
@@ -3780,7 +3783,7 @@ begin
     if (menu >= 0) and (menu < 6) then
     begin
       Redraw;
-      WriteFreshScreen(0, 0, screen.w, screen.h);
+      RecordFreshScreen(0, 0, screen.w, screen.h);
       iamount := ReadItemList(i);
       atlu := 0;
       ShowMenuItem(row, col, x, y, atlu);
@@ -4127,7 +4130,7 @@ begin
     words3[12] := (' 智力');
   end;
 
-  ReadFreshScreen(0, 0, screen.w, screen.h);
+  LoadFreshScreen(0, 0, screen.w, screen.h);
   DrawRectangle(screen, 110, 30, 386, 25, 0, ColColor(255), 30);
   DrawRectangle(screen, 110, 60, 386, 25, 0, ColColor(255), 30);
   DrawRectangle(screen, 110, 90, 386, 218, 0, ColColor(255), 30);
@@ -4560,7 +4563,7 @@ var
 begin
   str := (' 查看隊員狀態');
   Redraw;
-  WriteFreshScreen(0, 0, screen.w, screen.h);
+  RecordFreshScreen(0, 0, screen.w, screen.h);
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
   DrawTextWithRect(screen, @str[1], 10, 30, 132, ColColor($23), ColColor($21));
   setlength(menuString, 6);
@@ -4663,7 +4666,7 @@ begin
   p[9] := 53;
   p[10] := 54;
 
-  ReadFreshScreen(0, 0, screen.w, screen.h);
+  LoadFreshScreen(0, 0, screen.w, screen.h);
 
   DrawRectangle(screen, x, y, 525, 315, 0, ColColor(255), 50);
 
@@ -6048,7 +6051,8 @@ begin
   else
   begin
     //lua_dofile(Lua_script, AppPath + 'script/oldevent/oldevent_' + inttostr(num));
-    //writeln(inttostr(num));
+    if IsConsole then
+      writeln('Run event with ', num,'.lua script. ');
     ExecScript(PChar(AppPath + 'script/oldevent/oldevent_' + IntToStr(num) + '.lua'), nil);
   end;
 
@@ -6161,6 +6165,17 @@ function MouseInRegion(x, y, w, h: integer; var x1, y1: integer): boolean; overl
 begin
   SDL_GetMouseState2(x1, y1);
   Result := (x1 >= x) and (y1 >= y) and (x1 < x + w) and (y1 < y + h);
+end;
+
+
+//限制变量的范围
+function RegionParameter(x, x1, x2: integer): integer;
+var
+  px: integer;
+begin
+  if x < x1 then x := x1;
+  if x > x2 then x := x2;
+  Result := x;
 end;
 
 end.
