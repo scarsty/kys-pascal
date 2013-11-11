@@ -109,8 +109,8 @@ function GetCurrentEvent(L: Plua_state): integer; cdecl;
 
 function GetBattleNumber(L: Plua_state): integer; cdecl;
 function SelectOneAim(L: Plua_state): integer; cdecl;
-function GetBattlePro(L: Plua_state): integer; cdecl;
-function PutBattlePro(L: Plua_state): integer; cdecl;
+function GetBattleRolePro(L: Plua_state): integer; cdecl;
+function PutBattleRolePro(L: Plua_state): integer; cdecl;
 function PlayAction(L: Plua_state): integer; cdecl;
 //function GetRoundNumber(L: Plua_state): integer; cdecl;
 function PlayHurtValue(L: Plua_state): integer; cdecl;
@@ -250,8 +250,8 @@ begin
 
   lua_register(Lua_script, 'getbattlenumber', GetBattleNumber);
   lua_register(Lua_script, 'selectoneaim', SelectOneAim);
-  lua_register(Lua_script, 'getbattlepro', GetBattlePro);
-  lua_register(Lua_script, 'putbattlepro', PutBattlePro);
+  lua_register(Lua_script, 'getbattlerolepro', GetBattleRolePro);
+  lua_register(Lua_script, 'putbattlerolepro', PutBattleRolePro);
   lua_register(Lua_script, 'playaction', PlayAction);
   lua_register(Lua_script, 'playhurtvalue', PlayHurtValue);
   lua_register(Lua_script, 'setaminationlayer', SetAminationLayer);
@@ -1399,7 +1399,7 @@ end;
 
 //取战斗属性
 
-function GetBattlePro(L: Plua_state): integer; cdecl;
+function GetBattleRolePro(L: Plua_state): integer; cdecl;
 begin
   lua_pushnumber(L, Brole[floor(lua_tonumber(L, -2))].Data[floor(lua_tonumber(L, -1))]);
   Result := 1;
@@ -1408,7 +1408,7 @@ end;
 
 //写战斗属性
 
-function PutBattlePro(L: Plua_state): integer; cdecl;
+function PutBattleRolePro(L: Plua_state): integer; cdecl;
 begin
   Brole[floor(lua_tonumber(L, -2))].Data[floor(lua_tonumber(L, -1))] := floor(lua_tonumber(L, -3));
   Result := 0;
