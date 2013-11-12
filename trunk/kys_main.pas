@@ -4545,10 +4545,10 @@ begin
     menuString[1] := (' 繼續');
     str := (' 是否自宮？');
     DrawTextWithRect(screen, @str[1], 80, 30, 105, ColColor(7), ColColor(5));
-    if CommonMenu(80, 65, 45, 1, menuString) = 0 then
-      Result := False
+    if CommonMenu(80, 65, 45, 1, menuString) = 1 then
+      Rrole[rnum].Sexual := 2
     else
-      Rrole[rnum].Sexual := 2;
+      Result := False;
   end;
 
 end;
@@ -6052,7 +6052,7 @@ begin
   begin
     //lua_dofile(Lua_script, AppPath + 'script/oldevent/oldevent_' + inttostr(num));
     if IsConsole then
-      writeln('Run event with ', num,'.lua script. ');
+      writeln('Run event with ', num, '.lua script. ');
     ExecScript(PChar(AppPath + 'script/oldevent/oldevent_' + IntToStr(num) + '.lua'), nil);
   end;
 

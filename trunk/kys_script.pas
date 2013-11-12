@@ -1224,7 +1224,7 @@ begin
   y1 := floor(lua_tonumber(L, -3));
   x2 := floor(lua_tonumber(L, -2));
   y2 := floor(lua_tonumber(L, -1));
-  instruct_30(x1, x2, y1, y2);
+  instruct_30(x1, y1, x2, y2);
   Result := 0;
 
 end;
@@ -1237,7 +1237,7 @@ begin
   y1 := floor(lua_tonumber(L, -3));
   x2 := floor(lua_tonumber(L, -2));
   y2 := floor(lua_tonumber(L, -1));
-  instruct_25(x1, x2, y1, y2);
+  instruct_25(x1, y1, x2, y2);
   Result := 0;
 
 end;
