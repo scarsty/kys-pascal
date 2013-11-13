@@ -305,7 +305,7 @@ begin
   lua_register(Lua_script, 'instruct_37', AddEthics);
   lua_register(Lua_script, 'instruct_38', ChangeScencePic);
   lua_register(Lua_script, 'instruct_39', OpenScence);
-  lua_register(Lua_script, 'instruct_40', SetScencePosition);
+  lua_register(Lua_script, 'instruct_40', SetScenceFace);
   lua_register(Lua_script, 'instruct_41', AnotherGetItem);
   lua_register(Lua_script, 'instruct_42', JudgeFemaleInTeam);
   lua_register(Lua_script, 'instruct_43', HaveItemBool);
