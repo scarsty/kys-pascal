@@ -2226,7 +2226,7 @@ begin
     47: //Here no need to re-set the pic.
     begin
     end;
-    51: //Show some parameters.
+    48: //Show some parameters.
     begin
       str := '';
       for i := e1 to e1 + e2 - 1 do
@@ -2270,7 +2270,7 @@ begin
       for i := 0 to min(e5, length(p1)) - 1 do
         (p + i)^ := (p1 + i)^;
     end;
-    48: //Enter a number.
+    51: //Enter a number.
     begin
       if FULLSCREEN = 0 then
         while (True) do
