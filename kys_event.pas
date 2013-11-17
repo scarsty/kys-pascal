@@ -28,7 +28,7 @@ uses
 procedure instruct_0;
 procedure instruct_1(talknum, headnum, dismode: integer);
 procedure instruct_2(inum, amount: integer);
-procedure ReArrangeItem;
+procedure ReArrangeItem(sort: integer = 0);
 procedure instruct_3(list: array of integer);
 function instruct_4(inum, jump1, jump2: integer): integer;
 function instruct_5(jump1, jump2: integer): integer;
@@ -276,37 +276,67 @@ begin
 
 end;
 
-procedure ReArrangeItem;
+//重排物品，清除为0的物品
+//合并同类物品（空间换时间）
+
+procedure ReArrangeItem(sort: integer = 0);
 var
-  i, p: integer;
+  i, j, p: integer;
   item, amount: array of integer;
 begin
   p := 0;
   setlength(item, MAX_ITEM_AMOUNT);
-  setlength(amount, MAX_ITEM_AMOUNT);
+  setlength(amount, high(Ritem) + 1);
+  fillchar(amount[0], sizeof(amount[0]) * length(amount), 0);
   for i := 0 to MAX_ITEM_AMOUNT - 1 do
   begin
     if (RItemList[i].Number >= 0) and (RItemList[i].Amount > 0) then
     begin
-      item[p] := RItemList[i].Number;
-      amount[p] := RItemList[i].Amount;
-      p := p + 1;
+      if amount[RItemList[i].Number] = 0 then
+      begin
+        item[p] := RItemList[i].Number;
+        amount[RItemList[i].Number] := RItemList[i].Amount;
+        p := p + 1;
+      end
+      else
+        amount[RItemList[i].Number] := amount[RItemList[i].Number] + RItemList[i].Amount;
     end;
   end;
-  for i := 0 to MAX_ITEM_AMOUNT - 1 do
+
+  if sort = 0 then
   begin
-    if i < p then
+    for i := 0 to MAX_ITEM_AMOUNT - 1 do
     begin
-      RItemList[i].Number := item[i];
-      RItemList[i].Amount := amount[i];
-    end
-    else
+      if i < p then
+      begin
+        RItemList[i].Number := item[i];
+        RItemList[i].Amount := amount[item[i]];
+      end
+      else
+      begin
+        RItemList[i].Number := -1;
+        RItemList[i].Amount := 0;
+      end;
+    end;
+  end
+  else
+  begin
+    for i := 0 to MAX_ITEM_AMOUNT - 1 do
     begin
       RItemList[i].Number := -1;
       RItemList[i].Amount := 0;
     end;
+    j := 0;
+    for i := 0 to length(amount) - 1 do
+    begin
+      if amount[i] > 0 then
+      begin
+        RItemList[j].Number := i;
+        RItemList[j].Amount := amount[i];
+        j := j + 1;
+      end;
+    end;
   end;
-
 end;
 
 //改变事件, 如在当前场景需重置场景
