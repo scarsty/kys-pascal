@@ -105,7 +105,6 @@ procedure MenuMedcine;
 procedure MenuMedPoison;
 function MenuItem: boolean;
 function ReadItemList(ItemType: integer): integer;
-procedure ReSort;
 procedure ShowMenuItem(row, col, x, y, atlu: integer);
 procedure DrawItemFrame(x, y: integer);
 procedure UseItem(inum: integer);
@@ -3776,7 +3775,7 @@ begin
       Result := False;
     if menu = 6 then
     begin
-      ReSort;
+      ReArrangeItem(1);
       Redraw;
     end;
 
@@ -4023,27 +4022,6 @@ begin
 
 end;
 
-procedure ReSort;
-var
-  amount, i, j, inum: smallint;
-begin
-  for I := 0 to MAX_ITEM_AMOUNT - 2 do
-  begin
-    for J := MAX_ITEM_AMOUNT - 1 downto i + 1 do
-    begin
-      if (Ritemlist[j].Number < Ritemlist[j - 1].Number) and (Ritemlist[j].Number > -1) then
-      begin
-        amount := Ritemlist[j].Amount;
-        inum := Ritemlist[j].Number;
-        Ritemlist[j].Amount := Ritemlist[j - 1].Amount;
-        Ritemlist[j].Number := Ritemlist[j - 1].Number;
-        Ritemlist[j - 1].Amount := amount;
-        Ritemlist[j - 1].Number := inum;
-      end;
-    end;
-  end;
-  //ReArrangeItem;
-end;
 
 //显示物品选单
 
