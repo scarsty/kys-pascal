@@ -333,6 +333,7 @@ function SelectTeamMembers: integer;
 var
   i, menu, max, menup: integer;
   menuString: array[0..8] of WideString;
+  str: WideString;
 begin
   Result := 0;
   max := 1;
@@ -348,6 +349,10 @@ begin
   end;
   menuString[0] := ('   全員參戰');
   menuString[max] := ('   開始戰鬥');
+  str := ('選擇參戰人物');
+  DrawTextWithRect(@str[1], CENTER_X - 63, 100, 126, ColColor($21), ColColor($23));
+  UpdateAllScreen;
+  RecordFreshScreen(0, 0, CENTER_X * 2, CENTER_Y * 2);
   ShowMultiMenu(max, 0, 0, menuString);
   //sdl_enablekeyrepeat(50, 30);
   while (SDL_WaitEvent(@event) >= 0) do
@@ -434,29 +439,27 @@ end;
 procedure ShowMultiMenu(max, menu, status: integer; menuString: array of WideString);
 var
   i, x, y: integer;
-  str, str1, str2: WideString;
+  str1: WideString;
 begin
   x := CENTER_X - 105;
   y := 150;
-  Redraw;
-  str := ('選擇參與戰鬥之人物');
+  LoadFreshScreen(x + 30, y, 151, max * 22 + 29);
   str1 := ('參戰');
-  //Drawtextwithrect(@str[1],x + 5, y-35, 200 , colcolor($23), colcolor($21));
   DrawRectangle(screen, x + 30, y, 150, max * 22 + 28, 0, ColColor(255), 50);
   for i := 0 to max do
     if i = menu then
     begin
-      DrawShadowText(screen, @menuString[i][1], x + 33, y + 3 + 22 * i, ColColor($66), ColColor($64));
+      DrawShadowText(screen, @menuString[i][1], x + 33, y + 3 + 22 * i, ColColor($64), ColColor($66));
       if ((status and (1 shl (i - 1))) > 0) and (i > 0) and (i < max) then
-        DrawShadowText(screen, @str1[1], x + 133, y + 3 + 22 * i, ColColor($66), ColColor($64));
+        DrawShadowText(screen, @str1[1], x + 133, y + 3 + 22 * i, ColColor($64), ColColor($66));
     end
     else
     begin
-      DrawShadowText(screen, @menuString[i][1], x + 33, y + 3 + 22 * i, ColColor($7), ColColor($5));
+      DrawShadowText(screen, @menuString[i][1], x + 33, y + 3 + 22 * i, ColColor($5), ColColor($7));
       if ((status and (1 shl (i - 1))) > 0) and (i > 0) and (i < max) then
-        DrawShadowText(screen, @str1[1], x + 133, y + 3 + 22 * i, ColColor($23), ColColor($21));
+        DrawShadowText(screen, @str1[1], x + 133, y + 3 + 22 * i, ColColor($21), ColColor($23));
     end;
-  SDL_UpdateRect2(screen, x + 30, y, 151, max * 22 + 28 + 1);
+  SDL_UpdateRect2(screen, x + 30, y, 151, max * 22 + 29);
   //UpdateAllScreen;
 end;
 
@@ -2739,9 +2742,9 @@ begin
           if needitemamount <= itemamount then
           begin
             ShowSimpleStatus(rnum, 350, 50);
-            DrawRectangle(screen, 115, 63, 145, 25, 0, ColColor(255), 25);
-            str := (' 製藥成功');
-            DrawShadowText(screen, @str[1], 127, 65, ColColor($23), ColColor($21));
+            DrawRectangle(screen, 115, 63, 145, 25, 0, ColColor(255), 50);
+            str := ('製藥成功');
+            DrawShadowText(screen, @str[1], 147, 65, ColColor($23), ColColor($21));
 
             instruct_2(Ritem[inum].GetItem[p], 1 + random(5));
             instruct_32(needitem, -needitemamount);
