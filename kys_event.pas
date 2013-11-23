@@ -2026,14 +2026,14 @@ begin
         if byte(p^) = $2A then
         begin
           p^ := char(0);
-          DrawBig5ShadowText(screen, p1, e3 - 22, e4 + 22 * i - 3, ColColor(e5 and $FF),
+          DrawBig5ShadowText(screen, p1, e3 - 2, e4 + 22 * i - 3, ColColor(e5 and $FF),
             ColColor((e5 and $FF00) shl 8));
           i := i + 1;
           p1 := p + 1;
         end;
         p := p + 1;
       end;
-      DrawBig5ShadowText(screen, p1, e3 - 22, e4 + 22 * i - 3, ColColor(e5 and $FF), ColColor((e5 and $FF00) shl 8));
+      DrawBig5ShadowText(screen, p1, e3 - 2, e4 + 22 * i - 3, ColColor(e5 and $FF), ColColor((e5 and $FF00) shl 8));
       SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
       //waitanykey;
     end;
@@ -2043,7 +2043,7 @@ begin
       e3 := e_GetValue(1, e1, e3);
       e4 := e_GetValue(2, e1, e4);
       e5 := e_GetValue(3, e1, e5);
-      DrawRectangle(screen, e2, e3, e4, e5, 0, ColColor($FF), 40);
+      DrawRectangle(screen, e2, e3, e4, e5, 0, ColColor($FF), 50);
       //SDL_UpdateRect2(screen,e1,e2,e3+1,e4+1);
     end;
     35: //Pause and wait a key.
@@ -2092,7 +2092,7 @@ begin
         i1 := 1;
       if byte(p^) = $2A then
         i1 := i1 - 1;
-      DrawRectangle(screen, e3, e4, i2 * 10 + 25, i1 * 22 + 5, 0, ColColor(255), 30);
+      DrawRectangle(screen, e3, e4, i2 * 10 + 25, i1 * 22 + 5, 0, ColColor(255), 50);
       p := @x50[e2];
       p1 := p;
       i := 0;
@@ -2101,14 +2101,14 @@ begin
         if byte(p^) = $2A then
         begin
           p^ := char(0);
-          DrawBig5ShadowText(screen, p1, e3 - 17, e4 + 22 * i + 2, ColColor(e5 and $FF),
+          DrawBig5ShadowText(screen, p1, e3 + 3, e4 + 22 * i + 2, ColColor(e5 and $FF),
             ColColor((e5 and $FF00) shl 8));
           i := i + 1;
           p1 := p + 1;
         end;
         p := p + 1;
       end;
-      DrawBig5ShadowText(screen, p1, e3 - 17, e4 + 22 * i + 2, ColColor(e5 and $FF), ColColor((e5 and $FF00) shl 8));
+      DrawBig5ShadowText(screen, p1, e3 + 3, e4 + 22 * i + 2, ColColor(e5 and $FF), ColColor((e5 and $FF00) shl 8));
       SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
       i := WaitAnyKey;
       if i = SDLK_y then
