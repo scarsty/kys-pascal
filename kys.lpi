@@ -95,7 +95,7 @@
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
-      <Libraries Value=".;\usr\local\lib;\sw\lib;\usr\X11R6\lib"/>
+      <Libraries Value=".;\usr\local\lib;\sw\lib;\usr\X11R6\lib;\lib"/>
     </SearchPaths>
     <Parsing>
       <SyntaxOptions>
@@ -114,9 +114,9 @@
     </CodeGeneration>
     <Linking>
       <Debugging>
-        <GenerateDebugInfo Value="False"/>
-        <UseLineInfoUnit Value="False"/>
+        <UseValgrind Value="True"/>
         <StripSymbols Value="True"/>
+        <UseExternalDbgSyms Value="True"/>
       </Debugging>
       <LinkSmart Value="True"/>
       <Options>

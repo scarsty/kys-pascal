@@ -1450,7 +1450,7 @@ begin
         else if (BField[3, i1, i2] >= 0) and (abs(i1 - Bx) + abs(i2 - By) <= step) then
           DrawBPic(Bfield[0, i1, i2] div 2, pos.x, pos.y, 0);
         //else
-          //DrawBPic(Bfield[0, i1, i2] div 2, pos.x, pos.y, 0, 0, 0, 0, 33);
+        //DrawBPic(Bfield[0, i1, i2] div 2, pos.x, pos.y, 0, 0, 0, 0, 33);
         {if (i1 = Ax) and (i2 = Ay) then
           DrawMPic(1, pos.x, pos.y);}
       end;
