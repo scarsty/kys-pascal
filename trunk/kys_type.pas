@@ -447,6 +447,8 @@ var
   ImageWidth, ImageHeight: smallint;
   BattleRound: integer;
 
+  CHNFONT_SPACEWIDTH: integer;
+
 implementation
 
 end.
