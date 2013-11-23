@@ -163,7 +163,6 @@ implementation
 
 uses
   kys_draw;
-
 procedure InitialScript;
 begin
   //LoadLua;
@@ -648,7 +647,7 @@ begin
   x := floor(lua_tonumber(L, -3));
   y := floor(lua_tonumber(L, -2));
 
-  str := ' ' + UTF8Decode(lua_tostring(L, -1));
+  str := UTF8Decode(lua_tostring(L, -1));
   h := 1;
   w := 0;
   wt := 0;
@@ -667,7 +666,7 @@ begin
   end;
 
   DrawRectangle(screen, x, y - 2, w * 10 + 5, h * 22 + 5, 0, ColColor(255), 30);
-  DrawShadowText(screen, @str[1], x - 17, y, ColColor(5), ColColor(7));
+  DrawShadowText(screen, @str[1], x + 3, y, ColColor(5), ColColor(7));
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
   Result := 0;
 
@@ -691,10 +690,7 @@ begin
     lua_pushnumber(L, i + 1);
     lua_gettable(L, -2);
     p := UTF8Decode(lua_tostring(L, -1));
-    if p[1] = ' ' then
-      menuString[i] := p
-    else
-      menuString[i] := ' ' + p;
+    menuString[i] := p;
     lua_pop(L, 1);
   end;
 
@@ -1271,7 +1267,8 @@ begin
 {$IFDEF fpc}
   str := CP950ToUTF8(p1);
 {$ELSE}
-  str := UTF8encode(Big5ToUnicode(p1));
+  str := UTF8Encode(Big5ToUnicode(p1));
+
 {$ENDIF}
   lua_pushstring(L, @str[1]);
   Result := 1;

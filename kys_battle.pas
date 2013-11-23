@@ -346,8 +346,8 @@ begin
       max := max + 1;
     end;
   end;
-  menuString[0] := ('    全員參戰');
-  menuString[max] := ('    開始戰鬥');
+  menuString[0] := ('   全員參戰');
+  menuString[max] := ('   開始戰鬥');
   ShowMultiMenu(max, 0, 0, menuString);
   //sdl_enablekeyrepeat(50, 30);
   while (SDL_WaitEvent(@event) >= 0) do
@@ -439,22 +439,22 @@ begin
   x := CENTER_X - 105;
   y := 150;
   Redraw;
-  str := (' 選擇參與戰鬥之人物');
-  str1 := (' 參戰');
+  str := ('選擇參與戰鬥之人物');
+  str1 := ('參戰');
   //Drawtextwithrect(@str[1],x + 5, y-35, 200 , colcolor($23), colcolor($21));
-  DrawRectangle(screen, x + 30, y, 150, max * 22 + 28, 0, ColColor(255), 30);
+  DrawRectangle(screen, x + 30, y, 150, max * 22 + 28, 0, ColColor(255), 50);
   for i := 0 to max do
     if i = menu then
     begin
-      DrawShadowText(screen, @menuString[i][1], x + 13, y + 3 + 22 * i, ColColor($66), ColColor($64));
+      DrawShadowText(screen, @menuString[i][1], x + 33, y + 3 + 22 * i, ColColor($66), ColColor($64));
       if ((status and (1 shl (i - 1))) > 0) and (i > 0) and (i < max) then
-        DrawShadowText(screen, @str1[1], x + 113, y + 3 + 22 * i, ColColor($66), ColColor($64));
+        DrawShadowText(screen, @str1[1], x + 133, y + 3 + 22 * i, ColColor($66), ColColor($64));
     end
     else
     begin
-      DrawShadowText(screen, @menuString[i][1], x + 13, y + 3 + 22 * i, ColColor($7), ColColor($5));
+      DrawShadowText(screen, @menuString[i][1], x + 33, y + 3 + 22 * i, ColColor($7), ColColor($5));
       if ((status and (1 shl (i - 1))) > 0) and (i > 0) and (i < max) then
-        DrawShadowText(screen, @str1[1], x + 113, y + 3 + 22 * i, ColColor($23), ColColor($21));
+        DrawShadowText(screen, @str1[1], x + 133, y + 3 + 22 * i, ColColor($23), ColColor($21));
     end;
   SDL_UpdateRect2(screen, x + 30, y, 151, max * 22 + 28 + 1);
   //UpdateAllScreen;
@@ -583,7 +583,8 @@ begin
                       Brole[j].Auto := sign(Brole[j].AutoMode);
               end;
               //Brole[i].Acted := 0;
-            end; -1:
+            end;
+            else
             begin
               if tempbrole.rnum = Brole[i].rnum then
               begin
@@ -777,8 +778,8 @@ begin
 
   Redraw;
   ShowSimpleStatus(Brole[bnum].rnum, CENTER_X + 100, 50);
-  str := utf8decode(format(' 回合%d', [BattleRound]));
-  DrawTextWithRect(screen, puint16(str), 160, 50, DrawLength(str) * 10 - 4, ColColor($21), ColColor($23));
+  str := UTF8Decode(format('回合%d', [BattleRound]));
+  DrawTextWithRect(screen, puint16(str), 160, 50, DrawLength(str) * 10 + 6, ColColor($21), ColColor($23));
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
   menu := 0;
 
@@ -880,31 +881,31 @@ var
   word: array[0..9] of WideString;
 begin
 
-  word[0] := (' 移動');
-  word[1] := (' 攻擊');
-  word[2] := (' 用毒');
-  word[3] := (' 解毒');
-  word[4] := (' 醫療');
-  word[5] := (' 物品');
-  word[6] := (' 等待');
-  word[7] := (' 狀態');
-  word[8] := (' 休息');
-  word[9] := (' 自動');
+  word[0] := ('移動');
+  word[1] := ('攻擊');
+  word[2] := ('用毒');
+  word[3] := ('解毒');
+  word[4] := ('醫療');
+  word[5] := ('物品');
+  word[6] := ('等待');
+  word[7] := ('狀態');
+  word[8] := ('休息');
+  word[9] := ('自動');
 
   Redraw;
 
-  DrawRectangle(screen, 100, 50, 47, max * 22 + 28, 0, ColColor(255), 30);
+  DrawRectangle(screen, 100, 50, 47, max * 22 + 28, 0, ColColor(255), 50);
   p := 0;
   for i := 0 to 9 do
   begin
     if (p = menu) and ((MenuStatus and (1 shl i) > 0)) then
     begin
-      DrawShadowText(screen, @word[i][1], 83, 53 + 22 * p, ColColor($66), ColColor($64));
+      DrawShadowText(screen, @word[i][1], 103, 53 + 22 * p, ColColor($66), ColColor($64));
       p := p + 1;
     end
     else if (p <> menu) and ((MenuStatus and (1 shl i) > 0)) then
     begin
-      DrawShadowText(screen, @word[i][1], 83, 53 + 22 * p, ColColor($23), ColColor($21));
+      DrawShadowText(screen, @word[i][1], 103, 53 + 22 * p, ColColor($23), ColColor($21));
       p := p + 1;
     end;
   end;
@@ -1295,7 +1296,7 @@ begin
   SetAminationPosition(1, step);
   DrawBFieldWithCursor(-1);
 
-  str := (' 選擇攻擊方向');
+  str := ('選擇攻擊方向');
   DrawTextWithRect(screen, @str[1], 280, 200, 125, ColColor($23), ColColor($21));
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
   Result := False;
@@ -1831,7 +1832,7 @@ begin
     str := Big5ToUnicode(@Ritem[mnum].Name);
   str := MidStr(str, 1, 6);
   l := length(str);
-  DrawTextWithRect(screen, @str[1], CENTER_X - l * 10, CENTER_Y - 150, l * 20 - 14, ColColor($14), ColColor($16));
+  DrawTextWithRect(screen, @str[1], CENTER_X - l * 10, CENTER_Y - 150, l * 20 + 6, ColColor($14), ColColor($16));
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
   SDL_Delay(500);
 
@@ -1958,13 +1959,13 @@ begin
   begin
     if (p = menu) and ((MenuStatus and (1 shl i) > 0)) then
     begin
-      DrawShadowText(screen, @menuString[i][1], 83, 53 + 22 * p, ColColor($66), ColColor($64));
+      DrawShadowText(screen, @menuString[i][1], 103, 53 + 22 * p, ColColor($66), ColColor($64));
       DrawEngShadowText(screen, @menuEngString[i][1], 223, 53 + 22 * p, ColColor($66), ColColor($64));
       p := p + 1;
     end
     else if (p <> menu) and ((MenuStatus and (1 shl i) > 0)) then
     begin
-      DrawShadowText(screen, @menuString[i][1], 83, 53 + 22 * p, ColColor($23), ColColor($21));
+      DrawShadowText(screen, @menuString[i][1], 103, 53 + 22 * p, ColColor($23), ColColor($21));
       DrawEngShadowText(screen, @menuEngString[i][1], 223, 53 + 22 * p, ColColor($23), ColColor($21));
       p := p + 1;
     end;
@@ -2537,9 +2538,9 @@ begin
       p := min(Rrole[rnum].ExpForItem + basicvalue div 5 * 3, pmax);
       Rrole[rnum].ExpForItem := p;
       ShowSimpleStatus(rnum, 100, 50);
-      DrawRectangle(screen, 100, 235, 145, 25, 0, ColColor(255), 25);
-      str := (' 得經驗');
-      DrawShadowText(screen, @str[1], 83, 237, ColColor($23), ColColor($21));
+      DrawRectangle(screen, 100, 235, 145, 25, 0, ColColor(255), 50);
+      str := ('得經驗');
+      DrawShadowText(screen, @str[1], 103, 237, ColColor($23), ColColor($21));
       str := format('%5d', [Brole[i].ExpGot + basicvalue]);
       DrawEngShadowText(screen, @str[1], 188, 237, ColColor($66), ColColor($64));
       SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
@@ -2614,7 +2615,7 @@ begin
   if Brole[bnum].Team = 0 then
   begin
     ShowStatus(rnum);
-    str := (' 升級');
+    str := ('昇級');
     DrawTextWithRect(screen, @str[1], 58, CENTER_Y - 150, 46, ColColor($23), ColColor($21));
     WaitAnyKey;
   end;
@@ -3172,26 +3173,26 @@ var
     i: integer;
   begin
     Redraw;
-    DrawRectangle(screen, x, y, w, h, 0, ColColor(255), 30);
+    DrawRectangle(screen, x, y, w, h, 0, ColColor(255), 50);
     for i := 0 to amount - 1 do
     begin
       if (i = menu) then
       begin
-        DrawShadowText(@namestr[i][1], x - 17, y + 3 + 22 * i, ColColor($64), ColColor($66));
-        DrawShadowText(@modestring[Brole[a[i]].AutoMode][1], x + 100 - 17, y + 3 + 22 * i,
+        DrawShadowText(@namestr[i][1], x + 3, y + 3 + 22 * i, ColColor($64), ColColor($66));
+        DrawShadowText(@modestring[Brole[a[i]].AutoMode][1], x + 120 - 17, y + 3 + 22 * i,
           ColColor($64), ColColor($66));
       end
       else
       begin
-        DrawShadowText(@namestr[i][1], x - 17, y + 3 + 22 * i, ColColor($21), ColColor($23));
-        DrawShadowText(@modestring[Brole[a[i]].AutoMode][1], x + 100 - 17, y + 3 + 22 * i,
+        DrawShadowText(@namestr[i][1], x + 3, y + 3 + 22 * i, ColColor($21), ColColor($23));
+        DrawShadowText(@modestring[Brole[a[i]].AutoMode][1], x + 120 - 17, y + 3 + 22 * i,
           ColColor($21), ColColor($23));
       end;
     end;
     if menu = -2 then
-      DrawShadowText(@str[1], x - 17, y + 3 + 22 * amount, ColColor($64), ColColor($66))
+      DrawShadowText(@str[1], x + 3, y + 3 + 22 * amount, ColColor($64), ColColor($66))
     else
-      DrawShadowText(@str[1], x - 17, y + 3 + 22 * amount, ColColor($21), ColColor($23));
+      DrawShadowText(@str[1], x + 3, y + 3 + 22 * amount, ColColor($21), ColColor($23));
     SDL_UpdateRect2(screen, x, y, w + 1, h + 1);
   end;
 
@@ -3214,11 +3215,11 @@ begin
     end;
   end;
   h := amount * 22 + 28;
-  modestring[1] := ' 疯子';
-  modestring[2] := ' 傻子';
-  modestring[3] := ' 呆子';
-  modestring[0] := ' 手動';
-  str := '  確認';
+  modestring[1] := '疯子';
+  modestring[2] := '傻子';
+  modestring[3] := '呆子';
+  modestring[0] := '手動';
+  str := ' 確認';
 
   //RecordFreshScreen(x, y, w + 1, h + 1);
   setlength(tempmode, BRoleAmount);

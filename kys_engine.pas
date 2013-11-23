@@ -79,7 +79,7 @@ function GetPositionOnScreen(x, y, CenterX, CenterY: integer): TPosition;
 
 
 //显示文字的子程
-function Big5ToUnicode(str: pchar): WideString;
+function Big5ToUnicode(str: pchar; len: integer = -1): WideString;
 function UnicodeToBig5(str: pWideChar): string;
 procedure DrawText(sur: PSDL_Surface; word: puint16; x_pos, y_pos: integer; color: uint32);
 procedure DrawEngText(sur: PSDL_Surface; word: puint16; x_pos, y_pos: integer; color: uint32);
@@ -122,7 +122,6 @@ implementation
 uses
   kys_draw,
   kys_battle;
-
 procedure InitialMusic;
 var
   i: integer;
@@ -1210,9 +1209,7 @@ end;
 
 //big5转为unicode
 
-function Big5ToUnicode(str: pchar): WideString;
-var
-  len: integer;
+function Big5ToUnicode(str: pchar; len: integer = -1): WideString;
 begin
 {$IFDEF fpc}
   Result := UTF8Decode(CP950ToUTF8(str));
@@ -1221,7 +1218,12 @@ begin
   setlength(Result, len - 1);
   MultiByteToWideChar(950, 0, PChar(str), length(str), pWideChar(Result), len + 1);
 {$ENDIF}
-  Result := ' ' + Result;
+  //Result := ' ' + Result;
+  if len >= 0 then
+  begin
+    if length(Result) > len then
+      setlength(Result, len);
+  end;
 
 end;
 
@@ -1245,10 +1247,10 @@ end;
 
 procedure DrawText(sur: PSDL_Surface; word: puint16; x_pos, y_pos: integer; color: uint32);
 var
-  dest: TSDL_Rect;
+  dest, src: TSDL_Rect;
   tempcolor: TSDL_Color;
   len, i, k: integer;
-  pword: array[0..2] of uint16;
+  word0: array[0..2] of uint16 = (32, 0, 0);
   word1: ansistring;
   word2: WideString;
   p1: pbyte;
@@ -1298,31 +1300,33 @@ begin
   tempcolor.r := r;
   tempcolor.g := g;
   tempcolor.b := b;
-  pword[0] := 32;
-  pword[2] := 0;
-
   dest.x := x_pos;
-
+  //注意每种字体的空格宽度不同
+  {src.x := CHNFONT_SPACEWIDTH;
+  src.y := 0;
+  src.w := 20;
+  src.h := 20;}
   while word^ > 0 do
   begin
-    pword[1] := word^;
+    word0[1] := word^;
     Inc(word);
-    if pword[1] > $1000 then
+    if word0[1] > $1000 then
     begin
-      Text := TTF_RenderUnicode_blended(font, @pword[0], tempcolor);
+      Text := TTF_RenderUnicode_blended(font, @word0[0], tempcolor);
       //dest.x := x_pos;
-      dest.x := x_pos - 0;
+      dest.x := x_pos - CHNFONT_SPACEWIDTH;
       dest.y := y_pos;
       SDL_BlitSurface(Text, nil, sur, @dest);
       x_pos := x_pos + 20;
     end
     else
     begin
-      //if pword[1] <> 20 then
+      //if word0[1] <> 20 then
       begin
-        Text := TTF_RenderUNICODE_blended(engfont, @pword[1], tempcolor);
+        Text := TTF_RenderUNICODE_blended(engfont, @word0[1], tempcolor);
         //showmessage(inttostr(pword[1]));
-        dest.x := x_pos + 10;
+        //dest.x := x_pos + 10;
+        dest.x := x_pos;
         dest.y := y_pos + 2;
         SDL_BlitSurface(Text, nil, sur, @dest);
       end;
@@ -1395,7 +1399,6 @@ begin
   setlength(words, len - 1);
   MultiByteToWideChar(950, 0, PChar(str), length(str), pWideChar(words), len + 1);
 {$ENDIF}
-  words := ' ' + words;
   DrawText(sur, @words[1], x_pos, y_pos, color);
 
 end;
@@ -1414,7 +1417,6 @@ begin
   setlength(words, len - 1);
   MultiByteToWideChar(950, 0, PChar(word), length(word), pWideChar(words), len + 1);
 {$ENDIF}
-  words := ' ' + words;
   DrawText(sur, @words[1], x_pos + 1, y_pos, color2);
   DrawText(sur, @words[1], x_pos, y_pos, color1);
 
@@ -1432,8 +1434,8 @@ var
   len: integer;
   p: pchar;
 begin
-  DrawRectangle(sur, x, y, w, 28, 0, ColColor(255), 30);
-  DrawShadowText(sur, word, x - 17, y + 2, color1, color2);
+  DrawRectangle(sur, x, y, w, 28, 0, ColColor(255), 50);
+  DrawShadowText(sur, word, x + 3, y + 2, color1, color2);
   SDL_UpdateRect2(screen, x, y, w + 1, 29);
 
 end;
@@ -1883,8 +1885,8 @@ begin
     SDL_BlitSurface(tempscr, nil, screen, nil);
     DrawRectangleWithoutFrame(screen, 0, 0, screen.w, screen.h, 0, 50);
     SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-    menuString[0] := ' 取消';
-    menuString[1] := ' 確認';
+    menuString[0] := '取消';
+    menuString[1] := '確認';
     if CommonMenu(CENTER_X * 2 - 50, 2, 45, 1, menuString) = 1 then
       Quit;
     Redraw(1);
