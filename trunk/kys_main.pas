@@ -4661,7 +4661,7 @@ begin
   DrawHeadPic(Rrole[rnum].HeadNum, x + 60, y + 80);
   //显示姓名
   Name := Big5ToUnicode(@Rrole[rnum].Name, 5);
-  DrawShadowText(screen, @Name[1], x + 88 - length(Name) * 10, y + 85,
+  DrawShadowText(screen, @Name[1], x + 88 - drawlength(Name) * 5, y + 85,
     ColColor($66), ColColor($63));
   //显示所需字符
   for i := 0 to 5 do
@@ -4871,7 +4871,7 @@ begin
   DrawRectangle(screen, x, y, 145, 173, 0, ColColor(255), 50);
   DrawHeadPic(Rrole[rnum].HeadNum, x + 50, y + 63);
   str := Big5ToUnicode(@Rrole[rnum].Name, 5);
-  DrawShadowText(screen, @str[1], x + 80 - length(str) * 10, y + 65, ColColor($64), ColColor($66));
+  DrawShadowText(screen, @str[1], x + 80 - drawlength(str) * 5, y + 65, ColColor($64), ColColor($66));
   for i := 0 to 3 do
     DrawShadowText(screen, @strs[i, 1], x + 3, y + 86 + 21 * i, ColColor($21), ColColor($23));
 
