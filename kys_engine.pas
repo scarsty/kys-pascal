@@ -122,6 +122,7 @@ implementation
 uses
   kys_draw,
   kys_battle;
+
 procedure InitialMusic;
 var
   i: integer;
@@ -130,7 +131,7 @@ var
   Flag: longword;
 begin
   BASS_Set3DFactors(1, 0, 0);
-  sf.font := BASS_MIDI_FontInit(PChar(AppPath + 'music/mid.sf2'), 0);
+  sf.font := BASS_MIDI_FontInit(pchar(AppPath + 'music/mid.sf2'), 0);
   BASS_MIDI_StreamSetFonts(0, sf, 1);
   sf.preset := -1; // use all presets
   sf.bank := 0;
@@ -141,10 +142,10 @@ begin
   for i := low(Music) to high(Music) do
   begin
     str := AppPath + 'music/' + IntToStr(i) + '.mp3';
-    if FileExists(PChar(str)) then
+    if FileExists(pchar(str)) then
     begin
       try
-        Music[i] := BASS_StreamCreateFile(False, PChar(str), 0, 0, 0);
+        Music[i] := BASS_StreamCreateFile(False, pchar(str), 0, 0, 0);
       finally
 
       end;
@@ -152,10 +153,10 @@ begin
     else
     begin
       str := AppPath + 'music/' + IntToStr(i) + '.mid';
-      if FileExists(PChar(str)) then
+      if FileExists(pchar(str)) then
       begin
         try
-          Music[i] := BASS_MIDI_StreamCreateFile(False, PChar(str), 0, 0, 0, 0);
+          Music[i] := BASS_MIDI_StreamCreateFile(False, pchar(str), 0, 0, 0, 0);
           BASS_MIDI_StreamSetFonts(Music[i], sf, 1);
           //showmessage(inttostr(Music[i]));
         finally
@@ -170,8 +171,8 @@ begin
   for i := low(ESound) to high(ESound) do
   begin
     str := AppPath + formatfloat('sound/e00', i) + '.wav';
-    if FileExists(PChar(str)) then
-      ESound[i] := BASS_SampleLoad(False, PChar(str), 0, 0, 1, Flag)
+    if FileExists(pchar(str)) then
+      ESound[i] := BASS_SampleLoad(False, pchar(str), 0, 0, 1, Flag)
     else
       ESound[i] := 0;
     //showmessage(inttostr(esound[i]));
@@ -179,8 +180,8 @@ begin
   for i := low(ASound) to high(ASound) do
   begin
     str := AppPath + formatfloat('sound/atk00', i) + '.wav';
-    if FileExists(PChar(str)) then
-      ASound[i] := BASS_SampleLoad(False, PChar(str), 0, 0, 1, Flag)
+    if FileExists(pchar(str)) then
+      ASound[i] := BASS_SampleLoad(False, pchar(str), 0, 0, 1, Flag)
     else
       ASound[i] := 0;
   end;
@@ -757,7 +758,7 @@ begin
   Result := nil;
   if FileExists(filename) then
   begin
-    tempscr := IMG_Load(PChar(filename));
+    tempscr := IMG_Load(pchar(filename));
     Result := SDL_DisplayFormatAlpha(tempscr);
     SDL_FreeSurface(tempscr);
   end;
@@ -900,13 +901,13 @@ begin
     image := SDL_LoadBMP(file_name);
     if (image = nil) then
     begin
-      MessageBox(0, PChar(Format('Couldn''t load %s : %s', [file_name, SDL_GetError])), 'Error', MB_OK or MB_ICONHAND);
+      MessageBox(0, pchar(Format('Couldn''t load %s : %s', [file_name, SDL_GetError])), 'Error', MB_OK or MB_ICONHAND);
       exit;
     end;
     dest.x := x;
     dest.y := y;
     if (SDL_BlitSurface(image, nil, screen, @dest) < 0) then
-      MessageBox(0, PChar(Format('BlitSurface error : %s', [SDL_GetError])), 'Error', MB_OK or MB_ICONHAND);
+      MessageBox(0, pchar(Format('BlitSurface error : %s', [SDL_GetError])), 'Error', MB_OK or MB_ICONHAND);
     //SDL_UpdateRect2(screen, 0, 0, image.w, image.h);
     SDL_FreeSurface(image);
   end;
@@ -924,13 +925,13 @@ begin
     image := IMG_Load(file_name);
     if (image = nil) then
     begin
-      MessageBox(0, PChar(Format('Couldn''t load %s : %s', [file_name, SDL_GetError])), 'Error', MB_OK or MB_ICONHAND);
+      MessageBox(0, pchar(Format('Couldn''t load %s : %s', [file_name, SDL_GetError])), 'Error', MB_OK or MB_ICONHAND);
       exit;
     end;
     dest.x := x;
     dest.y := y;
     if (SDL_BlitSurface(image, nil, screen, @dest) < 0) then
-      MessageBox(0, PChar(Format('BlitSurface error : %s', [SDL_GetError])), 'Error', MB_OK or MB_ICONHAND);
+      MessageBox(0, pchar(Format('BlitSurface error : %s', [SDL_GetError])), 'Error', MB_OK or MB_ICONHAND);
     //SDL_UpdateRect2(screen, 0, 0, image.w, image.h);
     SDL_FreeSurface(image);
   end;
@@ -1210,20 +1211,25 @@ end;
 //big5转为unicode
 
 function Big5ToUnicode(str: pchar; len: integer = -1): WideString;
+var
+  str1: ansistring;
 begin
 {$IFDEF fpc}
+  str1 := str;
+  if (len >= 0) and (length(str) > len * 2) then
+    setlength(str1, len * 2);
   Result := UTF8Decode(CP950ToUTF8(str));
 {$ELSE}
-  len := MultiByteToWideChar(950, 0, PChar(str), -1, nil, 0);
+  len := MultiByteToWideChar(950, 0, pchar(str), -1, nil, 0);
   setlength(Result, len - 1);
-  MultiByteToWideChar(950, 0, PChar(str), length(str), pWideChar(Result), len + 1);
+  MultiByteToWideChar(950, 0, pchar(str), length(str), pWideChar(Result), len + 1);
 {$ENDIF}
   //Result := ' ' + Result;
-  if len >= 0 then
+  {if len >= 0 then
   begin
     if length(Result) > len then
       setlength(Result, len);
-  end;
+  end;}
 
 end;
 
@@ -1238,7 +1244,7 @@ begin
 {$ELSE}
   len := WideCharToMultiByte(950, 0, pWideChar(str), -1, nil, 0, nil, nil);
   setlength(Result, len + 1);
-  WideCharToMultiByte(950, 0, pWideChar(str), -1, PChar(Result), len + 1, nil, nil);
+  WideCharToMultiByte(950, 0, pWideChar(str), -1, pchar(Result), len + 1, nil, nil);
 {$ENDIF}
 
 end;
@@ -1302,21 +1308,22 @@ begin
   tempcolor.b := b;
   dest.x := x_pos;
   //注意每种字体的空格宽度不同
-  {src.x := CHNFONT_SPACEWIDTH;
+  src.x := CHNFONT_SPACEWIDTH;
   src.y := 0;
-  src.w := 20;
-  src.h := 20;}
   while word^ > 0 do
   begin
     word0[1] := word^;
     Inc(word);
     if word0[1] > $1000 then
     begin
-      Text := TTF_RenderUnicode_blended(font, @word0[0], tempcolor);
-      //dest.x := x_pos;
-      dest.x := x_pos - CHNFONT_SPACEWIDTH;
+      Text := TTF_RenderUnicode_blended(font, @word0[1], tempcolor);
+      dest.x := x_pos;
+      //dest.x := x_pos - CHNFONT_SPACEWIDTH;
       dest.y := y_pos;
-      SDL_BlitSurface(Text, nil, sur, @dest);
+      src.x := Text.w - 20;
+      src.w := Text.w - src.x;
+      src.h := Text.h;
+      SDL_BlitSurface(Text, @src, sur, @dest);
       x_pos := x_pos + 20;
     end
     else
@@ -1395,9 +1402,9 @@ begin
 {$IFDEF fpc}
   words := UTF8Decode(CP950ToUTF8(str));
 {$ELSE}
-  len := MultiByteToWideChar(950, 0, PChar(str), -1, nil, 0);
+  len := MultiByteToWideChar(950, 0, pchar(str), -1, nil, 0);
   setlength(words, len - 1);
-  MultiByteToWideChar(950, 0, PChar(str), length(str), pWideChar(words), len + 1);
+  MultiByteToWideChar(950, 0, pchar(str), length(str), pWideChar(words), len + 1);
 {$ENDIF}
   DrawText(sur, @words[1], x_pos, y_pos, color);
 
@@ -1413,9 +1420,9 @@ begin
 {$IFDEF fpc}
   words := UTF8Decode(CP950ToUTF8(word));
 {$ELSE}
-  len := MultiByteToWideChar(950, 0, PChar(word), -1, nil, 0);
+  len := MultiByteToWideChar(950, 0, pchar(word), -1, nil, 0);
   setlength(words, len - 1);
-  MultiByteToWideChar(950, 0, PChar(word), length(word), pWideChar(words), len + 1);
+  MultiByteToWideChar(950, 0, pchar(word), length(word), pWideChar(words), len + 1);
 {$ENDIF}
   DrawText(sur, @words[1], x_pos + 1, y_pos, color2);
   DrawText(sur, @words[1], x_pos, y_pos, color1);
