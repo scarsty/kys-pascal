@@ -1316,7 +1316,7 @@ begin
     Inc(word);
     if word0[1] > $1000 then
     begin
-      Text := TTF_RenderUnicode_blended(font, @word0[1], tempcolor);
+      Text := TTF_RenderUnicode_blended(font, @word0[0], tempcolor);
       dest.x := x_pos;
       //dest.x := x_pos - CHNFONT_SPACEWIDTH;
       dest.y := y_pos;
@@ -1373,7 +1373,6 @@ procedure DrawShadowText(sur: PSDL_Surface; word: puint16; x_pos, y_pos: integer
 begin
   DrawText(sur, word, x_pos + 1, y_pos, color2);
   DrawText(sur, word, x_pos, y_pos, color1);
-
 end;
 
 procedure DrawShadowText(word: puint16; x_pos, y_pos: integer; color1, color2: uint32); overload;
