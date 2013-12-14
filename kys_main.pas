@@ -136,17 +136,7 @@ procedure CloudCreateOnSide(num: integer);
 
 function IsCave(snum: integer): boolean;
 
-function round(x: real): integer;
-procedure swap(var x, y: uint32); overload;
-procedure UpdateAllScreen;
-procedure TransBlackScreen;
-procedure CleanKeyValue;
-procedure GetMousePosition(var x, y: integer; x0, y0: integer; yp: integer = 0);
 
-function MouseInRegion(x, y, w, h: integer): boolean; overload;
-function MouseInRegion(x, y, w, h: integer; var x1, y1: integer): boolean; overload;
-
-function RegionParameter(x, x1, x2: integer): integer;
 
 
 implementation
@@ -6094,75 +6084,5 @@ begin
   Result := snum in [5, 7, 10, 41, 42, 46, 65, 66, 67, 72, 79];
 end;
 
-
-function round(x: real): integer;
-begin
-  Result := floor(x + 0.5);
-end;
-
-procedure swap(var x, y: uint32); overload;
-var
-  t: uint32;
-begin
-  t := x;
-  x := y;
-  y := t;
-end;
-
-//刷新全部屏幕
-procedure UpdateAllScreen;
-begin
-  SDL_UpdateRect2(screen, 0, 0, CENTER_X * 2, CENTER_Y * 2);
-end;
-
-//屏幕整体变半透明黑
-procedure TransBlackScreen;
-begin
-  DrawRectangleWithoutFrame(screen, 0, 0, CENTER_X * 2, CENTER_Y * 2, 0, 50);
-end;
-
-//清键值
-procedure CleanKeyValue;
-begin
-  event.key.keysym.sym := 0;
-  event.button.button := 0;
-end;
-
-//换算当前鼠标的位置为人物坐标
-procedure GetMousePosition(var x, y: integer; x0, y0: integer; yp: integer = 0);
-var
-  x1, y1: integer;
-begin
-  SDL_GetMouseState2(x1, y1);
-  x := (-x1 + CENTER_X + 2 * (y1 + yp) - 2 * CENTER_Y + 18) div 36 + x0;
-  y := (x1 - CENTER_X + 2 * (y1 + yp) - 2 * CENTER_Y + 18) div 36 + y0;
-end;
-
-//判断鼠标是否在区域内, 以画布的坐标为准
-//第二个函数会返回鼠标的画布位置
-function MouseInRegion(x, y, w, h: integer): boolean; overload;
-var
-  x1, y1: integer;
-begin
-  SDL_GetMouseState2(x1, y1);
-  Result := (x1 >= x) and (y1 >= y) and (x1 < x + w) and (y1 < y + h);
-end;
-
-function MouseInRegion(x, y, w, h: integer; var x1, y1: integer): boolean; overload;
-begin
-  SDL_GetMouseState2(x1, y1);
-  Result := (x1 >= x) and (y1 >= y) and (x1 < x + w) and (y1 < y + h);
-end;
-
-
-//限制变量的范围
-function RegionParameter(x, x1, x2: integer): integer;
-var
-  px: integer;
-begin
-  if x < x1 then x := x1;
-  if x > x2 then x := x2;
-  Result := x;
-end;
 
 end.

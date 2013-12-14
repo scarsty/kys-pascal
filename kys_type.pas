@@ -21,6 +21,10 @@ type
     Number, Amount: smallint;
   end;
 
+  TBuildInfo = record
+    c, x, y: integer;
+  end;
+
   TPInt1 = procedure(i: integer);
 
   PPSDL_Surface = ^PSDL_Surface;
@@ -448,6 +452,8 @@ var
   BattleRound: integer;
 
   CHNFONT_SPACEWIDTH: integer;
+
+  tttt, cccc1, cccc2: int64;
 
 implementation
 

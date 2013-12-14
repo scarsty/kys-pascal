@@ -12,7 +12,8 @@ uses
   LCLType,
   LCLIntf,
   FileUtil,
-{$ELSE}
+{$ENDIF}
+{$IFDEF mswindows}
   Windows,
 {$ENDIF}
   Math,
@@ -115,6 +116,24 @@ procedure CheckBasicEvent;
 function DrawLength(str: WideString): integer; overload;
 function DrawLength(p: pWideChar): integer; overload;
 function DrawLength(p: pchar): integer; overload;
+
+function round(x: real): integer;
+procedure swap(var x, y: uint32); overload;
+procedure UpdateAllScreen;
+procedure TransBlackScreen;
+procedure CleanKeyValue;
+procedure GetMousePosition(var x, y: integer; x0, y0: integer; yp: integer = 0);
+
+function MouseInRegion(x, y, w, h: integer): boolean; overload;
+function MouseInRegion(x, y, w, h: integer; var x1, y1: integer): boolean; overload;
+
+function RegionParameter(x, x1, x2: integer): integer;
+
+procedure QuickSortB(var a: array of TBuildInfo; l, r: integer);
+
+//计时, 测速用
+procedure tic;
+procedure toc;
 
 
 implementation
@@ -1968,5 +1987,131 @@ begin
   result := str;
 end;}
 {$ENDIF}
+
+function round(x: real): integer;
+begin
+  Result := floor(x + 0.5);
+end;
+
+procedure swap(var x, y: uint32); overload;
+var
+  t: uint32;
+begin
+  t := x;
+  x := y;
+  y := t;
+end;
+
+//刷新全部屏幕
+procedure UpdateAllScreen;
+begin
+  SDL_UpdateRect2(screen, 0, 0, CENTER_X * 2, CENTER_Y * 2);
+end;
+
+//屏幕整体变半透明黑
+procedure TransBlackScreen;
+begin
+  DrawRectangleWithoutFrame(screen, 0, 0, CENTER_X * 2, CENTER_Y * 2, 0, 50);
+end;
+
+//清键值
+procedure CleanKeyValue;
+begin
+  event.key.keysym.sym := 0;
+  event.button.button := 0;
+end;
+
+//换算当前鼠标的位置为人物坐标
+procedure GetMousePosition(var x, y: integer; x0, y0: integer; yp: integer = 0);
+var
+  x1, y1: integer;
+begin
+  SDL_GetMouseState2(x1, y1);
+  x := (-x1 + CENTER_X + 2 * (y1 + yp) - 2 * CENTER_Y + 18) div 36 + x0;
+  y := (x1 - CENTER_X + 2 * (y1 + yp) - 2 * CENTER_Y + 18) div 36 + y0;
+end;
+
+//判断鼠标是否在区域内, 以画布的坐标为准
+//第二个函数会返回鼠标的画布位置
+function MouseInRegion(x, y, w, h: integer): boolean; overload;
+var
+  x1, y1: integer;
+begin
+  SDL_GetMouseState2(x1, y1);
+  Result := (x1 >= x) and (y1 >= y) and (x1 < x + w) and (y1 < y + h);
+end;
+
+function MouseInRegion(x, y, w, h: integer; var x1, y1: integer): boolean; overload;
+begin
+  SDL_GetMouseState2(x1, y1);
+  Result := (x1 >= x) and (y1 >= y) and (x1 < x + w) and (y1 < y + h);
+end;
+
+
+//限制变量的范围
+function RegionParameter(x, x1, x2: integer): integer;
+var
+  px: integer;
+begin
+  if x < x1 then x := x1;
+  if x > x2 then x := x2;
+  Result := x;
+end;
+
+
+procedure QuickSortB(var a: array of TBuildInfo; l, r: integer);
+var
+  i, j: integer;
+  x, t: TBuildInfo;
+begin
+  i := l;
+  j := r;
+  x := a[(l + r) div 2];
+  repeat
+    while a[i].c < x.c do Inc(i);
+    while a[j].c > x.c do Dec(j);
+    if i <= j then
+    begin
+      t := a[i];
+      a[i] := a[j];
+      a[j] := t;
+      Inc(i);
+      Dec(j);
+    end;
+  until i > j;
+  if i < r then
+    QuickSortB(a, i, r);
+  if l < j then
+    QuickSortB(a, l, j);
+end;
+
+{$ifdef mswindows}
+
+procedure tic;
+begin
+  QueryPerformanceFrequency(tttt);
+  QueryPerformanceCounter(cccc1);
+  //tttt := SDL_GetTicks;
+end;
+
+procedure toc;
+begin
+  QueryPerformanceCounter(cccc2);
+  writeln(' ', format('%3.2f', [(cccc2 - cccc1) / tttt * 1e6]), 'us.');
+end;
+
+{$else}
+
+procedure tic;
+begin
+  tttt := SDL_GetTicks;
+end;
+
+procedure toc;
+begin
+  writeln(' ', SDL_GetTicks - tttt, 'ms.');
+end;
+
+{$endif}
 
 end.
