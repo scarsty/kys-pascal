@@ -782,12 +782,12 @@ end;}
 
 procedure DrawMMap;
 var
-  i1, i2, i, sum, x, y, k, c, widthregion, sumregion, num: integer;
+  i1, i2, i, sum, x, y, k, c, widthregion, sumregion, num,h: integer;
   temp: array[0..479, 0..479] of smallint;
-  Width, Height, yoffset: smallint;
+  Width, Height, xoffset, yoffset: smallint;
   pos: TPosition;
-  BuildingList: array[0..2000] of TPosition;
-  CenterList: array[0..2000] of integer;
+  BuildArray: array[0..2000] of TBuildInfo;
+  tempb: TBuildInfo;
   tempscr, tempscr1: PSDL_Surface;
   dest: TSDL_Rect;
 begin
@@ -809,12 +809,13 @@ begin
   end;}
   //由上到下绘制, 先绘制地面和表面, 同时计算出现的建筑数
   k := 0;
+  h:=High(BuildArray);
   widthregion := CENTER_X div 36 + 3;
   sumregion := CENTER_Y div 9 + 2;
   for sum := -sumregion to sumregion + 15 do
     for i := -Widthregion to Widthregion do
     begin
-      if k >= High(CenterList) then
+      if k >= h then
         break;
       i1 := Mx + i + (sum div 2);
       i2 := My - i + (sum - sum div 2);
@@ -846,8 +847,8 @@ begin
         num := temp[i1, i2] div 2;
         if (num > 0) and (num < MPicAmount) then
         begin
-          BuildingList[k].x := i1;
-          BuildingList[k].y := i2;
+          BuildArray[k].x := i1;
+          BuildArray[k].y := i2;
           if PNG_TILE > 0 then
           begin
             if MPNGIndex[num].CurPointer <> nil then
@@ -857,6 +858,7 @@ begin
                 Width := MPNGIndex[num].CurPointer^.w;
                 Height := MPNGIndex[num].CurPointer^.h;
                 yoffset := MPNGIndex[num].y;
+                xoffset := MPNGIndex[num].y;
               end;
             end;
           end
@@ -865,11 +867,13 @@ begin
             Width := SmallInt(Mpic[MIdx[num - 1]]);
             Height := SmallInt(Mpic[MIdx[num - 1] + 2]);
             yoffset := SmallInt(Mpic[MIdx[num - 1] + 6]);
+            xoffset := SmallInt(Mpic[MIdx[num - 1] + 4]);
           end;
           //根据图片的宽度计算图的中点的坐标和作为排序依据
-          CenterList[k] := (i1 + i2) - (Width + 35) div 36 - (yoffset - Height + 1) div 9;
+          //BuildArray[k].c := (i1 + i2) - (Width + 35) div 36 - (yoffset - Height + 1) div 9;
+          BuildArray[k].c := (i1 + i2) - (max(xoffset, width - xoffset) + 17) div 18 - (yoffset - Height + 1) div 9;
           if (i1 = Mx) and (i2 = My) then
-            CenterList[k] := i1 + i2;
+            BuildArray[k].c := i1 + i2;
           k := k + 1;
         end;
       end
@@ -877,23 +881,23 @@ begin
         DrawMPic(0, pos.x, pos.y);
     end;
   //按照中点坐标排序
-  for i1 := 0 to k - 2 do
+  //tic;
+  {for i1 := 0 to k - 2 do
     for i2 := i1 + 1 to k - 1 do
     begin
-      if CenterList[i1] > CenterList[i2] then
+      if BuildArray[i1].c > BuildArray[i2].c then
       begin
-        pos := BuildingList[i1];
-        BuildingList[i1] := BuildingList[i2];
-        BuildingList[i2] := pos;
-        c := CenterList[i1];
-        CenterList[i1] := CenterList[i2];
-        CenterList[i2] := c;
+        tempb := BuildArray[i1];
+        BuildArray[i1] := BuildArray[i2];
+        BuildArray[i2] := tempb;
       end;
-    end;
+    end;}
+  QuickSortB(BuildArray, 0, k-1);
+  //toc;
   for i := 0 to k - 1 do
   begin
-    x := BuildingList[i].x;
-    y := BuildingList[i].y;
+    x := BuildArray[i].x;
+    y := BuildArray[i].y;
     Pos := GetPositionOnScreen(x, y, Mx, My);
     DrawMPic(temp[x, y] div 2, pos.x, pos.y);
   end;
