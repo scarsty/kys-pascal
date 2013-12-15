@@ -870,7 +870,7 @@ begin
           //BuildArray[k].c := (i1 + i2) - (Width + 35) div 36 - (yoffset - Height + 1) div 9;
           BuildArray[k].c := ((i1 + i2) - (Width + 35) div 36 - (yoffset - Height + 1) div 9) * 1024 + i2;
           if (i1 = Mx) and (i2 = My) then
-            BuildArray[k].c := (i1 + i2) * 960 + i2;
+            BuildArray[k].c := (i1 + i2) * 1024 + i2;
           k := k + 1;
         end;
       end
@@ -1680,4 +1680,4 @@ begin
 
 end;
 
-end.
+end.
