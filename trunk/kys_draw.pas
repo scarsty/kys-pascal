@@ -866,8 +866,9 @@ begin
             xoffset := SmallInt(Mpic[MIdx[num - 1] + 4]);
           end;
           //根据图片的宽度计算图的中点的坐标和作为排序依据
+          //y坐标为第二依据
           //BuildArray[k].c := (i1 + i2) - (Width + 35) div 36 - (yoffset - Height + 1) div 9;
-          BuildArray[k].c := ((i1 + i2) - (Width + 35) div 36 - (yoffset - Height + 1) div 9) * 960 + i2;
+          BuildArray[k].c := ((i1 + i2) - (Width + 35) div 36 - (yoffset - Height + 1) div 9) * 1024 + i2;
           if (i1 = Mx) and (i2 = My) then
             BuildArray[k].c := (i1 + i2) * 960 + i2;
           k := k + 1;
