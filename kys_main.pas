@@ -503,8 +503,8 @@ begin
   ReadFileToBuffer(@Earth[0, 0], AppPath + 'resource/earth.002', 480 * 480 * 2, 0);
   ReadFileToBuffer(@surface[0, 0], AppPath + 'resource/surface.002', 480 * 480 * 2, 0);
   ReadFileToBuffer(@Building[0, 0], AppPath + 'resource/building.002', 480 * 480 * 2, 0);
-  ReadFileToBuffer(@Buildx[0, 0], AppPath + 'resource/Buildx.002', 480 * 480 * 2, 0);
-  ReadFileToBuffer(@Buildy[0, 0], AppPath + 'resource/Buildy.002', 480 * 480 * 2, 0);
+  ReadFileToBuffer(@Buildx[0, 0], AppPath + 'resource/Buildy.002', 480 * 480 * 2, 0);
+  ReadFileToBuffer(@Buildy[0, 0], AppPath + 'resource/Buildx.002', 480 * 480 * 2, 0);
 
   ReadFileToBuffer(@leavelist[0], AppPath + 'list/leave.bin', 200, 0);
   ReadFileToBuffer(@effectlist[0], AppPath + 'list/effect.bin', 400, 0);
