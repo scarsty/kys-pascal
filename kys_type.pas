@@ -22,7 +22,7 @@ type
   end;
 
   TBuildInfo = record
-    c, x, y: integer;
+    b, c, x, y: integer;
   end;
 
   TPInt1 = procedure(i: integer);
