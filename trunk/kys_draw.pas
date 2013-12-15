@@ -302,7 +302,7 @@ begin
   str := AppPath + 'head/' + IntToStr(num) + '.png';
   if FileExists(str) then
   begin
-    image := IMG_Load(PChar(str));
+    image := IMG_Load(pchar(str));
     dest.x := px;
     dest.y := py;
     SDL_BlitSurface(image, nil, scr, @dest);
@@ -515,12 +515,12 @@ begin
     3:
     begin
       SDL_FillRect(screen, nil, 0);
-      display_img(PChar(AppPath + 'resource/open.png'), OpenPicPosition.x, OpenPicPosition.y);
+      display_img(pchar(AppPath + 'resource/open.png'), OpenPicPosition.x, OpenPicPosition.y);
     end;
     4:
     begin
       SDL_FillRect(screen, nil, 0);
-      display_img(PChar(AppPath + 'resource/dead.png'), OpenPicPosition.x, OpenPicPosition.y);
+      display_img(pchar(AppPath + 'resource/dead.png'), OpenPicPosition.x, OpenPicPosition.y);
     end;
   end;
   if WriteFresh = 1 then
@@ -782,8 +782,8 @@ end;}
 
 procedure DrawMMap;
 var
-  i1, i2, i, sum, x, y, k, c, widthregion, sumregion, num,h: integer;
-  temp: array[0..479, 0..479] of smallint;
+  i1, i2, i, sum, x, y, k, c, widthregion, sumregion, num, h: integer;
+  //temp: array[0..479, 0..479] of smallint;
   Width, Height, xoffset, yoffset: smallint;
   pos: TPosition;
   BuildArray: array[0..2000] of TBuildInfo;
@@ -809,7 +809,7 @@ begin
   end;}
   //由上到下绘制, 先绘制地面和表面, 同时计算出现的建筑数
   k := 0;
-  h:=High(BuildArray);
+  h := High(BuildArray);
   widthregion := CENTER_X div 36 + 3;
   sumregion := CENTER_Y div 9 + 2;
   for sum := -sumregion to sumregion + 15 do
@@ -828,27 +828,23 @@ begin
           if surface[i1, i2] > 0 then
             DrawMPic(surface[i1, i2] div 2, pos.x, pos.y);
         end;
-
-        temp[i1, i2] := 0;
-        if building[i1, i2] <> 0 then
-          temp[i1, i2] := building[i1, i2];
+        num := building[i1, i2] div 2;
         //将主角的位置计入建筑
         if (i1 = Mx) and (i2 = My) then
         begin
           if (InShip = 0) then
             if still = 0 then
-              temp[i1, i2] := 2501 + MFace * 7 + MStep
+              num := 2501 + MFace * 7 + MStep
             else
-              temp[i1, i2] := 2528 + Mface * 6 + MStep
+              num := 2528 + Mface * 6 + MStep
           else
-            temp[i1, i2] := 3715 + MFace * 4 + (MStep + 1) div 2;
-          temp[i1, i2] := temp[i1, i2] * 2;
+            num := 3715 + MFace * 4 + (MStep + 1) div 2;
         end;
-        num := temp[i1, i2] div 2;
         if (num > 0) and (num < MPicAmount) then
         begin
           BuildArray[k].x := i1;
           BuildArray[k].y := i2;
+          BuildArray[k].b := num;
           if PNG_TILE > 0 then
           begin
             if MPNGIndex[num].CurPointer <> nil then
@@ -873,7 +869,7 @@ begin
           //BuildArray[k].c := (i1 + i2) - (Width + 35) div 36 - (yoffset - Height + 1) div 9;
           BuildArray[k].c := ((i1 + i2) - (Width + 35) div 36 - (yoffset - Height + 1) div 9) * 960 + i2;
           if (i1 = Mx) and (i2 = My) then
-            BuildArray[k].c := (i1 + i2) * 960 +i2;
+            BuildArray[k].c := (i1 + i2) * 960 + i2;
           k := k + 1;
         end;
       end
@@ -892,14 +888,12 @@ begin
         BuildArray[i2] := tempb;
       end;
     end;}
-  QuickSortB(BuildArray, 0, k-1);
+  QuickSortB(BuildArray, 0, k - 1);
   //toc;
   for i := 0 to k - 1 do
   begin
-    x := BuildArray[i].x;
-    y := BuildArray[i].y;
-    Pos := GetPositionOnScreen(x, y, Mx, My);
-    DrawMPic(temp[x, y] div 2, pos.x, pos.y);
+    Pos := GetPositionOnScreen(BuildArray[i].x, BuildArray[i].y, Mx, My);
+    DrawMPic(BuildArray[i].b, pos.x, pos.y);
   end;
   DrawClouds;
 
