@@ -168,11 +168,11 @@ begin
   SetMODVersion;
 
   TTF_Init();
-  font := TTF_OpenFont(PChar(AppPath + CHINESE_FONT), CHINESE_FONT_SIZE);
-  engfont := TTF_OpenFont(PChar(AppPath + ENGLISH_FONT), ENGLISH_FONT_SIZE);
+  font := TTF_OpenFont(pchar(AppPath + CHINESE_FONT), CHINESE_FONT_SIZE);
+  engfont := TTF_OpenFont(pchar(AppPath + ENGLISH_FONT), ENGLISH_FONT_SIZE);
   if font = nil then
   begin
-    MessageBox(0, PChar(Format('Error:%s!', [SDL_GetError])), 'Error', MB_OK or MB_ICONHAND);
+    MessageBox(0, pchar(Format('Error:%s!', [SDL_GetError])), 'Error', MB_OK or MB_ICONHAND);
     exit;
   end;
   //此处测试中文字体的空格宽度
@@ -194,12 +194,12 @@ begin
   //SDL_Init(SDL_INIT_VIDEO);
   if (SDL_Init(SDL_INIT_VIDEO) < 0) then
   begin
-    MessageBox(0, PChar(Format('Couldn''t initialize SDL : %s', [SDL_GetError])), 'Error', MB_OK or MB_ICONHAND);
+    MessageBox(0, pchar(Format('Couldn''t initialize SDL : %s', [SDL_GetError])), 'Error', MB_OK or MB_ICONHAND);
     SDL_Quit;
     exit;
   end;
 
-  SDL_WM_SetIcon(IMG_Load(PChar(AppPath + 'resource/icon.png')), 0);
+  SDL_WM_SetIcon(IMG_Load(pchar(AppPath + 'resource/icon.png')), 0);
 
   ScreenFlag := SDL_SWSURFACE or SDL_RESIZABLE
   {SDL_HWSURFACE or SDL_HWACCEL or SDL_ANYFORMAT or SDL_ASYNCBLIT or SDL_FULLSCREEN};
@@ -251,13 +251,13 @@ begin
 
   if (RealScreen = nil) then
   begin
-    MessageBox(0, PChar(Format('Couldn''t set 640x480x8 video mode : %s', [SDL_GetError])),
+    MessageBox(0, pchar(Format('Couldn''t set 640x480x8 video mode : %s', [SDL_GetError])),
       'Error', MB_OK or MB_ICONHAND);
     SDL_Quit;
     halt(1);
   end;
 
-  SDL_WM_SetCaption(PChar(TitleString), 's.weyl');
+  SDL_WM_SetCaption(pchar(TitleString), 's.weyl');
 
   InitialScript;
   InitialMusic;
@@ -503,8 +503,8 @@ begin
   ReadFileToBuffer(@Earth[0, 0], AppPath + 'resource/earth.002', 480 * 480 * 2, 0);
   ReadFileToBuffer(@surface[0, 0], AppPath + 'resource/surface.002', 480 * 480 * 2, 0);
   ReadFileToBuffer(@Building[0, 0], AppPath + 'resource/building.002', 480 * 480 * 2, 0);
-  ReadFileToBuffer(@Buildx[0, 0], AppPath + 'resource/Buildy.002', 480 * 480 * 2, 0);
-  ReadFileToBuffer(@Buildy[0, 0], AppPath + 'resource/Buildx.002', 480 * 480 * 2, 0);
+  ReadFileToBuffer(@Buildx[0, 0], AppPath + 'resource/buildy.002', 480 * 480 * 2, 0);
+  ReadFileToBuffer(@Buildy[0, 0], AppPath + 'resource/buildx.002', 480 * 480 * 2, 0);
 
   ReadFileToBuffer(@leavelist[0], AppPath + 'list/leave.bin', 200, 0);
   ReadFileToBuffer(@effectlist[0], AppPath + 'list/effect.bin', 400, 0);
@@ -680,7 +680,7 @@ var
 begin
   instruct_14;
   Redraw;
-  i := FileOpen(PChar(AppPath + 'list/start.txt'), fmOpenRead);
+  i := FileOpen(pchar(AppPath + 'list/start.txt'), fmOpenRead);
   len := FileSeek(i, 0, 2);
   FileSeek(i, 0, 0);
   setlength(str, len + 1);
@@ -1826,7 +1826,7 @@ begin
       //功能键(esc)使用松开按键事件
       SDL_KEYUP:
       begin
-        keystate := PChar(SDL_GetKeyState(nil));
+        keystate := pchar(SDL_GetKeyState(nil));
         if (puint8(keystate + SDLK_LEFT)^ = 0) and (puint8(keystate + SDLK_RIGHT)^ = 0) and
           (puint8(keystate + SDLK_UP)^ = 0) and (puint8(keystate + SDLK_DOWN)^ = 0) then
         begin
@@ -2308,7 +2308,7 @@ begin
     case event.type_ of
       SDL_KEYUP:
       begin
-        keystate := PChar(SDL_GetKeyState(nil));
+        keystate := pchar(SDL_GetKeyState(nil));
         if (puint8(keystate + SDLK_LEFT)^ = 0) and (puint8(keystate + SDLK_RIGHT)^ = 0) and
           (puint8(keystate + SDLK_UP)^ = 0) and (puint8(keystate + SDLK_DOWN)^ = 0) then
         begin
@@ -2779,8 +2779,8 @@ begin
   if snum >= 0 then
   begin
     scencename := Big5ToUnicode(@Rscence[snum].Name);
-    DrawTextWithRect(screen, @scencename[1], CENTER_X - length(PChar(@Rscence[snum].Name)) * 5 + 7, 100,
-      length(PChar(@Rscence[snum].Name)) * 10 + 6, ColColor(5), ColColor(7));
+    DrawTextWithRect(screen, @scencename[1], CENTER_X - length(pchar(@Rscence[snum].Name)) * 5 + 7, 100,
+      length(pchar(@Rscence[snum].Name)) * 10 + 6, ColColor(5), ColColor(7));
 
     //改变音乐
     if Rscence[snum].EntranceMusic >= 0 then
@@ -2858,7 +2858,7 @@ var
   enum: integer;
 begin
   enum := SData[CurScence, 3, Sx, Sy];
-  if (DData[CurScence, enum, 4] > 0) and (enum >= 0) then
+  if (enum >= 0) and (DData[CurScence, enum, 4] > 0) then
   begin
     CurEvent := enum;
     Cx := Sx;
@@ -4137,9 +4137,9 @@ begin
   begin
     str := format('%5d', [RItemlist[listnum].Amount]);
     DrawEngShadowText(screen, @str[1], 430, 32, ColColor($64), ColColor($66));
-    len := length(PChar(@Ritem[item].Name));
+    len := length(pchar(@Ritem[item].Name));
     DrawBig5ShadowText(screen, @Ritem[item].Name, 305 - len * 5, 32, ColColor($21), ColColor($23));
-    len := length(PChar(@Ritem[item].Introduction));
+    len := length(pchar(@Ritem[item].Introduction));
     DrawBig5ShadowText(screen, @Ritem[item].Introduction, 305 - len * 5, 62, ColColor($5), ColColor($7));
     DrawShadowText(screen, @words[Ritem[item].ItemType, 1], 117, 315, ColColor($21), ColColor($23));
     //如有人使用则显示
@@ -4651,7 +4651,7 @@ begin
   DrawHeadPic(Rrole[rnum].HeadNum, x + 60, y + 80);
   //显示姓名
   Name := Big5ToUnicode(@Rrole[rnum].Name, 5);
-  DrawShadowText(screen, @Name[1], x + 88 - drawlength(Name) * 5, y + 85,
+  DrawShadowText(screen, @Name[1], x + 88 - DrawLength(Name) * 5, y + 85,
     ColColor($66), ColColor($63));
   //显示所需字符
   for i := 0 to 5 do
@@ -4861,7 +4861,7 @@ begin
   DrawRectangle(screen, x, y, 145, 173, 0, ColColor(255), 50);
   DrawHeadPic(Rrole[rnum].HeadNum, x + 50, y + 63);
   str := Big5ToUnicode(@Rrole[rnum].Name, 5);
-  DrawShadowText(screen, @str[1], x + 80 - drawlength(str) * 5, y + 65, ColColor($64), ColColor($66));
+  DrawShadowText(screen, @str[1], x + 80 - DrawLength(str) * 5, y + 65, ColColor($64), ColColor($66));
   for i := 0 to 3 do
     DrawShadowText(screen, @strs[i, 1], x + 3, y + 86 + 21 * i, ColColor($21), ColColor($23));
 
@@ -5275,7 +5275,7 @@ begin
     str1 := inputbox('Script file number:', str1, '1');
     str2 := '';
     str2 := inputbox('Function name:', str2, 'f1');
-    if ExecScript(PChar(AppPath + 'script/' + str1 + '.lua'), PChar(str2)) <> 0 then
+    if ExecScript(pchar(AppPath + 'script/' + str1 + '.lua'), pchar(str2)) <> 0 then
     begin
       DrawTextWithRect(screen, @str[1], 100, 200, 150, $FFFFFFFF, $FFFFFFFF);
       WaitAnyKey;
@@ -5514,7 +5514,7 @@ begin
       word[18] := ('增加射擊能力');
     end;
 
-    DrawRectangle(screen, 100, 70, 100 + length(PChar(@Ritem[inum].Name)) * 10, 25, 0, ColColor(255), 50);
+    DrawRectangle(screen, 100, 70, 100 + length(pchar(@Ritem[inum].Name)) * 10, 25, 0, ColColor(255), 50);
     str := '服用';
     if Ritem[inum].ItemType = 2 then
       str := UTF8Decode(format('練成%d次', [Result]));
@@ -6030,7 +6030,7 @@ begin
     //lua_dofile(Lua_script, AppPath + 'script/oldevent/oldevent_' + inttostr(num));
     if IsConsole then
       writeln('Run event with ', num, '.lua script. ');
-    ExecScript(PChar(AppPath + 'script/oldevent/oldevent_' + IntToStr(num) + '.lua'), nil);
+    ExecScript(pchar(AppPath + 'script/oldevent/oldevent_' + IntToStr(num) + '.lua'), nil);
   end;
 
   //event.key.keysym.sym := 0;
