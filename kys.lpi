@@ -95,7 +95,7 @@
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
-      <Libraries Value=".;\usr\local\lib\;\sw\lib\;\usr\X11R6\lib\;\lib\"/>
+      <Libraries Value=".;\usr\local\lib;\sw\lib;\usr\X11R6\lib;\lib"/>
     </SearchPaths>
     <Parsing>
       <SyntaxOptions>
@@ -145,4 +145,4 @@
       </Item3>
     </Exceptions>
   </Debugging>
-</CONFIG>
+</CONFIG>
