@@ -72,7 +72,7 @@ procedure CalLTPosOnImageByCenter(i1, i2: integer; var x, y: integer);
 procedure InitialScenceOnePosition(i1, i2, x1, y1, w, h, depth, temp: integer);
 procedure UpdateScence(xs, ys: integer);
 procedure LoadScencePart(x, y: integer);
-procedure DrawWholeBField(needProgress: integer = 1);
+procedure DrawBField(needProgress: integer = 1);
 procedure DrawBfieldWithoutRole(x, y: integer);
 procedure DrawRoleOnBfield(x, y: integer; mixColor: uint32 = 0; mixAlpha: integer = 0; Alpha: integer = 75);
 procedure InitialBFieldImage;
@@ -511,7 +511,7 @@ begin
   case where of
     0: DrawMMap;
     1: DrawScence;
-    2: DrawWholeBField;
+    2: DrawBField;
     3:
     begin
       SDL_FillRect(screen, nil, 0);
@@ -1242,7 +1242,7 @@ end;
 
 //画战场
 
-procedure DrawWholeBField(needProgress: integer = 1);
+procedure DrawBField(needProgress: integer = 1);
 var
   i, i1, i2: integer;
 begin
@@ -1680,4 +1680,4 @@ begin
 
 end;
 
-end.
+end.
