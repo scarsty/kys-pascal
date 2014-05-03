@@ -2171,6 +2171,7 @@ begin
   AmiCount := 0;
   speed := 0;
   stillcount := 0;
+
   exitscencemusicnum := Rscence[CurScence].ExitMusic;
 
   SDL_EnableKeyRepeat(50, 30);
@@ -2269,8 +2270,9 @@ begin
       break;
     end;
     //检查是否位于跳转口, 如是则重新初始化场景
+    //如果处于站立状态则不跳转, 防止连续跳转
     if ((Sx = Rscence[CurScence].JumpX1) and (Sy = Rscence[CurScence].JumpY1)) and
-      (Rscence[CurScence].JumpScence >= 0) then
+      (Rscence[CurScence].JumpScence >= 0) and (SStep <> 0) then
     begin
       instruct_14;
       PreScence := CurScence;
@@ -2298,6 +2300,7 @@ begin
 
       InitialScence;
       Walking := 0;
+      SStep := 0;
       DrawScence;
       ShowScenceName(CurScence);
       CheckEvent3;

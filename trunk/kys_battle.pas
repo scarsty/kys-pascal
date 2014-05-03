@@ -498,7 +498,7 @@ begin
     if SEMIREAL = 1 then
     begin
       //将不含进度条的图形画入快速重载入屏幕
-      DrawWholeBField(0);
+      DrawBField(0);
       RecordFreshScreen(0, 0, screen.w, screen.h);
       DrawProgress;
       act := 0;
