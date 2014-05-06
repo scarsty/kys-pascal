@@ -310,6 +310,7 @@ begin
   //51-魏征
   //62-红颜录解密
   //71-天书劫
+  //81-自然与祥和
 
   case MODVersion of
     0:
@@ -391,6 +392,13 @@ begin
       MAX_ITEM_AMOUNT := 400;
       Setlength(Esound, 207);
       Setlength(Asound, 37);
+    end;
+    81:
+    begin
+      TitleString := 'All Heros in Kam Yung''s Stories - Awaking of Dragons';
+      Setlength(Music, 999);
+      TitlePosition.x := 100;
+      TitlePosition.y := 270;
     end;
   end;
 
