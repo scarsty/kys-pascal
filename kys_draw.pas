@@ -17,10 +17,9 @@ uses
 {$ENDIF}
   Math,
   Dialogs,
-  SDL_TTF,
-  SDL_image,
-  SDL_gfx,
-  SDL,
+  SDL2_TTF,
+  SDL2_image,
+  SDL2,
   glext,
   gl,
   bassmidi,
@@ -1397,7 +1396,7 @@ begin
   dest.y := y;
   dest.w := screen.w;
   dest.h := screen.h;
-  SDL_SetAlpha(ImgBBuild, SDL_SRCALPHA, 255 - alpha * 255 div 100);
+  SDL_SetSurfaceAlphaMod(ImgBBuild, 255 - alpha * 255 div 100);
   SDL_BlitSurface(ImgBBuild, @dest, screen, nil);
   //SDL_SetAlpha(ImgBBuild, SDL_SRCALPHA, 255);
   {for i1 := 0 to screen.w - 1 do

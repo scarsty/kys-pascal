@@ -18,10 +18,9 @@ uses
 {$ENDIF}
   Math,
   Dialogs,
-  SDL_TTF,
-  SDL_image,
-  SDL_gfx,
-  SDL,
+  SDL2_TTF,
+  SDL2_image,
+  SDL2,
   glext,
   gl,
   bassmidi,
@@ -778,7 +777,7 @@ begin
   if FileExists(filename) then
   begin
     tempscr := IMG_Load(pchar(filename));
-    Result := SDL_DisplayFormatAlpha(tempscr);
+    Result := SDL_ConvertSurface(tempscr, screen.format, 0);
     SDL_FreeSurface(tempscr);
   end;
 end;
@@ -791,7 +790,7 @@ begin
   Result := nil;
   tempRWops := SDL_RWFromMem(p, len);
   tempscr := IMG_LoadPNG_RW(tempRWops);
-  Result := SDL_DisplayFormatAlpha(tempscr);
+  Result := SDL_ConvertSurface(tempscr, screen.format, 0);
   SDL_FreeSurface(tempscr);
   SDL_FreeRW(tempRWops);
 
@@ -1478,7 +1477,7 @@ begin
   begin
     SDL_LockSurface(screen);
   end;}
-  tempscr := SDL_CreateRGBSurface(sur.flags or SDL_SRCALPHA, w + 1, h + 1, 32, RMask, GMask, BMask, AMask);
+  tempscr := SDL_CreateRGBSurface(sur.flags, w + 1, h + 1, 32, RMask, GMask, BMask, AMask);
   SDL_GetRGB(colorin, tempscr.format, @r, @g, @b);
   SDL_GetRGB(colorframe, tempscr.format, @r1, @g1, @b1);
   SDL_FillRect(tempscr, nil, SDL_MapRGBA(tempscr.format, r, g, b, alpha * 255 div 100));
@@ -1528,9 +1527,9 @@ begin
   begin
     SDL_LockSurface(screen);
   end;}
-  tempscr := SDL_CreateRGBSurface(sur.flags, w, h, 32, 0, 0, 0, 0);
-  SDL_FillRect(tempscr, nil, colorin);
-  SDL_SetAlpha(tempscr, SDL_SRCALPHA, alpha * 255 div 100);
+  tempscr := SDL_CreateRGBSurface(sur.flags, w, h, 32, RMASK, GMASK, BMASK, AMASK);
+  SDL_FillRect(tempscr, nil, colorin or $ff000000);
+  SDL_SetSurfaceAlphaMod(tempscr, alpha * 255 div 100);
   dest.x := x;
   dest.y := y;
   SDL_BlitSurface(tempscr, nil, sur, @dest);
@@ -1618,7 +1617,7 @@ var
   x1, x2, y1, y2: integer;
   lenint: integer;
 begin
-  with PNGIndex do
+  {with PNGIndex do
   begin
     if (CurPointer <> nil) and (Loaded = 1) and (Frame > 0) then
     begin
@@ -1744,7 +1743,7 @@ begin
         end;
       end;
     end;
-  end;
+  end;}
 end;
 
 procedure SetPNGTileBlock(PNGIndex: TPNGIndex; px, py, depth: integer; BlockImageW: pchar;
@@ -1794,16 +1793,28 @@ var
   tempscr: PSDL_Surface;
   now, Next: uint32;
   dest: TSDL_Rect;
-  TextureID: GLUint;
+  p: Pointer;
+  //TextureID: GLUint;
 begin
   dest.x := x;
   dest.y := y;
   dest.w := w;
   dest.h := h;
+  if w <= 0 then
+    dest.w := CENTER_X * 2;
+  if h <= 0 then
+    dest.h := CENTER_Y * 2;
   if scr1 = screen then
-    SDL_BlitSurface(screen, @dest, prescreen, @dest);
+  begin
+    // Here p is the address to the pixel we want to set
+    p:=Pointer(uint32(screen.pixels) + y * screen.pitch + x * screen.format.BytesPerPixel);
+    SDL_UpdateTexture(screenTex, @dest, p, screen.pitch);
+    SDL_RenderCopy(render, screenTex, nil, nil);
+    SDL_RenderPresent(render);
+  end;
+  //SDL_BlitSurface(screen, @dest, prescreen, @dest);
 
-  if GLHR = 1 then
+  {if GLHR = 1 then
   begin
     glGenTextures(1, @TextureID);
     glBindTexture(GL_TEXTURE_2D, TextureID);
@@ -1837,25 +1848,24 @@ begin
   end
   else
   begin
-    //realx := x * RealScreen.w div scr1.w;
-    //realw := (x + w + 2) * RealScreen.w div scr1.w - realx;
-    //realy := y * RealScreen.h div scr1.h;
-    //realh := (y + h + 2) * RealScreen.h div scr1.h - realy;
-    //if realw + realx > RealScreen.w then realw := RealScreen.w - realx;
-    //if realh + realy > RealScreen.h then realh := RealScreen.h - realy;
-    if (RealScreen.w = screen.w) and (RealScreen.h = screen.h) then
+    //realx := x * resolutionx div scr1.w;
+    //realw := (x + w + 2) * resolutionx div scr1.w - realx;
+    //realy := y * resolutiony div scr1.h;
+    //realh := (y + h + 2) * resolutiony div scr1.h - realy;
+    //if realw + realx > resolutionx then realw := resolutionx - realx;
+    //if realh + realy > resolutiony then realh := resolutiony - realy;
+    if (resolutionx = screen.w) and (resolutiony = screen.h) then
     begin
       SDL_BlitSurface(prescreen, nil, RealScreen, nil);
     end
     else
     begin
-      tempscr := sdl_gfx.zoomSurface(prescreen, RealScreen.w / screen.w, RealScreen.h / screen.h, SMOOTH);
+      tempscr := sdl_gfx.zoomSurface(prescreen, resolutionx / screen.w, resolutiony / screen.h, SMOOTH);
       SDL_BlitSurface(tempscr, nil, RealScreen, nil);
       SDL_FreeSurface(tempscr);
     end;
-    SDL_UpdateRect(RealScreen, 0, 0, RealScreen.w, RealScreen.h);
-  end;
-
+    SDL_UpdateRect(RealScreen, 0, 0, resolutionx, resolutiony);
+  end;}
 end;
 
 
@@ -1863,23 +1873,23 @@ procedure SDL_GetMouseState2(var x, y: integer);
 var
   tempx, tempy: integer;
 begin
-  SDL_GetMouseState(tempx, tempy);
-  x := tempx * screen.w div RealScreen.w;
-  y := tempy * screen.h div RealScreen.h;
+  SDL_GetMouseState(@tempx, @tempy);
+  x := tempx * screen.w div RESOLUTIONX;
+  y := tempy * screen.h div RESOLUTIONY;
 
 end;
 
 procedure ResizeWindow(w, h: integer);
 begin
-  RealScreen := SDL_SetVideoMode(w, h, 32, ScreenFlag);
+  {RealScreen := SDL_SetVideoMode(w, h, 32, ScreenFlag);
   event.type_ := 0;
-  SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+  SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);}
 
 end;
 
 procedure SwitchFullscreen;
 begin
-  FULLSCREEN := 1 - FULLSCREEN;
+  {FULLSCREEN := 1 - FULLSCREEN;
   if FULLSCREEN = 0 then
   begin
     RealScreen := SDL_SetVideoMode(RESOLUTIONX, RESOLUTIONY, 32, ScreenFlag);
@@ -1887,8 +1897,7 @@ begin
   else
   begin
     RealScreen := SDL_SetVideoMode(CENTER_X * 2, CENTER_Y * 2, 32, ScreenFlag or SDL_FULLSCREEN);
-  end;
-
+  end;}
 end;
 
 procedure QuitConfirm;
@@ -1906,7 +1915,7 @@ begin
     if AskingQuit then
       exit;
     AskingQuit := True;
-    tempscr := SDL_ConvertSurface(prescreen, screen.format, screen.flags);
+    tempscr := SDL_ConvertSurface(screen, screen.format, screen.flags);
     SDL_BlitSurface(tempscr, nil, screen, nil);
     DrawRectangleWithoutFrame(screen, 0, 0, screen.w, screen.h, 0, 50);
     SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
@@ -1931,8 +1940,8 @@ begin
     case event.type_ of
       SDL_QUITEV:
         QuitConfirm;
-      SDL_VIDEORESIZE:
-        ResizeWindow(event.resize.w, event.resize.h);
+      {SDL_VIDEORESIZE:
+        ResizeWindow(event.resize.w, event.resize.h);}
       SDL_KEYUP:
         if (where = 2) and (event.key.keysym.sym = SDLK_ESCAPE) then
         begin
@@ -2053,8 +2062,10 @@ function RegionParameter(x, x1, x2: integer): integer;
 var
   px: integer;
 begin
-  if x < x1 then x := x1;
-  if x > x2 then x := x2;
+  if x < x1 then
+    x := x1;
+  if x > x2 then
+    x := x2;
   Result := x;
 end;
 
@@ -2068,8 +2079,10 @@ begin
   j := r;
   x := a[(l + r) div 2];
   repeat
-    while a[i].c < x.c do Inc(i);
-    while a[j].c > x.c do Dec(j);
+    while a[i].c < x.c do
+      Inc(i);
+    while a[j].c > x.c do
+      Dec(j);
     if i <= j then
     begin
       t := a[i];

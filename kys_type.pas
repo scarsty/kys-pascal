@@ -5,8 +5,8 @@ unit kys_type;
 interface
 
 uses
-  SDL,
-  SDL_TTF,
+  SDL2,
+  SDL2_TTF,
   bass,
   bassmidi,
   Classes,
@@ -331,8 +331,12 @@ var
   GL_TEXTURE: integer = 0; //全部使用gl纹理, 仅在使用png贴图时有效
 
   ScreenFlag: uint32;
-  screen, prescreen, freshscreen, RealScreen: PSDL_Surface;
-  //主画面, 手动双缓冲画面, 用于菜单/事件中快速重画的画面, 实际屏幕
+  screen, prescreen, freshscreen: PSDL_Surface;
+  //主画面, 手动双缓冲画面, 用于菜单/事件中快速重画的画面, 实际屏幕(删除了)
+  window: PSDL_Window;
+  render: PSDL_Renderer;
+  screenTex: PSDL_Texture;
+
   ImgScence, ImgScenceBack, ImgBField, ImgBBuild: PSDL_Surface;
   //重画场景和战场的图形映像. 实时重画场景效率较低, 故首先生成映像, 需要时载入
   //Img1在场景中用于副线程动态效果, Img2在战场用于仅保存建筑层以方便快速载入
