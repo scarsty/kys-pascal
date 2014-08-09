@@ -15,7 +15,7 @@ uses
   Windows,
 {$ENDIF}
   SysUtils,
-  SDL,
+  SDL2,
   Math,
   lua52,
   kys_main,
