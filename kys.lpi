@@ -73,7 +73,6 @@
       <Unit6>
         <Filename Value="lua52.pas"/>
         <IsPartOfProject Value="True"/>
-        <UnitName Value="lua52"/>
       </Unit6>
       <Unit7>
         <Filename Value="kys_type.pas"/>
@@ -96,6 +95,7 @@
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
       <Libraries Value=".;\usr\local\lib;\sw\lib;\usr\X11R6\lib;\lib"/>
+      <OtherUnitFiles Value="lib"/>
     </SearchPaths>
     <Parsing>
       <SyntaxOptions>
@@ -126,9 +126,6 @@
       </Options>
     </Linking>
     <Other>
-      <CompilerMessages>
-        <MsgFileName Value=""/>
-      </CompilerMessages>
       <CompilerPath Value="$(CompPath)"/>
     </Other>
   </CompilerOptions>

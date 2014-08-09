@@ -14,9 +14,9 @@ uses
   Windows,
 {$ENDIF}
   StrUtils,
-  SDL_TTF,
-  SDL_image,
-  SDL,
+  SDL2_TTF,
+  SDL2_image,
+  SDL2,
   Math,
   kys_main,
   kys_type,
@@ -2885,7 +2885,8 @@ begin
       begin
         case event.key.keysym.sym of
           SDLK_0..SDLK_9: menu := event.key.keysym.sym - SDLK_0;
-          SDLK_KP0..SDLK_KP9: menu := event.key.keysym.sym - SDLK_KP0;
+                   SDLK_KP_1..SDLK_KP_9: menu := event.key.keysym.sym - SDLK_KP_1 + 1;
+          SDLK_KP_0: menu := 0;
           SDLK_MINUS, SDLK_KP_MINUS: menu := 10;
           SDLK_DELETE: menu := 12;
           SDLK_RETURN, SDLK_SPACE, SDLK_KP_ENTER: menu := highButton;
