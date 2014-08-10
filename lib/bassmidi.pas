@@ -204,6 +204,9 @@ const
 {$IFDEF DARWIN}
   bassmididll = 'libbassmidi.dylib';
 {$ENDIF}
+{$IFDEF ANDROID}
+  bassmididll = 'libbassmidi.so';
+{$ENDIF}
 
 function BASS_MIDI_StreamCreate(channels,flags,freq:DWORD): HSTREAM; {$IFDEF MSWINDOWS}stdcall{$ELSE}cdecl{$ENDIF}; external bassmididll;
 function BASS_MIDI_StreamCreateFile(mem:BOOL; fl:pointer; offset,length:QWORD; flags,freq:DWORD): HSTREAM; {$IFDEF MSWINDOWS}stdcall{$ELSE}cdecl{$ENDIF}; external bassmididll;
@@ -240,4 +243,4 @@ function BASS_MIDI_InStop(device:DWORD): BOOL; {$IFDEF MSWINDOWS}stdcall{$ELSE}c
 
 implementation
 
-end.
+end.

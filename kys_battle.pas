@@ -393,10 +393,10 @@ begin
       end;
       SDL_MOUSEBUTTONUP:
       begin
-        if (round(event.button.x / (resolutionx / screen.w)) >= CENTER_X - 75) and
-          (round(event.button.x / (resolutionx / screen.w)) < CENTER_X + 75) and
-          (round(event.button.y / (resolutiony / screen.h)) >= 150) and
-          (round(event.button.y / (resolutiony / screen.h)) < max * 22 + 178) then
+        if (round(event.button.x / (RESOLUTIONX / screen.w)) >= CENTER_X - 75) and
+          (round(event.button.x / (RESOLUTIONX / screen.w)) < CENTER_X + 75) and
+          (round(event.button.y / (RESOLUTIONY / screen.h)) >= 150) and
+          (round(event.button.y / (RESOLUTIONY / screen.h)) < max * 22 + 178) then
         begin
           if (event.button.button = SDL_BUTTON_LEFT) and (menu <> max) then
           begin
@@ -417,13 +417,13 @@ begin
       end;
       SDL_MOUSEMOTION:
       begin
-        if (round(event.button.x / (resolutionx/ screen.w)) >= CENTER_X - 75) and
-          (round(event.button.x / (resolutionx / screen.w)) < CENTER_X + 75) and
-          (round(event.button.y / (resolutiony / screen.h)) >= 150) and
-          (round(event.button.y / (resolutiony / screen.h)) < max * 22 + 178) then
+        if (round(event.button.x / (RESOLUTIONX / screen.w)) >= CENTER_X - 75) and
+          (round(event.button.x / (RESOLUTIONX / screen.w)) < CENTER_X + 75) and
+          (round(event.button.y / (RESOLUTIONY / screen.h)) >= 150) and
+          (round(event.button.y / (RESOLUTIONY / screen.h)) < max * 22 + 178) then
         begin
           menup := menu;
-          menu := (round(event.button.y / (resolutiony / screen.h)) - 152) div 22;
+          menu := (round(event.button.y / (RESOLUTIONY / screen.h)) - 152) div 22;
           if menup <> menu then
             ShowMultiMenu(max, menu, Result, menuString);
         end;
@@ -828,11 +828,10 @@ begin
       end;
       SDL_MOUSEBUTTONUP:
       begin
-        if (event.button.button = SDL_BUTTON_LEFT) and
-          (round(event.button.x / (resolutionx / screen.w)) >= 100) and
-          (round(event.button.x / (resolutionx / screen.w)) < 147) and
-          (round(event.button.y / (resolutiony / screen.h)) >= 50) and
-          (round(event.button.y / (resolutiony / screen.h)) < max * 22 + 78) then
+        if (event.button.button = SDL_BUTTON_LEFT) and (round(event.button.x / (RESOLUTIONX / screen.w)) >=
+          100) and (round(event.button.x / (RESOLUTIONX / screen.w)) < 147) and
+          (round(event.button.y / (RESOLUTIONY / screen.h)) >= 50) and
+          (round(event.button.y / (RESOLUTIONY / screen.h)) < max * 22 + 78) then
           break;
         if (event.button.button = SDL_BUTTON_RIGHT) then
         begin
@@ -842,13 +841,13 @@ begin
       end;
       SDL_MOUSEMOTION:
       begin
-        if (round(event.button.x / (resolutionx / screen.w)) >= 100) and
-          (round(event.button.x / (resolutionx / screen.w)) < 147) and
-          (round(event.button.y / (resolutiony / screen.h)) >= 50) and
-          (round(event.button.y / (resolutiony / screen.h)) < max * 22 + 78) then
+        if (round(event.button.x / (RESOLUTIONX / screen.w)) >= 100) and
+          (round(event.button.x / (RESOLUTIONX / screen.w)) < 147) and
+          (round(event.button.y / (RESOLUTIONY / screen.h)) >= 50) and
+          (round(event.button.y / (RESOLUTIONY / screen.h)) < max * 22 + 78) then
         begin
           menup := menu;
-          menu := (round(event.button.y / (resolutiony / screen.h)) - 52) div 22;
+          menu := (round(event.button.y / (RESOLUTIONY / screen.h)) - 52) div 22;
           if menu > max then
             menu := max;
           if menu < 0 then
@@ -1100,6 +1099,7 @@ var
 begin
   Ax := Bx;
   Ay := By;
+  BattleSelecting := True;
   Redraw;
   SetAminationPosition(AreaType, step, AreaRange);
   DrawBFieldWithCursor(step);
@@ -1160,10 +1160,10 @@ begin
       end;
       SDL_MOUSEMOTION:
       begin
-        Axp := (-round(event.button.x / (resolutionx / screen.w)) + CENTER_X + 2 *
-          round(event.button.y / (resolutiony / screen.h)) - 2 * CENTER_Y + 18) div 36 + Bx;
-        Ayp := (round(event.button.x / (resolutionx / screen.w)) - CENTER_X + 2 *
-          round(event.button.y / (resolutiony / screen.h)) - 2 * CENTER_Y + 18) div 36 + By;
+        Axp := (-round(event.button.x / (RESOLUTIONX / screen.w)) + CENTER_X + 2 *
+          round(event.button.y / (RESOLUTIONY / screen.h)) - 2 * CENTER_Y + 18) div 36 + Bx;
+        Ayp := (round(event.button.x / (RESOLUTIONX / screen.w)) - CENTER_X + 2 *
+          round(event.button.y / (RESOLUTIONY / screen.h)) - 2 * CENTER_Y + 18) div 36 + By;
         if (abs(Axp - Bx) + abs(Ayp - By) <= step) and (Bfield[3, Axp, Ayp] >= 0) then
         begin
           Ax := Axp;
@@ -1177,7 +1177,7 @@ begin
       ShowSimpleStatus(Brole[Bfield[2, Ax, Ay]].rnum, CENTER_X + 100, 50);
     SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
   end;
-
+  BattleSelecting := False;
 end;
 
 {function SelectAim(bnum, step: integer): boolean;
@@ -1288,6 +1288,7 @@ var
 begin
   Ax := Bx;
   Ay := By;
+  BattleSelecting := True;
   case Brole[bnum].Face of
     0: Ax := Ax - 1;
     1: Ay := Ay + 1;
@@ -1363,17 +1364,17 @@ begin
         //按照所点击位置设置方向
         Ax := Bx;
         Ay := By;
-        if (round(event.button.x / (resolutionx / screen.w)) < CENTER_X) and
-          (round(event.button.y / (resolutiony / screen.h)) < CENTER_Y) then
+        if (round(event.button.x / (RESOLUTIONX / screen.w)) < CENTER_X) and
+          (round(event.button.y / (RESOLUTIONY / screen.h)) < CENTER_Y) then
           Ay := By - 1;
-        if (round(event.button.x / (resolutionx / screen.w)) < CENTER_X) and
-          (round(event.button.y / (resolutiony / screen.h)) >= CENTER_Y) then
+        if (round(event.button.x / (RESOLUTIONX / screen.w)) < CENTER_X) and
+          (round(event.button.y / (RESOLUTIONY / screen.h)) >= CENTER_Y) then
           Ax := Bx + 1;
-        if (round(event.button.x / (resolutionx / screen.w)) >= CENTER_X) and
-          (round(event.button.y / (resolutiony / screen.h)) < CENTER_Y) then
+        if (round(event.button.x / (RESOLUTIONX / screen.w)) >= CENTER_X) and
+          (round(event.button.y / (RESOLUTIONY / screen.h)) < CENTER_Y) then
           Ax := Bx - 1;
-        if (round(event.button.x / (resolutionx / screen.w)) >= CENTER_X) and
-          (round(event.button.y / (resolutiony / screen.h)) >= CENTER_Y) then
+        if (round(event.button.x / (RESOLUTIONX / screen.w)) >= CENTER_X) and
+          (round(event.button.y / (RESOLUTIONY / screen.h)) >= CENTER_Y) then
           Ay := By + 1;
       end;
     end;
@@ -1381,7 +1382,7 @@ begin
     DrawBFieldWithCursor(-1);
     SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
   end;
-
+  BattleSelecting := False;
 end;
 
 //计算可以被选中的位置
@@ -1913,13 +1914,13 @@ begin
       end;
       SDL_MOUSEMOTION:
       begin
-        if (round(event.button.x / (resolutionx / screen.w)) >= 100) and
-          (round(event.button.x / (resolutionx / screen.w)) < 267) and
-          (round(event.button.y / (resolutiony / screen.h)) >= 50) and
-          (round(event.button.y / (resolutiony / screen.h)) < max * 22 + 78) then
+        if (round(event.button.x / (RESOLUTIONX / screen.w)) >= 100) and
+          (round(event.button.x / (RESOLUTIONX / screen.w)) < 267) and
+          (round(event.button.y / (RESOLUTIONY / screen.h)) >= 50) and
+          (round(event.button.y / (RESOLUTIONY / screen.h)) < max * 22 + 78) then
         begin
           menup := menu;
-          menu := (round(event.button.y / (resolutiony / screen.h)) - 52) div 22;
+          menu := (round(event.button.y / (RESOLUTIONY / screen.h)) - 52) div 22;
           if menu > max then
             menu := max;
           if menu < 0 then

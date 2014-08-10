@@ -7,25 +7,12 @@ interface
 uses
   SysUtils,
 {$IFDEF fpc}
-  LMessages,
-  LConvEncoding,
-  LCLType,
-  LCLIntf,
-  FileUtil,
 {$ELSE}
   Windows,
 {$ENDIF}
   Math,
-  Dialogs,
-  SDL2_TTF,
   SDL2_image,
   SDL2,
-  glext,
-  gl,
-  bassmidi,
-  bass,
-  ziputils,
-  unzip,
   kys_main,
   kys_type;
 

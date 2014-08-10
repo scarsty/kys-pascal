@@ -7,11 +7,9 @@ interface
 uses
   SysUtils,
 {$IFDEF fpc}
-  LMessages,
   LConvEncoding,
   LCLType,
   LCLIntf,
-  FileUtil,
 {$ENDIF}
 {$IFDEF mswindows}
   Windows,
@@ -21,20 +19,20 @@ uses
   SDL2_TTF,
   SDL2_image,
   SDL2,
-  glext,
-  gl,
   bassmidi,
   bass,
   ziputils,
   unzip,
   kys_main,
-  kys_type;
+  kys_type,
+  mythoutput;
 
+function EventFilter(p: pointer; e: PSDL_Event): longint; cdecl;
 //音频子程
 procedure InitialMusic;
-procedure PlayMP3(MusicNum, times: integer); overload;
+procedure PlayMP3(MusicNum, times: integer; frombeginning: integer = 1); overload;
 procedure PlayMP3(filename: pchar; times: integer); overload;
-procedure StopMP3;
+procedure StopMP3(frombeginning: integer = 1);
 procedure PlaySoundE(SoundNum, times: integer); overload;
 procedure PlaySoundE(SoundNum: integer); overload;
 procedure PlaySoundE(SoundNum, times, x, y, z: integer); overload;
@@ -68,9 +66,9 @@ procedure DrawRectangleWithoutFrame(sur: PSDL_Surface; x, y, w, h: integer; colo
 function JudgeInScreen(px, py, w, h, xs, ys: integer): boolean; overload;
 function JudgeInScreen(px, py, w, h, xs, ys, xx, yy, xw, yh: integer): boolean; overload;
 procedure DrawRLE8Pic(colorPanel: pchar; num, px, py: integer; Pidx: Pinteger; Ppic: PByte;
-  RectArea: pchar; Image: PSDL_Surface; widthI, heightI, sizeI: integer; shadow: integer); overload;
+  RectArea: pchar; Image: PSDL_Surface; widthI, heightI, sizeI: integer; shadow: integer); overload; inline;
 procedure DrawRLE8Pic(colorPanel: pchar; num, px, py: integer; Pidx: Pinteger; Ppic: PByte;
-  RectArea: pchar; Image: PSDL_Surface; widthI, heightI, sizeI: integer; shadow, alpha: integer); overload;
+  RectArea: pchar; Image: PSDL_Surface; widthI, heightI, sizeI: integer; shadow, alpha: integer); overload; inline;
 procedure DrawRLE8Pic(colorPanel: pchar; num, px, py: integer; Pidx: Pinteger; Ppic: PByte;
   RectArea: pchar; Image: PSDL_Surface; widthI, heightI, sizeI: integer; shadow, alpha: integer;
   BlockImageW: pchar; BlockPosition: pchar; widthW, heightW, sizeW: integer; depth: integer;
@@ -110,7 +108,8 @@ procedure SDL_GetMouseState2(var x, y: integer);
 procedure ResizeWindow(w, h: integer);
 procedure SwitchFullscreen;
 procedure QuitConfirm;
-procedure CheckBasicEvent;
+function CheckBasicEvent:uint32;
+function AngleToDirection(y, x: real): integer;
 
 function DrawLength(str: WideString): integer; overload;
 function DrawLength(p: pWideChar): integer; overload;
@@ -134,12 +133,26 @@ procedure QuickSortB(var a: array of TBuildInfo; l, r: integer);
 procedure tic;
 procedure toc;
 
+ procedure Message(formatstring: string; content: array of const; cr: boolean = True); overload; inline;
+procedure Message(formatstring: string = ''; cr: boolean = True); overload; inline;
 
 implementation
 
 uses
-  kys_draw,
-  kys_battle;
+  kys_draw;
+
+function EventFilter(p: pointer; e: PSDL_Event): longint; cdecl;
+begin
+  Result := 1;
+  {or (e.type_ = SDL_FINGERMOTION)}
+  case e.type_ of
+    SDL_FINGERUP, SDL_FINGERDOWN, SDL_CONTROLLERAXISMOTION, SDL_CONTROLLERBUTTONDOWN, SDL_CONTROLLERBUTTONUP:
+      Result := 0;
+    SDL_FINGERMOTION:
+      if CellPhone = 0 then
+        Result := 0;
+  end;
+end;
 
 procedure InitialMusic;
 var
@@ -210,10 +223,9 @@ end;
 
 //播放mp3音乐
 
-procedure PlayMP3(MusicNum, times: integer); overload;
+procedure PlayMP3(MusicNum, times: integer; frombeginning: integer = 1); overload;
 var
   repeatable: boolean;
-  //nowmusic: HSTREAM;
 begin
   if times = -1 then
     repeatable := True
@@ -224,11 +236,9 @@ begin
       if Music[MusicNum] <> 0 then
       begin
         //BASS_ChannelSlideAttribute(Music[nowmusic], BASS_ATTRIB_VOL, 0, 1000);
-        if nowmusic in [Low(Music)..High(Music)] then
-        begin
-          BASS_ChannelStop(Music[nowmusic]);
+        BASS_ChannelStop(Music[nowmusic]);
+        if frombeginning = 1 then
           BASS_ChannelSetPosition(Music[nowmusic], 0, BASS_POS_BYTE);
-        end;
         BASS_ChannelSetAttribute(Music[MusicNum], BASS_ATTRIB_VOL, VOLUME / 100.0);
         if SOUND3D = 1 then
         begin
@@ -240,7 +250,7 @@ begin
           BASS_ChannelFlags(Music[MusicNum], BASS_SAMPLE_LOOP, BASS_SAMPLE_LOOP)
         else
           BASS_ChannelFlags(Music[MusicNum], 0, BASS_SAMPLE_LOOP);
-        BASS_ChannelPlay(Music[MusicNum], repeatable);
+        BASS_ChannelPlay(Music[MusicNum], False);
         nowmusic := musicnum;
       end;
   finally
@@ -262,9 +272,11 @@ end;
 
 //停止当前播放的音乐
 
-procedure StopMP3;
+procedure StopMP3(frombeginning: integer = 1);
 begin
-  {  Mix_HaltMusic;}
+  BASS_ChannelStop(Music[nowmusic]);
+  if frombeginning = 1 then
+    BASS_ChannelSetPosition(Music[nowmusic], 0, BASS_POS_BYTE);
 
 end;
 
@@ -604,11 +616,11 @@ begin
     p := ReadFileToBuffer(nil, AppPath + path + '.imz', -1, 1);
     if p <> nil then
     begin
-      Result := pint(p)^;
+      Result := pinteger(p)^;
       //最大的有帧数的数量作为贴图的最大编号
       for i := Result - 1 downto 0 do
       begin
-        if pint(p + pint(p + 4 + i * 4)^ + 4)^ > 0 then
+        if pinteger(p + pinteger(p + 4 + i * 4)^ + 4)^ > 0 then
         begin
           Result := i + 1;
           break;
@@ -620,13 +632,13 @@ begin
       Count := 0;
       for i := 0 to Result - 1 do
       begin
-        pngoff := pint(p + 4 + i * 4)^;
+        pngoff := pinteger(p + 4 + i * 4)^;
         with PNGIndexArray[i] do
         begin
           Num := Count;
           x := psmallint(p + pngoff)^;
           y := psmallint(p + pngoff + 2)^;
-          Frame := pint(p + pngoff + 4)^;
+          Frame := pinteger(p + pngoff + 4)^;
           Count := Count + frame;
           CurPointer := nil;
           Loaded := 0;
@@ -738,9 +750,9 @@ begin
       begin
         if frommem then
         begin
-          off := pint(p + 4 + filenum * 4)^ + 8;
-          index := pint(p + off)^;
-          len := pint(p + off + 4)^;
+          off := pinteger(p + 4 + filenum * 4)^ + 8;
+          index := pinteger(p + off)^;
+          len := pinteger(p + off + 4)^;
           SurfacePointer^ := LoadSurfaceFromMem(p + index, len);
         end
         else
@@ -754,9 +766,9 @@ begin
         begin
           if frommem then
           begin
-            off := pint(p + 4 + filenum * 4)^ + 8;
-            index := pint(p + off + j * 8)^;
-            len := pint(p + off + j * 8 + 4)^;
+            off := pinteger(p + 4 + filenum * 4)^ + 8;
+            index := pinteger(p + off + j * 8)^;
+            len := pinteger(p + off + j * 8 + 4)^;
             SurfacePointer^ := LoadSurfaceFromMem(p + index, len);
           end
           else
@@ -1057,6 +1069,7 @@ begin
   ys := Psmallint((Ppic))^;
   Inc(Ppic, 2);
   pixdepth := 0;
+
   //if (num >= 1916) and (num <= 1941) then h := h - 50;
   if Image = nil then
     Image := screen;
@@ -1074,8 +1087,8 @@ begin
   end;
   if (BlockPosition <> nil) then
   begin
-    blockx := pint(BlockPosition)^;
-    blocky := pint(BlockPosition + 4)^;
+    blockx := pinteger(BlockPosition)^;
+    blocky := pinteger(BlockPosition + 4)^;
   end;
   alpha1 := (alpha shr 8) and $FF;
   if ((w > 1) or (h > 1)) and (px - xs + w >= area.x) and (px - xs < area.x + area.w) and
@@ -1932,27 +1945,200 @@ begin
 
 end;
 
-procedure CheckBasicEvent;
+function CheckBasicEvent: uint32;
 var
-  i: integer;
+  i, x, y: integer;
+  msCount: uint32;
+  msWait: uint32;
+
+  function inReturn(x, y: integer): boolean; inline;
+  begin
+    Result := (x > CENTER_X * 2 - 100) and (y > CENTER_Y * 2 - 100);
+  end;
+
+  function inEscape(x, y: integer): boolean; inline;
+  begin
+    Result := (x < 100) and (y > CENTER_Y * 2 - 100);
+  end;
+
 begin
-  if not (LoadingScence) then
-    case event.type_ of
-      SDL_QUITEV:
-        QuitConfirm;
-      {SDL_VIDEORESIZE:
-        ResizeWindow(event.resize.w, event.resize.h);}
-      SDL_KEYUP:
-        if (where = 2) and (event.key.keysym.sym = SDLK_ESCAPE) then
+  //if not ((LoadingTiles) or (LoadingScence)) then
+  SDL_FlushEvent(SDL_MOUSEWHEEL);
+  SDL_FlushEvent(SDL_JOYAXISMOTION);
+  SDL_FlushEvent(SDL_FINGERMOTION);
+  //SDL_FlushEvent(SDL_FINGERDOWN);
+  //SDL_FlushEvent(SDL_FINGERUP);
+  if CellPhone = 1 then
+    SDL_FlushEvent(SDL_MOUSEMOTION);
+  //writeln(inttohex(event.type_, 4));
+  //JoyAxisMouse;
+  Result := event.type_;
+  case event.type_ of
+    SDL_JOYBUTTONUP:
+    begin
+      event.type_ := SDL_KEYUP;
+      if event.jbutton.button = JOY_ESCAPE then
+        event.key.keysym.sym := SDLK_ESCAPE
+      else if event.jbutton.button = JOY_RETURN then
+        event.key.keysym.sym := SDLK_RETURN
+      else if event.jbutton.button = JOY_MOUSE_LEFT then
+      begin
+        event.button.button := SDL_BUTTON_LEFT;
+        event.type_ := SDL_MOUSEBUTTONUP;
+      end
+      else if event.jbutton.button = JOY_UP then
+        event.key.keysym.sym := SDLK_UP
+      else if event.jbutton.button = JOY_DOWN then
+        event.key.keysym.sym := SDLK_DOWN
+      else if event.jbutton.button = JOY_LEFT then
+        event.key.keysym.sym := SDLK_LEFT
+      else if event.jbutton.button = JOY_RIGHT then
+        event.key.keysym.sym := SDLK_RIGHT;
+    end;
+    SDL_JOYBUTTONDOWN:
+    begin
+      event.type_ := SDL_KEYDOWN;
+      if event.jbutton.button = JOY_UP then
+        event.key.keysym.sym := SDLK_UP
+      else if event.jbutton.button = JOY_DOWN then
+        event.key.keysym.sym := SDLK_DOWN
+      else if event.jbutton.button = JOY_LEFT then
+        event.key.keysym.sym := SDLK_LEFT
+      else if event.jbutton.button = JOY_RIGHT then
+        event.key.keysym.sym := SDLK_RIGHT;
+    end;
+    SDL_JOYHATMOTION:
+    begin
+      event.type_ := SDL_KEYDOWN;
+      case event.jhat.value of
+        SDL_HAT_UP: event.key.keysym.sym := SDLK_UP;
+        SDL_HAT_DOWN: event.key.keysym.sym := SDLK_DOWN;
+        SDL_HAT_LEFT: event.key.keysym.sym := SDLK_LEFT;
+        SDL_HAT_RIGHT: event.key.keysym.sym := SDLK_RIGHT;
+      end;
+    end;
+    SDL_FINGERMOTION:
+      if CellPhone = 1 then
+      begin
+        if event.tfinger.fingerId = 1 then
         begin
-          for i := 0 to BRoleAmount - 1 do
+          msCount := SDL_GetTicks() - FingerTick;
+          msWait := 50;
+          if BattleSelecting then
+            msWait := 100;
+          if msCount > 500 then
+            FingerCount := 1;
+          if ((FingerCount <= 2) and (msCount > 200)) or ((FingerCount > 2) and (msCount > msWait)) then
           begin
-            if Brole[i].Team = 0 then
-              Brole[i].Auto := 0;
+            FingerCount := FingerCount + 1;
+            FingerTick := SDL_GetTicks();
+            event.type_ := SDL_KEYDOWN;
+            event.key.keysym.sym := AngleToDirection(event.tfinger.dy, event.tfinger.dx);
           end;
         end;
+      end;
+    SDL_FINGERUP:
+      ;
+    SDL_MULTIGESTURE:
+      ;
+    SDL_QUITEV:
+      QuitConfirm;
+    SDL_WindowEvent:
+    begin
+      if event.window.event = SDL_WINDOWEVENT_RESIZED then
+      begin
+        ResizeWindow(event.window.data1, event.window.data2);
+      end;
     end;
+    SDL_APP_DIDENTERFOREGROUND:
+      PlayMP3(nowmusic, -1, 0);
+    SDL_APP_DIDENTERBACKGROUND:
+      StopMP3(0);
+    {SDL_MOUSEBUTTONDOWN:
+    if (CellPhone = 1) and (event.button.button = SDL_BUTTON_LEFT) then
+    begin
+      SDL_GetMouseState(@x, @y);
+    end;}
+    SDL_MOUSEMOTION:
+    begin
+      if CellPhone = 1 then
+      begin
+        FingerCount := 0;
+        SDL_GetMouseState2(x, y);
+        if inEscape(x, y) or inReturn(x, y) then
+          event.type_ := 0;
+      end;
+    end;
+    SDL_KEYUP, SDL_MOUSEBUTTONUP:
+    begin
+      if (CellPhone = 1) and (event.type_ = SDL_MOUSEBUTTONUP) and (event.button.button = SDL_BUTTON_LEFT) then
+      begin
+        SDL_GetMouseState2(x, y);
+        if inEscape(x, y) then
+        begin
+          //event.button.x := RESOLUTIONX div 2;
+          //event.button.y := RESOLUTIONY div 2;
+          event.button.button := SDL_BUTTON_RIGHT;
+          event.key.keysym.sym := SDLK_ESCAPE;
+          message('Change to escape');
+        end
+        else if inReturn(x, y) then
+        begin
+          //event.button.x := RESOLUTIONX div 2;
+          //event.button.y := RESOLUTIONY div 2;
+          event.type_ := SDL_KEYUP;
+          event.key.keysym.sym := SDLK_RETURN;
+          message('Change to return');
+        end
+        //手机在战场仅有确认键有用
+        else if (where = 2) and (BattleSelecting) then
+        begin
+          event.button.button := 0;
+        end;
+        //第二指不触发事件
+        if FingerCount >= 1 then
+          event.button.button := 0;
+      end;
+      if (where = 2) and ((event.key.keysym.sym = SDLK_ESCAPE) or (event.button.button = SDL_BUTTON_RIGHT)) then
+      begin
+        for i := 0 to BRoleAmount - 1 do
+        begin
+          if Brole[i].Team = 0 then
+            Brole[i].Auto := 0;
+        end;
+      end;
+      if event.key.keysym.sym = SDLK_KP_ENTER then
+        event.key.keysym.sym := SDLK_RETURN;
+    end;
+  end;
+  //CheckRenderTextures;
+end;
 
+function AngleToDirection(y, x: real): integer;
+var
+  angle: real;
+  angleregion: real;
+begin
+  Result := 0;
+  angle := arctan2(-y, x);
+  angleregion := PI / 4;
+  //注意这里的判断方法可能并不准确
+
+  if (abs(angle + PI / 8) < angleregion) then
+    Result := SDLK_RIGHT;
+  if (abs(angle - PI * 3 / 8) < angleregion) then
+    Result := SDLK_UP;
+  if (abs(angle - PI * 7 / 8) < angleregion) or (angle < -PI * 7 / 8) then
+    Result := SDLK_LEFT;
+  if (abs(angle + PI * 5 / 8) < angleregion) then
+    Result := SDLK_DOWN;
+  if ScreenRotate = 1 then
+    case Result of
+      SDLK_UP: Result := SDLK_LEFT;
+      SDLK_DOWN: Result := SDLK_RIGHT;
+      SDLK_LEFT: Result := SDLK_DOWN;
+      SDLK_RIGHT: Result := SDLK_UP;
+    end;
 end;
 
 function DrawLength(str: WideString): integer; overload;
@@ -2110,7 +2296,7 @@ end;
 procedure toc;
 begin
   QueryPerformanceCounter(cccc2);
-  writeln(' ', format('%3.2f', [(cccc2 - cccc1) / tttt * 1e6]), 'us.');
+  Message(' %3.2f us', [(cccc2 - cccc1) / tttt * 1e6]);
 end;
 
 {$else}
@@ -2122,9 +2308,50 @@ end;
 
 procedure toc;
 begin
-  writeln(' ', SDL_GetTicks - tttt, 'ms.');
+  Message(' %d ms', [SDL_GetTicks - tttt]);
 end;
 
 {$endif}
+
+
+procedure Message(formatstring: string; content: array of const; cr: boolean = True); overload;
+var
+  i: integer;
+  str: string;
+begin
+{$ifdef console}
+  Write(format(formatstring, content));
+  if cr then
+    writeln();
+{$endif}
+{$ifdef android}
+  str := format(formatstring, content);
+  mythoutput.mythoutput(pchar(str));
+  {i := fileopen(SDL_AndroidGetExternalStoragePath()+'/pig3_place_game_here',fmopenwrite);
+  fileseek(i, 0, 2);
+  filewrite(i, str[1], length(str));
+  fileclose(i);}
+{$endif}
+end;
+
+procedure Message(formatstring: string = ''; cr: boolean = True); overload;
+var
+  i: integer;
+  str: string;
+begin
+{$ifdef console}
+  Write(format(formatstring, []));
+  if cr then
+    writeln();
+{$endif}
+{$ifdef android}
+  str := format(formatstring, []);
+  mythoutput.mythoutput(pchar(str));
+  {i := fileopen(SDL_AndroidGetExternalStoragePath()+'/pig3_place_game_here',fmopenwrite);
+  fileseek(i, 0, 2);
+  filewrite(i, str[1], length(str));
+  fileclose(i);}
+{$endif}
+end;
 
 end.

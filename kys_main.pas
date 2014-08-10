@@ -32,32 +32,26 @@ interface
 uses
 
 {$IFDEF fpc}
-  LMessages,
   LConvEncoding,
   LCLType,
   LCLIntf,
-  FileUtil,
 {$ELSE}
   Windows,
+{$ENDIF}
+{$IFDEF ANDROID}
+  jni,
 {$ENDIF}
   kys_type,
   SysUtils,
   Dialogs,
   Math,
   SDL2_TTF,
-  SDL2_image,
   SDL2,
-  lua52,
   iniFiles,
-  gl,
-  glext,
-  bass,
-  zlib,
-  ziputils,
-  unzip;
+  bass;
 
 //程序重要子程
-procedure Run;
+procedure Run; stdcall; export;
 procedure Quit;
 procedure SetMODVersion;
 procedure ReadFiles;
@@ -72,7 +66,7 @@ function WaitAnyKey: integer;
 procedure Walk;
 function CanWalk(x, y: integer): boolean;
 function CheckEntrance: boolean;
-function UpdateScenceAmi(interval: Uint32; param: pointer):uint32;
+function UpdateScenceAmi(interval: uint32; param: pointer): uint32;
 function WalkInScence(Open: integer): integer;
 procedure FindWay(x1, y1: integer);
 procedure Moveman(x1, y1, x2, y2: integer);
@@ -155,12 +149,22 @@ var
   Text: PSDL_Surface;
   word: array[0..1] of uint16 = (32, 0);
   tempcolor: TSDL_Color;
+  str: string;
 begin
 
 {$IFDEF UNIX}
   AppPath := ExtractFilePath(ParamStr(0));
 {$ELSE}
   AppPath := '';
+{$ENDIF}
+{$IFDEF android}
+  AppPath := SDL_AndroidGetExternalStoragePath() + '/game/';
+  //for i := 1 to 4 do
+  //AppPath:= ExtractFileDir(AppPath);
+  str := SDL_AndroidGetExternalStoragePath() + '/place_game_here';
+  //if not fileexists(str) then
+  FileClose(filecreate(str));
+  CellPhone := 1;
 {$ENDIF}
 
   ReadFiles;
@@ -170,11 +174,7 @@ begin
   TTF_Init();
   font := TTF_OpenFont(pchar(AppPath + CHINESE_FONT), CHINESE_FONT_SIZE);
   engfont := TTF_OpenFont(pchar(AppPath + ENGLISH_FONT), ENGLISH_FONT_SIZE);
-  if font = nil then
-  begin
-    MessageBox(0, pchar(Format('Error:%s!', [SDL_GetError])), 'Error', MB_OK or MB_ICONHAND);
-    exit;
-  end;
+
   //此处测试中文字体的空格宽度
   Text := TTF_RenderUNICODE_solid(font, @word[0], tempcolor);
   //writeln(text.w);
@@ -222,10 +222,16 @@ begin
 
   window := SDL_CreateWindow(pchar(TitleString), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
     RESOLUTIONX, RESOLUTIONY, ScreenFlag);
-  RMask := $FF0000;
-  GMask := $FF00;
-  BMask := $FF;
-  AMask := $FF000000;
+
+  SDL_GetWindowSize(window, @RESOLUTIONX, @RESOLUTIONY);
+
+  if (CellPhone = 1) then
+  begin
+    if (RESOLUTIONY > RESOLUTIONX) then
+      ScreenRotate := 0;
+    //SDL_WarpMouseInWindow(window, RESOLUTIONX, RESOLUTIONY);
+  end;
+
   render := SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED or SDL_RENDERER_TARGETTEXTURE);
   screen := SDL_CreateRGBSurface(ScreenFlag, CENTER_X * 2, CENTER_Y * 2, 32, RMask, GMask, BMask, 0);
   screenTex := SDL_CreateTexture(render, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING,
@@ -246,6 +252,7 @@ begin
   SDL_SetColorKey(ImgBBuild, 1, 1);
   setlength(BlockImg, ImageWidth * ImageHeight);
   setlength(BlockImg2, ImageWidth * ImageHeight);
+
   {if GLHR = 1 then
   begin
     glBindTexture(GL_TEXTURE_2D, TextureID);
@@ -260,10 +267,12 @@ begin
   end;
 
   //SDL_WM_SetCaption(pchar(TitleString), 's.weyl');
+  SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, pchar(IntToStr(SMOOTH)));
 
   InitialScript;
   InitialMusic;
 
+  SDL_SetEventFilter(@EventFilter, nil);
   mutex := SDL_CreateMutex();
 
   SDL_AddTimer(200, UpdateScenceAmi, nil);
@@ -744,6 +753,15 @@ var
 {$ENDIF}
   p0, p1: pchar;
   named: boolean;
+  {$ifdef android}
+  env: PJNIEnv;
+  jstr: jstring;
+  cstr: pchar;
+  activity: jobject;
+  clazz: jclass;
+  method_id: jmethodID;
+  e: TSDL_event;
+{$endif}
 begin
   LoadR(0);
   //显示输入姓名的对话框
@@ -755,8 +773,25 @@ begin
   Redraw;
   tempname := '我是主角';
   homename := '主角的家';
+{$ifdef android}
+  {ShowStatus(0);
+  UpdateAllScreen;
+  str0 := '點擊一下開始選屬性！';
+  DrawTextWithRect(@str0[1], 175, CENTER_Y + 171, 10, ColColor($64), ColColor($66));
+  env := SDL_AndroidGetJNIEnv();
+  activity := SDL_AndroidGetActivity();
+  clazz := env^.GetObjectClass(env, activity);
+  method_id := env^.GetMethodID(env, clazz, 'mythSetName', '()Ljava/lang/String;');
+  jstr := jstring(env^.CallObjectMethod(env, activity, method_id));
+  cstr := env^.GetStringUTFChars(env, jstr, 0);
+  Name := strpas(cstr);
+  env^.ReleaseStringUTFChars(env, jstr, cstr);}
+  Name := tempname;
+  named := True;
+{$else}
   named := InputQuery('Enter name', str1, ansistring(tempname));
   Name := tempname;
+{$endif}
 
   if named then
   begin
@@ -1700,22 +1735,49 @@ end;
 //等待任意按键
 
 function WaitAnyKey: integer;
+var
+  x, y: integer;
 begin
   //event.type_ := SDL_NOEVENT;
+  //SDL_EventState(SDL_KEYDOWN, SDL_ENABLE);
+  //SDL_EventState(SDL_KEYUP, SDL_ENABLE);
+  //SDL_EventState(SDL_mousebuttonUP, SDL_ENABLE);
+  //SDL_EventState(SDL_mousebuttonDOWN, SDL_ENABLE);
   event.key.keysym.sym := 0;
   event.button.button := 0;
-  while (SDL_WaitEvent(@event) >= 0) do
+  while (SDL_PollEvent(@event) >= 0) do
   begin
     CheckBasicEvent;
     if (event.type_ = SDL_KEYUP) or (event.type_ = SDL_MOUSEBUTTONUP) then
       if (event.key.keysym.sym <> 0) or (event.button.button <> 0) then
         break;
+    SDL_Delay(20);
   end;
   Result := event.key.keysym.sym;
+
+  if event.button.button = SDL_BUTTON_LEFT then
+  begin
+    Result := SDLK_SPACE;
+    if CellPhone = 1 then
+    begin
+      SDL_GetMouseState2(x, y);
+      if (y < 100) then
+        Result := SDLK_UP;
+      if (x < 100) then
+        Result := SDLK_LEFT;
+      if (x > CENTER_X * 2 - 100) then
+        Result := SDLK_RIGHT;
+      if (y > CENTER_Y * 2 - 100) then
+        Result := SDLK_DOWN;
+      if (x < 100) and ((y > CENTER_Y * 2 - 100)) then
+        Result := SDLK_RETURN;
+      if (x > CENTER_X * 2 - 100) and ((y > CENTER_Y * 2 - 100)) then
+        Result := SDLK_RETURN;
+    end;
+  end;
   if event.button.button = SDL_BUTTON_RIGHT then
     Result := SDLK_ESCAPE;
-  if event.button.button = SDL_BUTTON_LEFT then
-    Result := SDLK_RETURN;
+
   event.key.keysym.sym := 0;
   event.button.button := 0;
 end;
@@ -1725,8 +1787,8 @@ end;
 procedure Walk;
 var
   word: array[0..10] of uint16;
-  x, y, walking, speed, Mx1, My1, Mx2, My2, i, stillcount, axp, ayp: integer;
-  axp1, ayp1, gotoEntrance, minstep, step, i1, drawed: integer;
+  x, y, walking, speed, Mx1, My1, Mx2, My2, i, i1, i2, stillcount, axp, ayp: integer;
+  axp1, ayp1, gotoEntrance, minstep, step, drawed: integer;
   now, next_time, next_time2, next_time3: uint32;
   keystate: pchar;
   pos: Tposition;
@@ -1867,13 +1929,14 @@ begin
       end;
       SDL_MOUSEMOTION:
       begin
-        if (event.button.x < CENTER_X) and (event.button.y < CENTER_Y) then
+        SDL_GetMouseState2(x, y);
+        if (x < CENTER_X) and (y < CENTER_Y) then
           Mface := 2;
-        if (event.button.x > CENTER_X) and (event.button.y < CENTER_Y) then
+        if (x > CENTER_X) and (y < CENTER_Y) then
           Mface := 0;
-        if (event.button.x < CENTER_X) and (event.button.y > CENTER_Y) then
+        if (x < CENTER_X) and (y > CENTER_Y) then
           Mface := 3;
-        if (event.button.x > CENTER_X) and (event.button.y > CENTER_Y) then
+        if (x > CENTER_X) and (y > CENTER_Y) then
           Mface := 1;
       end;
       SDL_MOUSEBUTTONUP:
@@ -1895,6 +1958,20 @@ begin
             FillChar(Fway[0, 0], sizeof(Fway), -1);
             FindWay(Mx, My);
             gotoEntrance := -1;
+            if (Buildy[axp, ayp] > 0) and (Entrance[Axp, Ayp] < 0) then
+            begin
+              //点到建筑在附近格内寻找入口
+              axp := Buildx[axp, ayp];
+              ayp := Buildy[axp, ayp];
+              for i1 := axp - 3 to axp do
+                for i2 := ayp - 3 to ayp do
+                  if (Entrance[i1, i2] >= 0) and (buildx[i1, i2] = axp) and (buildy[i1, i2] = ayp) then
+                  begin
+                    axp := i1;
+                    ayp := i2;
+                    break;
+                  end;
+            end;
             if Entrance[Axp, Ayp] >= 0 then
             begin
               minstep := 4096;
@@ -2143,15 +2220,15 @@ begin
 
 end;
 
-function UpdateScenceAmi(interval: Uint32; param: pointer):uint32;
+function UpdateScenceAmi(interval: uint32; param: pointer): uint32;
 begin
-    result := 200;
+  Result := 200;
   //while True do
   begin
     if (where = 1) and (CurEvent < 0) and (not LoadingScence) and (NeedRefreshScence <> 0) then
       InitialScence(2);
     //if (where < 1) or (where > 2) then
-      //break;
+    //break;
   end;
 
 end;
@@ -2218,7 +2295,7 @@ begin
   CheckEvent3;
 
   //if SCENCEAMI = 2 then
-    //UpDate := SDL_CreateThread(@UpdateScenceAmi, nil, nil);
+  //UpDate := SDL_CreateThread(@UpdateScenceAmi, nil, nil);
   while (SDL_PollEvent(@event) >= 0) do
   begin
     if where <> 1 then
@@ -2284,7 +2361,7 @@ begin
     //检查是否位于跳转口, 如是则重新初始化场景
     //如果处于站立状态则不跳转, 防止连续跳转
     if ((Sx = Rscence[CurScence].JumpX1) and (Sy = Rscence[CurScence].JumpY1)) and
-      (Rscence[CurScence].JumpScence >= 0) and (SStep <> 0) then
+      (Rscence[CurScence].JumpScence >= 0) {and (SStep <> 0)} then
     begin
       instruct_14;
       PreScence := CurScence;
@@ -2387,14 +2464,15 @@ begin
         end;}
       SDL_MOUSEMOTION:
       begin
-        if (event.button.x < CENTER_X) and (event.button.y < CENTER_Y) then
-          Sface := 2;
-        if (event.button.x > CENTER_X) and (event.button.y < CENTER_Y) then
-          Sface := 0;
-        if (event.button.x < CENTER_X) and (event.button.y > CENTER_Y) then
-          Sface := 3;
-        if (event.button.x > CENTER_X) and (event.button.y > CENTER_Y) then
-          Sface := 1;
+        SDL_GetMouseState2(x, y);
+        if (x < CENTER_X) and (y < CENTER_Y) then
+          Mface := 2;
+        if (x > CENTER_X) and (y < CENTER_Y) then
+          Mface := 0;
+        if (x < CENTER_X) and (y > CENTER_Y) then
+          Mface := 3;
+        if (x > CENTER_X) and (y > CENTER_Y) then
+          Mface := 1;
       end;
       SDL_MOUSEBUTTONUP:
       begin
@@ -3938,7 +4016,7 @@ begin
           end;
           SDL_MOUSEWHEEL:
           begin
-            if (event.wheel.y > 0) then
+            if (event.wheel.y < 0) then
             begin
               y := y + 1;
               if y < 0 then
@@ -3952,7 +4030,7 @@ begin
               ShowMenuItem(row, col, x, y, atlu);
               SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
             end;
-            if (event.wheel.y < 0) then
+            if (event.wheel.y > 0) then
             begin
               y := y - 1;
               if y < 0 then

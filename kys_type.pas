@@ -8,8 +8,6 @@ uses
   SDL2,
   SDL2_TTF,
   bass,
-  bassmidi,
-  Classes,
   lua52;
 
 type
@@ -449,7 +447,6 @@ var
   ItemList: array[0..500] of smallint; //物品显示使用的列表
 
   //RegionRect: TSDL_Rect; //全局重画范围, 无用
-  RMask, GMask, BMask, AMask: uint32; //色值蒙版, 注意透明蒙版在创建RGB表面时需设为0
 
   EXPAND_GROUND: integer = 1;
   ExGround: array[-64..127, -64..127] of smallint;  //用来使场景边缘的显示效果改善
@@ -459,6 +456,26 @@ var
   CHNFONT_SPACEWIDTH: integer;
 
   tttt, cccc1, cccc2: int64;
+
+  //手柄控制相关
+  joy: PSDL_Joystick;
+  JOY_RETURN, JOY_ESCAPE, JOY_LEFT, JOY_RIGHT, JOY_UP, JOY_DOWN, JOY_MOUSE_LEFT: uint32;
+  JOY_AXIS_DELAY: uint32;
+
+  CellPhone: integer = 0;
+  ScreenRotate: integer = 0;
+
+  FingerCount: integer = 0;    //双指操作计数
+  FingerTick: uint32 = 0;    //双指操作间隔
+  FreeWalking: boolean = False;
+  BattleSelecting: boolean = False;   //是否处于战场上选择
+
+const
+  //色值蒙版, 注意透明蒙版在创建RGB表面时需设为0
+  RMask: uint32 = $FF0000;
+  GMask: uint32 = $FF00;
+  BMask: uint32 = $FF;
+  AMask: uint32 = $FF000000;
 
 implementation
 
