@@ -158,6 +158,7 @@ implementation
 
 uses
   kys_draw;
+
 procedure InitialScript;
 begin
   //LoadLua;

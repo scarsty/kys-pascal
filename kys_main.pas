@@ -232,6 +232,9 @@ begin
     //SDL_WarpMouseInWindow(window, RESOLUTIONX, RESOLUTIONY);
   end;
 
+  //SDL_WM_SetCaption(pchar(TitleString), 's.weyl');
+  SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, pchar(IntToStr(SMOOTH)));
+
   render := SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED or SDL_RENDERER_TARGETTEXTURE);
   screen := SDL_CreateRGBSurface(ScreenFlag, CENTER_X * 2, CENTER_Y * 2, 32, RMask, GMask, BMask, 0);
   screenTex := SDL_CreateTexture(render, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING,
@@ -265,9 +268,6 @@ begin
     SDL_Quit;
     halt(1);
   end;
-
-  //SDL_WM_SetCaption(pchar(TitleString), 's.weyl');
-  SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, pchar(IntToStr(SMOOTH)));
 
   InitialScript;
   InitialMusic;
@@ -1769,10 +1769,12 @@ begin
         Result := SDLK_RIGHT;
       if (y > CENTER_Y * 2 - 100) then
         Result := SDLK_DOWN;
-      if (x < 100) and ((y > CENTER_Y * 2 - 100)) then
+      if (x < 100) and (y > CENTER_Y * 2 - 100) then
         Result := SDLK_RETURN;
-      if (x > CENTER_X * 2 - 100) and ((y > CENTER_Y * 2 - 100)) then
+      if (x > CENTER_X * 2 - 100) and (y > CENTER_Y * 2 - 100) then
         Result := SDLK_RETURN;
+      if (x > CENTER_X * 2 - 100) and (y < 100) then
+        Result := SDLK_y;
     end;
   end;
   if event.button.button = SDL_BUTTON_RIGHT then

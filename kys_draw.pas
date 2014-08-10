@@ -961,22 +961,26 @@ begin
     for i1 := 31 downto -64 do
       for i2 := 0 to 63 do
       begin
-        if ExGround[i1, i2] <= 0 then ExGround[i1, i2] := ExGround[i1 + 1, i2];
+        if ExGround[i1, i2] <= 0 then
+          ExGround[i1, i2] := ExGround[i1 + 1, i2];
       end;
     for i1 := 32 to 127 do
       for i2 := 0 to 63 do
       begin
-        if ExGround[i1, i2] <= 0 then ExGround[i1, i2] := ExGround[i1 - 1, i2];
+        if ExGround[i1, i2] <= 0 then
+          ExGround[i1, i2] := ExGround[i1 - 1, i2];
       end;
     for i1 := -64 to 127 do
       for i2 := 31 downto -64 do
       begin
-        if ExGround[i1, i2] <= 0 then ExGround[i1, i2] := ExGround[i1, i2 + 1];
+        if ExGround[i1, i2] <= 0 then
+          ExGround[i1, i2] := ExGround[i1, i2 + 1];
       end;
     for i1 := -64 to 127 do
       for i2 := 32 to 127 do
       begin
-        if ExGround[i1, i2] <= 0 then ExGround[i1, i2] := ExGround[i1, i2 - 1];
+        if ExGround[i1, i2] <= 0 then
+          ExGround[i1, i2] := ExGround[i1, i2 - 1];
       end;
     for i1 := -64 to 127 do
       for i2 := -64 to 127 do

@@ -108,7 +108,7 @@ procedure SDL_GetMouseState2(var x, y: integer);
 procedure ResizeWindow(w, h: integer);
 procedure SwitchFullscreen;
 procedure QuitConfirm;
-function CheckBasicEvent:uint32;
+function CheckBasicEvent: uint32;
 function AngleToDirection(y, x: real): integer;
 
 function DrawLength(str: WideString): integer; overload;
@@ -133,7 +133,7 @@ procedure QuickSortB(var a: array of TBuildInfo; l, r: integer);
 procedure tic;
 procedure toc;
 
- procedure Message(formatstring: string; content: array of const; cr: boolean = True); overload; inline;
+procedure Message(formatstring: string; content: array of const; cr: boolean = True); overload; inline;
 procedure Message(formatstring: string = ''; cr: boolean = True); overload; inline;
 
 implementation
@@ -1820,7 +1820,7 @@ begin
   if scr1 = screen then
   begin
     // Here p is the address to the pixel we want to set
-    p:=Pointer(uint32(screen.pixels) + y * screen.pitch + x * screen.format.BytesPerPixel);
+    p := Pointer(uint32(screen.pixels) + y * screen.pitch + x * screen.format.BytesPerPixel);
     SDL_UpdateTexture(screenTex, @dest, p, screen.pitch);
     SDL_RenderCopy(render, screenTex, nil, nil);
     SDL_RenderPresent(render);
@@ -1894,6 +1894,8 @@ end;
 
 procedure ResizeWindow(w, h: integer);
 begin
+  RESOLUTIONX := w;
+  RESOLUTIONY := h;
   {RealScreen := SDL_SetVideoMode(w, h, 32, ScreenFlag);
   event.type_ := 0;
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);}
