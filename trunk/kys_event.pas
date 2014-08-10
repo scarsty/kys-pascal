@@ -7,14 +7,11 @@ interface
 uses
   SysUtils,
 {$IFDEF fpc}
-  LMessages,
   LConvEncoding,
   LCLType,
   LCLIntf, {$ELSE}
   Windows,
 {$ENDIF}
-  StrUtils,
-  SDL2_TTF,
   SDL2_image,
   SDL2,
   Math,
@@ -201,7 +198,7 @@ begin
   move(TDef[offset], talkarray[0], len);
 
   //color :=;
-  DrawRectangleWithoutFrame(screen, 0, diagy - 10, 640, 120, 0, 40);
+  DrawRectangleWithoutFrame(screen, 0, diagy - 10, CENTER_X*2, 120, 0, 60);
 
   if headx > 0 then
     DrawHeadPic(headnum, headx, heady);
@@ -233,7 +230,7 @@ begin
           key := WaitAnyKey;
         until (key <> SDLK_LEFT) and (key <> SDLK_RIGHT) and (key <> SDLK_UP) and (key <> SDLK_DOWN);
         Redraw;
-        DrawRectangleWithoutFrame(screen, 0, diagy - 10, 640, 120, 0, 40);
+        DrawRectangleWithoutFrame(screen, 0, diagy - 10, 640, 120, 0, 60);
         if headx > 0 then
           DrawHeadPic(headnum, headx, heady);
         l := 0;
@@ -2525,7 +2522,6 @@ begin
     np2^ := ap^;
     (np2 + 1)^ := (ap + 1)^;
     (np2 + 2)^ := char(0);
-    ;
   end
   else if alen = 6 then
   begin
@@ -2534,7 +2530,6 @@ begin
     np1^ := ap^;
     (np1 + 1)^ := (ap + 1)^;
     (np1 + 2)^ := char(0);
-    ;
     setlength(name2, 3);
     np2 := @name2[0];
     np2^ := (ap + 2)^;
@@ -2686,7 +2681,7 @@ begin
       DrawRectangle(screen, nx, ny, nw, nh, frame, ColColor($FF), 40);
       namelen := length(np);
       if namelen > 0 then
-        DrawBig5ShadowText(screen, np, nx + 20 - namelen * 9 div 2, ny + 4, ColColor($63), ColColor($70));
+        DrawBig5ShadowText(screen, np, nx + 40 - namelen * 9 div 2, ny + 4, ColColor($63), ColColor($70));
     end;
 
     while r1 < row do
@@ -2742,7 +2737,7 @@ begin
           begin
             pword[0] := puint16(np3 + i)^;
             i := i + 2;
-            DrawBig5ShadowText(screen, @pword[0], x - 14 + CHINESE_FONT_SIZE * c1, y + 4 +
+            DrawBig5ShadowText(screen, @pword[0], x +6 + CHINESE_FONT_SIZE * c1, y + 4 +
               CHINESE_FONT_SIZE * r1, ColColor(color1), ColColor(color2));
             Inc(c1);
             if c1 = cell then
@@ -2778,7 +2773,7 @@ begin
                   DrawRectangle(screen, nx, ny, nw, nh, frame, ColColor($FF), 40);
                   namelen := length(np);
                   if namelen > 0 then
-                    DrawBig5ShadowText(screen, np, nx + 20 - namelen * 9 div 2, ny + 4, ColColor($63), ColColor($70));
+                    DrawBig5ShadowText(screen, np, nx + 40 - namelen * 9 div 2, ny + 4, ColColor($63), ColColor($70));
                 end;
               end;
             end;
@@ -2786,7 +2781,7 @@ begin
         end
         else //显示文字
         begin
-          DrawBig5ShadowText(screen, @pword[0], x - 14 + CHINESE_FONT_SIZE * c1, y + 4 +
+          DrawBig5ShadowText(screen, @pword[0], x +6 + CHINESE_FONT_SIZE * c1, y + 4 +
             CHINESE_FONT_SIZE * r1, ColColor(color1), ColColor(color2));
           Inc(c1);
           if c1 = cell then

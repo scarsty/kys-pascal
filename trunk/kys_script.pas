@@ -6,11 +6,7 @@ interface
 
 uses
 {$IFDEF fpc}
-  LMessages,
   LConvEncoding,
-  LCLType,
-  LCLIntf,
-  FileUtil,
 {$ELSE}
   Windows,
 {$ENDIF}
@@ -23,7 +19,6 @@ uses
   kys_engine,
   kys_battle,
   kys_type,
-  Dialogs,
   Classes;
 
 //初始化脚本配置,运行脚本
