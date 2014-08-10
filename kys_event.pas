@@ -78,7 +78,7 @@ procedure instruct_51;
 procedure instruct_52;
 procedure instruct_53;
 procedure instruct_54;
-function instruct_55(enum, Value, jump1, jump2: integer): integer;
+function instruct_55(enum, value, jump1, jump2: integer): integer;
 procedure instruct_56(Repute: integer);
 procedure instruct_58;
 procedure instruct_57;
@@ -198,7 +198,7 @@ begin
   move(TDef[offset], talkarray[0], len);
 
   //color :=;
-  DrawRectangleWithoutFrame(screen, 0, diagy - 10, CENTER_X*2, 120, 0, 60);
+  DrawRectangleWithoutFrame(screen, 0, diagy - 10, CENTER_X * 2, 120, 0, 60);
 
   if headx > 0 then
     DrawHeadPic(headnum, headx, heady);
@@ -1338,10 +1338,10 @@ end;
 
 //Judge the event number.
 
-function instruct_55(enum, Value, jump1, jump2: integer): integer;
+function instruct_55(enum, value, jump1, jump2: integer): integer;
 begin
   Result := jump2;
-  if DData[CurScence, enum, 2] = Value then
+  if DData[CurScence, enum, 2] = value then
     Result := jump1;
 end;
 
@@ -1510,7 +1510,7 @@ begin
   instruct_14;
 
   i := 0;
-  tempscr := img_load(PChar(AppPath + 'resource/end.png'));
+  tempscr := img_load(pchar(AppPath + 'resource/end.png'));
   while SDL_PollEvent(@event) >= 0 do
   begin
     CheckBasicEvent;
@@ -1662,9 +1662,12 @@ begin
         0: x50[e3] := x50[e4] + t1;
         1: x50[e3] := x50[e4] - t1;
         2: x50[e3] := x50[e4] * t1;
-        3: if t1 <> 0 then x50[e3] := x50[e4] div t1;
-        4: if t1 <> 0 then x50[e3] := x50[e4] mod t1;
-        5: if t1 <> 0 then x50[e3] := uint16(x50[e4]) div t1;
+        3: if t1 <> 0 then
+            x50[e3] := x50[e4] div t1;
+        4: if t1 <> 0 then
+            x50[e3] := x50[e4] mod t1;
+        5: if t1 <> 0 then
+            x50[e3] := uint16(x50[e4]) div t1;
       end;
     end;
     4: //Judge the parameter.
@@ -1750,7 +1753,7 @@ begin
     end;
     10: //Get the length of a string.
     begin
-      x50[e2] := length(PChar(@x50[e1]));
+      x50[e2] := length(pchar(@x50[e1]));
       //showmessage(inttostr(x50[e2]));
     end;
     11: //Combine 2 strings.
@@ -2135,7 +2138,7 @@ begin
       for i := 0 to e2 - 1 do
       begin
         menuString[i] := Big5ToUnicode(@x50[x50[e3 + i]]);
-        i1 := length(PChar(@x50[x50[e3 + i]]));
+        i1 := length(pchar(@x50[x50[e3 + i]]));
         if i1 > t1 then
           t1 := i1;
       end;
@@ -2152,7 +2155,7 @@ begin
       for i := 0 to e2 - 1 do
       begin
         menuString[i] := Big5ToUnicode(@x50[x50[e3 + i]]);
-        i1 := length(PChar(@x50[x50[e3 + i]]));
+        i1 := length(pchar(@x50[x50[e3 + i]]));
         if i1 > i2 then
           i2 := i1;
       end;
@@ -2193,6 +2196,7 @@ begin
     end;
     43: //Call another event.
     begin
+      //message('50 43 to %d', [e2]);
       e2 := e_GetValue(0, e1, e2);
       e3 := e_GetValue(1, e1, e3);
       e4 := e_GetValue(2, e1, e4);
@@ -2202,14 +2206,14 @@ begin
       x50[$7101] := e4;
       x50[$7102] := e5;
       x50[$7103] := e6;
-      if e2 = 202 then
+      if e2 = 202 then  //得到物品
       begin
         if e5 = 0 then
           instruct_2(e3, e4)
         else
           instruct_32(e3, e4);
       end
-      else if e2 = 201 then
+      else if e2 = 201 then //新对话
         NewTalk(e3, e4, e5, e6 mod 100, (e6 mod 100) div 10, e6 div 100, 0)
       else if (e2 = 999) and (MODVersion = 62) then
       begin
@@ -2224,9 +2228,14 @@ begin
         ShowScenceName(CurScence);
         CheckEvent3;
       end
+      else if (e2 = 176) and (MODVersion = 22) then  //菠萝三国输入数字
+      begin
+        x50[10032] := EnterNumber(0, 32767, CENTER_X, CENTER_Y - 100);
+        x50[$7000] := 0;
+        Redraw;
+      end
       else
         CallEvent(e2);
-      //showmessage(inttostr(e2));
     end;
     44: //Play amination.
     begin
@@ -2327,7 +2336,7 @@ begin
     begin
       e2 := e_GetValue(0, e1, e2);
       e3 := e_GetValue(1, e1, e3);
-      ExecScript(PChar('script/' + IntToStr(e2) + '.lua'), PChar('f' + IntToStr(e3)));
+      ExecScript(pchar('script/' + IntToStr(e2) + '.lua'), pchar('f' + IntToStr(e3)));
     end;
   end;
 
@@ -2737,7 +2746,7 @@ begin
           begin
             pword[0] := puint16(np3 + i)^;
             i := i + 2;
-            DrawBig5ShadowText(screen, @pword[0], x +6 + CHINESE_FONT_SIZE * c1, y + 4 +
+            DrawBig5ShadowText(screen, @pword[0], x + 6 + CHINESE_FONT_SIZE * c1, y + 4 +
               CHINESE_FONT_SIZE * r1, ColColor(color1), ColColor(color2));
             Inc(c1);
             if c1 = cell then
@@ -2781,7 +2790,7 @@ begin
         end
         else //显示文字
         begin
-          DrawBig5ShadowText(screen, @pword[0], x +6 + CHINESE_FONT_SIZE * c1, y + 4 +
+          DrawBig5ShadowText(screen, @pword[0], x + 6 + CHINESE_FONT_SIZE * c1, y + 4 +
             CHINESE_FONT_SIZE * r1, ColColor(color1), ColColor(color2));
           Inc(c1);
           if c1 = cell then
@@ -2814,7 +2823,7 @@ end;
 
 function EnterNumber(MinValue, MaxValue, x, y: integer; Default: integer = 0): smallint;
 var
-  Value, i, menu, sure, pvalue, pmenu, highButton: integer;
+  value, i, menu, sure, pvalue, pmenu, highButton: integer;
   str: array[0..13] of WideString;
   color: uint32;
   strv, strr: WideString;
@@ -2822,7 +2831,7 @@ var
   Button: array[0..13] of TSDL_Rect;
 begin
   CleanKeyValue;
-  Value := Default;
+  value := Default;
   MinValue := max(-32768, MinValue);
   MaxValue := min(32767, MaxValue);
   //13个按钮的位置和大小
@@ -2865,7 +2874,7 @@ begin
   end;
   UpdateAllScreen;
   RecordFreshScreen(x, y, 181, 181);
-  strv := UTF8Decode(format(' 範圍%d~%d', [MinValue, MaxValue]));
+  strv := UTF8Decode(format('%d~%d', [MinValue, MaxValue]));
   DrawTextWithRect(@strv[1], x, y - 35, DrawLength(strv) * 10 + 7, ColColor($21), ColColor($27));
   //在循环中写字体是为了字体分层模式容易处理
   menu := -1;
@@ -2876,11 +2885,11 @@ begin
   begin
     CheckBasicEvent;
     case event.type_ of
-      SDL_KeyUp:
+      SDL_KEYUP:
       begin
         case event.key.keysym.sym of
           SDLK_0..SDLK_9: menu := event.key.keysym.sym - SDLK_0;
-                   SDLK_KP_1..SDLK_KP_9: menu := event.key.keysym.sym - SDLK_KP_1 + 1;
+          SDLK_KP_1..SDLK_KP_9: menu := event.key.keysym.sym - SDLK_KP_1 + 1;
           SDLK_KP_0: menu := 0;
           SDLK_MINUS, SDLK_KP_MINUS: menu := 10;
           SDLK_DELETE: menu := 12;
@@ -2921,10 +2930,10 @@ begin
       end;
     end;
     //画界面
-    if (Value <> pvalue) or (menu <> pmenu) then
+    if (value <> pvalue) or (menu <> pmenu) then
     begin
       LoadFreshScreen(x, y, 181, 181);
-      strv := format('%6d', [Value]);
+      strv := format('%6d', [value]);
       DrawShadowText(@strv[1], x + 80, y + 10, ColColor($64), ColColor($66));
       if (menu >= 0) and (menu <= highButton) then
       begin
@@ -2933,10 +2942,10 @@ begin
       end;
       for i := 0 to highButton do
       begin
-        DrawShadowText(@str[i][1], Button[i].x - 2, Button[i].y + Button[i].h div 2 - 11, ColColor(5), ColColor(7));
+        DrawShadowText(@str[i][1], Button[i].x + 8, Button[i].y + Button[i].h div 2 - 11, ColColor(5), ColColor(7));
       end;
       UpdateAllScreen;
-      pvalue := Value;
+      pvalue := value;
       pmenu := menu;
     end;
     CleanKeyValue;
@@ -2945,11 +2954,11 @@ begin
     begin
       case menu of
         0.. 9:
-          if Value * 10 < 1e5 then
-            Value := 10 * Value + menu;
-        10: Value := -Value;
-        11: Value := Value div 10;
-        12: Value := 0;
+          if value * 10 < 1e5 then
+            value := 10 * value + menu;
+        10: value := -value;
+        11: value := value div 10;
+        12: value := 0;
         else
           if menu = highButton then
             break;
@@ -2960,9 +2969,9 @@ begin
     sure := 0;
     SDL_Delay(25);
   end;
-  Result := RegionParameter(Value, MinValue, MaxValue);
+  Result := RegionParameter(value, MinValue, MaxValue);
   //Redraw;
-  if Result <> Value then
+  if Result <> value then
   begin
     Redraw;
     UpdateAllScreen;
