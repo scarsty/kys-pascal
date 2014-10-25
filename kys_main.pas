@@ -2043,7 +2043,7 @@ begin
             My := My1;
           end;
           if (speed <= 1) then
-            walking := 0;
+            SDL_Delay(50);
         end;
         2:
         begin
@@ -2616,7 +2616,7 @@ begin
           //一定步数之内一次动一格
           if (speed <= 1) then
           begin
-            walking := 0;
+            SDL_Delay(50);
             //sdl_delay(20);
           end;
           if event.key.keysym.sym = 0 then
@@ -3998,7 +3998,7 @@ begin
               //SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
               break;
             end;
-            if (event.button.button = SDL_BUTTON_LEFT) then
+            if (event.button.button = SDL_BUTTON_LEFT) and (CellPhone = 0) then
             begin
               if (round(event.button.x / (RESOLUTIONX / screen.w)) >= 110) and
                 (round(event.button.x / (RESOLUTIONX / screen.w)) < 496) and
