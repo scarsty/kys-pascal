@@ -2619,8 +2619,8 @@ begin
             SDL_Delay(50);
             //sdl_delay(20);
           end;
-          if event.key.keysym.sym = 0 then
-            walking := 0;
+          //if event.key.keysym.sym = 0 then
+            //walking := 0;
         end;
         2:
         begin
