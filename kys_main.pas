@@ -506,7 +506,7 @@ begin
       ShowVirtualKey := Kys_ini.ReadInteger('system', 'Virtual_Key', 1);
       VirtualKeyX := Kys_ini.ReadInteger('system', 'Virtual_Key_X', 150);
       VirtualKeyY := Kys_ini.ReadInteger('system', 'Virtual_Key_Y', 250);
-      if FileExists(AppPath + 'resource/mmap/index.ka') then
+      if FileExists(AppPath + 'resource/u.png') then
       begin
         VirtualKeyU := IMG_Load(pchar(AppPath + 'resource/u.png'));
         VirtualKeyD := IMG_Load(pchar(AppPath + 'resource/d.png'));
@@ -1951,6 +1951,8 @@ begin
       end;
       SDL_MOUSEMOTION:
       begin
+        if ShowVirtualKey = 0 then
+        begin
         SDL_GetMouseState2(x, y);
         if (x < CENTER_X) and (y < CENTER_Y) then
           Mface := 2;
@@ -1960,6 +1962,7 @@ begin
           Mface := 3;
         if (x > CENTER_X) and (y > CENTER_Y) then
           Mface := 1;
+        end;
       end;
       SDL_MOUSEBUTTONUP:
       begin
@@ -2486,6 +2489,8 @@ begin
         end;}
       SDL_MOUSEMOTION:
       begin
+        if ShowVirtualKey = 0 then
+        begin
         SDL_GetMouseState2(x, y);
         if (x < CENTER_X) and (y < CENTER_Y) then
           Mface := 2;
@@ -2495,6 +2500,7 @@ begin
           Mface := 3;
         if (x > CENTER_X) and (y > CENTER_Y) then
           Mface := 1;
+        end;
       end;
       SDL_MOUSEBUTTONUP:
       begin
