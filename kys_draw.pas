@@ -76,6 +76,7 @@ procedure DrawClouds;
 
 procedure DrawProgress;
 
+procedure DrawVirtualKey;
 
 implementation
 
@@ -883,7 +884,7 @@ begin
     DrawMPic(BuildArray[i].b, pos.x, pos.y);
   end;
   DrawClouds;
-
+   DrawVirtualKey;
 end;
 
 
@@ -915,7 +916,7 @@ begin
     else
       DrawRoleOnScence(Cx, Cy);
   end;
-
+  DrawVirtualKey;
 end;
 
 //画不含主角的场景(与DrawScenceByCenter相同)
@@ -1260,6 +1261,7 @@ begin
   begin
     SDL_UnlockSurface(screen);
   end;}
+  DrawVirtualKey;
 end;
 
 //画不含主角的战场
@@ -1463,7 +1465,7 @@ begin
       end;
     end;
   DrawProgress;
-
+  DrawVirtualKey;
 end;
 
 //画带效果的战场
@@ -1668,6 +1670,44 @@ begin
     end;
   end;
 
+end;
+
+procedure DrawVirtualKey;
+var
+  u, d, l, r: integer;
+  rect: TSDL_Rect;
+begin
+  if ShowVirtualKey <> 0 then
+  begin
+    u := 128;
+    d := 128;
+    l := 128;
+    r := 128;
+    case VirtualKeyValue of
+      SDLK_UP: u := 0;
+      SDLK_Left: l := 0;
+      SDLK_down: d := 0;
+      SDLK_RIGHT: r := 0;
+    end;
+    SDL_SetSurfaceAlphaMod(VirtualKeyU, 255 - u);
+    SDL_SetSurfaceAlphaMod(VirtualKeyD, 255 - d);
+    SDL_SetSurfaceAlphaMod(VirtualKeyL, 255 - l);
+    SDL_SetSurfaceAlphaMod(VirtualKeyR, 255 - r);
+
+    rect.x := VirtualKeyX;
+    rect.y := VirtualKeyY;
+    SDL_BlitSurface(VirtualKeyU, nil, screen, @rect);
+
+    rect.x := VirtualKeyX - VirtualKeySize;
+    rect.y := VirtualKeyY + VirtualKeySize;
+    SDL_BlitSurface(VirtualKeyL, nil, screen, @rect);
+
+    rect.x := VirtualKeyX;
+    SDL_BlitSurface(VirtualKeyD, nil, screen, @rect);
+
+    rect.x := VirtualKeyX + VirtualKeySize;
+    SDL_BlitSurface(VirtualKeyR, nil, screen, @rect);
+  end;
 end;
 
 end.

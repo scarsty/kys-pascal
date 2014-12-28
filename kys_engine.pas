@@ -1963,6 +1963,30 @@ var
     Result := (x < 100) and (y > CENTER_Y * 2 - 100);
   end;
 
+    function inSwitchShowVirtualKey(x, y: integer): boolean; inline;
+  begin
+    Result := (x > CENTER_X * 2 - 100) and (y < 100);
+  end;
+
+    function InRegion(x1, y1, x, y, w, h: integer): boolean;
+begin
+  Result := (x1 >= x) and (y1 >= y) and (x1 < x + w) and (y1 < y + h);
+end;
+
+  function inVirtualKey(x, y: integer; var key: uint32): uint32;
+  begin
+    Result := 0;
+    if inregion(x, y, VirtualKeyX, VirtualKeyY, VirtualKeySize, VirtualKeySize) then
+      Result := sdlk_up;
+    if inregion(x, y, VirtualKeyX - VirtualKeySize, VirtualKeyY + VirtualKeySize, VirtualKeySize, VirtualKeySize) then
+      Result := sdlk_left;
+    if inregion(x, y, VirtualKeyX, VirtualKeyY + VirtualKeySize, VirtualKeySize, VirtualKeySize) then
+      Result := sdlk_down;
+    if inregion(x, y, VirtualKeyX + VirtualKeySize, VirtualKeyY + VirtualKeySize, VirtualKeySize, VirtualKeySize) then
+      Result := sdlk_right;
+    key := result;
+  end;
+
 begin
   //if not ((LoadingTiles) or (LoadingScence)) then
   SDL_FlushEvent(SDL_MOUSEWHEEL);
@@ -2071,6 +2095,19 @@ begin
           event.type_ := 0;
       end;
     end;
+    SDL_MOUSEBUTTONDOWN:
+    begin
+      if (CellPhone = 1) and (showVirtualKey <> 0) then
+      begin
+        SDL_GetMouseState2(x, y);
+        inVirtualKey(x, y, VirtualKeyValue);
+        if VirtualKeyValue <> 0 then
+        begin
+          event.type_ := SDL_KEYDOWN;
+          event.key.keysym.sym := VirtualKeyValue;
+        end;
+      end;
+    end;
     SDL_KEYUP, SDL_MOUSEBUTTONUP:
     begin
       if (CellPhone = 1) and (event.type_ = SDL_MOUSEBUTTONUP) and (event.button.button = SDL_BUTTON_LEFT) then
@@ -2091,6 +2128,18 @@ begin
           event.type_ := SDL_KEYUP;
           event.key.keysym.sym := SDLK_RETURN;
           message('Change to return');
+        end
+        else if (showVirtualKey <> 0) and (inVirtualKey(x, y, VirtualKeyValue) <> 0) then
+        begin
+          if VirtualKeyValue<>0 then
+          begin
+            event.type_ := SDL_KEYUP;
+            event.key.keysym.sym := VirtualKeyValue;
+          end;
+        end
+        else if inSwitchShowVirtualKey(x, y) then
+        begin
+          ShowVirtualKey := not ShowVirtualKey;
         end
         //手机在战场仅有确认键有用
         else if (where = 2) and (BattleSelecting) then

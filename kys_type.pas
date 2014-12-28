@@ -470,6 +470,14 @@ var
   FreeWalking: boolean = False;
   BattleSelecting: boolean = False;   //是否处于战场上选择
 
+  VirtualKeyU, VirtualKeyD, VirtualKeyL, VirtualKeyR: PSDL_Surface;
+  //虚拟按键相关
+  ShowVirtualKey: integer = 0;
+  VirtualKeyValue: Uint32 = 0;
+  VirtualKeyX: integer = 150;
+  VirtualKeyY: integer = 250;
+  VIrtualKeySize: integer = 60;
+
 const
   //色值蒙版, 注意透明蒙版在创建RGB表面时需设为0
   RMask: uint32 = $FF0000;

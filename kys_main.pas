@@ -47,6 +47,7 @@ uses
   Math,
   SDL2_TTF,
   SDL2,
+SDL2_image,
   iniFiles,
   bass;
 
@@ -499,6 +500,25 @@ begin
     PNG_TILE := Kys_ini.ReadInteger('system', 'PNG_TILE', 0);
     TRY_FIND_GRP := Kys_ini.ReadInteger('system', 'TRY_FIND_GRP', 0);
     EXPAND_GROUND := Kys_ini.ReadInteger('system', 'EXPAND_GROUND', 1);
+
+    if CellPhone <> 0 then
+    begin
+      ShowVirtualKey := Kys_ini.ReadInteger('system', 'Virtual_Key', 1);
+      VirtualKeyX := Kys_ini.ReadInteger('system', 'Virtual_Key_X', 150);
+      VirtualKeyY := Kys_ini.ReadInteger('system', 'Virtual_Key_Y', 250);
+      if FileExists(AppPath + 'resource/mmap/index.ka') then
+      begin
+        VirtualKeyU := IMG_Load(pchar(AppPath + 'resource/u.png'));
+        VirtualKeyD := IMG_Load(pchar(AppPath + 'resource/d.png'));
+        VirtualKeyL := IMG_Load(pchar(AppPath + 'resource/l.png'));
+        VirtualKeyR := IMG_Load(pchar(AppPath + 'resource/r.png'));
+      end
+      else
+        ShowVirtualKey := 0;
+    end
+    else
+      ShowVirtualKey := 0;
+
     if (not FileExists(AppPath + 'resource/mmap/index.ka')) and
       (not FileExists(AppPath + 'resource/mmap.imz')) then
       PNG_TILE := 0;
