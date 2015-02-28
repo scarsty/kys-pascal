@@ -32,7 +32,7 @@
           </Target>
           <SearchPaths>
             <IncludeFiles Value="$(ProjOutDir)"/>
-            <Libraries Value=".;\usr\local\lib;\sw\lib;\usr\X11R6\lib;\lib"/>
+            <Libraries Value=".;\usr\local\lib\;\sw\lib\;\usr\X11R6\lib\;\lib\"/>
             <OtherUnitFiles Value="lib"/>
           </SearchPaths>
           <Parsing>
@@ -76,7 +76,7 @@
           </Target>
           <SearchPaths>
             <IncludeFiles Value="$(ProjOutDir)"/>
-            <Libraries Value="lib;.;\usr\local\lib;\sw\lib;\usr\X11R6\lib;\lib;D:\soft\develop_adt\ndk\platforms\android-12\arch-arm\usr\lib\"/>
+            <Libraries Value="lib;.;\usr\local\lib\;\sw\lib\;\usr\X11R6\lib\;\lib\;D:\soft\develop_adt\ndk\platforms\android-12\arch-arm\usr\lib"/>
             <OtherUnitFiles Value="lib"/>
           </SearchPaths>
           <Parsing>
@@ -144,12 +144,10 @@
       <Unit2>
         <Filename Value="kys_event.pas"/>
         <IsPartOfProject Value="True"/>
-        <UnitName Value="kys_event"/>
       </Unit2>
       <Unit3>
         <Filename Value="kys_battle.pas"/>
         <IsPartOfProject Value="True"/>
-        <UnitName Value="kys_battle"/>
       </Unit3>
       <Unit4>
         <Filename Value="kys_engine.pas"/>
@@ -173,7 +171,6 @@
       <Unit8>
         <Filename Value="kys_draw.pas"/>
         <IsPartOfProject Value="True"/>
-        <UnitName Value="kys_draw"/>
       </Unit8>
     </Units>
   </ProjectOptions>
@@ -185,7 +182,7 @@
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
-      <Libraries Value=".;\usr\local\lib;\sw\lib;\usr\X11R6\lib;\lib"/>
+      <Libraries Value=".;\usr\local\lib\;\sw\lib\;\usr\X11R6\lib\;\lib\"/>
       <OtherUnitFiles Value="lib"/>
     </SearchPaths>
     <Parsing>
@@ -225,4 +222,4 @@
       </Item3>
     </Exceptions>
   </Debugging>
-</CONFIG>
+</CONFIG>
