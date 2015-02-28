@@ -45,9 +45,9 @@ uses
   SysUtils,
   Dialogs,
   Math,
-  SDL2_TTF,
+  SDL2_ttf,
   SDL2,
-SDL2_image,
+  SDL2_image,
   iniFiles,
   bass;
 
@@ -6217,4 +6217,4 @@ begin
 end;
 
 
-end.
+end.
