@@ -6,7 +6,7 @@ interface
 
 uses
   SDL2,
-  SDL2_ttf,
+  SDL2_TTF,
   bass,
   lua52;
 
@@ -487,4 +487,4 @@ const
 
 implementation
 
-end.
+end.

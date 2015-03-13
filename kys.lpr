@@ -5,12 +5,6 @@ library kys;
 program kys;
 {$ENDIF}
 
-{$ifdef darwin}
-{$linklib bass}
-{$linklib bassmidi}
-{$linklib lua}
-{$endif}
-
 //{$MODE Delphi}
 {$IFDEF UNIX}
 
@@ -58,4 +52,4 @@ end.
 
 
 
-
+
