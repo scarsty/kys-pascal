@@ -23,7 +23,8 @@ uses SDL2;
 {$DEFINE lSDL:=cdecl; external 'SDL2_ttf'}
 
 {$IFDEF DARWIN}
-  {$linklib SDL2_ttf}
+  {$linkframework SDL2}
+  {$linkframework SDL2_ttf}
 {$ENDIF}
 
 const
