@@ -54,8 +54,8 @@ function LoadSurfaceFromZIPFile(zipFile: unzFile; filename: string): PSDL_Surfac
 procedure FreeAllSurface;
 
 //基本绘图子程
-function GetPixel(surface: PSDL_Surface; x: integer; y: integer): uint32;
-procedure PutPixel(surface: PSDL_Surface; x: integer; y: integer; pixel: uint32);
+function GetPixel(surface: PSDL_Surface; x: integer; y: integer): uint32; inline;
+procedure PutPixel(surface: PSDL_Surface; x: integer; y: integer; pixel: uint32); inline;
 procedure display_bmp(file_name: pchar; x, y: integer);
 procedure display_img(file_name: pchar; x, y: integer);
 function ColColor(num: byte): uint32;
@@ -63,8 +63,8 @@ procedure DrawRectangle(sur: PSDL_Surface; x, y, w, h: integer; colorin, colorfr
 procedure DrawRectangleWithoutFrame(sur: PSDL_Surface; x, y, w, h: integer; colorin: uint32; alpha: integer);
 
 //画RLE8图片的子程
-function JudgeInScreen(px, py, w, h, xs, ys: integer): boolean; overload;
-function JudgeInScreen(px, py, w, h, xs, ys, xx, yy, xw, yh: integer): boolean; overload;
+function JudgeInScreen(px, py, w, h, xs, ys: integer): boolean; overload; inline;
+function JudgeInScreen(px, py, w, h, xs, ys, xx, yy, xw, yh: integer): boolean; overload; inline;
 procedure DrawRLE8Pic(colorPanel: pchar; num, px, py: integer; Pidx: Pinteger; Ppic: PByte;
   RectArea: pchar; Image: PSDL_Surface; widthI, heightI, sizeI: integer; shadow: integer); overload; inline;
 procedure DrawRLE8Pic(colorPanel: pchar; num, px, py: integer; Pidx: Pinteger; Ppic: PByte;
@@ -856,7 +856,8 @@ var
 begin
   if (x >= 0) and (x < surface.w) and (y >= 0) and (y < surface.h) then
   begin
-    bpp := surface.format.BytesPerPixel;
+    Result := puint32(uint32(surface.pixels) + y * surface.pitch + x * 4)^;
+    {bpp := surface.format.BytesPerPixel;
     // Here p is the address to the pixel we want to retrieve
     p := Pointer(uint32(surface.pixels) + y * surface.pitch + x * bpp);
     case bpp of
@@ -873,7 +874,7 @@ begin
         Result := puint32(p)^;
       else
         Result := 0; // shouldn't happen, but avoids warnings
-    end;
+    end;}
   end;
 
 end;
@@ -890,7 +891,8 @@ var
 begin
   if (x >= 0) and (x < surface.w) and (y >= 0) and (y < surface.h) then
   begin
-    bpp := surface.format.BytesPerPixel;
+    puint32(uint32(surface.pixels) + y * surface.pitch + x * 4)^ := pixel;
+    {bpp := surface.format.BytesPerPixel;
     // Here p is the address to the pixel we want to set
     p := Pointer(uint32(surface.pixels) + y * surface.pitch + x * bpp);
 
@@ -914,7 +916,7 @@ begin
         end;
       4:
         puint32(p)^ := pixel;
-    end;
+    end;}
   end;
 end;
 
@@ -985,22 +987,16 @@ end;
 
 //判断像素是否在屏幕内
 
-function JudgeInScreen(px, py, w, h, xs, ys: integer): boolean; overload;
+function JudgeInScreen(px, py, w, h, xs, ys: integer): boolean;
 begin
-  Result := False;
-  if (px - xs + w >= 0) and (px - xs < screen.w) and (py - ys + h >= 0) and (py - ys < screen.h) then
-    Result := True;
-
+   Result := (px - xs + w >= 0) and (px - xs < screen.w) and (py - ys + h >= 0) and (py - ys < screen.h);
 end;
 
 //判断像素是否在指定范围内(重载)
 
-function JudgeInScreen(px, py, w, h, xs, ys, xx, yy, xw, yh: integer): boolean; overload;
+function JudgeInScreen(px, py, w, h, xs, ys, xx, yy, xw, yh: integer): boolean;
 begin
-  Result := False;
-  if (px - xs + w >= xx) and (px - xs < xx + xw) and (py - ys + h >= yy) and (py - ys < yy + yh) then
-    Result := True;
-
+  Result := (px - xs + w >= xx) and (px - xs < xx + xw) and (py - ys + h >= yy) and (py - ys < yy + yh);
 end;
 
 //RLE8图片绘制子程, 所有相关子程均对此封装. 最后一个参数为亮度, 仅在绘制战场选择对方时使用
