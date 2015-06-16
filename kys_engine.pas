@@ -58,7 +58,7 @@ function GetPixel(surface: PSDL_Surface; x: integer; y: integer): uint32; inline
 procedure PutPixel(surface: PSDL_Surface; x: integer; y: integer; pixel: uint32); inline;
 procedure display_bmp(file_name: pchar; x, y: integer);
 procedure display_img(file_name: pchar; x, y: integer);
-function ColColor(num: byte): uint32;
+function ColColor(num: byte): uint32; inline;
 procedure DrawRectangle(sur: PSDL_Surface; x, y, w, h: integer; colorin, colorframe: uint32; alpha: integer);
 procedure DrawRectangleWithoutFrame(sur: PSDL_Surface; x, y, w, h: integer; colorin: uint32; alpha: integer);
 
@@ -976,10 +976,10 @@ begin
   //{$IFDEF darwin}
   //colcolor := SDL_mapRGB(screen.format, Acol[num * 3 + 0] * 4, Acol[num * 3 + 1] * 4, Acol[num * 3 + 2] * 4);
   //{$ELSE}
-  if (num >= 0) and (num <= 255) then
+  //if (num >= 0) and (num <= 255) then
     Result := SDL_MapRGB(screen.format, Acol[num * 3] * 4, Acol[num * 3 + 1] * 4, Acol[num * 3 + 2] * 4)
-  else
-    Result := 0;
+  //else
+    //Result := 0;
   //{$ENDIF}
 
 end;
