@@ -5,7 +5,7 @@
 
 #如何编译
 首先下载游戏本体，其中包含了Windows版本的exe文件和dll文件，可以直接运行。使用Lazarus可以直接编译。但是压缩包中的源码一般会比较旧，最新的需要用svn来获取。
-一般下载地址在：http://pan.baidu.com/s/1pJ9Giwj。
+一般下载地址在：<http://pan.baidu.com/s/1pJ9Giwj>。
 注意大部分是使用商业性质的素材，这个分享可能是违规的。
 安装fpc（任何方法均可），如果你对命令行熟悉可以不安装Lazarus，我推荐安装。CodeTyphon也是很好的选择。
 
@@ -16,4 +16,4 @@
 未包含Android的工程。
 
 #注意
-因为衍生版本《金庸水浒传》（URL：https://github.com/scarsty/hugebase）代码的完备程度已经超过这个版本，故本工程暂时停止更新。
+因为衍生版本《金庸水浒传》（<https://github.com/scarsty/hugebase>）代码的完备程度已经超过这个版本，故本工程暂时停止更新。
