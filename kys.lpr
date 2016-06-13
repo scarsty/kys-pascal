@@ -28,7 +28,7 @@ uses
 {$IFDEF android}
 exports
   Run;
-{$endif}
+{$ENDIF}
 
 begin
 {$IFNDEF android}

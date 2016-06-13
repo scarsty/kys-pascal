@@ -473,7 +473,7 @@ var
   VirtualKeyU, VirtualKeyD, VirtualKeyL, VirtualKeyR: PSDL_Surface;
   //虚拟按键相关
   ShowVirtualKey: integer = 0;
-  VirtualKeyValue: Uint32 = 0;
+  VirtualKeyValue: uint32 = 0;
   VirtualKeyX: integer = 150;
   VirtualKeyY: integer = 250;
   VIrtualKeySize: integer = 60;

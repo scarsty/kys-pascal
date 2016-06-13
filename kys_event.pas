@@ -78,7 +78,7 @@ procedure instruct_51;
 procedure instruct_52;
 procedure instruct_53;
 procedure instruct_54;
-function instruct_55(enum, value, jump1, jump2: integer): integer;
+function instruct_55(enum, Value, jump1, jump2: integer): integer;
 procedure instruct_56(Repute: integer);
 procedure instruct_58;
 procedure instruct_57;
@@ -1338,10 +1338,10 @@ end;
 
 //Judge the event number.
 
-function instruct_55(enum, value, jump1, jump2: integer): integer;
+function instruct_55(enum, Value, jump1, jump2: integer): integer;
 begin
   Result := jump2;
-  if DData[CurScence, enum, 2] = value then
+  if DData[CurScence, enum, 2] = Value then
     Result := jump1;
 end;
 
@@ -1510,7 +1510,7 @@ begin
   instruct_14;
 
   i := 0;
-  tempscr := img_load(pchar(AppPath + 'resource/end.png'));
+  tempscr := img_load(PChar(AppPath + 'resource/end.png'));
   while SDL_PollEvent(@event) >= 0 do
   begin
     CheckBasicEvent;
@@ -1623,7 +1623,7 @@ end;
 function instruct_50e(code, e1, e2, e3, e4, e5, e6: integer): integer;
 var
   i, t1, grp, idx, offset, len, i1, i2: integer;
-  p, p1: pchar;
+  p, p1: PChar;
   //ps :pstring;
   str: ansistring;
   {$ifdef fpc}
@@ -1753,7 +1753,7 @@ begin
     end;
     10: //Get the length of a string.
     begin
-      x50[e2] := length(pchar(@x50[e1]));
+      x50[e2] := length(PChar(@x50[e1]));
       //showmessage(inttostr(x50[e2]));
     end;
     11: //Combine 2 strings.
@@ -2138,7 +2138,7 @@ begin
       for i := 0 to e2 - 1 do
       begin
         menuString[i] := Big5ToUnicode(@x50[x50[e3 + i]]);
-        i1 := length(pchar(@x50[x50[e3 + i]]));
+        i1 := length(PChar(@x50[x50[e3 + i]]));
         if i1 > t1 then
           t1 := i1;
       end;
@@ -2155,7 +2155,7 @@ begin
       for i := 0 to e2 - 1 do
       begin
         menuString[i] := Big5ToUnicode(@x50[x50[e3 + i]]);
-        i1 := length(pchar(@x50[x50[e3 + i]]));
+        i1 := length(PChar(@x50[x50[e3 + i]]));
         if i1 > i2 then
           i2 := i1;
       end;
@@ -2336,7 +2336,7 @@ begin
     begin
       e2 := e_GetValue(0, e1, e2);
       e3 := e_GetValue(1, e1, e3);
-      ExecScript(pchar('script/' + IntToStr(e2) + '.lua'), pchar('f' + IntToStr(e3)));
+      ExecScript(PChar('script/' + IntToStr(e2) + '.lua'), PChar('f' + IntToStr(e3)));
     end;
   end;
 
@@ -2390,7 +2390,7 @@ procedure NewTalk(headnum, talknum, namenum, place, showhead, color, frame: inte
 var
   k, alen, newcolor, color1, color2, nh, nw, ch, c1, r1, n, namelen, i, t1, grp, idx: integer;
   offset, len, i1, i2, face, c, nx, ny, hx, hy, hw, hh, x, y, w, h, cell, row: integer;
-  np3, np, np1, np2, tp, p1, ap: pchar;
+  np3, np, np1, np2, tp, p1, ap: PChar;
   actorarray, talkarray, namearray, name1, name2: array of byte;
   pword: array[0..1] of uint16;
   {wd,} str: string;
@@ -2823,7 +2823,7 @@ end;
 
 function EnterNumber(MinValue, MaxValue, x, y: integer; Default: integer = 0): smallint;
 var
-  value, i, menu, sure, pvalue, pmenu, highButton: integer;
+  Value, i, menu, sure, pvalue, pmenu, highButton: integer;
   str: array[0..13] of WideString;
   color: uint32;
   strv, strr: WideString;
@@ -2831,7 +2831,7 @@ var
   Button: array[0..13] of TSDL_Rect;
 begin
   CleanKeyValue;
-  value := Default;
+  Value := Default;
   MinValue := max(-32768, MinValue);
   MaxValue := min(32767, MaxValue);
   //13个按钮的位置和大小
@@ -2930,10 +2930,10 @@ begin
       end;
     end;
     //画界面
-    if (value <> pvalue) or (menu <> pmenu) then
+    if (Value <> pvalue) or (menu <> pmenu) then
     begin
       LoadFreshScreen(x, y, 181, 181);
-      strv := format('%6d', [value]);
+      strv := format('%6d', [Value]);
       DrawShadowText(@strv[1], x + 80, y + 10, ColColor($64), ColColor($66));
       if (menu >= 0) and (menu <= highButton) then
       begin
@@ -2945,7 +2945,7 @@ begin
         DrawShadowText(@str[i][1], Button[i].x + 8, Button[i].y + Button[i].h div 2 - 11, ColColor(5), ColColor(7));
       end;
       UpdateAllScreen;
-      pvalue := value;
+      pvalue := Value;
       pmenu := menu;
     end;
     CleanKeyValue;
@@ -2954,11 +2954,11 @@ begin
     begin
       case menu of
         0.. 9:
-          if value * 10 < 1e5 then
-            value := 10 * value + menu;
-        10: value := -value;
-        11: value := value div 10;
-        12: value := 0;
+          if Value * 10 < 1e5 then
+            Value := 10 * Value + menu;
+        10: Value := -Value;
+        11: Value := Value div 10;
+        12: Value := 0;
         else
           if menu = highButton then
             break;
@@ -2969,9 +2969,9 @@ begin
     sure := 0;
     SDL_Delay(25);
   end;
-  Result := RegionParameter(value, MinValue, MaxValue);
+  Result := RegionParameter(Value, MinValue, MaxValue);
   //Redraw;
-  if Result <> value then
+  if Result <> Value then
   begin
     Redraw;
     UpdateAllScreen;
