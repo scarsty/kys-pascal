@@ -90,8 +90,9 @@ const
 {$ENDIF}
 {$IFDEF ANDROID}
   LUA_LIB_NAME = 'liblua.so';
-{$ENDIF}{$IFDEF linux}
-  LUA_LIB_NAME = 'liblua.a';
+{$ENDIF}
+{$IFDEF linux}
+  LUA_LIB_NAME = 'liblua5.2.so';
 {$ENDIF}
 {$ENDIF}
 

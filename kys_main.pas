@@ -809,7 +809,9 @@ begin
   Name := tempname;
   named := True;
 {$else}
+{$ifndef linux}
   named := InputQuery('Enter name', str1, ansistring(tempname));
+{$endif}
   Name := tempname;
 {$endif}
 

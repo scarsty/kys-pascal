@@ -32,7 +32,7 @@
           </Target>
           <SearchPaths>
             <IncludeFiles Value="$(ProjOutDir)"/>
-            <Libraries Value=".;\usr\local\lib\;\sw\lib\;\usr\X11R6\lib\;\lib\"/>
+            <Libraries Value=".;\usr\local\lib;\lib"/>
             <OtherUnitFiles Value="lib"/>
           </SearchPaths>
           <Parsing>
@@ -77,7 +77,7 @@
           </Target>
           <SearchPaths>
             <IncludeFiles Value="$(ProjOutDir)"/>
-            <Libraries Value="lib;.;\usr\local\lib\;\sw\lib\;\usr\X11R6\lib\;\lib\;D:\soft\develop_adt\ndk\platforms\android-12\arch-arm\usr\lib"/>
+            <Libraries Value="lib;.;\usr\local\lib;\lib;D:\soft\develop_adt\ndk\platforms\android-12\arch-arm\usr\lib\"/>
             <OtherUnitFiles Value="lib"/>
           </SearchPaths>
           <Parsing>
@@ -132,7 +132,7 @@
         <PackageName Value="LCL"/>
       </Item1>
     </RequiredPackages>
-    <Units Count="9">
+    <Units Count="8">
       <Unit0>
         <Filename Value="kys.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -158,17 +158,13 @@
         <IsPartOfProject Value="True"/>
       </Unit5>
       <Unit6>
-        <Filename Value="lua52.pas"/>
+        <Filename Value="kys_type.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit6>
       <Unit7>
-        <Filename Value="kys_type.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit7>
-      <Unit8>
         <Filename Value="kys_draw.pas"/>
         <IsPartOfProject Value="True"/>
-      </Unit8>
+      </Unit7>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
@@ -179,7 +175,7 @@
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
-      <Libraries Value=".;\usr\local\lib\;\sw\lib\;\usr\X11R6\lib\;\lib\"/>
+      <Libraries Value=".;\usr\local\lib;\lib"/>
       <OtherUnitFiles Value="lib"/>
     </SearchPaths>
     <Parsing>

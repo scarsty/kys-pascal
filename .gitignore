@@ -4,3 +4,10 @@ music/
 resource/
 save/
 sound/
+*.dbg
+*.compiled
+*.lps
+*.o
+*.or
+*.ppu
+*.a
