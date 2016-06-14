@@ -219,7 +219,7 @@ procedure InitialSPic(num, px, py, x, y, w, h, needBlock, depth, temp: integer);
 var
   Area: TSDL_Rect;
   pImg: PSDL_Surface;
-  pBlock: pchar;
+  pBlock: PChar;
 begin
   if temp = 0 then
   begin
@@ -289,7 +289,7 @@ begin
   str := AppPath + 'head/' + IntToStr(num) + '.png';
   if FileExists(str) then
   begin
-    image := IMG_Load(pchar(str));
+    image := IMG_Load(PChar(str));
     dest.x := px;
     dest.y := py;
     SDL_BlitSurface(image, nil, scr, @dest);
@@ -502,12 +502,12 @@ begin
     3:
     begin
       SDL_FillRect(screen, nil, 0);
-      display_img(pchar(AppPath + 'resource/open.png'), OpenPicPosition.x, OpenPicPosition.y);
+      display_img(PChar(AppPath + 'resource/open.png'), OpenPicPosition.x, OpenPicPosition.y);
     end;
     4:
     begin
       SDL_FillRect(screen, nil, 0);
-      display_img(pchar(AppPath + 'resource/dead.png'), OpenPicPosition.x, OpenPicPosition.y);
+      display_img(PChar(AppPath + 'resource/dead.png'), OpenPicPosition.x, OpenPicPosition.y);
     end;
   end;
   if WriteFresh = 1 then
@@ -884,7 +884,7 @@ begin
     DrawMPic(BuildArray[i].b, pos.x, pos.y);
   end;
   DrawClouds;
-   DrawVirtualKey;
+  DrawVirtualKey;
 end;
 
 
@@ -1685,8 +1685,8 @@ begin
     r := 128;
     case VirtualKeyValue of
       SDLK_UP: u := 0;
-      SDLK_Left: l := 0;
-      SDLK_down: d := 0;
+      SDLK_LEFT: l := 0;
+      SDLK_DOWN: d := 0;
       SDLK_RIGHT: r := 0;
     end;
     SDL_SetSurfaceAlphaMod(VirtualKeyU, 255 - u);

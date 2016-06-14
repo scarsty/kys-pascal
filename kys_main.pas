@@ -47,7 +47,7 @@ uses
   Math,
   SDL2_TTF,
   SDL2,
-SDL2_image,
+  SDL2_image,
   iniFiles,
   bass;
 
@@ -173,8 +173,8 @@ begin
   SetMODVersion;
 
   TTF_Init();
-  font := TTF_OpenFont(pchar(AppPath + CHINESE_FONT), CHINESE_FONT_SIZE);
-  engfont := TTF_OpenFont(pchar(AppPath + ENGLISH_FONT), ENGLISH_FONT_SIZE);
+  font := TTF_OpenFont(PChar(AppPath + CHINESE_FONT), CHINESE_FONT_SIZE);
+  engfont := TTF_OpenFont(PChar(AppPath + ENGLISH_FONT), ENGLISH_FONT_SIZE);
 
   //此处测试中文字体的空格宽度
   Text := TTF_RenderUNICODE_solid(font, @word[0], tempcolor);
@@ -195,7 +195,7 @@ begin
   //SDL_Init(SDL_INIT_VIDEO);
   if (SDL_Init(SDL_INIT_VIDEO) < 0) then
   begin
-    MessageBox(0, pchar(Format('Couldn''t initialize SDL : %s', [SDL_GetError])), 'Error', MB_OK or MB_ICONHAND);
+    MessageBox(0, PChar(Format('Couldn''t initialize SDL : %s', [SDL_GetError])), 'Error', MB_OK or MB_ICONHAND);
     SDL_Quit;
     exit;
   end;
@@ -221,7 +221,7 @@ begin
   if HARDWARE_BLIT = 1 then
     ScreenFlag := ScreenFlag or SDL_HWSURFACE or SDL_HWACCEL;}
 
-  window := SDL_CreateWindow(pchar(TitleString), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+  window := SDL_CreateWindow(PChar(TitleString), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
     RESOLUTIONX, RESOLUTIONY, ScreenFlag);
 
   SDL_GetWindowSize(window, @RESOLUTIONX, @RESOLUTIONY);
@@ -234,7 +234,7 @@ begin
   end;
 
   //SDL_WM_SetCaption(pchar(TitleString), 's.weyl');
-  SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, pchar(IntToStr(SMOOTH)));
+  SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, PChar(IntToStr(SMOOTH)));
 
   render := SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED or SDL_RENDERER_TARGETTEXTURE);
   screen := SDL_CreateRGBSurface(ScreenFlag, CENTER_X * 2, CENTER_Y * 2, 32, RMask, GMask, BMask, 0);
@@ -508,10 +508,10 @@ begin
       VirtualKeyY := Kys_ini.ReadInteger('system', 'Virtual_Key_Y', 250);
       if FileExists(AppPath + 'resource/u.png') then
       begin
-        VirtualKeyU := IMG_Load(pchar(AppPath + 'resource/u.png'));
-        VirtualKeyD := IMG_Load(pchar(AppPath + 'resource/d.png'));
-        VirtualKeyL := IMG_Load(pchar(AppPath + 'resource/l.png'));
-        VirtualKeyR := IMG_Load(pchar(AppPath + 'resource/r.png'));
+        VirtualKeyU := IMG_Load(PChar(AppPath + 'resource/u.png'));
+        VirtualKeyD := IMG_Load(PChar(AppPath + 'resource/d.png'));
+        VirtualKeyL := IMG_Load(PChar(AppPath + 'resource/l.png'));
+        VirtualKeyR := IMG_Load(PChar(AppPath + 'resource/r.png'));
       end
       else
         ShowVirtualKey := 0;
@@ -721,7 +721,7 @@ var
 begin
   instruct_14;
   Redraw;
-  i := FileOpen(pchar(AppPath + 'list/start.txt'), fmOpenRead);
+  i := FileOpen(PChar(AppPath + 'list/start.txt'), fmOpenRead);
   len := FileSeek(i, 0, 2);
   FileSeek(i, 0, 0);
   setlength(str, len + 1);
@@ -771,12 +771,12 @@ var
 {$ELSE}
   Name, homename: WideString;
 {$ENDIF}
-  p0, p1: pchar;
+  p0, p1: PChar;
   named: boolean;
   {$ifdef android}
   env: PJNIEnv;
   jstr: jstring;
-  cstr: pchar;
+  cstr: PChar;
   activity: jobject;
   clazz: jclass;
   method_id: jmethodID;
@@ -1812,7 +1812,7 @@ var
   x, y, walking, speed, Mx1, My1, Mx2, My2, i, i1, i2, stillcount, axp, ayp: integer;
   axp1, ayp1, gotoEntrance, minstep, step, drawed: integer;
   now, next_time, next_time2, next_time3: uint32;
-  keystate: pchar;
+  keystate: PChar;
   pos: Tposition;
 begin
   if where >= 3 then
@@ -1922,7 +1922,7 @@ begin
       //功能键(esc)使用松开按键事件
       SDL_KEYUP:
       begin
-        keystate := pchar(SDL_GetKeyboardState(nil));
+        keystate := PChar(SDL_GetKeyboardState(nil));
         if (puint8(keystate + SDL_scancode_LEFT)^ = 0) and (puint8(keystate + SDL_scancode_RIGHT)^ = 0) and
           (puint8(keystate + SDL_scancode_UP)^ = 0) and (puint8(keystate + SDL_scancode_DOWN)^ = 0) then
         begin
@@ -1953,15 +1953,15 @@ begin
       begin
         if ShowVirtualKey = 0 then
         begin
-        SDL_GetMouseState2(x, y);
-        if (x < CENTER_X) and (y < CENTER_Y) then
-          Mface := 2;
-        if (x > CENTER_X) and (y < CENTER_Y) then
-          Mface := 0;
-        if (x < CENTER_X) and (y > CENTER_Y) then
-          Mface := 3;
-        if (x > CENTER_X) and (y > CENTER_Y) then
-          Mface := 1;
+          SDL_GetMouseState2(x, y);
+          if (x < CENTER_X) and (y < CENTER_Y) then
+            Mface := 2;
+          if (x > CENTER_X) and (y < CENTER_Y) then
+            Mface := 0;
+          if (x < CENTER_X) and (y > CENTER_Y) then
+            Mface := 3;
+          if (x > CENTER_X) and (y > CENTER_Y) then
+            Mface := 1;
         end;
       end;
       SDL_MOUSEBUTTONUP:
@@ -2270,7 +2270,7 @@ var
   scencename: WideString;
   now, next_time, next_time2: uint32;
   AmiCount: integer; //场景内动态效果计数
-  keystate: pchar;
+  keystate: PChar;
   UpDate: PSDL_Thread;
   pos: Tposition;
 begin
@@ -2425,7 +2425,7 @@ begin
     case event.type_ of
       SDL_KEYUP:
       begin
-        keystate := pchar(SDL_GetKeyboardState(nil));
+        keystate := PChar(SDL_GetKeyboardState(nil));
         if (puint8(keystate + SDL_scancode_LEFT)^ = 0) and (puint8(keystate + SDL_scancode_RIGHT)^ = 0) and
           (puint8(keystate + SDL_scancode_UP)^ = 0) and (puint8(keystate + SDL_scancode_DOWN)^ = 0) then
         begin
@@ -2491,15 +2491,15 @@ begin
       begin
         if ShowVirtualKey = 0 then
         begin
-        SDL_GetMouseState2(x, y);
-        if (x < CENTER_X) and (y < CENTER_Y) then
-          Mface := 2;
-        if (x > CENTER_X) and (y < CENTER_Y) then
-          Mface := 0;
-        if (x < CENTER_X) and (y > CENTER_Y) then
-          Mface := 3;
-        if (x > CENTER_X) and (y > CENTER_Y) then
-          Mface := 1;
+          SDL_GetMouseState2(x, y);
+          if (x < CENTER_X) and (y < CENTER_Y) then
+            Mface := 2;
+          if (x > CENTER_X) and (y < CENTER_Y) then
+            Mface := 0;
+          if (x < CENTER_X) and (y > CENTER_Y) then
+            Mface := 3;
+          if (x > CENTER_X) and (y > CENTER_Y) then
+            Mface := 1;
         end;
       end;
       SDL_MOUSEBUTTONUP:
@@ -2646,7 +2646,7 @@ begin
             //sdl_delay(20);
           end;
           //if event.key.keysym.sym = 0 then
-            //walking := 0;
+          //walking := 0;
         end;
         2:
         begin
@@ -2904,8 +2904,8 @@ begin
   if snum >= 0 then
   begin
     scencename := Big5ToUnicode(@Rscence[snum].Name);
-    DrawTextWithRect(screen, @scencename[1], CENTER_X - length(pchar(@Rscence[snum].Name)) * 5 + 7, 100,
-      length(pchar(@Rscence[snum].Name)) * 10 + 6, ColColor(5), ColColor(7));
+    DrawTextWithRect(screen, @scencename[1], CENTER_X - length(PChar(@Rscence[snum].Name)) * 5 + 7, 100,
+      length(PChar(@Rscence[snum].Name)) * 10 + 6, ColColor(5), ColColor(7));
 
     //改变音乐
     if Rscence[snum].EntranceMusic >= 0 then
@@ -4268,9 +4268,9 @@ begin
   begin
     str := format('%5d', [RItemlist[listnum].Amount]);
     DrawEngShadowText(screen, @str[1], 430, 32, ColColor($64), ColColor($66));
-    len := length(pchar(@Ritem[item].Name));
+    len := length(PChar(@Ritem[item].Name));
     DrawBig5ShadowText(screen, @Ritem[item].Name, 305 - len * 5, 32, ColColor($21), ColColor($23));
-    len := length(pchar(@Ritem[item].Introduction));
+    len := length(PChar(@Ritem[item].Introduction));
     DrawBig5ShadowText(screen, @Ritem[item].Introduction, 305 - len * 5, 62, ColColor($5), ColColor($7));
     DrawShadowText(screen, @words[Ritem[item].ItemType, 1], 117, 315, ColColor($21), ColColor($23));
     //如有人使用则显示
@@ -5406,7 +5406,7 @@ begin
     str1 := inputbox('Script file number:', str1, '1');
     str2 := '';
     str2 := inputbox('Function name:', str2, 'f1');
-    if ExecScript(pchar(AppPath + 'script/' + str1 + '.lua'), pchar(str2)) <> 0 then
+    if ExecScript(PChar(AppPath + 'script/' + str1 + '.lua'), PChar(str2)) <> 0 then
     begin
       DrawTextWithRect(screen, @str[1], 100, 200, 150, $FFFFFFFF, $FFFFFFFF);
       WaitAnyKey;
@@ -5646,7 +5646,7 @@ begin
       word[18] := ('增加射擊能力');
     end;
 
-    DrawRectangle(screen, 100, 70, 100 + length(pchar(@Ritem[inum].Name)) * 10, 25, 0, ColColor(255), 50);
+    DrawRectangle(screen, 100, 70, 100 + length(PChar(@Ritem[inum].Name)) * 10, 25, 0, ColColor(255), 50);
     str := '服用';
     if Ritem[inum].ItemType = 2 then
       str := UTF8Decode(format('練成%d次', [Result]));
@@ -6162,7 +6162,7 @@ begin
     //lua_dofile(Lua_script, AppPath + 'script/oldevent/oldevent_' + inttostr(num));
     if IsConsole then
       writeln('Run event with ', num, '.lua script. ');
-    ExecScript(pchar(AppPath + 'script/oldevent/oldevent_' + IntToStr(num) + '.lua'), nil);
+    ExecScript(PChar(AppPath + 'script/oldevent/oldevent_' + IntToStr(num) + '.lua'), nil);
   end;
 
   //event.key.keysym.sym := 0;
