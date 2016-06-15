@@ -856,7 +856,7 @@ var
 begin
   if (x >= 0) and (x < surface.w) and (y >= 0) and (y < surface.h) then
   begin
-    Result := puint32(uint32(surface.pixels) + y * surface.pitch + x * 4)^;
+    Result := puint32(ptruint(surface.pixels) + y * surface.pitch + x * 4)^;
     {bpp := surface.format.BytesPerPixel;
     // Here p is the address to the pixel we want to retrieve
     p := Pointer(uint32(surface.pixels) + y * surface.pitch + x * bpp);
@@ -891,7 +891,7 @@ var
 begin
   if (x >= 0) and (x < surface.w) and (y >= 0) and (y < surface.h) then
   begin
-    puint32(uint32(surface.pixels) + y * surface.pitch + x * 4)^ := pixel;
+    puint32(ptruint(surface.pixels) + y * surface.pitch + x * 4)^ := pixel;
     {bpp := surface.format.BytesPerPixel;
     // Here p is the address to the pixel we want to set
     p := Pointer(uint32(surface.pixels) + y * surface.pitch + x * bpp);
@@ -1816,7 +1816,7 @@ begin
   if scr1 = screen then
   begin
     // Here p is the address to the pixel we want to set
-    p := Pointer(uint32(screen.pixels) + y * screen.pitch + x * screen.format.BytesPerPixel);
+    p := Pointer(nativeuint(screen.pixels) + y * screen.pitch + x * screen.format.BytesPerPixel);
     SDL_UpdateTexture(screenTex, @dest, p, screen.pitch);
     SDL_RenderCopy(render, screenTex, nil, nil);
     SDL_RenderPresent(render);

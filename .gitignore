@@ -11,3 +11,6 @@ sound/
 *.or
 *.ppu
 *.a
+*.zip
+*.bin
+*.txt

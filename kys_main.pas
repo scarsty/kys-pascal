@@ -4398,6 +4398,7 @@ procedure DrawItemFrame(x, y: integer);
 var
   i, xp, yp, d: integer;
   t: byte;
+  c: uint32;
 begin
   xp := 110;
   yp := 60;
@@ -4405,10 +4406,11 @@ begin
   for i := 0 to 39 do
   begin
     t := 250 - i * 3;
-    PutPixel(screen, x * d + 6 + i + xp, y * d + 36 + yp, SDL_MapRGB(screen.format, t, t, t));
-    PutPixel(screen, x * d + 6 + 39 - i + xp, y * d + 36 + 39 + yp, SDL_MapRGB(screen.format, t, t, t));
-    PutPixel(screen, x * d + 6 + xp, y * d + 36 + i + yp, SDL_MapRGB(screen.format, t, t, t));
-    PutPixel(screen, x * d + 6 + 39 + xp, y * d + 36 + 39 - i + yp, SDL_MapRGB(screen.format, t, t, t));
+    c := SDL_MapRGB(screen.format, t, t, t);
+    PutPixel(screen, x * d + 6 + i + xp, y * d + 36 + yp, c);
+    PutPixel(screen, x * d + 6 + 39 - i + xp, y * d + 36 + 39 + yp, c);
+    PutPixel(screen, x * d + 6 + xp, y * d + 36 + i + yp, c);
+    PutPixel(screen, x * d + 6 + 39 + xp, y * d + 36 + 39 - i + yp, c);
   end;
 
 end;
