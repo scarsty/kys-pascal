@@ -1,7 +1,8 @@
-#用Object Pascal和SDL实现的DOS游戏《金庸群侠传》的重制版
+#DOS游戏《金庸群侠传》复刻版
+<img src='https://raw.githubusercontent.com/scarsty/kys-pascal/master/open.png' />
 
-这是目前网路上最完善的《金庸群侠传》复刻版，通过更换数据包，可以运行大部分MOD。
-因google code即将关闭，本项目迁移至github。
+《金庸群侠传》复刻版，通过更换数据包，可以运行大部分MOD。
+因google code已经关闭，本项目迁移至github。
 
 #如何编译
 首先下载游戏本体，其中包含了Windows版本的exe文件和dll文件以及资源文件：<http://pan.baidu.com/s/1pJ9Giwj>。
