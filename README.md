@@ -24,5 +24,4 @@
 未包含Android的工程。
 
 ## 注意
-因为衍生版本《金庸水浒传》（<https://github.com/scarsty/hugebase>）代码的完备程度已经超过这个版本，故本工程暂时停止更新。
 建议改用c++版：<https://github.com/scarsty/kys-cpp>。
