@@ -1,11 +1,13 @@
-#《金庸群侠传》复刻版
+# 《金庸群侠传》复刻版
 <img src='https://raw.githubusercontent.com/scarsty/kys-pascal/master/open.png' />
+
+<img src='https://raw.githubusercontent.com/scarsty/kys-pascal/master/2.png' />
 
 原DOS下面的经典游戏《金庸群侠传》pascal复刻版。
 
 通过更换数据包，可以运行大部分MOD。
 
-##如何编译
+## 如何编译
 首先下载游戏本体，其中包含了Windows版本的exe文件和dll文件以及资源文件：<http://pan.baidu.com/s/1pJ9Giwj>。
 
 注意大部分是使用商业性质的素材，这个分享可能是违规的。
@@ -21,5 +23,5 @@
 
 未包含Android的工程。
 
-##注意
-因为衍生版本《金庸水浒传》（<https://github.com/scarsty/hugebase>）代码的完备程度已经超过这个版本，故本工程暂时停止更新。
+## 注意
+建议改用c++版：<https://github.com/scarsty/kys-cpp>。
