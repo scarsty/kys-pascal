@@ -21,3 +21,9 @@ UPedit/
 sfeu16/
 *.or
 *.zip
+*.dll
+*.exe
+*.obj
+*.bak
+*.lps
+*.compiled
