@@ -3802,9 +3802,11 @@ begin
     str := ('隊員目前生命');
     DrawTextWithRect(screen, @str[1], 230, 30, 132, ColColor($21), ColColor($23));
     menu := SelectOneTeamMember(230, 65, '%4d/%4d', 17, 18);
-    role2 := TeamList[menu];
     if menu >= 0 then
+    begin
+      role2 := TeamList[menu];
       EffectMedcine(role1, role2);
+    end;
   end;
   //waitanykey;
   //ReFreshScreen;
@@ -3830,9 +3832,11 @@ begin
     str := ('隊員中毒程度');
     DrawTextWithRect(screen, @str[1], 230, 30, 132, ColColor($21), ColColor($23));
     menu := SelectOneTeamMember(230, 65, '%4d', 20, 0);
-    role2 := TeamList[menu];
     if menu >= 0 then
+    begin
+      role2 := TeamList[menu];
       EffectMedPoison(role1, role2);
+    end;
   end;
   //waitanykey;
   //ReFreshScreen;
