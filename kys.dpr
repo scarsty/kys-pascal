@@ -10,7 +10,7 @@
 
 {$ENDIF}
 
-//{$APPTYPE CONSOLE}
+{$APPTYPE CONSOLE}
 
 uses
   SysUtils,
@@ -23,8 +23,7 @@ uses
   kys_engine in 'kys_engine.pas',
   kys_script in 'kys_script.pas',
   kys_draw in 'kys_draw.pas',
-  kys_type in 'kys_type.pas',
-  lua52 in 'lua52.pas';
+  kys_type in 'kys_type.pas';
 
 {$R *.res}
 

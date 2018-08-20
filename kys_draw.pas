@@ -1,4 +1,4 @@
-unit kys_draw;
+﻿unit kys_draw;
 
 //{$mode delphi}
 
@@ -219,7 +219,7 @@ procedure InitialSPic(num, px, py, x, y, w, h, needBlock, depth, temp: integer);
 var
   Area: TSDL_Rect;
   pImg: PSDL_Surface;
-  pBlock: PChar;
+  pBlock: PAnsiChar;
 begin
   if temp = 0 then
   begin
@@ -281,7 +281,7 @@ procedure DrawHeadPic(num, px, py: integer; scr: PSDL_Surface); overload;
 var
   image: PSDL_Surface;
   dest: TSDL_Rect;
-  str: string;
+  str: AnsiString;
   Area: TSDL_Rect;
   offset: integer;
   y: smallint;
@@ -289,7 +289,7 @@ begin
   str := AppPath + 'head/' + IntToStr(num) + '.png';
   if FileExists(str) then
   begin
-    image := IMG_Load(PChar(str));
+    image := IMG_Load(PAnsiChar(str));
     dest.x := px;
     dest.y := py;
     SDL_BlitSurface(image, nil, scr, @dest);
@@ -315,7 +315,7 @@ end;
 procedure DrawHeadPic(num, px, py, shadow, alpha, depth: integer; mixColor: uint32; mixAlpha: integer); overload;
 var
   len, grp, idx: integer;
-  str: string;
+  str: AnsiString;
 begin
   str := AppPath + 'head/' + IntToStr(num) + '.png';
   if FileExists(str) { *Converted from FileExists*  } then
@@ -502,12 +502,12 @@ begin
     3:
     begin
       SDL_FillRect(screen, nil, 0);
-      display_img(PChar(AppPath + 'resource/open.png'), OpenPicPosition.x, OpenPicPosition.y);
+      display_img(PAnsiChar(AppPath + 'resource/open.png'), OpenPicPosition.x, OpenPicPosition.y);
     end;
     4:
     begin
       SDL_FillRect(screen, nil, 0);
-      display_img(PChar(AppPath + 'resource/dead.png'), OpenPicPosition.x, OpenPicPosition.y);
+      display_img(PAnsiChar(AppPath + 'resource/dead.png'), OpenPicPosition.x, OpenPicPosition.y);
     end;
   end;
   if WriteFresh = 1 then
@@ -551,7 +551,7 @@ begin
   begin
     if (SDL_LockSurface(screen) < 0) then
     begin
-      MessageBox(0, PChar(Format('Can''t lock screen : %s', [SDL_GetError])), 'Error', MB_OK or MB_ICONHAND);
+      MessageBox(0, PAnsiChar(Format('Can''t lock screen : %s', [SDL_GetError])), 'Error', MB_OK or MB_ICONHAND);
       exit;
     end;
   end;
@@ -640,7 +640,7 @@ begin
   begin
     if (SDL_LockSurface(screen) < 0) then
     begin
-      MessageBox(0, PChar(Format('Can''t lock screen : %s', [SDL_GetError])), 'Error', MB_OK or MB_ICONHAND);
+      MessageBox(0, PAnsiChar(Format('Can''t lock screen : %s', [SDL_GetError])), 'Error', MB_OK or MB_ICONHAND);
       exit;
     end;
   end;
@@ -1241,7 +1241,7 @@ begin
   begin
     if (SDL_LockSurface(screen) < 0) then
     begin
-      MessageBox(0, PChar(Format('Can''t lock screen : %s', [SDL_GetError])), 'Error', MB_OK or MB_ICONHAND);
+      MessageBox(0, PAnsiChar(Format('Can''t lock screen : %s', [SDL_GetError])), 'Error', MB_OK or MB_ICONHAND);
       exit;
     end;
   end;}
@@ -1479,7 +1479,7 @@ begin
   begin
     if (SDL_LockSurface(screen) < 0) then
     begin
-      MessageBox(0, PChar(Format('Can''t lock screen : %s', [SDL_GetError])), 'Error', MB_OK or MB_ICONHAND);
+      MessageBox(0, PAnsiChar(Format('Can''t lock screen : %s', [SDL_GetError])), 'Error', MB_OK or MB_ICONHAND);
       exit;
     end;
   end;}

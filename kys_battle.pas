@@ -57,7 +57,7 @@ procedure CalHurtRole(bnum, mnum, level: integer);
 function CalHurtValue(bnum1, bnum2, mnum, level: integer): integer;
 function CalHurtValue2(bnum1, bnum2, mnum, level: integer): integer;
 procedure ShowHurtValue(mode: integer);
-procedure SelectModeColor(mode: integer; var color1, color2: uint32; var str: string; trans: integer = 0);
+procedure SelectModeColor(mode: integer; var color1, color2: uint32; var str: AnsiString; trans: integer = 0);
 procedure CalPoiHurtLife;
 procedure ClearDeadRolePic;
 procedure Wait(bnum: integer);
@@ -105,7 +105,7 @@ uses
 function Battle(battlenum, getexp: integer): boolean;
 var
   i, j, num, SelectTeamList, x, y, PreMusic: integer;
-  path: string;
+  path: AnsiString;
 begin
   Bstatus := 0;
   CurrentBattle := battlenum;
@@ -2047,7 +2047,7 @@ var
   beginpic, i, endpic, x, y, z, min, max, i1, i2: integer;
   posA, posB: TPosition;
   color1, color2: uint32;
-  str: string;
+  str: AnsiString;
 begin
   SelectModeColor(mode, color1, color2, str, 1);
   min := 1000;
@@ -2269,7 +2269,7 @@ end;
 //选择颜色
 //0红色, 2绿色, 4蓝色, 3黄色, 1紫色
 
-procedure SelectModeColor(mode: integer; var color1, color2: uint32; var str: string; trans: integer = 0);
+procedure SelectModeColor(mode: integer; var color1, color2: uint32; var str: AnsiString; trans: integer = 0);
 var
   tempcolor: TSDL_Color;
 begin
@@ -2319,7 +2319,7 @@ var
   i, i1, x, y: integer;
   color1, color2: uint32;
   word: array of WideString;
-  str: string;
+  str: AnsiString;
   pos: TPosition;
 begin
   SelectModeColor(mode, color1, color2, str);
@@ -2808,7 +2808,7 @@ end;
 procedure PlayActionAmination(bnum, mode: integer; mnum: integer = -1);
 var
   d1, d2, dm, rnum, i, beginpic, endpic, idx, grp, tnum, len, spic, Ax1, Ay1: integer;
-  filename: string;
+  filename: AnsiString;
 begin
   Ax1 := Ax;
   Ay1 := Ay;

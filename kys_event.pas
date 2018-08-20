@@ -1510,7 +1510,7 @@ begin
   instruct_14;
 
   i := 0;
-  tempscr := img_load(PChar(AppPath + 'resource/end.png'));
+  tempscr := img_load(PAnsiChar(AppPath + 'resource/end.png'));
   while SDL_PollEvent(@event) >= 0 do
   begin
     CheckBasicEvent;
@@ -1623,11 +1623,11 @@ end;
 function instruct_50e(code, e1, e2, e3, e4, e5, e6: integer): integer;
 var
   i, t1, grp, idx, offset, len, i1, i2: integer;
-  p, p1: PChar;
+  p, p1: PAnsiChar;
   //ps :pstring;
   str: ansistring;
   {$ifdef fpc}
-  word, word1: string;
+  word, word1: AnsiString;
   {$else}
   word, word1: WideString;
   {$endif}
@@ -1732,7 +1732,7 @@ begin
       p := @x50[e3];
       for i := 0 to len - 2 do //最后一位为0, 不处理
       begin
-        p^ := char(byte(p^) xor $FF);
+        p^ := AnsiChar(byte(p^) xor $FF);
         p := p + 1;
       end;
       p^ := char(0);
@@ -1753,7 +1753,7 @@ begin
     end;
     10: //Get the length of a string.
     begin
-      x50[e2] := length(PChar(@x50[e1]));
+      x50[e2] := length(PAnsiChar(@x50[e1]));
       //showmessage(inttostr(x50[e2]));
     end;
     11: //Combine 2 strings.
@@ -2138,7 +2138,7 @@ begin
       for i := 0 to e2 - 1 do
       begin
         menuString[i] := Big5ToUnicode(@x50[x50[e3 + i]]);
-        i1 := length(PChar(@x50[x50[e3 + i]]));
+        i1 := length(PAnsiChar(@x50[x50[e3 + i]]));
         if i1 > t1 then
           t1 := i1;
       end;
@@ -2155,7 +2155,7 @@ begin
       for i := 0 to e2 - 1 do
       begin
         menuString[i] := Big5ToUnicode(@x50[x50[e3 + i]]);
-        i1 := length(PChar(@x50[x50[e3 + i]]));
+        i1 := length(PAnsiChar(@x50[x50[e3 + i]]));
         if i1 > i2 then
           i2 := i1;
       end;
@@ -2294,7 +2294,7 @@ begin
       word1 := CP950ToUTF8(p);
       {$else}
       word1 := Big5ToUnicode(p);
-      word1 := MidStr(word1, 2, length(word1) - 1);
+      //word1 := MidStr(word1, 2, length(word1) - 1);
       {$endif}
       word := '請輸入名字：';
       if FULLSCREEN = 0 then
@@ -2336,7 +2336,7 @@ begin
     begin
       e2 := e_GetValue(0, e1, e2);
       e3 := e_GetValue(1, e1, e3);
-      ExecScript(PChar('script/' + IntToStr(e2) + '.lua'), PChar('f' + IntToStr(e3)));
+      ExecScript(PAnsiChar('script/' + IntToStr(e2) + '.lua'), PAnsiChar('f' + IntToStr(e3)));
     end;
   end;
 
@@ -2390,12 +2390,12 @@ procedure NewTalk(headnum, talknum, namenum, place, showhead, color, frame: inte
 var
   k, alen, newcolor, color1, color2, nh, nw, ch, c1, r1, n, namelen, i, t1, grp, idx: integer;
   offset, len, i1, i2, face, c, nx, ny, hx, hy, hw, hh, x, y, w, h, cell, row: integer;
-  np3, np, np1, np2, tp, p1, ap: PChar;
+  np3, np, np1, np2, tp, p1, ap: PAnsiChar;
   actorarray, talkarray, namearray, name1, name2: array of byte;
   pword: array[0..1] of uint16;
-  {wd,} str: string;
+  {wd,} str: AnsiString;
   temp2: WideString;
-  wd: string;
+  wd: AnsiString;
 begin
   pword[1] := 0;
   face := 4900;

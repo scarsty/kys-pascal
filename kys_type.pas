@@ -52,7 +52,7 @@ type
   TRole = record
     case TCallType of
       Element: (ListNum, HeadNum, IncLife, UnUse: smallint;
-        Name, Nick: array[0..9] of char;
+        Name, Nick: array[0..9] of AnsiChar;
         Sexual, Level: smallint;
         Exp: word;
         CurrentHP, MaxHP, Hurt, Poison, PhyPower: smallint;
@@ -71,8 +71,8 @@ type
   TItem = record
     case TCallType of
       Element: (ListNum: smallint;
-        Name, Name1: array[0..19] of char;
-        Introduction: array[0..29] of char;
+        Name, Name1: array[0..19] of AnsiChar;
+        Introduction: array[0..29] of AnsiChar;
         Magic, AmiNum, User, EquipType, ShowIntro, ItemType, UnKnow5, UnKnow6, UnKnow7: smallint;
         AddCurrentHP, AddMaxHP, AddPoi, AddPhyPower, ChangeMPType, AddCurrentMP, AddMaxMP: smallint;
         AddAttack, AddSpeed, AddDefence, AddMedcine, AddUsePoi, AddMedPoi, AddDefPoi: smallint;
@@ -88,7 +88,7 @@ type
   TScence = record
     case TCallType of
       Element: (ListNum: smallint;
-        Name: array[0..9] of char;
+        Name: array[0..9] of AnsiChar;
         ExitMusic, EntranceMusic: smallint;
         JumpScence, EnCondition: smallint;
         MainEntranceY1, MainEntranceX1, MainEntranceY2, MainEntranceX2: smallint;
@@ -101,7 +101,7 @@ type
   TMagic = record
     case TCallType of
       Element: (ListNum: smallint;
-        Name: array[0..9] of char;
+        Name: array[0..9] of AnsiChar;
         UnKnow: array[0..4] of smallint;
         SoundNum, MagicType, AmiNum, HurtType, AttAreaType, NeedMP, Poison: smallint;
         Attack, MoveDistance, AttDistance, AddMP, HurtMP: array[0..9] of smallint);
@@ -138,7 +138,7 @@ type
   TWarData = record
     case TCallType of
       Element: (Warnum: smallint;
-        Name: array[0..9] of char;
+        Name: array[0..9] of AnsiChar;
         BFieldNum, ExpGot, MusicNum: smallint;
         TeamMate, AutoTeamMate, TeamY, TeamX: array[0..5] of smallint;
         Enemy, EnemyY, EnemyX: array[0..19] of smallint);
@@ -148,7 +148,7 @@ type
   TRoleRedFace = record
     case TCallType of
       Element: (ListNum, HeadNum, IncLife, UnUse: smallint;
-        Name, Nick: array[0..9] of char;
+        Name, Nick: array[0..9] of AnsiChar;
         Sexual, Level: smallint;
         Exp: word;
         CurrentHP, MaxHP, Hurt, Poison, PhyPower: smallint;
@@ -169,8 +169,8 @@ type
   TItemRedFace = record
     case TCallType of
       Element: (//ListNum: smallint;
-        Name: array[0..19] of char;
-        Introduction: array[0..29] of char;
+        Name: array[0..19] of AnsiChar;
+        Introduction: array[0..29] of AnsiChar;
         Magic, AmiNum, User, EquipType, ShowIntro, ItemType, UnKnow5, UnKnow6, UnKnow7: smallint;
         AddCurrentHP, AddMaxHP, AddPoi, AddPhyPower, ChangeMPType, AddCurrentMP, AddMaxMP: smallint;
         AddAttack, AddSpeed, AddDefence, AddMedcine, AddUsePoi, AddMedPoi, AddDefPoi: smallint;
@@ -187,7 +187,7 @@ type
   TMagicRedFace = record
     case TCallType of
       Element: (//ListNum: smallint;
-        Name: array[0..9] of char;
+        Name: array[0..9] of AnsiChar;
         UnKnow: array[0..4] of smallint;
         SoundNum, MagicType, AmiNum, HurtType, AttAreaType, NeedMP, Poison: smallint;
         Attack, MoveDistance, AttDistance, AddMP, HurtMP: array[0..9] of smallint;
@@ -198,7 +198,7 @@ type
   TWarDataRedFace = record
     case TCallType of
       Element: (Warnum: smallint;
-        Name: array[0..9] of char;
+        Name: array[0..9] of AnsiChar;
         BFieldNum, ExpGot, MusicNum: smallint;
         //TeamMate, TeamY, TeamX: array [0..11] of smallint;
         //AutoTeamMate, AutoTeamY, AutoTeamX: array [0..29] of smallint;
@@ -221,7 +221,7 @@ var
   //71-天书劫
 
   //初始值
-  TitleString: string;
+  TitleString: AnsiString;
 
   CHINESE_FONT: PAnsiChar = 'resource/chinese.ttf';
   CHINESE_FONT_SIZE: integer = 20;
@@ -231,7 +231,7 @@ var
   CENTER_X: integer = 320;
   CENTER_Y: integer = 220;
 
-  AppPath: string; //程序的路径
+  AppPath: AnsiString; //程序的路径
 
   //游戏本身的常量
   //以下为常数表, 其中多数可以由ini文件改变
@@ -380,7 +380,7 @@ var
   StartMusic: integer;
   ExitScenceMusicNum: integer; //离开场景的音乐
   nowmusic: integer = -1; //正在播放的音乐
-  //MusicName: string;
+  //MusicName: AnsiString;
 
 
   //事件和脚本部分

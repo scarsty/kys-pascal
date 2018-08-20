@@ -24,7 +24,7 @@ uses
 //初始化脚本配置,运行脚本
 procedure InitialScript;
 procedure DestroyScript;
-function ExecScript(filename, functionname: PChar): integer;
+function ExecScript(filename, functionname: PAnsiChar): integer;
 
 //具体指令,封装基本指令
 function Blank(L: Plua_state): integer; cdecl;
@@ -341,10 +341,10 @@ begin
   //UnloadLua;
 end;
 
-function ExecScript(filename, functionname: PChar): integer;
+function ExecScript(filename, functionname: PAnsiChar): integer;
 var
-  Script: string;
-  //Data: string;
+  Script: AnsiString;
+  //Data: AnsiString;
   Data: TStringList;
   h: integer;
   len: integer;
@@ -1248,9 +1248,9 @@ end;
 
 function GetNameAsString(L: Plua_state): integer; cdecl;
 var
-  str: string;
+  str: AnsiString;
   typenum, num: integer;
-  p1: PChar;
+  p1: PAnsiChar;
 begin
   typenum := floor(lua_tonumber(L, -2));
   num := floor(lua_tonumber(L, -1));

@@ -1,6 +1,6 @@
 unit mythoutput;
 
-{$mode delphi}
+//{$mode delphi}
 
 interface
 

@@ -1,4 +1,4 @@
-unit kys_main;
+﻿unit kys_main;
 
 {$IFDEF fpc}
 //{$MODE Delphi}
@@ -93,7 +93,7 @@ procedure ShowCommonScrollMenu(x, y, w, max, maxshow, menu, menutop: integer;
   menuString, menuEngString: array of WideString);
 function CommonMenu2(x, y, w: integer; menuString: array of WideString): integer;
 procedure ShowCommonMenu2(x, y, w, menu: integer; menuString: array of WideString);
-function SelectOneTeamMember(x, y: integer; str: string; list1, list2: integer): integer;
+function SelectOneTeamMember(x, y: integer; str: AnsiString; list1, list2: integer): integer;
 procedure MenuEsc;
 procedure ShowMenu(menu: integer);
 procedure MenuMedcine;
@@ -148,11 +148,11 @@ uses
 procedure Run;
 var
   Text: PSDL_Surface;
-  word: array[0..1] of uint16 = (32, 0);
+  word: array[0..1] of uint16;// = (32, 0);
   tempcolor: TSDL_Color;
-  str: string;
+  str: AnsiString;
 begin
-
+  word[0]:=32;
 {$IFDEF UNIX}
   AppPath := ExtractFilePath(ParamStr(0));
 {$ELSE}
@@ -173,13 +173,15 @@ begin
   SetMODVersion;
 
   TTF_Init();
-  font := TTF_OpenFont(PChar(AppPath + CHINESE_FONT), CHINESE_FONT_SIZE);
-  engfont := TTF_OpenFont(PChar(AppPath + ENGLISH_FONT), ENGLISH_FONT_SIZE);
+  font := TTF_OpenFont(PAnsiChar(AppPath + CHINESE_FONT), CHINESE_FONT_SIZE);
+  engfont := TTF_OpenFont(PAnsiChar(AppPath + ENGLISH_FONT), ENGLISH_FONT_SIZE);
 
   //此处测试中文字体的空格宽度
   Text := TTF_RenderUNICODE_solid(font, @word[0], tempcolor);
+  //writeln(SDL_geterror());
   //writeln(text.w);
   CHNFONT_SPACEWIDTH := Text.w;
+  //CHNFONT_SPACEWIDTH := 10;
   SDL_FreeSurface(Text);
 
   //初始化音频系统
@@ -195,12 +197,12 @@ begin
   //SDL_Init(SDL_INIT_VIDEO);
   if (SDL_Init(SDL_INIT_VIDEO) < 0) then
   begin
-    MessageBox(0, PChar(Format('Couldn''t initialize SDL : %s', [SDL_GetError])), 'Error', MB_OK or MB_ICONHAND);
+  //  MessageBox(0, PAnsiChar(Format('Couldn''t initialize SDL : %s', [SDL_GetError])), 'Error', MB_OK or MB_ICONHAND);
     SDL_Quit;
     exit;
   end;
 
-  //SDL_WM_SetIcon(IMG_Load(pchar(AppPath + 'resource/icon.png')), 0);
+  //SDL_WM_SetIcon(IMG_Load(PAnsiChar(AppPath + 'resource/icon.png')), 0);
 
   ScreenFlag := SDL_WINDOW_RESIZABLE;
   {SDL_HWSURFACE or SDL_HWACCEL or SDL_ANYFORMAT or SDL_ASYNCBLIT or SDL_FULLSCREEN};
@@ -221,7 +223,7 @@ begin
   if HARDWARE_BLIT = 1 then
     ScreenFlag := ScreenFlag or SDL_HWSURFACE or SDL_HWACCEL;}
 
-  window := SDL_CreateWindow(PChar(TitleString), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+  window := SDL_CreateWindow(PAnsiChar(TitleString), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
     RESOLUTIONX, RESOLUTIONY, ScreenFlag);
 
   SDL_GetWindowSize(window, @RESOLUTIONX, @RESOLUTIONY);
@@ -233,8 +235,8 @@ begin
     //SDL_WarpMouseInWindow(window, RESOLUTIONX, RESOLUTIONY);
   end;
 
-  //SDL_WM_SetCaption(pchar(TitleString), 's.weyl');
-  SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, PChar(IntToStr(SMOOTH)));
+  //SDL_WM_SetCaption(PAnsiChar(TitleString), 's.weyl');
+  //SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, PAnsiChar(AnsiString(SMOOTH)));
 
   render := SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED or SDL_RENDERER_TARGETTEXTURE);
   screen := SDL_CreateRGBSurface(ScreenFlag, CENTER_X * 2, CENTER_Y * 2, 32, RMask, GMask, BMask, 0);
@@ -276,7 +278,7 @@ begin
   SDL_SetEventFilter(@EventFilter, nil);
   mutex := SDL_CreateMutex();
 
-  SDL_AddTimer(200, UpdateScenceAmi, nil);
+  //SDL_AddTimer(200, UpdateScenceAmi, nil);
 
   Start;
 
@@ -303,7 +305,7 @@ end;
 
 procedure SetMODVersion;
 var
-  filename: string;
+  filename: AnsiString;
   Kys_ini: TIniFile;
 begin
 
@@ -437,7 +439,7 @@ end;
 procedure ReadFiles;
 var
   grp, idx, tnum, len, col, i, k: integer;
-  filename: string;
+  filename: AnsiString;
   Kys_ini: TIniFile;
   LoadPNGTilesThread: PSDL_Thread;
 begin
@@ -508,10 +510,10 @@ begin
       VirtualKeyY := Kys_ini.ReadInteger('system', 'Virtual_Key_Y', 250);
       if FileExists(AppPath + 'resource/u.png') then
       begin
-        VirtualKeyU := IMG_Load(PChar(AppPath + 'resource/u.png'));
-        VirtualKeyD := IMG_Load(PChar(AppPath + 'resource/d.png'));
-        VirtualKeyL := IMG_Load(PChar(AppPath + 'resource/l.png'));
-        VirtualKeyR := IMG_Load(PChar(AppPath + 'resource/r.png'));
+        VirtualKeyU := IMG_Load(PAnsiChar(AppPath + 'resource/u.png'));
+        VirtualKeyD := IMG_Load(PAnsiChar(AppPath + 'resource/d.png'));
+        VirtualKeyL := IMG_Load(PAnsiChar(AppPath + 'resource/l.png'));
+        VirtualKeyR := IMG_Load(PAnsiChar(AppPath + 'resource/r.png'));
       end
       else
         ShowVirtualKey := 0;
@@ -721,7 +723,7 @@ var
 begin
   instruct_14;
   Redraw;
-  i := FileOpen(PChar(AppPath + 'list/start.txt'), fmOpenRead);
+  i := FileOpen(PAnsiChar(AppPath + 'list/start.txt'), fmOpenRead);
   len := FileSeek(i, 0, 2);
   FileSeek(i, 0, 0);
   setlength(str, len + 1);
@@ -765,18 +767,18 @@ var
   i: integer;
   p: array[0..14] of integer;
   str, str0: WideString;
-  str1, str2, tempname: string;
+  str1, str2, tempname: AnsiString;
 {$IFDEF fpc}
-  Name, homename: string;
+  Name, homename: AnsiString;
 {$ELSE}
   Name, homename: WideString;
 {$ENDIF}
-  p0, p1: PChar;
+  p0, p1: PAnsiChar;
   named: boolean;
   {$ifdef android}
   env: PJNIEnv;
   jstr: jstring;
-  cstr: PChar;
+  cstr: PAnsiChar;
   activity: jobject;
   clazz: jclass;
   method_id: jmethodID;
@@ -810,7 +812,7 @@ begin
   named := True;
 {$else}
 {$ifndef linux}
-  named := InputQuery('Enter name', str1, ansistring(tempname));
+  //named := InputQuery('Enter name', str1, ansistring(tempname));
 {$endif}
   Name := tempname;
 {$endif}
@@ -1592,7 +1594,7 @@ end;
 
 procedure LoadR(num: integer);
 var
-  filename: string;
+  filename: AnsiString;
   idx, grp, i1, i2, len, ScenceAmount: integer;
   BasicOffset, RoleOffset, ItemOffset, ScenceOffset, MagicOffset, WeiShopOffset, i: integer;
 begin
@@ -1687,7 +1689,7 @@ end;
 
 procedure SaveR(num: integer);
 var
-  filename: string;
+  filename: AnsiString;
   idx, grp, i1, i2, length, ScenceAmount: integer;
   BasicOffset, RoleOffset, ItemOffset, ScenceOffset, MagicOffset, WeiShopOffset, i: integer;
 begin
@@ -1814,7 +1816,7 @@ var
   x, y, walking, speed, Mx1, My1, Mx2, My2, i, i1, i2, stillcount, axp, ayp: integer;
   axp1, ayp1, gotoEntrance, minstep, step, drawed: integer;
   now, next_time, next_time2, next_time3: uint32;
-  keystate: PChar;
+  keystate: PAnsiChar;
   pos: Tposition;
 begin
   if where >= 3 then
@@ -1924,7 +1926,7 @@ begin
       //功能键(esc)使用松开按键事件
       SDL_KEYUP:
       begin
-        keystate := PChar(SDL_GetKeyboardState(nil));
+        keystate := PAnsiChar(SDL_GetKeyboardState(nil));
         if (puint8(keystate + SDL_scancode_LEFT)^ = 0) and (puint8(keystate + SDL_scancode_RIGHT)^ = 0) and
           (puint8(keystate + SDL_scancode_UP)^ = 0) and (puint8(keystate + SDL_scancode_DOWN)^ = 0) then
         begin
@@ -2268,11 +2270,11 @@ function WalkInScence(Open: integer): integer;
 var
   grp, idx, offset, just, i1, i2, x, y, haveAmi, preface, drawed: integer;
   Sx1, Sy1, s, i, walking, Prescence, stillcount, speed, axp, ayp, gotoevent, minstep, axp1, ayp1, step: integer;
-  filename: string;
+  filename: AnsiString;
   scencename: WideString;
   now, next_time, next_time2: uint32;
   AmiCount: integer; //场景内动态效果计数
-  keystate: PChar;
+  keystate: PAnsiChar;
   UpDate: PSDL_Thread;
   pos: Tposition;
 begin
@@ -2427,7 +2429,7 @@ begin
     case event.type_ of
       SDL_KEYUP:
       begin
-        keystate := PChar(SDL_GetKeyboardState(nil));
+        keystate := PAnsiChar(SDL_GetKeyboardState(nil));
         if (puint8(keystate + SDL_scancode_LEFT)^ = 0) and (puint8(keystate + SDL_scancode_RIGHT)^ = 0) and
           (puint8(keystate + SDL_scancode_UP)^ = 0) and (puint8(keystate + SDL_scancode_DOWN)^ = 0) then
         begin
@@ -2906,8 +2908,8 @@ begin
   if snum >= 0 then
   begin
     scencename := Big5ToUnicode(@Rscence[snum].Name);
-    DrawTextWithRect(screen, @scencename[1], CENTER_X - length(PChar(@Rscence[snum].Name)) * 5 + 7, 100,
-      length(PChar(@Rscence[snum].Name)) * 10 + 6, ColColor(5), ColColor(7));
+    DrawTextWithRect(screen, @scencename[1], CENTER_X - length(PAnsiChar(@Rscence[snum].Name)) * 5 + 7, 100,
+      length(PAnsiChar(@Rscence[snum].Name)) * 10 + 6, ColColor(5), ColColor(7));
 
     //改变音乐
     if Rscence[snum].EntranceMusic >= 0 then
@@ -3570,7 +3572,7 @@ end;
 
 //选择一名队员, 可以附带两个属性显示
 
-function SelectOneTeamMember(x, y: integer; str: string; list1, list2: integer): integer;
+function SelectOneTeamMember(x, y: integer; str: AnsiString; list1, list2: integer): integer;
 var
   i, amount: integer;
   menuString, menuEngString: array of WideString;
@@ -4274,9 +4276,9 @@ begin
   begin
     str := format('%5d', [RItemlist[listnum].Amount]);
     DrawEngShadowText(screen, @str[1], 430, 32, ColColor($64), ColColor($66));
-    len := length(PChar(@Ritem[item].Name));
+    len := length(PAnsiChar(@Ritem[item].Name));
     DrawBig5ShadowText(screen, @Ritem[item].Name, 305 - len * 5, 32, ColColor($21), ColColor($23));
-    len := length(PChar(@Ritem[item].Introduction));
+    len := length(PAnsiChar(@Ritem[item].Introduction));
     DrawBig5ShadowText(screen, @Ritem[item].Introduction, 305 - len * 5, 62, ColColor($5), ColColor($7));
     DrawShadowText(screen, @words[Ritem[item].ItemType, 1], 117, 315, ColColor($21), ColColor($23));
     //如有人使用则显示
@@ -5389,7 +5391,7 @@ end;
 procedure MenuQuit;
 var
   menu: integer;
-  str1, str2: string;
+  str1, str2: AnsiString;
   str: WideString;
   menuString: array[0..2] of WideString;
 begin
@@ -5414,7 +5416,7 @@ begin
     str1 := inputbox('Script file number:', str1, '1');
     str2 := '';
     str2 := inputbox('Function name:', str2, 'f1');
-    if ExecScript(PChar(AppPath + 'script/' + str1 + '.lua'), PChar(str2)) <> 0 then
+    if ExecScript(PAnsiChar(AppPath + 'script/' + str1 + '.lua'), PAnsiChar(str2)) <> 0 then
     begin
       DrawTextWithRect(screen, @str[1], 100, 200, 150, $FFFFFFFF, $FFFFFFFF);
       WaitAnyKey;
@@ -5654,7 +5656,7 @@ begin
       word[18] := ('增加射擊能力');
     end;
 
-    DrawRectangle(screen, 100, 70, 100 + length(PChar(@Ritem[inum].Name)) * 10, 25, 0, ColColor(255), 50);
+    DrawRectangle(screen, 100, 70, 100 + length(PAnsiChar(@Ritem[inum].Name)) * 10, 25, 0, ColColor(255), 50);
     str := '服用';
     if Ritem[inum].ItemType = 2 then
       str := UTF8Decode(format('練成%d次', [Result]));
@@ -6170,7 +6172,7 @@ begin
     //lua_dofile(Lua_script, AppPath + 'script/oldevent/oldevent_' + inttostr(num));
     if IsConsole then
       writeln('Run event with ', num, '.lua script. ');
-    ExecScript(PChar(AppPath + 'script/oldevent/oldevent_' + IntToStr(num) + '.lua'), nil);
+    ExecScript(PAnsiChar(AppPath + 'script/oldevent/oldevent_' + IntToStr(num) + '.lua'), nil);
   end;
 
   //event.key.keysym.sym := 0;
