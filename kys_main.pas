@@ -67,7 +67,7 @@ function WaitAnyKey: integer;
 procedure Walk;
 function CanWalk(x, y: integer): boolean;
 function CheckEntrance: boolean;
-function UpdateScenceAmi(interval: uint32; param: pointer): uint32;
+function UpdateScenceAmi(interval: uint32; param: pointer): uint32; cdecl;
 function WalkInScence(Open: integer): integer;
 procedure FindWay(x1, y1: integer);
 procedure Moveman(x1, y1, x2, y2: integer);
@@ -278,7 +278,7 @@ begin
   SDL_SetEventFilter(@EventFilter, nil);
   mutex := SDL_CreateMutex();
 
-  //SDL_AddTimer(200, UpdateScenceAmi, nil);
+  SDL_AddTimer(200, UpdateScenceAmi, nil);
 
   Start;
 
