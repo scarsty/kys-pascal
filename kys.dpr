@@ -10,7 +10,7 @@
 
 {$ENDIF}
 
-{$APPTYPE CONSOLE}
+//{$APPTYPE CONSOLE}
 
 uses
   SysUtils,

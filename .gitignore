@@ -27,3 +27,6 @@ sfeu16/
 *.bak
 *.lps
 *.compiled
+*.dcu
+__history/
+fight0/

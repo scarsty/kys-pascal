@@ -223,7 +223,7 @@ function BASS_MIDI_StreamGetEvent(handle:HSTREAM; chan,event:DWORD): DWORD; {$IF
 function BASS_MIDI_StreamGetEvents(handle:HSTREAM; chan,filter:DWORD; var events:BASS_MIDI_EVENT): DWORD; {$IFDEF MSWINDOWS}stdcall{$ELSE}cdecl{$ENDIF}; external bassmididll;
 function BASS_MIDI_StreamGetChannel(handle:HSTREAM; chan:DWORD): HSTREAM; {$IFDEF MSWINDOWS}stdcall{$ELSE}cdecl{$ENDIF}; external bassmididll;
 
-function BASS_MIDI_FontInit(fname:PChar; flags:DWORD): HSOUNDFONT; {$IFDEF MSWINDOWS}stdcall{$ELSE}cdecl{$ENDIF}; external bassmididll;
+function BASS_MIDI_FontInit(fname:PAnsiChar; flags:DWORD): HSOUNDFONT; {$IFDEF MSWINDOWS}stdcall{$ELSE}cdecl{$ENDIF}; external bassmididll;
 function BASS_MIDI_FontFree(handle:HSOUNDFONT): BOOL; {$IFDEF MSWINDOWS}stdcall{$ELSE}cdecl{$ENDIF}; external bassmididll;
 function BASS_MIDI_FontGetInfo(handle:HSOUNDFONT; var info:BASS_MIDI_FONTINFO): BOOL; {$IFDEF MSWINDOWS}stdcall{$ELSE}cdecl{$ENDIF}; external bassmididll;
 function BASS_MIDI_FontGetPreset(handle:HSOUNDFONT; preset,bank:LongInt): PAnsiChar; {$IFDEF MSWINDOWS}stdcall{$ELSE}cdecl{$ENDIF}; external bassmididll;

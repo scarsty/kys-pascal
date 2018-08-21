@@ -162,7 +162,7 @@ var
   Flag: longword;
 begin
   BASS_Set3DFactors(1, 0, 0);
-  //sf.font := BASS_MIDI_FontInit(PAnsiChar(AppPath + ansistring('music/mid.sf2')), 0);
+  sf.font := BASS_MIDI_FontInit(PAnsiChar(AppPath + 'music/mid.sf2'), 0);
   BASS_MIDI_StreamSetFonts(0, sf, 1);
   sf.preset := -1; // use all presets
   sf.bank := 0;
@@ -232,7 +232,7 @@ begin
   else
     repeatable := False;
   try
-    if (MusicNum in [Low(Music)..High(Music)]) and (VOLUME > 0) then
+    if (MusicNum >= Low(Music)) and (MusicNum <= High(Music)) and (VOLUME > 0) then
       if Music[MusicNum] <> 0 then
       begin
         //BASS_ChannelSlideAttribute(Music[nowmusic], BASS_ATTRIB_VOL, 0, 1000);
@@ -291,7 +291,7 @@ begin
     repeatable := True
   else
     repeatable := False;
-  if (SoundNum in [Low(Esound)..High(Esound)]) and (VOLUME > 0) then
+  if (SoundNum >= Low(Esound)) and (SoundNum <= High(Esound)) and (VOLUME > 0) then
     if Esound[SoundNum] <> 0 then
     begin
       //Mix_VolumeChunk(Esound[SoundNum], Volume);
@@ -327,7 +327,7 @@ begin
   else
     repeatable := False;
 
-  if (SoundNum in [Low(Esound)..High(Esound)]) and (VOLUMEWAV > 0) then
+  if (SoundNum >= Low(Esound)) and (SoundNum <= High(Esound)) and (VOLUMEWAV > 0) then
     if Esound[SoundNum] <> 0 then
     begin
       //Mix_VolumeChunk(Esound[SoundNum], Volume);
@@ -371,7 +371,7 @@ begin
     repeatable := True
   else
     repeatable := False;
-  if (SoundNum in [Low(Asound)..High(Asound)]) and (VOLUMEWAV > 0) then
+  if (SoundNum >= Low(Asound)) and (SoundNum <= High(Asound)) and (VOLUMEWAV > 0) then
     if Asound[SoundNum] <> 0 then
     begin
       //Mix_VolumeChunk(Esound[SoundNum], Volume);
@@ -551,7 +551,11 @@ begin
     if malloc = 1 then
     begin
       //GetMem(result, size + 4);
+      {$ifdef fpc}
       Result := StrAlloc(size + 4);
+      {$else}
+      Result := AnsiStrAlloc(size + 4);
+      {$endif}
       p := Result;
       //writeln(StrBufSize(p));
     end;
@@ -856,7 +860,7 @@ var
 begin
   if (x >= 0) and (x < surface.w) and (y >= 0) and (y < surface.h) then
   begin
-    Result := puint32(ptruint(surface.pixels) + y * surface.pitch + x * 4)^;
+    Result := puint32(NativeUInt(surface.pixels) + y * surface.pitch + x * 4)^;
     {bpp := surface.format.BytesPerPixel;
     // Here p is the address to the pixel we want to retrieve
     p := Pointer(uint32(surface.pixels) + y * surface.pitch + x * bpp);
@@ -891,7 +895,7 @@ var
 begin
   if (x >= 0) and (x < surface.w) and (y >= 0) and (y < surface.h) then
   begin
-    puint32(ptruint(surface.pixels) + y * surface.pitch + x * 4)^ := pixel;
+    puint32(NativeUInt(surface.pixels) + y * surface.pitch + x * 4)^ := pixel;
     {bpp := surface.format.BytesPerPixel;
     // Here p is the address to the pixel we want to set
     p := Pointer(uint32(surface.pixels) + y * surface.pitch + x * bpp);

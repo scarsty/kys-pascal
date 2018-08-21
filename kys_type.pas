@@ -1,4 +1,4 @@
-unit kys_type;
+﻿unit kys_type;
 
 //{$MODE delphi}
 

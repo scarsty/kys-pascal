@@ -236,7 +236,7 @@ begin
   end;
 
   //SDL_WM_SetCaption(PAnsiChar(TitleString), 's.weyl');
-  //SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, PAnsiChar(AnsiString(SMOOTH)));
+  SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, '1');
 
   render := SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED or SDL_RENDERER_TARGETTEXTURE);
   screen := SDL_CreateRGBSurface(ScreenFlag, CENTER_X * 2, CENTER_Y * 2, 32, RMask, GMask, BMask, 0);
@@ -6197,14 +6197,14 @@ end;
 procedure CloudCreate(num: integer);
 begin
   CloudCreateOnSide(num);
-  if num in [low(cloud)..high(cloud)] then
+  if (num >= low(cloud)) and (num <= high(cloud)) then
     Cloud[num].Positionx := random(17280);
 
 end;
 
 procedure CloudCreateOnSide(num: integer);
 begin
-  if num in [low(Cloud)..high(Cloud)] then
+  if (num >= low(cloud)) and (num <= high(cloud)) then
   begin
     with Cloud[num] do
     begin
