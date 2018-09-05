@@ -2294,7 +2294,7 @@ begin
       word1 := CP950ToUTF8(p);
       {$else}
       word1 := Big5ToUnicode(p);
-      word1 := MidStr(word1, 2, length(word1) - 1);
+      //word1 := MidStr(word1, 2, length(word1) - 1);
       {$endif}
       word := '請輸入名字：';
       if FULLSCREEN = 0 then
