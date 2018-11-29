@@ -10,7 +10,7 @@
 ## 如何编译
 SDL2的pas文件请从<https://github.com/ev1313/Pascal-SDL-2-Headers>获取。其他外部库的文件均已经自带。
 
-首先下载游戏本体，其中包含了Windows版本的exe文件和dll文件以及资源文件：<http://pan.baidu.com/s/1pJ9Giwj>。
+首先下载游戏本体，其中包含了Windows版本的exe文件和dll文件以及资源文件：<https://pan.baidu.com/s/1nv9R5rz>。
 
 注意大部分是使用商业性质的素材，这个分享可能是违规的。
 
