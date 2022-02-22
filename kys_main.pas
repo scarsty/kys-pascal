@@ -1994,7 +1994,8 @@ begin
               ayp := Buildy[axp, ayp];
               for i1 := axp - 3 to axp do
                 for i2 := ayp - 3 to ayp do
-                  if (Entrance[i1, i2] >= 0) and (buildx[i1, i2] = axp) and (buildy[i1, i2] = ayp) then
+                  if (i1 >= 0) and (i2 >= 0)
+                    and (Entrance[i1, i2] >= 0) and (buildx[i1, i2] = axp) and (buildy[i1, i2] = ayp) then
                   begin
                     axp := i1;
                     ayp := i2;
