@@ -425,8 +425,8 @@ begin
 {$ENDIF}
   Kys_ini := TIniFile.Create(filename);
   try
-    RESOLUTIONX := Kys_ini.ReadInteger('system', 'RESOLUTIONX', CENTER_X * 2);
-    RESOLUTIONY := Kys_ini.ReadInteger('system', 'RESOLUTIONY', CENTER_Y * 2);
+    //RESOLUTIONX := Kys_ini.ReadInteger('system', 'RESOLUTIONX', CENTER_X * 2);
+    //RESOLUTIONY := Kys_ini.ReadInteger('system', 'RESOLUTIONY', CENTER_Y * 2);
   finally
     Kys_ini.Free;
   end;
@@ -483,10 +483,10 @@ begin
     HARDWARE_BLIT := Kys_ini.ReadInteger('system', 'HARDWARE_BLIT', 1);
     SMOOTH := Kys_ini.ReadInteger('system', 'SMOOTH', 1);
     GLHR := Kys_ini.ReadInteger('system', 'GLHR', 1);
-    CENTER_X := Kys_ini.ReadInteger('system', 'CENTER_X', 320);
-    CENTER_Y := Kys_ini.ReadInteger('system', 'CENTER_Y', 220);
-    RESOLUTIONX := Kys_ini.ReadInteger('system', 'RESOLUTIONX', CENTER_X * 2);
-    RESOLUTIONY := Kys_ini.ReadInteger('system', 'RESOLUTIONY', CENTER_Y * 2);
+    //CENTER_X := Kys_ini.ReadInteger('system', 'CENTER_X', 320);
+    //CENTER_Y := Kys_ini.ReadInteger('system', 'CENTER_Y', 220);
+    //RESOLUTIONX := Kys_ini.ReadInteger('system', 'RESOLUTIONX', CENTER_X * 2);
+    //RESOLUTIONY := Kys_ini.ReadInteger('system', 'RESOLUTIONY', CENTER_Y * 2);
     VOLUME := Kys_ini.ReadInteger('music', 'VOLUME', 30);
     VOLUMEWAV := Kys_ini.ReadInteger('music', 'VOLUMEWAV', 30);
     SOUND3D := Kys_ini.ReadInteger('music', 'SOUND3D', 1);
@@ -2056,22 +2056,25 @@ begin
           speed := speed + 1;
           Mx1 := Mx;
           My1 := My;
-          case mface of
-            0: Mx1 := Mx1 - 1;
-            1: My1 := My1 + 1;
-            2: My1 := My1 - 1;
-            3: Mx1 := Mx1 + 1;
-          end;
-          Mstep := Mstep + 1;
-          if Mstep >= 7 then
-            Mstep := 1;
-          if CanWalk(Mx1, My1) = True then
+          if (speed = 1) or (speed >= 5) then
           begin
-            Mx := Mx1;
-            My := My1;
+            case mface of
+              0: Mx1 := Mx1 - 1;
+              1: My1 := My1 + 1;
+              2: My1 := My1 - 1;
+              3: Mx1 := Mx1 + 1;
+            end;
+            Mstep := Mstep + 1;
+            if Mstep >= 7 then
+              Mstep := 1;
+            if CanWalk(Mx1, My1) = True then
+            begin
+              Mx := Mx1;
+              My := My1;
+            end;
           end;
-          if (speed <= 1) then
-            SDL_Delay(50);
+          //if (speed <= 1) then
+          //  SDL_Delay(50);
         end;
         2:
         begin
@@ -2627,29 +2630,31 @@ begin
               if (x > CENTER_x) and (y > CENTER_y) then
                 Sface := 1;
             end;}
-          Sx1 := Sx;
-          Sy1 := Sy;
-          case Sface of
-            0: Sx1 := Sx1 - 1;
-            1: Sy1 := Sy1 + 1;
-            2: Sy1 := Sy1 - 1;
-            3: Sx1 := Sx1 + 1;
-          end;
-          Sstep := Sstep + 1;
-          if Sstep >= 7 then
-            Sstep := 1;
-          if CanWalkInScence(Sx1, Sy1) = True then
+          if (speed = 1) or (speed >= 5) then
           begin
-            Sx := Sx1;
-            Sy := Sy1;
+            Sx1 := Sx;
+            Sy1 := Sy;
+            case Sface of
+              0: Sx1 := Sx1 - 1;
+              1: Sy1 := Sy1 + 1;
+              2: Sy1 := Sy1 - 1;
+              3: Sx1 := Sx1 + 1;
+            end;
+            Sstep := Sstep + 1;
+            if Sstep >= 7 then
+              Sstep := 1;
+            if CanWalkInScence(Sx1, Sy1) = True then
+            begin
+              Sx := Sx1;
+              Sy := Sy1;
+            end;
           end;
-
           //一定步数之内一次动一格
-          if (speed <= 1) then
-          begin
-            SDL_Delay(50);
+          //if (speed <= 1) then
+          //begin
+            //SDL_Delay(50);
             //sdl_delay(20);
-          end;
+          //end;
           //if event.key.keysym.sym = 0 then
           //walking := 0;
         end;

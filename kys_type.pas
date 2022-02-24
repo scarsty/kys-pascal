@@ -228,8 +228,8 @@ var
   ENGLISH_FONT: PAnsiChar = 'resource/eng.ttf';
   ENGLISH_FONT_SIZE: integer = 19;
 
-  CENTER_X: integer = 320;
-  CENTER_Y: integer = 220;
+  CENTER_X: integer = 400;
+  CENTER_Y: integer = 225;
 
   AppPath: AnsiString; //程序的路径
 
@@ -322,7 +322,8 @@ var
   TRY_FIND_GRP: integer = 1; //当找不到PNG贴图时, 会试图寻找GRP中的图
   BIG_PNG_TILE: integer = 0;
   FULLSCREEN: integer; //是否全屏
-  RESOLUTIONX, RESOLUTIONY: integer;
+  RESOLUTIONX: integer = 1280;
+  RESOLUTIONY: integer = 720;
   HARDWARE_BLIT: integer; //是否使用硬件绘图
   GLHR: integer = 1; //是否使用OPENGL拉伸
   SMOOTH: integer = 1; //平滑设置 0-完全不平滑, 1-仅标准分辨率不平滑, 2-任何时候都使用平滑
