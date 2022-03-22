@@ -344,10 +344,10 @@ end;
 
 procedure instruct_3(list: array of integer);
 var
-  i, i1, i2, curPic, preEventPic: integer;
+  i, i1, i2, {curPic,} preEventPic: integer;
   ModifyS: boolean;
 begin
-  curPic := DData[CurScence, CurEvent, 5];
+  //curPic := DData[CurScence, CurEvent, 5];
   if list[0] = -2 then
     list[0] := CurScence;
   if list[1] = -2 then

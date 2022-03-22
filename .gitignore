@@ -30,3 +30,7 @@ sfeu16/
 *.dcu
 __history/
 fight0/
+data/
+lib/
+all-mod/
+backup/
