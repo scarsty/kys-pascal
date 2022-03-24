@@ -4575,11 +4575,11 @@ begin
         DrawShadowText(screen, @str1[1], 160, 32, ColColor($64), ColColor($66));
         SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
         menu := SelectOneTeamMember(80, 65, '', 0, 0);
-        rnum := TeamList[menu];
       end;
       if menu >= 0 then
       begin
         Redraw;
+        rnum := TeamList[menu];
         EatOneItem(rnum, inum);
         instruct_32(inum, -1);
         WaitAnyKey;

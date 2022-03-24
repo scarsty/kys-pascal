@@ -34,3 +34,7 @@ data/
 lib/
 all-mod/
 backup/
+sfe0.72.22/
+*.xlsx
+*.local
+*.identcache
