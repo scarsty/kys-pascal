@@ -12,11 +12,11 @@ SDL2的pas文件请从<https://github.com/ev1313/Pascal-SDL-2-Headers>获取。�
 
 首先下载游戏本体，其中包含了Windows版本的exe文件和dll文件以及资源文件：<https://pan.baidu.com/s/1nv9R5rz>。
 
-注意大部分是使用商业性质的素材，这个分享可能是违规的。
+注意大部分是使用商业性质的素材，禁止使用其盈利。
 
-安装fpc（任何方法均可），如果你对命令行熟悉可以不安装Lazarus，推荐使用Lazarus-1.6-fpc-3.0.0。CodeTyphon也是很好的选择。
+安装Lazarus，如果你对命令行熟悉可以只安装fpc，推荐使用最新版。CodeTyphon也可以。
 
-使用Delphi社区版也可以编译。
+使用Delphi社区版也可以编译，但不推荐。
 
 不在Windows下面编译则需要安装运行库，用brew（Mac），apt-get（Ubuntu）之类安装sdl，sdl-mixer，sdl-ttf，sdl-image，smpeg，lua等相关sdl库。
 如果lua库不能自动安装5.2版，下载lua5.2库自行编译，需要编译成支持i386的库。
