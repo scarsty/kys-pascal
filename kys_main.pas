@@ -2520,7 +2520,7 @@ begin
           speed := 0;
           if where = 0 then
           begin
-            if Rscence[CurScence].ExitMusic >= 0 then
+            if (CurScence >= 0) and (Rscence[CurScence].ExitMusic >= 0) then
             begin
               StopMP3;
               PlayMP3(Rscence[CurScence].ExitMusic, -1);
