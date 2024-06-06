@@ -48,10 +48,10 @@
           </CodeGeneration>
           <Linking>
             <Debugging>
-              <GenerateDebugInfo Value="False"/>
               <DebugInfoType Value="dsDwarf2Set"/>
               <UseValgrind Value="True"/>
               <StripSymbols Value="True"/>
+              <UseExternalDbgSyms Value="True"/>
             </Debugging>
             <LinkSmart Value="True"/>
             <Options>
