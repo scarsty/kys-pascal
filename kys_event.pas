@@ -1795,12 +1795,15 @@ begin
       e3 := e_GetValue(0, e1, e3);
       e4 := e_GetValue(1, e1, e4);
       e5 := e_GetValue(2, e1, e5);
-      case e2 of
-        0: Rrole[e3].Data[e4 div 2] := e5;
-        1: Ritem[e3].Data[e4 div 2] := e5;
-        2: Rscence[e3].Data[e4 div 2] := e5;
-        3: Rmagic[e3].Data[e4 div 2] := e5;
-        4: Rshop[e3].Data[e4 div 2] := e5;
+      if e3 >= 0 then
+      begin
+        case e2 of
+          0: Rrole[e3].Data[e4 div 2] := e5;
+          1: Ritem[e3].Data[e4 div 2] := e5;
+          2: Rscence[e3].Data[e4 div 2] := e5;
+          3: Rmagic[e3].Data[e4 div 2] := e5;
+          4: Rshop[e3].Data[e4 div 2] := e5;
+        end;
       end;
     end;
     17: //Read R data.
