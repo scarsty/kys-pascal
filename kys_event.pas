@@ -6,12 +6,13 @@ interface
 
 uses
   SysUtils,
-{$IFDEF fpc}
+  {$IFDEF fpc}
   LConvEncoding,
   LCLType,
-  LCLIntf, {$ELSE}
+  LCLIntf,
+  {$ELSE}
   Windows,
-{$ENDIF}
+  {$ENDIF}
   SDL2_image,
   SDL2,
   Math,
@@ -97,7 +98,7 @@ function instruct_50e(code, e1, e2, e3, e4, e5, e6: integer): integer;
 function HaveMagic(person, mnum, lv: integer): boolean;
 procedure StudyMagic(rnum, magicnum, newmagicnum, level, dismode: integer);
 procedure NewTalk(headnum, talknum, namenum, place, showhead, color, frame: integer);
-function EnterNumber(MinValue, MaxValue, x, y: integer; Default: integer = 0): smallint;
+function EnterNumber(MinValue, MaxValue, x, y: integer; Default: integer = 0): SmallInt;
 procedure SetAttribute(rnum, selecttype, modlevel, minlevel, maxlevel: integer);
 
 
@@ -112,7 +113,6 @@ uses
 //事件系统
 //事件指令含义请参阅其他相关文献
 //场景重绘一般来说仅重绘可见部分, 当事件中转移了画面位置需要全重绘
-
 procedure instruct_0;
 begin
   if NeedRefreshScence = 1 then
@@ -387,7 +387,6 @@ begin
 end;
 
 //是否使用了某剧情物品
-
 function instruct_4(inum, jump1, jump2: integer): integer;
 begin
   if inum = CurItem then
@@ -398,7 +397,6 @@ begin
 end;
 
 //询问是否战斗
-
 function instruct_5(jump1, jump2: integer): integer;
 var
   menu: integer;
@@ -420,7 +418,6 @@ begin
 end;
 
 //战斗
-
 function instruct_6(battlenum, jump1, jump2, getexp: integer): integer;
 begin
   Result := jump2;
@@ -435,7 +432,6 @@ begin
 end;
 
 //询问是否加入
-
 function instruct_9(jump1, jump2: integer): integer;
 var
   menu: integer;
@@ -485,7 +481,6 @@ begin
 end;
 
 //询问是否住宿
-
 function instruct_11(jump1, jump2: integer): integer;
 var
   menu: integer;
@@ -639,7 +634,6 @@ begin
 end;
 
 //Judge the team is full or not.
-
 function instruct_20(jump1, jump2: integer): integer;
 var
   i: integer;
@@ -1337,7 +1331,6 @@ begin
 end;
 
 //Judge the event number.
-
 function instruct_55(enum, Value, jump1, jump2: integer): integer;
 begin
   Result := jump2;
@@ -1600,7 +1593,6 @@ begin
 end;
 
 //50指令中获取变量值
-
 function e_GetValue(bit, t, x: integer): integer;
 var
   i: integer;
@@ -1619,13 +1611,12 @@ begin
 end;
 
 //Expanded 50 instructs.
-
 function instruct_50e(code, e1, e2, e3, e4, e5, e6: integer): integer;
 var
   i, t1, grp, idx, offset, len, i1, i2: integer;
   p, p1: PAnsiChar;
   //ps :pstring;
-  str: ansistring;
+  str: AnsiString;
   {$ifdef fpc}
   word, word1: AnsiString;
   {$else}
@@ -2346,7 +2337,6 @@ begin
 end;
 
 //判断某人有否某武功某级
-
 function HaveMagic(person, mnum, lv: integer): boolean;
 var
   i: integer;
@@ -2823,8 +2813,7 @@ end;
 
 
 //输入数字, 最小值, 最大值, 坐标x, y. 当结果被范围修正时有提示.
-
-function EnterNumber(MinValue, MaxValue, x, y: integer; Default: integer = 0): smallint;
+function EnterNumber(MinValue, MaxValue, x, y: integer; Default: integer = 0): SmallInt;
 var
   Value, i, menu, sure, pvalue, pmenu, highButton: integer;
   str: array[0..13] of WideString;

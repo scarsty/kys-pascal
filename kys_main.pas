@@ -31,16 +31,16 @@ interface
 
 uses
 
-{$IFDEF fpc}
+  {$IFDEF fpc}
   LConvEncoding,
   LCLType,
   LCLIntf,
-{$ELSE}
+  {$ELSE}
   Windows,
-{$ENDIF}
-{$IFDEF ANDROID}
+  {$ENDIF}
+  {$IFDEF ANDROID}
   jni,
-{$ENDIF}
+  {$ENDIF}
   kys_type,
   SysUtils,
   Dialogs,
@@ -82,15 +82,12 @@ function CommonMenu(x, y, w, max: integer; menuString: array of WideString): int
 function CommonMenu(x, y, w, max, default: integer; menuString: array of WideString): integer; overload;
 function CommonMenu(x, y, w, max: integer; menuString, menuEngString: array of WideString): integer; overload;
 function CommonMenu(x, y, w, max, default: integer; menuString, menuEngString: array of WideString): integer; overload;
-function CommonMenu(x, y, w, max, default: integer; menuString, menuEngString: array of WideString;
-  fn: TPInt1): integer; overload;
+function CommonMenu(x, y, w, max, default: integer; menuString, menuEngString: array of WideString; fn: TPInt1): integer; overload;
 procedure ShowCommonMenu(x, y, w, max, menu: integer; menuString: array of WideString); overload;
 procedure ShowCommonMenu(x, y, w, max, menu: integer; menuString, menuEngString: array of WideString); overload;
 function CommonScrollMenu(x, y, w, max, maxshow: integer; menuString: array of WideString): integer; overload;
-function CommonScrollMenu(x, y, w, max, maxshow: integer; menuString, menuEngString: array of WideString): integer;
-  overload;
-procedure ShowCommonScrollMenu(x, y, w, max, maxshow, menu, menutop: integer;
-  menuString, menuEngString: array of WideString);
+function CommonScrollMenu(x, y, w, max, maxshow: integer; menuString, menuEngString: array of WideString): integer; overload;
+procedure ShowCommonScrollMenu(x, y, w, max, maxshow, menu, menutop: integer; menuString, menuEngString: array of WideString);
 function CommonMenu2(x, y, w: integer; menuString: array of WideString): integer;
 procedure ShowCommonMenu2(x, y, w, menu: integer; menuString: array of WideString);
 function SelectOneTeamMember(x, y: integer; str: AnsiString; list1, list2: integer): integer;
@@ -143,7 +140,7 @@ uses
   kys_battle,
   kys_draw;
 
-//初始化字体, 音效, 视频, 启动游戏
+  //初始化字体, 音效, 视频, 启动游戏
 
 procedure Run;
 var
@@ -152,13 +149,13 @@ var
   tempcolor: TSDL_Color;
   str: AnsiString;
 begin
-  word[0]:=32;
-{$IFDEF UNIX}
+  word[0] := 32;
+  {$IFDEF UNIX}
   AppPath := ExtractFilePath(ParamStr(0));
-{$ELSE}
+  {$ELSE}
   AppPath := '';
-{$ENDIF}
-{$IFDEF android}
+  {$ENDIF}
+  {$IFDEF android}
   AppPath := SDL_AndroidGetExternalStoragePath() + '/game/';
   //for i := 1 to 4 do
   //AppPath:= ExtractFileDir(AppPath);
@@ -166,7 +163,7 @@ begin
   //if not fileexists(str) then
   FileClose(filecreate(str));
   CellPhone := 1;
-{$ENDIF}
+  {$ENDIF}
 
   ReadFiles;
 
@@ -197,7 +194,7 @@ begin
   //SDL_Init(SDL_INIT_VIDEO);
   if (SDL_Init(SDL_INIT_VIDEO) < 0) then
   begin
-  //  MessageBox(0, PAnsiChar(Format('Couldn''t initialize SDL : %s', [SDL_GetError])), 'Error', MB_OK or MB_ICONHAND);
+    //  MessageBox(0, PAnsiChar(Format('Couldn''t initialize SDL : %s', [SDL_GetError])), 'Error', MB_OK or MB_ICONHAND);
     SDL_Quit;
     exit;
   end;
@@ -418,11 +415,11 @@ begin
     end;
   end;
 
-{$IFDEF fpc}
+  {$IFDEF fpc}
   Filename := AppPath + 'kysmod.ini';
-{$ELSE}
+  {$ELSE}
   Filename := ExtractFilePath(ParamStr(0)) + 'kysmod.ini';
-{$ENDIF}
+  {$ENDIF}
   Kys_ini := TIniFile.Create(filename);
   try
     //RESOLUTIONX := Kys_ini.ReadInteger('system', 'RESOLUTIONX', CENTER_X * 2);
@@ -444,11 +441,11 @@ var
   LoadPNGTilesThread: PSDL_Thread;
 begin
 
-{$IFDEF fpc}
+  {$IFDEF fpc}
   Filename := AppPath + 'kysmod.ini';
-{$ELSE}
+  {$ELSE}
   Filename := ExtractFilePath(ParamStr(0)) + 'kysmod.ini';
-{$ENDIF}
+  {$ENDIF}
   Kys_ini := TIniFile.Create(filename);
 
   try
@@ -761,18 +758,17 @@ begin
 end;
 
 //初始化主角属性
-
 function InitialRole: boolean;
 var
   i: integer;
   p: array[0..14] of integer;
   str, str0: WideString;
   str1, str2, tempname: AnsiString;
-{$IFDEF fpc}
+  {$IFDEF fpc}
   Name, homename: AnsiString;
-{$ELSE}
+  {$ELSE}
   Name, homename: WideString;
-{$ENDIF}
+  {$ENDIF}
   p0, p1: PAnsiChar;
   named: boolean;
   {$ifdef android}
@@ -783,7 +779,7 @@ var
   clazz: jclass;
   method_id: jmethodID;
   e: TSDL_event;
-{$endif}
+  {$endif}
 begin
   LoadR(0);
   //显示输入姓名的对话框
@@ -795,7 +791,7 @@ begin
   Redraw;
   tempname := '我是主角';
   homename := '主角的家';
-{$ifdef android}
+  {$ifdef android}
   {ShowStatus(0);
   UpdateAllScreen;
   str0 := '點擊一下開始選屬性！';
@@ -810,12 +806,12 @@ begin
   env^.ReleaseStringUTFChars(env, jstr, cstr);}
   Name := tempname;
   named := True;
-{$else}
-{$ifndef linux}
-  named := InputQuery('Enter name', str1, ansistring(tempname));
-{$endif}
+  {$else}
+  {$ifndef linux}
+  named := InputQuery('Enter name', str1, AnsiString(tempname));
+  {$endif}
   Name := tempname;
-{$endif}
+  {$endif}
 
   if named then
   begin
@@ -824,17 +820,17 @@ begin
       Name := ' ';
     end;
 
-{$IFDEF fpc}
+    {$IFDEF fpc}
     str1 := UTF8ToCP950(Name);
     if (length(str1) in [1..7]) and (Name <> ' ') then
       homename := Name + '居';
     str2 := UTF8ToCP950(homename);
-{$ELSE}
+    {$ELSE}
     str1 := UnicodeToBig5(@Name[1]);
     if (length(str1[1]) in [1..7]) and (Name <> ' ') then
       homename := Name + '居';
     str2 := UnicodeToBig5(@homename[1]);
-{$ENDIF}
+    {$ENDIF}
     p0 := @Rrole[0].Name;
     p1 := @str1[1];
     for i := 0 to 4 do
@@ -1757,7 +1753,6 @@ begin
 end;
 
 //等待任意按键
-
 function WaitAnyKey: integer;
 var
   x, y: integer;
@@ -1994,8 +1989,7 @@ begin
               ayp := Buildy[axp, ayp];
               for i1 := axp - 3 to axp do
                 for i2 := ayp - 3 to ayp do
-                  if (i1 >= 0) and (i2 >= 0)
-                    and (Entrance[i1, i2] >= 0) and (buildx[i1, i2] = axp) and (buildy[i1, i2] = ayp) then
+                  if (i1 >= 0) and (i2 >= 0) and (Entrance[i1, i2] >= 0) and (buildx[i1, i2] = axp) and (buildy[i1, i2] = ayp) then
                   begin
                     axp := i1;
                     ayp := i2;
@@ -2173,7 +2167,6 @@ begin
 end;
 
 //判定主地图某个位置能否行走, 是否变成船
-
 function CanWalk(x, y: integer): boolean;
 begin
   if buildx[x, y] = 0 then
@@ -2204,7 +2197,6 @@ end;
 
 //Check able or not to ertrance a scence.
 //检测是否处于某入口, 并是否达成进入条件
-
 function CheckEntrance: boolean;
 var
   x, y, i, snum: integer;
@@ -2269,7 +2261,6 @@ end;
 //Walk in a scence, the returned value is the scence number when you exit. If it is -1.
 //WalkInScence(1) means the new game.
 //在内场景行走, 如参数为1表示新游戏
-
 function WalkInScence(Open: integer): integer;
 var
   grp, idx, offset, just, i1, i2, x, y, haveAmi, preface, drawed: integer;
@@ -2652,8 +2643,8 @@ begin
           //一定步数之内一次动一格
           //if (speed <= 1) then
           //begin
-            //SDL_Delay(50);
-            //sdl_delay(20);
+          //SDL_Delay(50);
+          //sdl_delay(20);
           //end;
           //if event.key.keysym.sym = 0 then
           //walking := 0;
@@ -2754,9 +2745,9 @@ end;
 
 procedure FindWay(x1, y1: integer);
 var
-  Xlist: array[0..4096] of smallint;
-  Ylist: array[0..4096] of smallint;
-  steplist: array[0..4096] of smallint;
+  Xlist: array[0..4096] of SmallInt;
+  Ylist: array[0..4096] of SmallInt;
+  steplist: array[0..4096] of SmallInt;
   curgrid, totalgrid: integer;
   Bgrid: array[1..4] of integer; //0空位, 1可过, 2已走过 ,3越界
   Xinc, Yinc: array[1..4] of integer;
@@ -2929,7 +2920,6 @@ begin
 end;
 
 //判定场景内某个位置能否行走
-
 function CanWalkInScence(x, y: integer): boolean; overload;
 begin
   if (SData[CurScence, 1, x, y] = 0) then
@@ -2957,7 +2947,6 @@ begin
 end;
 
 //检查是否有第1类事件, 如有则调用
-
 function CheckEvent1: boolean;
 var
   x, y: integer;
@@ -3006,7 +2995,6 @@ end;
 //Menus.
 //通用选单, (位置(x, y), 宽度, 最大选项(编号均从0开始))
 //使用前必须设置选单使用的字符串组才有效, 字符串组不可越界使用
-
 function CommonMenu(x, y, w, max, default: integer; menuString: array of WideString): integer; overload;
 var
   menuEngString: array of WideString;
@@ -3123,9 +3111,7 @@ begin
 end;
 
 //该选单即时产生显示效果, 由函数指定
-
-function CommonMenu(x, y, w, max, default: integer; menuString, menuEngString: array of WideString;
-  fn: TPInt1): integer; overload;
+function CommonMenu(x, y, w, max, default: integer; menuString, menuEngString: array of WideString; fn: TPInt1): integer; overload;
 var
   menu, menup: integer;
 begin
@@ -3244,7 +3230,6 @@ begin
 end;
 
 //卷动选单
-
 function CommonScrollMenu(x, y, w, max, maxshow: integer; menuString: array of WideString): integer; overload;
 var
   menuEngString: array of WideString;
@@ -3253,8 +3238,7 @@ begin
   Result := CommonScrollMenu(x, y, w, max, maxshow, menuString, menuEngString);
 end;
 
-function CommonScrollMenu(x, y, w, max, maxshow: integer; menuString, menuEngString: array of WideString): integer;
-  overload;
+function CommonScrollMenu(x, y, w, max, maxshow: integer; menuString, menuEngString: array of WideString): integer; overload;
 var
   menu, menup, menutop: integer;
 begin
@@ -3430,8 +3414,7 @@ begin
 
 end;
 
-procedure ShowCommonScrollMenu(x, y, w, max, maxshow, menu, menutop: integer;
-  menuString, menuEngString: array of WideString);
+procedure ShowCommonScrollMenu(x, y, w, max, maxshow, menu, menutop: integer; menuString, menuEngString: array of WideString);
 var
   i, p: integer;
 begin
@@ -3463,7 +3446,6 @@ end;
 
 //仅有两个选项的横排选单, 为美观使用横排
 //此类选单中每个选项限制为两个中文字, 仅适用于提问'继续', '取消'的情况
-
 function CommonMenu2(x, y, w: integer; menuString: array of WideString): integer;
 var
   menu, menup: integer;
@@ -3577,7 +3559,6 @@ begin
 end;
 
 //选择一名队员, 可以附带两个属性显示
-
 function SelectOneTeamMember(x, y: integer; str: AnsiString; list1, list2: integer): integer;
 var
   i, amount: integer;
@@ -3854,7 +3835,6 @@ begin
 end;
 
 //物品选单
-
 function MenuItem: boolean;
 var
   point, atlu, x, y, col, row, xp, yp, iamount, menu, max, i, xm, ym: integer;
@@ -4145,7 +4125,6 @@ end;
 
 //读物品列表, 主要是战斗中需屏蔽一部分物品
 //利用一个不可能用到的数值（100）, 表示读取所有物品
-
 function ReadItemList(ItemType: integer): integer;
 var
   i, p: integer;
@@ -4594,7 +4573,6 @@ begin
 end;
 
 //能否装备
-
 function CanEquip(rnum, inum: integer): boolean;
 var
   i, r: integer;
@@ -5332,7 +5310,6 @@ begin
 end;
 
 //特殊的读档选单, 仅用在开始时读档
-
 function MenuLoadAtBeginning: integer;
 var
   menu: integer;
@@ -5437,7 +5414,6 @@ end;
 
 //医疗的效果
 //未添加体力的需求与消耗
-
 function EffectMedcine(role1, role2: integer): integer;
 var
   word: WideString;
@@ -5479,7 +5455,6 @@ begin
 end;
 
 //解毒的效果
-
 function EffectMedPoison(role1, role2: integer): integer;
 var
   word: WideString;
@@ -5510,7 +5485,6 @@ end;
 //使用物品的效果
 //练成秘笈的效果
 //返回值: 无武学的秘笈, 如果次数可以将能力提升到顶仍有剩余时, 则返回所需的次数, 避免浪费经验
-
 function EatOneItem(rnum, inum: integer; times: integer = 1; display: integer = 1): integer;
 var
   i, p, l, x, y, twoline: integer;
@@ -5756,7 +5730,7 @@ end;
 
 procedure CallEvent(num: integer);
 var
-  e: array of smallint;
+  e: array of SmallInt;
   i, offset, len, p, temppic: integer;
   check: boolean;
   k: array[0..67] of integer;

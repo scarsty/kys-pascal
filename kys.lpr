@@ -23,33 +23,16 @@ uses
   kys_script in 'kys_script.pas',
   kys_draw in 'kys_draw.pas';
 
-{$R *.res}
+  {$R *.res}
 
-{$IFDEF android}
+  {$IFDEF android}
 exports
   Run;
-{$ENDIF}
+  {$ENDIF}
 
 begin
-{$IFNDEF android}
+  {$IFNDEF android}
   Application.Initialize;
   Run;
-{$ENDIF}
+  {$ENDIF}
 end.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

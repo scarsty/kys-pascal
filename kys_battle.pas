@@ -6,13 +6,14 @@ interface
 
 uses
   SysUtils,
-{$IFDEF fpc}
+  {$IFDEF fpc}
   LMessages,
   LConvEncoding,
   LCLType,
-  LCLIntf, {$ELSE}
+  LCLIntf,
+  {$ELSE}
   Windows,
-{$ENDIF}
+  {$ENDIF}
   kys_type,
   StrUtils,
   SDL2_TTF,
@@ -85,8 +86,7 @@ procedure CalArea(var Mx1, My1, Ax1, Ay1, tempmaxhurt: integer; curX, curY, bnum
 procedure CalPoint(var Mx1, My1, Ax1, Ay1, tempmaxhurt: integer; curX, curY, bnum, mnum, level: integer);
 procedure calcross(var Mx1, My1, Ax1, Ay1, tempmaxhurt: integer; curX, curY, bnum, mnum, level: integer);
 procedure NearestMove(var Mx1, My1: integer; bnum: integer);
-procedure NearestMoveByPro(var Mx1, My1, Ax1, Ay1: integer; bnum, TeamMate, KeepDis, Prolist, MaxMinPro: integer;
-  mode: integer);
+procedure NearestMoveByPro(var Mx1, My1, Ax1, Ay1: integer; bnum, TeamMate, KeepDis, Prolist, MaxMinPro: integer; mode: integer);
 
 var
   movetable: array of TPosition;
@@ -101,7 +101,6 @@ uses
 
 //Battle.
 //战斗, 返回值为是否胜利
-
 function Battle(battlenum, getexp: integer): boolean;
 var
   i, j, num, SelectTeamList, x, y, PreMusic: integer;
@@ -246,7 +245,6 @@ end;
 //The 2nd: 0: rnum, 1: Friend or enemy, 2: y, 3: x, 4: Face, 5: Dead or alive,
 //         7: Acted, 8: Pic Num, 9: The number, 10, 11, 12: Auto, 13: Exp gotten.
 //初始化战场
-
 function InitialBField: boolean;
 var
   sta, grp, idx, offset, i, i1, i2, x, y, fieldnum: integer;
@@ -327,7 +325,6 @@ begin
 end;
 
 //选择人物, 返回值为整型, 按bit表示人物是否参战
-
 function SelectTeamMembers: integer;
 var
   i, menu, max, menup: integer;
@@ -690,7 +687,6 @@ end;
 
 //0: Continue; 1: Victory; 2:Failed.
 //检查是否有一方全部阵亡
-
 function BattleStatus: integer;
 var
   i, sum0, sum1: integer;
@@ -715,7 +711,6 @@ begin
 end;
 
 //战斗主选单, menustatus按bit保存可用项
-
 function BattleMenu(bnum: integer): integer;
 var
   i, p, MenuStatus, menu, max, rnum, menup: integer;
@@ -1013,7 +1008,7 @@ function MoveAmination(bnum: integer): boolean;
 var
   s, i, a, tempx, tempy: integer;
   Xinc, Yinc: array[1..4] of integer;
-  linebx, lineby: array[0..4096] of smallint;
+  linebx, lineby: array[0..4096] of SmallInt;
   seekError: boolean;
 begin
   Result := abs(Ax - Bx) + abs(Ay - By) > 0;
@@ -1092,7 +1087,6 @@ begin
 end;
 
 //选择目标
-
 function SelectAim(bnum, step: integer; AreaType: integer = 0; AreaRange: integer = 0): boolean;
 var
   Axp, Ayp: integer;
@@ -1281,7 +1275,6 @@ begin
 end;}
 
 //选择方向
-
 function SelectDirector(bnum, step: integer): boolean;
 var
   str: WideString;
@@ -1842,7 +1835,6 @@ begin
 end;
 
 //选择武功
-
 function SelectMagic(rnum: integer): integer;
 var
   i, p, MenuStatus, max, menu, menup: integer;
@@ -2164,7 +2156,6 @@ begin
 end;
 
 //计算伤害值, 第一公式如小于0则取一个随机数, 无第二公式
-
 function CalHurtValue(bnum1, bnum2, mnum, level: integer): integer;
 var
   i, rnum1, rnum2, mhurt, att, def, k1, k2, dis: integer;
@@ -2256,7 +2247,6 @@ begin
 end;
 
 //AI专用
-
 function CalHurtValue2(bnum1, bnum2, mnum, level: integer): integer;
 begin
   Result := CalHurtValue(bnum1, bnum2, mnum, level);
@@ -2760,7 +2750,6 @@ begin
 end;
 
 //统计一方人数
-
 function CalRNum(team: integer): integer;
 var
   i: integer;
@@ -3165,7 +3154,7 @@ end;
 function TeamModeMenu: boolean;
 var
   menup, x, y, w, h, menu, i, amount, xm, ym: integer;
-  a: array of smallint;
+  a: array of SmallInt;
   tempmode: array of integer;
   modestring: array[0..3] of WideString;
   namestr: array of WideString;
@@ -4138,8 +4127,7 @@ end;
 //MaxMinPro: 1-search max, -1-search min, 0-any.
 //mode: 0-nearest only, 1-medcine, 2-解毒
 
-procedure NearestMoveByPro(var Mx1, My1, Ax1, Ay1: integer; bnum, TeamMate, KeepDis, Prolist, MaxMinPro: integer;
-  mode: integer);
+procedure NearestMoveByPro(var Mx1, My1, Ax1, Ay1: integer; bnum, TeamMate, KeepDis, Prolist, MaxMinPro: integer; mode: integer);
 var
   i, tempdis, mindis, tempPro, rnum: integer;
   aimX, aimY: integer;

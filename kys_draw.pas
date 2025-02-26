@@ -6,10 +6,10 @@ interface
 
 uses
   SysUtils,
-{$IFDEF fpc}
-{$ELSE}
+  {$IFDEF fpc}
+  {$ELSE}
   Windows,
-{$ENDIF}
+  {$ENDIF}
   Math,
   SDL2_image,
   SDL2,
@@ -19,8 +19,7 @@ uses
 //画单个图片的子程
 procedure DrawTitlePic(imgnum, px, py: integer);
 procedure DrawMPic(num, px, py: integer; Framenum: integer = -1); overload;
-procedure DrawMPic(num, px, py, shadow, alpha: integer; mixColor: uint32; mixAlpha: integer;
-  Framenum: integer = -1); overload;
+procedure DrawMPic(num, px, py, shadow, alpha: integer; mixColor: uint32; mixAlpha: integer; Framenum: integer = -1); overload;
 procedure DrawSPic(num, px, py: integer); overload;
 procedure DrawSPic(num, px, py, x, y, w, h: integer); overload;
 procedure DrawSPic(num, px, py, shadow, alpha, depth: integer; mixColor: uint32; mixAlpha: integer); overload;
@@ -68,8 +67,7 @@ procedure LoadBFieldPart2(x, y, alpha: integer);
 procedure DrawBFieldWithCursor(step: integer);
 procedure DrawBFieldWithEft(Epicnum: integer); overload;
 procedure DrawBFieldWithEft(Epicnum, beginpic, endpic, bnum: integer; mixColor: uint32); overload;
-procedure DrawBFieldWithEft(Epicnum, beginpic, endpic, curlevel, bnum, forteam, flash: integer;
-  mixColor: uint32); overload;
+procedure DrawBFieldWithEft(Epicnum, beginpic, endpic, curlevel, bnum, forteam, flash: integer; mixColor: uint32); overload;
 procedure DrawBFieldWithAction(bnum, Apicnum: integer);
 
 procedure DrawClouds;
@@ -83,7 +81,7 @@ implementation
 uses
   kys_engine;
 
-//显示title.grp的内容(即开始的选单)
+  //显示title.grp的内容(即开始的选单)
 
 procedure DrawTitlePic(imgnum, px, py: integer);
 var
@@ -113,8 +111,7 @@ end;
 
 //显示主地图贴图
 
-procedure DrawMPic(num, px, py, shadow, alpha: integer; mixColor: uint32; mixAlpha: integer;
-  Framenum: integer = -1); overload;
+procedure DrawMPic(num, px, py, shadow, alpha: integer; mixColor: uint32; mixAlpha: integer; Framenum: integer = -1); overload;
 var
   NeedGRP: integer;
 begin
@@ -192,8 +189,7 @@ begin
         depth, @BlockImg[0], ImageWidth, ImageHeight, sizeof(BlockImg[0]), BlockScreen.x, BlockScreen.y)
     else
     begin
-      DrawRLE8Pic(@ACol[0], num, px, py, @SIdx[0], @SPic[0], nil, nil, 0, 0, 0, shadow, alpha,
-        @BlockImg[0], @BlockScreen, ImageWidth, ImageHeight, sizeof(BlockImg[0]), depth, mixColor, mixAlpha);
+      DrawRLE8Pic(@ACol[0], num, px, py, @SIdx[0], @SPic[0], nil, nil, 0, 0, 0, shadow, alpha, @BlockImg[0], @BlockScreen, ImageWidth, ImageHeight, sizeof(BlockImg[0]), depth, mixColor, mixAlpha);
     end;
   end;
 
@@ -284,7 +280,7 @@ var
   str: AnsiString;
   Area: TSDL_Rect;
   offset: integer;
-  y: smallint;
+  y: SmallInt;
 begin
   str := AppPath + 'head/' + IntToStr(num) + '.png';
   if FileExists(str) then
@@ -351,8 +347,7 @@ begin
     end
     else
     begin
-      DrawRLE8Pic(@ACol[0], num, px, py, @WIdx[0], @WPic[0], nil, nil, 0, 0, 0, shadow, alpha,
-        @BlockImg2[0], @BlockScreen, ImageWidth, ImageHeight, sizeof(BlockImg2[0]), depth, mixColor, mixAlpha);
+      DrawRLE8Pic(@ACol[0], num, px, py, @WIdx[0], @WPic[0], nil, nil, 0, 0, 0, shadow, alpha, @BlockImg2[0], @BlockScreen, ImageWidth, ImageHeight, sizeof(BlockImg2[0]), depth, mixColor, mixAlpha);
     end;
   end;
 
@@ -771,7 +766,7 @@ procedure DrawMMap;
 var
   i1, i2, i, sum, x, y, k, c, widthregion, sumregion, num, h: integer;
   //temp: array[0..479, 0..479] of smallint;
-  Width, Height, xoffset, yoffset: smallint;
+  Width, Height, xoffset, yoffset: SmallInt;
   pos: TPosition;
   BuildArray: array[0..2000] of TBuildInfo;
   tempb: TBuildInfo;
@@ -1138,8 +1133,7 @@ begin
     num := DData[CurScence, SData[CurScence, 3, i1, i2], 5] div 2;
     if num > 0 then
     begin
-      for i := DData[CurScence, SData[CurScence, 3, i1, i2], 7] div 2
-        to DData[CurScence, SData[CurScence, 3, i1, i2], 6] div 2 do
+      for i := DData[CurScence, SData[CurScence, 3, i1, i2], 7] div 2 to DData[CurScence, SData[CurScence, 3, i1, i2], 6] div 2 do
         if (temp = 0) and (PNG_TILE > 0) then
           LoadOnePNGTile('resource/smap/', nil, i, SPNGIndex[i], @SPNGTile[0]);
       if SCENCEAMI = 2 then
@@ -1156,7 +1150,7 @@ procedure UpdateScence(xs, ys: integer);
 var
   i1, i2, x, y: integer;
   num, offset: integer;
-  xp, yp, w, h: smallint;
+  xp, yp, w, h: SmallInt;
 begin
   xp := -xs * 18 + ys * 18 + 1151;
   yp := xs * 9 + ys * 9 + 250;
@@ -1524,8 +1518,7 @@ begin
 
 end;
 
-procedure DrawBFieldWithEft(Epicnum, beginpic, endpic, curlevel, bnum, forteam, flash: integer;
-  mixColor: uint32); overload;
+procedure DrawBFieldWithEft(Epicnum, beginpic, endpic, curlevel, bnum, forteam, flash: integer; mixColor: uint32); overload;
 var
   k, i1, i2: integer;
   pos: TPosition;

@@ -5,11 +5,11 @@ unit kys_script;
 interface
 
 uses
-{$IFDEF fpc}
+  {$IFDEF fpc}
   LConvEncoding,
-{$ELSE}
+  {$ELSE}
   Windows,
-{$ENDIF}
+  {$ENDIF}
   SysUtils,
   SDL2,
   Math,
@@ -357,15 +357,15 @@ begin
     FileSeek(h, 0, 0);
     FileRead(h, Script[1], len);
     FileClose(h);
-{$IFDEF UNIX}
+    {$IFDEF UNIX}
     Script := LowerCase(Script);
-{$ELSE}
-{$IFDEF FPC}
+    {$ELSE}
+    {$IFDEF FPC}
     Script := LowerCase(Script);
-{$ELSE}
+    {$ELSE}
     Script := LowerCase(Script);
-{$ENDIF}
-{$ENDIF}
+    {$ENDIF}
+    {$ENDIF}
     //writeln(script);
     lual_loadbuffer(Lua_script, @script[1], length(script), 'code');
     lua_pcall(Lua_script, 0, 0, 0);
@@ -416,7 +416,6 @@ end;
 
 //检查按键
 //event.key.keysym.sym = 1 when mouse motion.
-
 function CheckButton(L: Plua_state): integer; cdecl;
 var
   t: integer;
@@ -462,7 +461,6 @@ begin
 end;
 
 //获取当前时间
-
 function GetTime(L: Plua_state): integer; cdecl;
 var
   t: integer;
@@ -782,7 +780,6 @@ begin
 end;
 
 //非队友得到物品
-
 function AnotherGetItem(L: Plua_state): integer; cdecl;
 begin
   instruct_41(floor(lua_tonumber(L, -3)), floor(lua_tonumber(L, -2)), floor(lua_tonumber(L, -1)));
@@ -791,7 +788,6 @@ begin
 end;
 
 //队伍中某属性等于某值的人数
-
 function CompareProInTeam(L: Plua_state): integer; cdecl;
 var
   n, i: integer;
@@ -937,7 +933,6 @@ begin
 end;
 
 //获取主地图坐标
-
 function GetMainMapPosition(L: Plua_state): integer; cdecl;
 begin
   lua_pushnumber(L, My);
@@ -946,7 +941,6 @@ begin
 end;
 
 //改变主地图坐标
-
 function SetMainMapPosition(L: Plua_state): integer; cdecl;
 begin
   Mx := floor(lua_tonumber(L, -1));
@@ -955,7 +949,6 @@ begin
 end;
 
 //获取场景坐标
-
 function GetScencePosition(L: Plua_state): integer; cdecl;
 begin
   lua_pushnumber(L, Sy);
@@ -964,7 +957,6 @@ begin
 end;
 
 //改变场景坐标
-
 function SetScencePosition(L: Plua_state): integer; cdecl;
 begin
   Sx := floor(lua_tonumber(L, -1));
@@ -991,7 +983,6 @@ begin
 end;
 
 //延时
-
 function Delay(L: Plua_state): integer; cdecl;
 begin
   SDL_Delay(floor(lua_tonumber(L, -1)));
@@ -999,7 +990,6 @@ begin
 end;
 
 //绘制矩形
-
 function DrawRect(L: Plua_state): integer; cdecl;
 var
   n, i: integer;
@@ -1021,7 +1011,6 @@ begin
 end;
 
 //队伍人数
-
 function MemberAmount(L: Plua_state): integer; cdecl;
 var
   n, i: integer;
@@ -1039,7 +1028,6 @@ begin
 end;
 
 //读队伍信息
-
 function GetMember(L: Plua_state): integer; cdecl;
 var
   n: integer;
@@ -1054,7 +1042,6 @@ begin
 end;
 
 //写队伍信息
-
 function PutMember(L: Plua_state): integer; cdecl;
 begin
   TeamList[floor(lua_tonumber(L, -1))] := floor(lua_tonumber(L, -2));
@@ -1063,7 +1050,6 @@ begin
 end;
 
 //读人物信息
-
 function GetRolePro(L: Plua_state): integer; cdecl;
 begin
   lua_pushnumber(L, Rrole[floor(lua_tonumber(L, -2))].Data[floor(lua_tonumber(L, -1))]);
@@ -1072,7 +1058,6 @@ begin
 end;
 
 //写人物信息
-
 function PutRolePro(L: Plua_state): integer; cdecl;
 begin
   Rrole[floor(lua_tonumber(L, -2))].Data[floor(lua_tonumber(L, -1))] := floor(lua_tonumber(L, -3));
@@ -1081,7 +1066,6 @@ begin
 end;
 
 //读物品信息
-
 function GetItemPro(L: Plua_state): integer; cdecl;
 begin
   lua_pushnumber(L, Ritem[floor(lua_tonumber(L, -2))].Data[floor(lua_tonumber(L, -1))]);
@@ -1090,7 +1074,6 @@ begin
 end;
 
 //写物品信息
-
 function PutItemPro(L: Plua_state): integer; cdecl;
 begin
   Ritem[floor(lua_tonumber(L, -2))].Data[floor(lua_tonumber(L, -1))] := floor(lua_tonumber(L, -3));
@@ -1099,7 +1082,6 @@ begin
 end;
 
 //读武功信息
-
 function GetMagicPro(L: Plua_state): integer; cdecl;
 begin
   lua_pushnumber(L, Rmagic[floor(lua_tonumber(L, -2))].Data[floor(lua_tonumber(L, -1))]);
@@ -1108,7 +1090,6 @@ begin
 end;
 
 //写武功信息
-
 function PutMagicPro(L: Plua_state): integer; cdecl;
 begin
   Rmagic[floor(lua_tonumber(L, -2))].Data[floor(lua_tonumber(L, -1))] := floor(lua_tonumber(L, -3));
@@ -1117,7 +1098,6 @@ begin
 end;
 
 //读场景信息
-
 function GetScencePro(L: Plua_state): integer; cdecl;
 begin
   lua_pushnumber(L, Rscence[floor(lua_tonumber(L, -2))].Data[floor(lua_tonumber(L, -1))]);
@@ -1126,7 +1106,6 @@ begin
 end;
 
 //写场景信息
-
 function PutScencePro(L: Plua_state): integer; cdecl;
 begin
   Rscence[floor(lua_tonumber(L, -2))].Data[floor(lua_tonumber(L, -1))] := floor(lua_tonumber(L, -3));
@@ -1135,7 +1114,6 @@ begin
 end;
 
 //读场景图信息
-
 function GetScenceMapPro(L: Plua_state): integer; cdecl;
 begin
   lua_pushnumber(L, sdata[floor(lua_tonumber(L, -4)), floor(lua_tonumber(L, -3)),
@@ -1145,7 +1123,6 @@ begin
 end;
 
 //写场景图信息
-
 function PutScenceMapPro(L: Plua_state): integer; cdecl;
 begin
   sdata[floor(lua_tonumber(L, -4)), floor(lua_tonumber(L, -3)), floor(lua_tonumber(L, -2)),
@@ -1167,7 +1144,6 @@ begin
 end;
 
 //读场景事件信息
-
 function GetScenceEventPro(L: Plua_state): integer; cdecl;
 begin
   lua_pushnumber(L, ddata[floor(lua_tonumber(L, -3)), floor(lua_tonumber(L, -2)), floor(lua_tonumber(L, -1))]);
@@ -1176,7 +1152,6 @@ begin
 end;
 
 //写场景事件信息
-
 function PutScenceEventPro(L: Plua_state): integer; cdecl;
 begin
   ddata[floor(lua_tonumber(L, -3)), floor(lua_tonumber(L, -2)), floor(lua_tonumber(L, -1))] :=
@@ -1260,12 +1235,12 @@ begin
     2: p1 := @Rscence[num].Name;
     3: p1 := @Rmagic[num].Name;
   end;
-{$IFDEF fpc}
+  {$IFDEF fpc}
   str := CP950ToUTF8(p1);
-{$ELSE}
+  {$ELSE}
   str := UTF8Encode(Big5ToUnicode(p1));
 
-{$ENDIF}
+  {$ENDIF}
   lua_pushstring(L, @str[1]);
   Result := 1;
 
@@ -1354,7 +1329,6 @@ begin
 end;
 
 //取得战斗序号
-
 function GetBattleNumber(L: Plua_state): integer; cdecl;
 var
   n, i, rnum, t: integer;
@@ -1381,7 +1355,6 @@ begin
 end;
 
 //选择目标
-
 function SelectOneAim(L: Plua_state): integer; cdecl;
 begin
   if floor(lua_tonumber(L, -1)) = 0 then
@@ -1391,7 +1364,6 @@ begin
 end;
 
 //取战斗属性
-
 function GetBattleRolePro(L: Plua_state): integer; cdecl;
 begin
   lua_pushnumber(L, Brole[floor(lua_tonumber(L, -2))].Data[floor(lua_tonumber(L, -1))]);
@@ -1400,7 +1372,6 @@ begin
 end;
 
 //写战斗属性
-
 function PutBattleRolePro(L: Plua_state): integer; cdecl;
 begin
   Brole[floor(lua_tonumber(L, -2))].Data[floor(lua_tonumber(L, -1))] := floor(lua_tonumber(L, -3));
@@ -1422,7 +1393,6 @@ begin
 end;
 
 //function GetRoundNumber(L: Plua_state): integer; cdecl;
-
 function PlayHurtValue(L: Plua_state): integer; cdecl;
 var
   mode: integer;
@@ -1489,7 +1459,6 @@ begin
 end;
 
 //强制设置战斗结果
-
 function ForceBattleResult(L: Plua_state): integer; cdecl;
 begin
   Bstatus := floor(lua_tonumber(L, -1));
