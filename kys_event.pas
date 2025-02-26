@@ -1801,12 +1801,15 @@ begin
     begin
       e3 := e_GetValue(0, e1, e3);
       e4 := e_GetValue(1, e1, e4);
-      case e2 of
-        0: x50[e5] := Rrole[e3].Data[e4 div 2];
-        1: x50[e5] := Ritem[e3].Data[e4 div 2];
-        2: x50[e5] := Rscence[e3].Data[e4 div 2];
-        3: x50[e5] := Rmagic[e3].Data[e4 div 2];
-        4: x50[e5] := Rshop[e3].Data[e4 div 2];
+      if e3 >= 0 then
+      begin
+        case e2 of
+          0: x50[e5] := Rrole[e3].Data[e4 div 2];
+          1: x50[e5] := Ritem[e3].Data[e4 div 2];
+          2: x50[e5] := Rscence[e3].Data[e4 div 2];
+          3: x50[e5] := Rmagic[e3].Data[e4 div 2];
+          4: x50[e5] := Rshop[e3].Data[e4 div 2];
+        end;
       end;
     end;
     18: //Write team data.
@@ -1950,17 +1953,20 @@ begin
     begin
       e3 := e_GetValue(0, e1, e3);
       p := @x50[e4];
-      case e2 of
-        0: p1 := @Rrole[e3].Name;
-        1: p1 := @Ritem[e3].Name;
-        2: p1 := @Rscence[e3].Name;
-        3: p1 := @Rmagic[e3].Name;
-      end;
-      len := min(10, length(p1));
-      for i := 0 to len - 1 do
+      if e3 >= 0 then
       begin
-        p^ := (p1 + i)^;
-        Inc(p);
+        case e2 of
+          0: p1 := @Rrole[e3].Name;
+          1: p1 := @Ritem[e3].Name;
+          2: p1 := @Rscence[e3].Name;
+          3: p1 := @Rmagic[e3].Name;
+        end;
+        len := min(10, length(p1));
+        for i := 0 to len - 1 do
+        begin
+          p^ := (p1 + i)^;
+          Inc(p);
+        end;
       end;
       if len mod 2 = 1 then
       begin
