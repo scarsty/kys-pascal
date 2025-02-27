@@ -210,7 +210,6 @@ end;
 
 
 //播放mp3音乐
-
 procedure PlayMP3(MusicNum, times: integer; frombeginning: integer = 1); overload;
 var
   repeatable: boolean;
@@ -259,7 +258,6 @@ begin
 end;
 
 //停止当前播放的音乐
-
 procedure StopMP3(frombeginning: integer = 1);
 begin
   BASS_ChannelStop(Music[nowmusic]);
@@ -269,7 +267,6 @@ begin
 end;
 
 //播放wav音效
-
 procedure PlaySoundE(SoundNum, times: integer); overload;
 var
   ch: HCHANNEL;
@@ -414,7 +411,6 @@ end;
 
 
 //播放mp3音乐
-
 procedure PlayMP3(MusicNum, times: integer); overload;
 begin
   if MusicNum in [Low(Music)..High(Music)] then
@@ -440,7 +436,6 @@ begin
 end;
 
 //停止当前播放的音乐
-
 procedure StopMP3;
 begin
   Mix_HaltMusic;
@@ -448,7 +443,6 @@ begin
 end;
 
 //播放eft音效
-
 procedure PlaySoundE(SoundNum, times: integer); overload;
 begin
   if SoundNum in [Low(Esound)..High(Esound)] then
@@ -475,7 +469,6 @@ begin
 end;
 
 //播放atk音效
-
 procedure PlaySoundA(SoundNum, times: integer);
 begin
   if SoundNum in [Low(ASound)..High(ASound)] then
@@ -867,7 +860,6 @@ begin
 end;
 
 //画像素
-
 procedure PutPixel(surface: PSDL_Surface; x: integer; y: integer; pixel: uint32);
 type
   TByteArray = array[0..2] of byte;
@@ -909,7 +901,6 @@ end;
 
 
 //显示bmp文件
-
 procedure display_bmp(file_name: PAnsiChar; x, y: integer);
 var
   image: PSDL_Surface;
@@ -933,7 +924,6 @@ begin
 end;
 
 //显示tif, png, jpg等格式图片
-
 procedure display_img(file_name: PAnsiChar; x, y: integer);
 var
   image: PSDL_Surface;
@@ -984,7 +974,6 @@ begin
 end;
 
 //RLE8图片绘制子程, 所有相关子程均对此封装. 最后一个参数为亮度, 仅在绘制战场选择对方时使用
-
 procedure DrawRLE8Pic(colorPanel: PAnsiChar; num, px, py: integer; Pidx: Pinteger; Ppic: pbyte; RectArea: PAnsiChar; Image: PSDL_Surface; widthI, heightI, sizeI: integer; shadow: integer); overload;
 begin
   DrawRLE8Pic(colorPanel, num, px, py, Pidx, Ppic, RectArea, Image, widthI, heightI, sizeI, Shadow, 0);
@@ -992,7 +981,6 @@ begin
 end;
 
 //增加透明度选项
-
 procedure DrawRLE8Pic(colorPanel: PAnsiChar; num, px, py: integer; Pidx: Pinteger; Ppic: pbyte; RectArea: PAnsiChar; Image: PSDL_Surface; widthI, heightI, sizeI: integer; shadow, alpha: integer); overload;
 begin
   DrawRLE8Pic(colorPanel, num, px, py, Pidx, Ppic, RectArea, Image, widthI, heightI, sizeI,
@@ -1016,7 +1004,6 @@ end;
 //即该值起作用的机会有两种: Image不为空到映像, 且BlockImageW不为空. 或者Image为空(到屏幕), 且BlockPosition不为空
 //如果在画到屏幕时避免该值起作用, 可以设为一个很大的值
 //MixColor: Uint32; MixAlpha: integer 图片的混合颜色和混合度, 仅在画到屏幕上时有效
-
 procedure DrawRLE8Pic(colorPanel: PAnsiChar; num, px, py: integer; Pidx: Pinteger; Ppic: pbyte; RectArea: PAnsiChar; Image: PSDL_Surface; widthI, heightI, sizeI: integer; shadow, alpha: integer; BlockImageW: PAnsiChar; BlockPosition: PAnsiChar; widthW, heightW, sizeW: integer; depth: integer; mixColor: uint32; mixAlpha: integer); overload;
 var
   w, h, xs, ys, x, y, blockx, blocky: SmallInt;
@@ -1253,7 +1240,6 @@ begin
 end;
 
 //显示unicode文字
-
 procedure DrawText(sur: PSDL_Surface; word: puint16; x_pos, y_pos: integer; color: uint32);
 var
   dest, src: TSDL_Rect;
@@ -1351,7 +1337,6 @@ begin
 end;
 
 //显示英文
-
 procedure DrawEngText(sur: PSDL_Surface; word: puint16; x_pos, y_pos: integer; color: uint32);
 var
   dest: TSDL_Rect;
@@ -1374,7 +1359,6 @@ begin
 end;
 
 //显示unicode中文阴影文字, 即将同样内容显示2次, 间隔1像素
-
 procedure DrawShadowText(sur: PSDL_Surface; word: puint16; x_pos, y_pos: integer; color1, color2: uint32); overload;
 begin
   DrawText(sur, word, x_pos + 1, y_pos, color2);
@@ -1389,7 +1373,6 @@ begin
 end;
 
 //显示英文阴影文字
-
 procedure DrawEngShadowText(sur: PSDL_Surface; word: puint16; x_pos, y_pos: integer; color1, color2: uint32);
 begin
   DrawEngText(sur, word, x_pos + 1, y_pos, color2);
@@ -1398,7 +1381,6 @@ begin
 end;
 
 //显示big5文字
-
 procedure DrawBig5Text(sur: PSDL_Surface; str: PAnsiChar; x_pos, y_pos: integer; color: uint32);
 var
   len: integer;
@@ -1416,7 +1398,6 @@ begin
 end;
 
 //显示big5阴影文字
-
 procedure DrawBig5ShadowText(sur: PSDL_Surface; word: PAnsiChar; x_pos, y_pos: integer; color1, color2: uint32);
 var
   len: integer;
@@ -1435,7 +1416,6 @@ begin
 end;
 
 //显示带边框的文字, 仅用于unicode, 需自定义宽度
-
 procedure DrawTextWithRect(word: puint16; x, y, w: integer; color1, color2: uint32); overload;
 begin
   DrawTextWithRect(screen, word, x, y, w, color1, color2);
@@ -1453,7 +1433,6 @@ begin
 end;
 
 //画带边框矩形, (x坐标, y坐标, 宽度, 高度, 内部颜色, 边框颜色, 透明度）
-
 procedure DrawRectangle(sur: PSDL_Surface; x, y, w, h: integer; colorin, colorframe: uint32; alpha: integer);
 var
   i1, i2, l1, l2, l3, l4: integer;
@@ -1505,7 +1484,6 @@ begin
 end;
 
 //画不含边框的矩形, 用于对话和黑屏
-
 procedure DrawRectangleWithoutFrame(sur: PSDL_Surface; x, y, w, h: integer; colorin: uint32; alpha: integer);
 var
   tempscr: PSDL_Surface;
@@ -1532,7 +1510,6 @@ end;
 
 
 //调色板变化, 贴图闪烁效果
-
 procedure ChangeCol;
 var
   i, i1, i2, a, b, add0, len: integer;
@@ -1579,7 +1556,6 @@ end;
 
 //绘制PNG贴图相关的代码
 //这里的可能较旧, 可以参照水浒的
-
 procedure DrawPNGTile(PNGIndex: TPNGIndex; FrameNum: integer; RectArea: PAnsiChar; scr: PSDL_Surface; px, py: integer); overload;
 begin
   DrawPNGTile(PNGIndex, FrameNum, RectArea, scr, px, py, 0, 0, 0, 0);

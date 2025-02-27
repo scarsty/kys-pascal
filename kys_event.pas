@@ -246,7 +246,6 @@ begin
 end;
 
 //得到物品可显示数量, 数量为负显示失去物品
-
 procedure instruct_2(inum, amount: integer);
 var
   x: integer;
@@ -278,7 +277,6 @@ end;
 
 //重排物品，清除为0的物品
 //合并同类物品（空间换时间）
-
 procedure ReArrangeItem(sort: integer = 0);
 var
   i, j, p: integer;
@@ -341,7 +339,6 @@ end;
 
 //改变事件, 如在当前场景需重置场景
 //在需改变贴图较多时效率较低
-
 procedure instruct_3(list: array of integer);
 var
   i, i1, i2, {curPic,} preEventPic: integer;
@@ -453,7 +450,6 @@ begin
 end;
 
 //加入队友, 同时得到其身上物品
-
 procedure instruct_10(rnum: integer);
 var
   i, i1: integer;
@@ -504,7 +500,6 @@ begin
 end;
 
 //住宿
-
 procedure instruct_12;
 var
   i, rnum: integer;
@@ -530,7 +525,6 @@ begin
 end;
 
 //亮屏, 在亮屏之前重新初始化场景
-
 procedure instruct_13;
 var
   i: integer;
@@ -550,7 +544,6 @@ begin
 end;
 
 //黑屏
-
 procedure instruct_14;
 var
   i: integer;
@@ -565,7 +558,6 @@ begin
 end;
 
 //失败画面
-
 procedure instruct_15;
 var
   i: integer;
@@ -684,7 +676,6 @@ end;
 
 //Black the screen when fail in battle.
 //Note: never be used, leave it as blank.
-
 procedure instruct_24;
 begin
 end;
@@ -692,7 +683,6 @@ end;
 //Note: never display the leading role.
 //This will be improved when I have a better method.
 //场景移动
-
 procedure instruct_25(x1, y1, x2, y2: integer);
 var
   i, s: integer;
@@ -757,7 +747,6 @@ end;
 
 //Note: of course an more effective engine can take place of it.
 //动画, 至今仍不完善
-
 procedure instruct_27(enum, beginpic, endpic: integer);
 var
   i, xpoint, ypoint, tempPic: integer;
@@ -822,7 +811,6 @@ begin
 end;
 
 //主角走动
-
 procedure instruct_30(x1, y1, x2, y2: integer);
 var
   s: integer;
@@ -932,7 +920,6 @@ begin
 end;
 
 //学到武功, 如果已有武功则升级, 如果已满10个不会洗武功
-
 procedure instruct_33(rnum, magicnum, dismode: integer);
 var
   i: integer;
@@ -1315,7 +1302,6 @@ end;
 
 //Open all scences.
 //Note: in primary game, some scences are set to different entrancing condition.
-
 procedure instruct_54;
 var
   i: integer;
@@ -1340,7 +1326,6 @@ end;
 
 //Add repute.
 //声望刚刚超过200时家里出现请帖
-
 procedure instruct_56(Repute: integer);
 begin
   Rrole[0].Repute := Rrole[0].Repute + repute;
@@ -1410,7 +1395,6 @@ begin
 end;
 
 //全员离队, 但未清除相关事件
-
 procedure instruct_59;
 var
   i: integer;
@@ -1525,14 +1509,12 @@ begin
 end;
 
 //Set sexual.
-
 procedure instruct_63(rnum, sexual: integer);
 begin
   Rrole[rnum].Sexual := sexual;
 end;
 
 //韦小宝的商店
-
 procedure instruct_64;
 var
   i, amount, shopnum, menu, price: integer;

@@ -81,8 +81,7 @@ implementation
 uses
   kys_engine;
 
-  //显示title.grp的内容(即开始的选单)
-
+//显示title.grp的内容(即开始的选单)
 procedure DrawTitlePic(imgnum, px, py: integer);
 var
   len, grp, idx: integer;
@@ -103,14 +102,12 @@ begin
 end;
 
 //显示主地图贴图
-
 procedure DrawMPic(num, px, py: integer; Framenum: integer = -1); overload;
 begin
   DrawMPic(num, px, py, 0, 0, 0, 0, Framenum);
 end;
 
 //显示主地图贴图
-
 procedure DrawMPic(num, px, py, shadow, alpha: integer; mixColor: uint32; mixAlpha: integer; Framenum: integer = -1); overload;
 var
   NeedGRP: integer;
@@ -143,7 +140,6 @@ begin
 end;
 
 //显示场景图片
-
 procedure DrawSPic(num, px, py: integer); overload;
 begin
   DrawSPic(num, px, py, 0, 0, 0, 0);
@@ -174,7 +170,6 @@ begin
 end;
 
 //画考虑遮挡的内场景
-
 procedure DrawSPic(num, px, py, shadow, alpha, depth: integer; mixColor: uint32; mixAlpha: integer); overload;
 begin
   if (num >= 0) and (num < SPicAmount) then
@@ -196,7 +191,6 @@ begin
 end;
 
 //将场景图片信息画到映像
-
 procedure InitialSPic(num, px, py, x, y, w, h: integer); overload;
 begin
   InitialSPic(num, px, py, x, y, w, h, 0, 0, 0);
@@ -204,7 +198,6 @@ begin
 end;
 
 //画到映像并记录深度数据
-
 procedure InitialSPic(num, px, py, x, y, w, h, needBlock, depth: integer); overload;
 begin
   InitialSPic(num, px, py, x, y, w, h, needBlock, depth, 0);
@@ -267,7 +260,6 @@ begin
 end;
 
 //显示头像, 优先考虑'.head/'目录下的png图片
-
 procedure DrawHeadPic(num, px, py: integer); overload;
 begin
   DrawHeadPic(num, px, py, 0, 0, 0, 0, 0);
@@ -326,7 +318,6 @@ begin
 end;
 
 //显示战场图片
-
 procedure DrawBPic(num, px, py, shadow: integer); overload;
 begin
   DrawBPic(num, px, py, shadow, 0, 0, 0, 0);
@@ -334,7 +325,6 @@ begin
 end;
 
 //用于画带透明度和遮挡的战场图
-
 procedure DrawBPic(num, px, py, shadow, alpha, depth: integer; mixColor: uint32; mixAlpha: integer); overload;
 begin
   if (num > 0) and (num < BPicAmount) then
@@ -354,7 +344,6 @@ begin
 end;
 
 //仅在某区域显示战场图
-
 procedure DrawBPicInRect(num, px, py, shadow, x, y, w, h: integer);
 var
   Area: TSDL_Rect;
@@ -378,14 +367,12 @@ begin
 end;
 
 //将战场图片画到映像
-
 procedure InitialBPic(num, px, py: integer); overload;
 begin
   InitialBPic(num, px, py, 0, 0);
 end;
 
 //画到映像并记录深度
-
 procedure InitialBPic(num, px, py, needBlock, depth: integer); overload;
 var
   pImg: PSDL_Surface;
@@ -417,7 +404,6 @@ begin
 end;
 
 //显示效果图片
-
 procedure DrawEPic(num, px, py: integer); overload;
 begin
   DrawEPic(num, px, py, 0, 0, 0, 0, 0);
@@ -442,7 +428,6 @@ begin
 end;
 
 //显示人物动作图片
-
 procedure DrawFPic(num, px, py, index: integer); overload;
 begin
   DrawFPic(num, px, py, 0, 0, 0, 0, 0, index);
@@ -450,7 +435,6 @@ begin
 end;
 
 //用于画带透明度和遮挡的人物动作图片
-
 procedure DrawFPic(num, px, py, index, shadow, alpha, depth: integer; mixColor: uint32; mixAlpha: integer); overload;
 begin
   case PNG_TILE of
@@ -472,7 +456,6 @@ begin
 end;
 
 //主地图上画云
-
 procedure DrawCPic(num, px, py, shadow, alpha: integer; mixColor: uint32; mixAlpha: integer);
 begin
   if PNG_TILE > 0 then
@@ -487,7 +470,6 @@ begin
 end;
 
 //重画屏幕
-
 procedure Redraw(WriteFresh: integer = 0);
 begin
   case where of
@@ -510,7 +492,6 @@ begin
 end;
 
 //以下两个函数用于需要连续几个相同帧时的快速重绘
-
 procedure RecordFreshScreen(x, y, w, h: integer);
 var
   dest: TSDL_Rect;
@@ -884,7 +865,6 @@ end;
 
 
 //画场景到屏幕
-
 procedure DrawScence;
 var
   i1, i2, x, y, xpoint, ypoint: integer;
@@ -915,7 +895,6 @@ begin
 end;
 
 //画不含主角的场景(与DrawScenceByCenter相同)
-
 procedure DrawScenceWithoutRole(x, y: integer);
 var
   x1, y1: integer;
@@ -925,7 +904,6 @@ begin
 end;
 
 //画主角于场景
-
 procedure DrawRoleOnScence(x, y: integer);
 var
   depth: integer;
@@ -938,7 +916,6 @@ end;
 
 //将地面扩大并绘图, 避免场景出现黑色边缘, 方法是重复边缘的贴图
 //因为有些场景自身的问题, 可能会出现较奇怪的结果
-
 procedure ExpandGroundOnImg();
 var
   i1, i2, x, y, num: integer;
@@ -993,7 +970,6 @@ end;
 
 //Save the image informations of the whole scence.
 //生成场景映像
-
 procedure InitialScence(); overload;
 begin
   InitialScence(0);
@@ -1001,7 +977,6 @@ begin
 end;
 
 //如参数不为0, 仅修改可见部分的场景映像. 参数为0与无参数相同
-
 procedure InitialScence(Visible: integer); overload;
 var
   i1, i2, x, y, x1, y1, w, h: integer;
@@ -1106,7 +1081,6 @@ end;
 
 
 //上面函数的子程
-
 procedure InitialScenceOnePosition(i1, i2, x1, y1, w, h, depth, temp: integer);
 var
   i, x, y, num: integer;
@@ -1145,7 +1119,6 @@ begin
 end;
 
 //更改场景映像, 用于动画, 场景内动态效果
-
 procedure UpdateScence(xs, ys: integer);
 var
   i1, i2, x, y: integer;
@@ -1203,7 +1176,6 @@ begin
 end;
 
 //将场景映像画到屏幕并载入遮挡数据
-
 procedure LoadScencePart(x, y: integer);
 var
   i1, i2: integer;
@@ -1226,7 +1198,6 @@ begin
 end;
 
 //画战场
-
 procedure DrawBField(needProgress: integer = 1);
 var
   i, i1, i2: integer;
@@ -1259,7 +1230,6 @@ begin
 end;
 
 //画不含主角的战场
-
 procedure DrawBfieldWithoutRole(x, y: integer);
 var
   x1, y1: integer;
@@ -1269,7 +1239,6 @@ begin
 end;
 
 //画战场上人物, 需更新人物身前的遮挡
-
 procedure DrawRoleOnBfield(x, y: integer; mixColor: uint32 = 0; mixAlpha: integer = 0; Alpha: integer = 75);
 var
   i1, i2, xpoint, ypoint, depth: integer;
@@ -1304,7 +1273,6 @@ begin
 end;
 
 //初始化战场映像
-
 procedure InitialBFieldImage;
 var
   sumi, i1, i2: integer;
@@ -1349,7 +1317,6 @@ begin
 end;
 
 //将战场映像画到屏幕并载入遮挡数据
-
 procedure LoadBfieldPart(x, y: integer; noBuild: integer = 0);
 var
   i1, i2: integer;
@@ -1371,7 +1338,6 @@ begin
 end;
 
 //直接载入建筑层Surface, 将战场分成两部分是为绘制带光标战场时可以单独载入建筑层
-
 procedure LoadBFieldPart2(x, y, alpha: integer);
 var
   i1, i2: integer;
@@ -1415,7 +1381,6 @@ end;
 
 //画带光标的子程
 //此子程效率不高- has been improved
-
 procedure DrawBFieldWithCursor(step: integer);
 var
   i, i1, i2, bnum, depth, x, y: integer;
@@ -1463,7 +1428,6 @@ begin
 end;
 
 //画带效果的战场
-
 procedure DrawBFieldWithEft(Epicnum: integer); overload;
 var
   i, i1, i2: integer;
@@ -1566,7 +1530,6 @@ begin
 end;
 
 //画带人物动作的战场
-
 procedure DrawBFieldWithAction(bnum, Apicnum: integer);
 var
   i, i1, i2: integer;
@@ -1592,7 +1555,6 @@ end;
 
 
 //绘制云
-
 procedure DrawClouds;
 var
   i, x, y: integer;
@@ -1607,7 +1569,6 @@ begin
 end;
 
 //显示半即时进度
-
 procedure DrawProgress;
 var
   i, j, x, y, curHead, temp: integer;

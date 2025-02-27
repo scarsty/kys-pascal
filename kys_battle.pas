@@ -431,7 +431,6 @@ begin
 end;
 
 //显示选择参战人物选单
-
 procedure ShowMultiMenu(max, menu, status: integer; menuString: array of WideString);
 var
   i, x, y: integer;
@@ -460,7 +459,6 @@ begin
 end;
 
 //战斗主控制
-
 procedure BattleMainControl;
 var
   i, j, act: integer;
@@ -621,7 +619,6 @@ begin
 end;
 
 //按轻功重排人物(未考虑装备)
-
 procedure ReArrangeBRole;
 var
   i, i1, i2, x: integer;
@@ -654,7 +651,6 @@ begin
 end;
 
 //计算可移动步数(考虑装备)
-
 procedure CalMoveAbility;
 var
   i, rnum, addspeed: integer;
@@ -870,7 +866,6 @@ begin
 end;
 
 //显示战斗主选单
-
 procedure ShowBMenu(MenuStatus, menu, max: integer);
 var
   i, p: integer;
@@ -910,7 +905,6 @@ begin
 end;
 
 //移动
-
 procedure MoveRole(bnum: integer);
 var
   s, i: integer;
@@ -1478,7 +1472,6 @@ end;}
 //计算可以被选中的位置
 //利用队列
 //移动过程中, 旁边有敌人, 则不能继续移动
-
 procedure SeekPath2(x, y, step, myteam, mode: integer);
 var
   Xlist: array[0..4096] of integer;
@@ -1719,7 +1712,6 @@ begin
 end;
 
 //攻击
-
 procedure Attack(bnum: integer);
 var
   rnum, i, mnum, level, step, i1: integer;
@@ -1804,7 +1796,6 @@ begin
 end;
 
 //攻击效果, 保持与之前的兼容不修改名字
-
 procedure AttackAction(bnum, mnum, level: integer); overload;
 begin
   ShowMagicName(mnum);
@@ -1816,7 +1807,6 @@ begin
 end;
 
 //mode = 1 means the hidden weapon.
-
 procedure ShowMagicName(mnum: integer; mode: integer = 0);
 var
   l: integer;
@@ -1942,7 +1932,6 @@ begin
 end;
 
 //显示武功选单
-
 procedure ShowMagicMenu(MenuStatus, menu, max: integer; menuString, menuEngString: array of WideString);
 var
   i, p: integer;
@@ -1970,7 +1959,6 @@ begin
 end;
 
 //设定攻击范围
-
 procedure SetAminationPosition(mode, step: integer; range: integer = 0); overload;
 begin
   SetAminationPosition(Bx, By, Ax, Ay, mode, step, range);
@@ -2033,7 +2021,6 @@ end;
 
 //显示武功效果, forTeam: 行动目标为队友
 //mode: 决定闪烁颜色, 与showhurtvalue相同
-
 procedure PlayMagicAmination(bnum, enum: integer; ForTeam: integer = 0; mode: integer = 0);
 var
   beginpic, i, endpic, x, y, z, min, max, i1, i2: integer;
@@ -2090,7 +2077,6 @@ begin
 end;
 
 //判断是否有非行动方角色在攻击范围之内
-
 procedure CalHurtRole(bnum, mnum, level: integer);
 var
   i, rnum, hurt, addpoi, mp: integer;
@@ -2258,7 +2244,6 @@ end;
 
 //选择颜色
 //0红色, 2绿色, 4蓝色, 3黄色, 1紫色
-
 procedure SelectModeColor(mode: integer; var color1, color2: uint32; var str: AnsiString; trans: integer = 0);
 var
   tempcolor: TSDL_Color;
@@ -2303,7 +2288,6 @@ begin
 end;
 
 //显示数字
-
 procedure ShowHurtValue(mode: integer);
 var
   i, i1, x, y: integer;
@@ -2348,7 +2332,6 @@ begin
 end;
 
 //计算中毒减少的生命
-
 procedure CalPoiHurtLife;
 var
   i: integer;
@@ -2374,7 +2357,6 @@ begin
 end;
 
 //设置生命低于0的人物为已阵亡, 主要是清除所占的位置
-
 procedure ClearDeadRolePic;
 var
   i, i1, i2, rnum: integer;
@@ -2439,7 +2421,6 @@ end;
 
 
 //等待, 似乎不太完善
-
 procedure Wait(bnum: integer);
 var
   i, i1, i2, x: integer;
@@ -2463,7 +2444,6 @@ begin
 end;
 
 //战斗结束恢复人物状态
-
 procedure RestoreRoleStatus;
 var
   i, rnum: integer;
@@ -2499,7 +2479,6 @@ begin
 end;
 
 //增加经验
-
 procedure AddExp;
 var
   i, rnum, basicvalue, amount, p, pmax: integer;
@@ -2546,7 +2525,6 @@ begin
 end;
 
 //检查是否能够升级
-
 procedure CheckLevelUp;
 var
   i, rnum: integer;
@@ -2567,7 +2545,6 @@ begin
 end;
 
 //升级, 如是我方人物显示状态
-
 procedure LevelUp(bnum: integer);
 var
   i, rnum, add: integer;
@@ -2616,7 +2593,6 @@ begin
 end;
 
 //检查身上秘笈
-
 procedure CheckBook;
 var
   i, j, i1, i2, p, rnum, inum, mnum, mlevel, needexp, needitem, needitemamount, itemamount, maxtimes, times: integer;
@@ -2764,7 +2740,6 @@ begin
 end;
 
 //战斗中物品选单
-
 procedure BattleMenuItem(bnum: integer);
 var
   rnum, inum, mode: integer;
@@ -2793,7 +2768,6 @@ begin
 end;
 
 //动作动画
-
 procedure PlayActionAmination(bnum, mode: integer; mnum: integer = -1);
 var
   d1, d2, dm, rnum, i, beginpic, endpic, idx, grp, tnum, len, spic, Ax1, Ay1: integer;
@@ -2872,7 +2846,6 @@ begin
 end;
 
 //用毒
-
 procedure UsePoison(bnum: integer);
 var
   rnum, bnum1, rnum1, poi, step, addpoi, i, minDefPoi: integer;
@@ -2935,7 +2908,6 @@ begin
 end;
 
 //医疗
-
 procedure Medcine(bnum: integer);
 var
   rnum, bnum1, rnum1, med, step, addlife, minHP, i, minushurt: integer;
@@ -2996,7 +2968,6 @@ begin
 end;
 
 //解毒
-
 procedure MedPoison(bnum: integer);
 var
   rnum, bnum1, rnum1, medpoi, step, minuspoi: integer;
@@ -3038,7 +3009,6 @@ begin
 end;
 
 //使用暗器
-
 procedure UseHiddenWeapon(bnum, inum: integer);
 var
   rnum, bnum1, rnum1, hidden, step, hurt, poison, i, maxhurt, eventnum: integer;
@@ -3135,7 +3105,6 @@ begin
 end;
 
 //休息
-
 procedure Rest(bnum: integer);
 var
   rnum: integer;
@@ -3325,7 +3294,6 @@ end;
 
 
 //The AI. Some codes were written by little samll pig.
-
 procedure AutoBattle(bnum: integer);
 var
   i, p, temp, rnum, inum, eneamount, aim, mnum, level: integer;
@@ -3694,7 +3662,6 @@ end;}
 end;
 
 //自动使用list的值最大的物品
-
 procedure AutoUseItem(bnum, list: integer);
 var
   i, p, temp, rnum, inum: integer;
@@ -3844,7 +3811,6 @@ begin
 end;
 
 //目标系点十菱, 原地系菱
-
 procedure CalPoint(var Mx1, My1, Ax1, Ay1, tempmaxhurt: integer; curX, curY, bnum, mnum, level: integer);
 var
   i, j, k, m, n, tempX, tempY, temphurt, ebnum, ernum, tempHP: integer;
@@ -3887,7 +3853,6 @@ begin
 end;
 
 //线型攻击的情况, 分四个方向考虑, 分别计算伤血量
-
 procedure calline(var Mx1, My1, Ax1, Ay1, tempmaxhurt: integer; curX, curY, bnum, mnum, level: integer);
 var
   i, tempX, tempY, ebnum, rnum, tempHP, temphurt: integer;
@@ -3971,7 +3936,6 @@ begin
 end;
 
 //原地系十叉米
-
 procedure calcross(var Mx1, My1, Ax1, Ay1, tempmaxhurt: integer; curX, curY, bnum, mnum, level: integer);
 var
   i, tempX, tempY, temphurt, ebnum, rnum: integer;
@@ -4031,7 +3995,6 @@ begin
 end;
 
 //目标系方、原地系方
-
 procedure CalArea(var Mx1, My1, Ax1, Ay1, tempmaxhurt: integer; curX, curY, bnum, mnum, level: integer);
 var
   i, j, k, m, n, tempX, tempY, temphurt: integer;
@@ -4073,7 +4036,6 @@ begin
 end;
 
 //移动到离最近的敌人最近的地方
-
 procedure NearestMove(var Mx1, My1: integer; bnum: integer);
 var
   temp1, temp2: integer;
@@ -4126,7 +4088,6 @@ end;
 //Prolist: the properties of role.
 //MaxMinPro: 1-search max, -1-search min, 0-any.
 //mode: 0-nearest only, 1-medcine, 2-解毒
-
 procedure NearestMoveByPro(var Mx1, My1, Ax1, Ay1: integer; bnum, TeamMate, KeepDis, Prolist, MaxMinPro: integer; mode: integer);
 var
   i, tempdis, mindis, tempPro, rnum: integer;

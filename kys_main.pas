@@ -140,8 +140,7 @@ uses
   kys_battle,
   kys_draw;
 
-  //初始化字体, 音效, 视频, 启动游戏
-
+//初始化字体, 音效, 视频, 启动游戏
 procedure Run;
 var
   Text: PSDL_Surface;
@@ -284,7 +283,6 @@ begin
 end;
 
 //关闭所有已打开的资源, 退出
-
 procedure Quit;
 begin
   FreeAllSurface;
@@ -432,7 +430,6 @@ end;
 
 
 //读取必须的文件
-
 procedure ReadFiles;
 var
   grp, idx, tnum, len, col, i, k: integer;
@@ -559,7 +556,6 @@ end;
 
 //Main game.
 //显示开头画面
-
 procedure Start;
 var
   menu, menup, i, col, i1, i2, x, y, k: integer;
@@ -711,7 +707,6 @@ begin
 end;
 
 //开头字幕
-
 procedure StartAmi;
 var
   x, y, i, len: integer;
@@ -1587,7 +1582,6 @@ begin
 end;
 
 //读入存档, 如为0则读入起始存档
-
 procedure LoadR(num: integer);
 var
   filename: AnsiString;
@@ -1682,7 +1676,6 @@ begin
 end;
 
 //存档
-
 procedure SaveR(num: integer);
 var
   filename: AnsiString;
@@ -1804,7 +1797,6 @@ begin
 end;
 
 //于主地图行走
-
 procedure Walk;
 var
   word: array[0..10] of uint16;
@@ -2976,7 +2968,6 @@ begin
 end;
 
 //检查是否有第3类事件, 如有则调用
-
 procedure CheckEvent3;
 var
   enum: integer;
@@ -3193,7 +3184,6 @@ end;
 
 //显示通用选单(位置, 宽度, 最大值)
 //这个通用选单包含两个字符串组, 可分别显示中文和英文
-
 procedure ShowCommonMenu(x, y, w, max, menu: integer; menuString: array of WideString); overload;
 var
   menuEngString: array of WideString;
@@ -3538,7 +3528,6 @@ begin
 end;
 
 //显示仅有两个选项的横排选单
-
 procedure ShowCommonMenu2(x, y, w, menu: integer; menuString: array of WideString);
 var
   i, p: integer;
@@ -3591,7 +3580,6 @@ begin
 end;
 
 //主选单
-
 procedure MenuEsc;
 var
   word: array[0..5] of WideString;
@@ -3736,7 +3724,6 @@ begin
 end;
 
 //显示主选单
-
 procedure ShowMenu(menu: integer);
 var
   word: array[0..5] of WideString;
@@ -3774,7 +3761,6 @@ begin
 end;
 
 //医疗选单, 需两次选择队员
-
 procedure MenuMedcine;
 var
   role1, role2, menu: integer;
@@ -3804,7 +3790,6 @@ begin
 end;
 
 //解毒选单
-
 procedure MenuMedPoison;
 var
   role1, role2, menu: integer;
@@ -4149,7 +4134,6 @@ end;
 
 
 //显示物品选单
-
 procedure ShowMenuItem(row, col, x, y, atlu: integer);
 var
   item, i, i1, i2, len, len2, len3, listnum: integer;
@@ -4384,7 +4368,6 @@ begin
 end;
 
 //画白色边框作为物品选单的光标
-
 procedure DrawItemFrame(x, y: integer);
 var
   i, xp, yp, d: integer;
@@ -4407,7 +4390,6 @@ begin
 end;
 
 //使用物品
-
 procedure UseItem(inum: integer);
 var
   x, y, menu, rnum, p: integer;
@@ -4655,7 +4637,6 @@ begin
 end;
 
 //查看状态选单
-
 procedure MenuStatus;
 var
   str: WideString;
@@ -4695,7 +4676,6 @@ begin
 end;
 
 //显示状态
-
 procedure ShowStatusByTeam(tnum: integer);
 begin
   if TeamList[tnum] >= 0 then
@@ -4965,7 +4945,6 @@ begin
 end;
 
 //显示简单状态(x, y表示位置)
-
 procedure ShowSimpleStatus(rnum, x, y: integer);
 var
   i, magicnum: integer;
@@ -5063,7 +5042,6 @@ begin
 end;
 
 //离队选单
-
 procedure MenuLeave;
 var
   str: WideString;
@@ -5101,7 +5079,6 @@ begin
 end;
 
 //系统选单
-
 procedure MenuSystem;
 var
   word: array[0..3] of WideString;
@@ -5243,7 +5220,6 @@ begin
 end;}
 
 //显示系统选单
-
 procedure ShowMenuSystem(menu: integer);
 {var
   word: array[0..3] of Widestring;
@@ -5273,7 +5249,6 @@ begin
 end;
 
 //读档选单
-
 procedure MenuLoad;
 var
   menu, nowwhere: integer;
@@ -5348,7 +5323,6 @@ begin
 end;
 
 //存档选单
-
 procedure MenuSave;
 var
   menu: integer;
@@ -5370,7 +5344,6 @@ begin
 end;
 
 //退出选单
-
 procedure MenuQuit;
 var
   menu: integer;
@@ -5727,7 +5700,6 @@ end;
 
 //Event.
 //事件系统
-
 procedure CallEvent(num: integer);
 var
   e: array of SmallInt;
