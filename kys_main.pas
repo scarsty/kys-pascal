@@ -233,6 +233,7 @@ begin
 
   //SDL_WM_SetCaption(PAnsiChar(TitleString), 's.weyl');
   SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, '1');
+  SDL_SetHint(SDL_HINT_IME_SHOW_UI, '1');
 
   render := SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED or SDL_RENDERER_TARGETTEXTURE);
   screen := SDL_CreateRGBSurface(ScreenFlag, CENTER_X * 2, CENTER_Y * 2, 32, RMask, GMask, BMask, 0);
@@ -773,14 +774,14 @@ var
   activity: jobject;
   clazz: jclass;
   method_id: jmethodID;
-  e: TSDL_event;
   {$endif}
+  r: TSDL_Rect;
 begin
   LoadR(0);
   //显示输入姓名的对话框
   //form1.ShowModal;
   //str := form1.edit1.text;
-  str1 := '請以繁體中文輸入主角之姓名，選定屬性後按Enter, Esc或滑鼠按鍵     ';
+  str1 := '請以繁體中文輸入主角之姓名';
   //name := InputBox('Enter name', str1, '我是主角');
   where := 3;
   Redraw;
@@ -802,10 +803,65 @@ begin
   Name := tempname;
   named := True;
   {$else}
-  {$ifndef linux}
-  named := InputQuery('Enter name', str1, AnsiString(tempname));
-  {$endif}
-  Name := tempname;
+  //named := InputQuery('Enter name', str1, AnsiString(tempname));
+  r.x := CENTER_X - 43;
+  r.y := CENTER_Y + 10;
+  r.w := 86;
+  r.h := 100;
+  SDL_SetHint(SDL_HINT_IME_INTERNAL_EDITING, '1');
+  SDL_SetTextInputRect(@r);
+  for i := 0 to 4 do
+    Rrole[0].Data[4 + i] := 0;
+  SDL_StartTextInput();
+  SDL_SetTextInputRect(@r);
+  str := str1;
+  while True do
+  begin
+    Redraw;
+    DrawRectangleWithoutFrame(screen, 0, 0, screen.w, screen.h, 0, 50);
+    DrawTextWithRect(@str[1], CENTER_X - 133, CENTER_Y - 30, 266, ColColor($21), ColColor($23));
+    str0 := UTF8Decode(Name);
+    DrawTextWithRect(@str0[1], CENTER_X - 43, CENTER_Y + 10, 86, ColColor($66), ColColor($63));
+    SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+    SDL_PollEvent(@event);
+    CheckBasicEvent;
+    case event.type_ of
+      SDL_TEXTINPUT:
+      begin
+        Name := Name + event.Text.Text;
+      end;
+      SDL_MOUSEBUTTONUP:
+      begin
+        if (event.button.button = SDL_BUTTON_RIGHT) then
+        begin
+          named := False;
+          break;
+        end;
+      end;
+      SDL_KEYUP:
+      begin
+        if event.key.keysym.sym = SDLK_RETURN then
+        begin
+          named := True;
+          break;
+        end;
+        if event.key.keysym.sym = SDLK_ESCAPE then
+        begin
+          named := False;
+          break;
+        end;
+        if event.key.keysym.sym = SDLK_BACKSPACE then
+        begin
+          if length(Name) > 0 then
+          begin
+            setlength(Name, length(Name) - 1);
+          end;
+        end;
+      end;
+    end;
+    SDL_Delay(16);
+  end;
+  SDL_StopTextInput();
   {$endif}
 
   if named then
