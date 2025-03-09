@@ -1,4 +1,4 @@
-unit kys_battle;
+﻿unit kys_battle;
 
 //{$MODE Delphi}
 
@@ -771,7 +771,7 @@ begin
 
   Redraw;
   ShowSimpleStatus(Brole[bnum].rnum, CENTER_X + 100, 50);
-  str := UTF8Decode(format('回合%d', [BattleRound]));
+  str := (format('回合%d', [BattleRound]));
   DrawTextWithRect(screen, puint16(str), 160, 50, DrawLength(str) * 10 + 6, ColColor($21), ColColor($23));
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
   menu := 0;

@@ -5668,7 +5668,7 @@ begin
     DrawRectangle(screen, 100, 70, 100 + length(PAnsiChar(@Ritem[inum].Name)) * 10, 25, 0, ColColor(255), 50);
     str := '服用';
     if Ritem[inum].ItemType = 2 then
-      str := UTF8Decode(format('練成%d次', [Result]));
+      str := (format('練成%d次', [Result]));
     DrawShadowText(screen, @str[1], 103, 72, ColColor($21), ColColor($23));
     DrawBig5ShadowText(screen, @Ritem[inum].Name, 193, 72, ColColor($64), ColColor($66));
 
@@ -5762,6 +5762,7 @@ var
   i, offset, len, p, temppic: integer;
   check: boolean;
   k: array[0..67] of integer;
+  filename: AnsiString;
 begin
   //CurEvent:=num;
   {k[61] := 0;  k[25] := 1;  k[13] := 2;  k[2] := 3;  k[58] := 4;  k[59] := 5;  k[38] := 6;  k[37] := 7;
@@ -5780,7 +5781,8 @@ begin
   //SDL_EnableKeyRepeat(0, 10);
 
   NeedRefreshScence := 0;
-  if (KDEF_SCRIPT = 0) or (not FileExists(AppPath + 'script/oldevent/oldevent_' + IntToStr(num) + '.lua')) then
+  filename := AppPath + 'script/oldevent/oldevent_' + IntToStr(num) + '.lua';
+  if (KDEF_SCRIPT = 0) or (not FileExists(filename)) then
   begin
     len := 0;
     if num = 0 then
@@ -6180,7 +6182,7 @@ begin
     //lua_dofile(Lua_script, AppPath + 'script/oldevent/oldevent_' + inttostr(num));
     if IsConsole then
       writeln('Run event with ', num, '.lua script. ');
-    ExecScript(PAnsiChar(AppPath + 'script/oldevent/oldevent_' + IntToStr(num) + '.lua'), nil);
+    ExecScript(@filename[1], nil);
   end;
 
   //event.key.keysym.sym := 0;

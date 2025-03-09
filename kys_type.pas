@@ -11,6 +11,9 @@ uses
   lua52;
 
 type
+  PUInt16 = pcuint16;
+  PUInt8 = pcuint8;
+
   TPosition = record
     x, y: integer;
   end;

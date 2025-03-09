@@ -1,4 +1,4 @@
-unit kys_script;
+﻿unit kys_script;
 
 //{$MODE Delphi}
 
@@ -344,6 +344,7 @@ end;
 function ExecScript(filename, functionname: PAnsiChar): integer;
 var
   Script: AnsiString;
+  filename1: AnsiString;
   //Data: AnsiString;
   Data: TStringList;
   h: integer;
