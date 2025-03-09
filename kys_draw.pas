@@ -71,9 +71,7 @@ procedure DrawBFieldWithEft(Epicnum, beginpic, endpic, curlevel, bnum, forteam, 
 procedure DrawBFieldWithAction(bnum, Apicnum: integer);
 
 procedure DrawClouds;
-
 procedure DrawProgress;
-
 procedure DrawVirtualKey;
 
 implementation
@@ -208,7 +206,7 @@ procedure InitialSPic(num, px, py, x, y, w, h, needBlock, depth, temp: integer);
 var
   Area: TSDL_Rect;
   pImg: PSDL_Surface;
-  pBlock: PAnsiChar;
+  pBlock: putf8char;
 begin
   if temp = 0 then
   begin
@@ -269,7 +267,7 @@ procedure DrawHeadPic(num, px, py: integer; scr: PSDL_Surface); overload;
 var
   image: PSDL_Surface;
   dest: TSDL_Rect;
-  str: AnsiString;
+  str: utf8string;
   Area: TSDL_Rect;
   offset: integer;
   y: SmallInt;
@@ -280,7 +278,7 @@ begin
     image := HeadSurface[num];
     if image = nil then
     begin
-      image := IMG_Load(PAnsiChar(str));
+      image := IMG_Load(putf8char(str));
       HeadSurface[num] := image;
     end;
     dest.x := px;
@@ -308,7 +306,7 @@ end;
 procedure DrawHeadPic(num, px, py, shadow, alpha, depth: integer; mixColor: uint32; mixAlpha: integer); overload;
 var
   len, grp, idx: integer;
-  str: AnsiString;
+  str: utf8string;
   dest: TSDL_Rect;
   image: PSDL_Surface;
 begin
@@ -319,7 +317,7 @@ begin
     image := HeadSurface[num];
     if image = nil then
     begin
-      image := IMG_Load(PAnsiChar(str));
+      image := IMG_Load(putf8char(str));
       HeadSurface[num] := image;
     end;
     dest.x := px;
@@ -497,12 +495,12 @@ begin
     3:
     begin
       SDL_FillRect(screen, nil, 0);
-      display_img(PAnsiChar(AppPath + 'resource/open.png'), OpenPicPosition.x, OpenPicPosition.y);
+      display_img(putf8char(AppPath + 'resource/open.png'), OpenPicPosition.x, OpenPicPosition.y);
     end;
     4:
     begin
       SDL_FillRect(screen, nil, 0);
-      display_img(PAnsiChar(AppPath + 'resource/dead.png'), OpenPicPosition.x, OpenPicPosition.y);
+      display_img(putf8char(AppPath + 'resource/dead.png'), OpenPicPosition.x, OpenPicPosition.y);
     end;
   end;
   if WriteFresh = 1 then
@@ -545,7 +543,7 @@ begin
   begin
     if (SDL_LockSurface(screen) < 0) then
     begin
-      MessageBox(0, PAnsiChar(Format('Can''t lock screen : %s', [SDL_GetError])), 'Error', MB_OK or MB_ICONHAND);
+      MessageBox(0, putf8char(Format('Can''t lock screen : %s', [SDL_GetError])), 'Error', MB_OK or MB_ICONHAND);
       exit;
     end;
   end;
@@ -634,7 +632,7 @@ begin
   begin
     if (SDL_LockSurface(screen) < 0) then
     begin
-      MessageBox(0, PAnsiChar(Format('Can''t lock screen : %s', [SDL_GetError])), 'Error', MB_OK or MB_ICONHAND);
+      MessageBox(0, putf8char(Format('Can''t lock screen : %s', [SDL_GetError])), 'Error', MB_OK or MB_ICONHAND);
       exit;
     end;
   end;
@@ -1224,7 +1222,7 @@ begin
   begin
     if (SDL_LockSurface(screen) < 0) then
     begin
-      MessageBox(0, PAnsiChar(Format('Can''t lock screen : %s', [SDL_GetError])), 'Error', MB_OK or MB_ICONHAND);
+      MessageBox(0, putf8char(Format('Can''t lock screen : %s', [SDL_GetError])), 'Error', MB_OK or MB_ICONHAND);
       exit;
     end;
   end;}
@@ -1455,7 +1453,7 @@ begin
   begin
     if (SDL_LockSurface(screen) < 0) then
     begin
-      MessageBox(0, PAnsiChar(Format('Can''t lock screen : %s', [SDL_GetError])), 'Error', MB_OK or MB_ICONHAND);
+      MessageBox(0, putf8char(Format('Can''t lock screen : %s', [SDL_GetError])), 'Error', MB_OK or MB_ICONHAND);
       exit;
     end;
   end;}

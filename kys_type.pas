@@ -11,15 +11,15 @@ uses
   lua52;
 
 type
-  PUInt16 = pcuint16;
-  PUInt8 = pcuint8;
+  //PUInt16 = pcuint16;
+  //PUInt8 = pcuint8;
 
   TPosition = record
     x, y: integer;
   end;
 
   TItemList = record
-    Number, Amount: SmallInt;
+    Number, Amount: smallint;
   end;
 
   TBuildInfo = record
@@ -32,7 +32,7 @@ type
   PPSDL_Surface = ^PSDL_Surface;
 
   TPNGIndex = record
-    Num, Frame, x, y, Loaded, UseGRP: SmallInt;
+    Num, Frame, x, y, Loaded, UseGRP: smallint;
     CurPointer: PPSDL_Surface;
   end;
 
@@ -54,75 +54,81 @@ type
 
   TRole = record
     case TCallType of
-      Element: (ListNum, HeadNum, IncLife, UnUse: SmallInt;
-        Name, Nick: array[0..9] of AnsiChar;
-        Sexual, Level: SmallInt;
+      Element: (ListNum, HeadNum, IncLife, UnUse: smallint;
+        Name, Nick: array[0..9] of ansichar;
+        Sexual, Level: smallint;
         Exp: word;
-        CurrentHP, MaxHP, Hurt, Poison, PhyPower: SmallInt;
+        CurrentHP, MaxHP, Hurt, Poison, PhyPower: smallint;
         ExpForItem: word;
-        Equip: array[0..1] of SmallInt;
-        AmiFrameNum, AmiDelay, SoundDealy: array[0..4] of SmallInt;
-        MPType, CurrentMP, MaxMP: SmallInt;
-        Attack, Speed, Defence, Medcine, UsePoi, MedPoi, DefPoi, Fist, Sword, Knife, Unusual, HidWeapon: SmallInt;
-        Knowledge, Ethics, AttPoi, AttTwice, Repute, Aptitude, PracticeBook: SmallInt;
+        Equip: array[0..1] of smallint;
+        AmiFrameNum, AmiDelay, SoundDealy: array[0..4] of smallint;
+        MPType, CurrentMP, MaxMP: smallint;
+        Attack, Speed, Defence, Medcine, UsePoi, MedPoi, DefPoi, Fist,
+        Sword, Knife, Unusual, HidWeapon: smallint;
+        Knowledge, Ethics, AttPoi, AttTwice, Repute, Aptitude, PracticeBook: smallint;
         ExpForBook: word;
-        Magic, MagLevel: array[0..9] of SmallInt;
-        TakingItem, TakingItemAmount: array[0..3] of SmallInt);
-      Address: (Data: array[0..90] of SmallInt);
+        Magic, MagLevel: array[0..9] of smallint;
+        TakingItem, TakingItemAmount: array[0..3] of smallint);
+      Address: (Data: array[0..90] of smallint);
   end;
 
   TItem = record
     case TCallType of
-      Element: (ListNum: SmallInt;
-        Name, Name1: array[0..19] of AnsiChar;
-        Introduction: array[0..29] of AnsiChar;
-        Magic, AmiNum, User, EquipType, ShowIntro, ItemType, UnKnow5, UnKnow6, UnKnow7: SmallInt;
-        AddCurrentHP, AddMaxHP, AddPoi, AddPhyPower, ChangeMPType, AddCurrentMP, AddMaxMP: SmallInt;
-        AddAttack, AddSpeed, AddDefence, AddMedcine, AddUsePoi, AddMedPoi, AddDefPoi: SmallInt;
+      Element: (ListNum: smallint;
+        Name, Name1: array[0..19] of ansichar;
+        Introduction: array[0..29] of ansichar;
+        Magic, AmiNum, User, EquipType, ShowIntro, ItemType, UnKnow5,
+        UnKnow6, UnKnow7: smallint;
+        AddCurrentHP, AddMaxHP, AddPoi, AddPhyPower, ChangeMPType,
+        AddCurrentMP, AddMaxMP: smallint;
+        AddAttack, AddSpeed, AddDefence, AddMedcine, AddUsePoi,
+        AddMedPoi, AddDefPoi: smallint;
         AddFist, AddSword, AddKnife, AddUnusual, AddHidWeapon, AddKnowledge, AddEthics,
-        AddAttTwice, AddAttPoi: SmallInt;
-        OnlyPracRole, NeedMPType, NeedMP, NeedAttack, NeedSpeed, NeedUsePoi, NeedMedcine, NeedMedPoi: SmallInt;
-        NeedFist, NeedSword, NeedKnife, NeedUnusual, NeedHidWeapon, NeedAptitude: SmallInt;
-        NeedExp, NeedExpForItem, NeedMaterial: SmallInt;
-        GetItem, NeedMatAmount: array[0..4] of SmallInt);
-      Address: (Data: array[0..94] of SmallInt);
+        AddAttTwice, AddAttPoi: smallint;
+        OnlyPracRole, NeedMPType, NeedMP, NeedAttack, NeedSpeed,
+        NeedUsePoi, NeedMedcine, NeedMedPoi: smallint;
+        NeedFist, NeedSword, NeedKnife, NeedUnusual, NeedHidWeapon,
+        NeedAptitude: smallint;
+        NeedExp, NeedExpForItem, NeedMaterial: smallint;
+        GetItem, NeedMatAmount: array[0..4] of smallint);
+      Address: (Data: array[0..94] of smallint);
   end;
 
   TScence = record
     case TCallType of
-      Element: (ListNum: SmallInt;
-        Name: array[0..9] of AnsiChar;
-        ExitMusic, EntranceMusic: SmallInt;
-        JumpScence, EnCondition: SmallInt;
-        MainEntranceY1, MainEntranceX1, MainEntranceY2, MainEntranceX2: SmallInt;
-        EntranceY, EntranceX: SmallInt;
-        ExitY, ExitX: array[0..2] of SmallInt;
-        JumpY1, JumpX1, JumpY2, JumpX2: SmallInt);
-      Address: (Data: array[0..25] of SmallInt);
+      Element: (ListNum: smallint;
+        Name: array[0..9] of ansichar;
+        ExitMusic, EntranceMusic: smallint;
+        JumpScence, EnCondition: smallint;
+        MainEntranceY1, MainEntranceX1, MainEntranceY2, MainEntranceX2: smallint;
+        EntranceY, EntranceX: smallint;
+        ExitY, ExitX: array[0..2] of smallint;
+        JumpY1, JumpX1, JumpY2, JumpX2: smallint);
+      Address: (Data: array[0..25] of smallint);
   end;
 
   TMagic = record
     case TCallType of
-      Element: (ListNum: SmallInt;
-        Name: array[0..9] of AnsiChar;
-        UnKnow: array[0..4] of SmallInt;
-        SoundNum, MagicType, AmiNum, HurtType, AttAreaType, NeedMP, Poison: SmallInt;
-        Attack, MoveDistance, AttDistance, AddMP, HurtMP: array[0..9] of SmallInt);
-      Address: (Data: array[0..67] of SmallInt);
+      Element: (ListNum: smallint;
+        Name: array[0..9] of ansichar;
+        UnKnow: array[0..4] of smallint;
+        SoundNum, MagicType, AmiNum, HurtType, AttAreaType, NeedMP, Poison: smallint;
+        Attack, MoveDistance, AttDistance, AddMP, HurtMP: array[0..9] of smallint);
+      Address: (Data: array[0..67] of smallint);
   end;
 
   TShop = record
     case TCallType of
-      Element: (Item, Amount, Price: array[0..4] of SmallInt);
-      Address: (Data: array[0..14] of SmallInt);
+      Element: (Item, Amount, Price: array[0..4] of smallint);
+      Address: (Data: array[0..14] of smallint);
   end;
 
   TBattleRole = record
     case TCallType of
-      Element: (rnum, Team, Y, X, Face, Dead, Step, Acted: SmallInt;
-        Pic, ShowNumber, UnUse1, UnUse2, UnUse3, ExpGot, Auto: SmallInt;
-        RealSpeed, RealProgress, BHead, AutoMode: SmallInt);
-      Address: (Data: array[0..18] of SmallInt);
+      Element: (rnum, Team, Y, X, Face, Dead, Step, Acted: smallint;
+        Pic, ShowNumber, UnUse1, UnUse2, UnUse3, ExpGot, Auto: smallint;
+        RealSpeed, RealProgress, BHead, AutoMode: smallint);
+      Address: (Data: array[0..18] of smallint);
   end;
 
   TCol = record
@@ -140,75 +146,81 @@ type
 
   TWarData = record
     case TCallType of
-      Element: (Warnum: SmallInt;
-        Name: array[0..9] of AnsiChar;
-        BFieldNum, ExpGot, MusicNum: SmallInt;
-        TeamMate, AutoTeamMate, TeamY, TeamX: array[0..5] of SmallInt;
-        Enemy, EnemyY, EnemyX: array[0..19] of SmallInt);
-      Address: (Data: array[0..$5C] of SmallInt);
+      Element: (Warnum: smallint;
+        Name: array[0..9] of ansichar;
+        BFieldNum, ExpGot, MusicNum: smallint;
+        TeamMate, AutoTeamMate, TeamY, TeamX: array[0..5] of smallint;
+        Enemy, EnemyY, EnemyX: array[0..19] of smallint);
+      Address: (Data: array[0..$5C] of smallint);
   end;
 
   TRoleRedFace = record
     case TCallType of
-      Element: (ListNum, HeadNum, IncLife, UnUse: SmallInt;
-        Name, Nick: array[0..9] of AnsiChar;
-        Sexual, Level: SmallInt;
+      Element: (ListNum, HeadNum, IncLife, UnUse: smallint;
+        Name, Nick: array[0..9] of ansichar;
+        Sexual, Level: smallint;
         Exp: word;
-        CurrentHP, MaxHP, Hurt, Poison, PhyPower: SmallInt;
+        CurrentHP, MaxHP, Hurt, Poison, PhyPower: smallint;
         ExpForItem: word;
-        Equip: array[0..1] of SmallInt;
-        AmiFrameNum, AmiDelay, SoundDealy: array[0..4] of SmallInt;
-        MPType, CurrentMP, MaxMP: SmallInt;
-        Attack, Speed, Defence, Medcine, UsePoi, MedPoi, DefPoi, Fist, Sword, Knife, Unusual, HidWeapon: SmallInt;
-        Knowledge, Ethics, AttPoi, AttTwice, Repute, Aptitude, PracticeBook: SmallInt;
+        Equip: array[0..1] of smallint;
+        AmiFrameNum, AmiDelay, SoundDealy: array[0..4] of smallint;
+        MPType, CurrentMP, MaxMP: smallint;
+        Attack, Speed, Defence, Medcine, UsePoi, MedPoi, DefPoi, Fist,
+        Sword, Knife, Unusual, HidWeapon: smallint;
+        Knowledge, Ethics, AttPoi, AttTwice, Repute, Aptitude, PracticeBook: smallint;
         ExpForBook: word;
         //Magic, MagLevel: array[0..9] of smallint;
-        Magic, MagLevel: array[0..39] of SmallInt;
-        TakingItem, TakingItemAmount: array[0..3] of SmallInt;
-        UnKnow: array[0..9] of SmallInt);
-      Address: (Data: array[0..160] of SmallInt);
+        Magic, MagLevel: array[0..39] of smallint;
+        TakingItem, TakingItemAmount: array[0..3] of smallint;
+        UnKnow: array[0..9] of smallint);
+      Address: (Data: array[0..160] of smallint);
   end;
 
   TItemRedFace = record
     case TCallType of
       Element: (//ListNum: smallint;
-        Name: array[0..19] of AnsiChar;
-        Introduction: array[0..29] of AnsiChar;
-        Magic, AmiNum, User, EquipType, ShowIntro, ItemType, UnKnow5, UnKnow6, UnKnow7: SmallInt;
-        AddCurrentHP, AddMaxHP, AddPoi, AddPhyPower, ChangeMPType, AddCurrentMP, AddMaxMP: SmallInt;
-        AddAttack, AddSpeed, AddDefence, AddMedcine, AddUsePoi, AddMedPoi, AddDefPoi: SmallInt;
+        Name: array[0..19] of ansichar;
+        Introduction: array[0..29] of ansichar;
+        Magic, AmiNum, User, EquipType, ShowIntro, ItemType, UnKnow5,
+        UnKnow6, UnKnow7: smallint;
+        AddCurrentHP, AddMaxHP, AddPoi, AddPhyPower, ChangeMPType,
+        AddCurrentMP, AddMaxMP: smallint;
+        AddAttack, AddSpeed, AddDefence, AddMedcine, AddUsePoi,
+        AddMedPoi, AddDefPoi: smallint;
         AddFist, AddSword, AddKnife, AddUnusual, AddHidWeapon, AddKnowledge, AddEthics,
-        AddAttTwice, AddAttPoi: SmallInt;
-        OnlyPracRole, NeedMPType, NeedMP, NeedAttack, NeedSpeed, NeedUsePoi, NeedMedcine, NeedMedPoi: SmallInt;
-        NeedFist, NeedSword, NeedKnife, NeedUnusual, NeedHidWeapon, NeedAptitude: SmallInt;
-        NeedExp, NeedExpForItem, NeedMaterial: SmallInt;
-        GetItem, NeedMatAmount: array[0..4] of SmallInt;
-        Unkown: array[0..10] of SmallInt);
-      Address: (Data: array[11..105] of SmallInt);
+        AddAttTwice, AddAttPoi: smallint;
+        OnlyPracRole, NeedMPType, NeedMP, NeedAttack, NeedSpeed,
+        NeedUsePoi, NeedMedcine, NeedMedPoi: smallint;
+        NeedFist, NeedSword, NeedKnife, NeedUnusual, NeedHidWeapon,
+        NeedAptitude: smallint;
+        NeedExp, NeedExpForItem, NeedMaterial: smallint;
+        GetItem, NeedMatAmount: array[0..4] of smallint;
+        Unkown: array[0..10] of smallint);
+      Address: (Data: array[11..105] of smallint);
   end;
 
   TMagicRedFace = record
     case TCallType of
       Element: (//ListNum: smallint;
-        Name: array[0..9] of AnsiChar;
-        UnKnow: array[0..4] of SmallInt;
-        SoundNum, MagicType, AmiNum, HurtType, AttAreaType, NeedMP, Poison: SmallInt;
-        Attack, MoveDistance, AttDistance, AddMP, HurtMP: array[0..9] of SmallInt;
-        UnKnow1: array[0..20] of SmallInt);
-      Address: (Data: array[0..67] of SmallInt);
+        Name: array[0..9] of ansichar;
+        UnKnow: array[0..4] of smallint;
+        SoundNum, MagicType, AmiNum, HurtType, AttAreaType, NeedMP, Poison: smallint;
+        Attack, MoveDistance, AttDistance, AddMP, HurtMP: array[0..9] of smallint;
+        UnKnow1: array[0..20] of smallint);
+      Address: (Data: array[0..67] of smallint);
   end;
 
   TWarDataRedFace = record
     case TCallType of
-      Element: (Warnum: SmallInt;
-        Name: array[0..9] of AnsiChar;
-        BFieldNum, ExpGot, MusicNum: SmallInt;
+      Element: (Warnum: smallint;
+        Name: array[0..9] of ansichar;
+        BFieldNum, ExpGot, MusicNum: smallint;
         //TeamMate, TeamY, TeamX: array [0..11] of smallint;
         //AutoTeamMate, AutoTeamY, AutoTeamX: array [0..29] of smallint;
-        AutoTeamMate, AutoTeamY, AutoTeamX: array[0..11] of SmallInt;
-        TeamMate, TeamY, TeamX: array[0..29] of SmallInt;
-        Enemy, EnemyY, EnemyX: array[0..99] of SmallInt);
-      Address: (Data: array[0..$5D] of SmallInt);
+        AutoTeamMate, AutoTeamY, AutoTeamX: array[0..11] of smallint;
+        TeamMate, TeamY, TeamX: array[0..29] of smallint;
+        Enemy, EnemyY, EnemyX: array[0..99] of smallint);
+      Address: (Data: array[0..$5D] of smallint);
   end;
 
 var
@@ -224,17 +236,17 @@ var
   //71-天书劫
 
   //初始值
-  TitleString: AnsiString;
+  TitleString: utf8string;
 
-  CHINESE_FONT: PAnsiChar = 'resource/chinese.ttf';
+  CHINESE_FONT: putf8char = 'resource/chinese.ttf';
   CHINESE_FONT_SIZE: integer = 20;
-  ENGLISH_FONT: PAnsiChar = 'resource/eng.ttf';
+  ENGLISH_FONT: putf8char = 'resource/eng.ttf';
   ENGLISH_FONT_SIZE: integer = 19;
 
   CENTER_X: integer = 400;
   CENTER_Y: integer = 225;
 
-  AppPath: AnsiString; //程序的路径
+  AppPath: utf8string; //程序的路径
 
   //游戏本身的常量
   //以下为常数表, 其中多数可以由ini文件改变
@@ -268,7 +280,8 @@ var
   MAX_ADD_PRO: integer = 0; //是否升级最大化攻击属性
   //以下3个常数实际并未使用, 不能由ini文件指定
   NOVEL_BOOK: integer = 144; //天书起始编码(因偷懒并未使用)
-  MAX_HEAD_NUM: integer = 189; //有专有头像的最大人物编号, 仅用于对话指令
+  MAX_HEAD_NUM: integer = 189;
+  //有专有头像的最大人物编号, 仅用于对话指令
   BEGIN_WALKPIC: integer = 2501; //场景内行走贴图起始值
 
 
@@ -278,10 +291,10 @@ var
   ACol2: array[0..768] of byte;
   //默认调色板数据, 第一个色调及顺序变化, 第二个仅色调变化, 第三个不可变
 
-  Earth, Surface, Building, BuildX, BuildY, Entrance: array[0..479, 0..479] of SmallInt;
+  Earth, Surface, Building, BuildX, BuildY, Entrance: array[0..479, 0..479] of smallint;
   //主地图数据
-  InShip, Useless1, Mx, My, Sx, Sy, MFace, ShipX, ShipY, ShipX1, ShipY1, ShipFace: SmallInt;
-  TeamList: array[0..5] of SmallInt;
+  InShip, Useless1, Mx, My, Sx, Sy, MFace, ShipX, ShipY, ShipX1, ShipY1, ShipFace: smallint;
+  TeamList: array[0..5] of smallint;
   RItemList: array of TItemList;
   Rrole: array[0..2031] of TRole;
   Ritem: array[0..724] of TItem;
@@ -290,14 +303,14 @@ var
   RShop: array[0..10] of TShop;
   //R文件数据, 均远大于原有容量
 
-  SData: array[0..400, 0..5, 0..63, 0..63] of SmallInt;
-  DData: array[0..400, 0..199, 0..10] of SmallInt;
+  SData: array[0..400, 0..5, 0..63, 0..63] of smallint;
+  DData: array[0..400, 0..199, 0..10] of smallint;
   //S, D文件数据
   //Scence1, SData[CurScence, 1, , Scence3, Scence4, Scence5, Scence6, Scence7, Scence8: array[0..63, 0..63] of smallint;
   //当前场景数据
   //0-地面, 1-建筑, 2-物品, 3-事件, 4-建筑高度, 5-物品高度
 
-  BField: array[0..7, 0..63, 0..63] of SmallInt;
+  BField: array[0..7, 0..63, 0..63] of smallint;
   //战场数据
   //0-地面, 1-建筑, 2-人物, 3-可否被选中, 4-攻击范围, 5, 6 ,7-未使用
   //补充 6-标记第一次移动时不能到达的位置 7-标记敌人身边
@@ -306,10 +319,10 @@ var
   WarSta: TWarData;
   //战场数据, 即war.sta文件的映像
 
-  LeaveList: array[0..99] of SmallInt;
-  EffectList: array[0..199] of SmallInt;
-  LevelUpList: array[0..99] of SmallInt;
-  MatchList: array[0..99, 0..2] of SmallInt;
+  LeaveList: array[0..99] of smallint;
+  EffectList: array[0..199] of smallint;
+  LevelUpList: array[0..99] of smallint;
+  MatchList: array[0..99, 0..2] of smallint;
   //各类列表, 前四个从文件读入
 
 
@@ -328,7 +341,8 @@ var
   RESOLUTIONY: integer = 720;
   HARDWARE_BLIT: integer; //是否使用硬件绘图
   GLHR: integer = 1; //是否使用OPENGL拉伸
-  SMOOTH: integer = 1; //平滑设置 0-完全不平滑, 1-仅标准分辨率不平滑, 2-任何时候都使用平滑
+  SMOOTH: integer = 1;
+  //平滑设置 0-完全不平滑, 1-仅标准分辨率不平滑, 2-任何时候都使用平滑
   GL_TEXTURE: integer = 0; //全部使用gl纹理, 仅在使用png贴图时有效
 
   ScreenFlag: uint32;
@@ -341,7 +355,7 @@ var
   ImgScence, ImgScenceBack, ImgBField, ImgBBuild: PSDL_Surface;
   //重画场景和战场的图形映像. 实时重画场景效率较低, 故首先生成映像, 需要时载入
   //Img1在场景中用于副线程动态效果, Img2在战场用于仅保存建筑层以方便快速载入
-  BlockImg, BlockImg2: array of SmallInt;
+  BlockImg, BlockImg2: array of smallint;
   BlockScreen: TPosition;
   //场景和战场的遮挡信息, 前者不会记录地板数据, 该值实际由绘图顺序决定
 
@@ -383,15 +397,16 @@ var
   StartMusic: integer;
   ExitScenceMusicNum: integer; //离开场景的音乐
   nowmusic: integer = -1; //正在播放的音乐
-  //MusicName: AnsiString;
+  //MusicName: utf8string;
 
 
   //事件和脚本部分
-  x50: array[-$8000..$7FFF] of SmallInt;
+  x50: array[-$8000..$7FFF] of smallint;
   //扩充指令50所使用的变量
   KDEF_SCRIPT: integer = 0; //使用脚本处理事件
   lua_script: Plua_state; //lua脚本
-  CurScenceRolePic: integer; //主角场景内当前贴图编号, 引入该常量主要用途是25指令事件号为-1的情况
+  CurScenceRolePic: integer;
+  //主角场景内当前贴图编号, 引入该常量主要用途是25指令事件号为-1的情况
   NeedRefreshScence: integer = 1; //是否需要刷新场景, 用于事件中和副线程
 
 
@@ -399,9 +414,11 @@ var
   CLOUD_AMOUNT: integer = 60; //云的数量
   Cloud: array of TCloud;
 
-  WALK_SPEED, WALK_SPEED2, BATTLE_SPEED: integer; //行走时的主延时, 如果觉得行走速度慢可以修改这里.
+  WALK_SPEED, WALK_SPEED2, BATTLE_SPEED: integer;
+  //行走时的主延时, 如果觉得行走速度慢可以修改这里.
   MMAPAMI: integer; //主地图动态效果
-  SCENCEAMI: integer; //场景内动态效果的处理方式: 0-关闭, 1-打开, 2-用另一线程处理, 当明显内场景速度拖慢时可以尝试2
+  SCENCEAMI: integer;
+  //场景内动态效果的处理方式: 0-关闭, 1-打开, 2-用另一线程处理, 当明显内场景速度拖慢时可以尝试2
   //updating screen should be in main thread, so this is too complicable.
   SEMIREAL: integer = 0; //半即時
   NIGHT_EFFECT: integer = 0; //是否使用白昼和黑夜效果
@@ -443,17 +460,18 @@ var
   //战斗状态, 0-继续, 1-胜利, 2-失败
 
   //寻路使用的变量表
-  linex, liney: array[0..480 * 480 - 1] of SmallInt;
+  linex, liney: array[0..480 * 480 - 1] of smallint;
   nowstep: integer;
   Fway: array[0..479, 0..479] of integer;
 
-  ItemList: array[0..500] of SmallInt; //物品显示使用的列表
+  ItemList: array[0..500] of smallint; //物品显示使用的列表
 
   //RegionRect: TSDL_Rect; //全局重画范围, 无用
 
   EXPAND_GROUND: integer = 1;
-  ExGround: array[-64..127, -64..127] of SmallInt;  //用来使场景边缘的显示效果改善
-  ImageWidth, ImageHeight: SmallInt;
+  ExGround: array[-64..127, -64..127] of smallint;
+  //用来使场景边缘的显示效果改善
+  ImageWidth, ImageHeight: smallint;
   BattleRound: integer;
 
   CHNFONT_SPACEWIDTH: integer;

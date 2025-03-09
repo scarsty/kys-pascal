@@ -24,7 +24,7 @@ uses
 //初始化脚本配置,运行脚本
 procedure InitialScript;
 procedure DestroyScript;
-function ExecScript(filename, functionname: PAnsiChar): integer;
+function ExecScript(filename, functionname: putf8char): integer;
 
 //具体指令,封装基本指令
 function Blank(L: Plua_state): integer; cdecl;
@@ -341,11 +341,11 @@ begin
   //UnloadLua;
 end;
 
-function ExecScript(filename, functionname: PAnsiChar): integer;
+function ExecScript(filename, functionname: putf8char): integer;
 var
-  Script: AnsiString;
-  filename1: AnsiString;
-  //Data: AnsiString;
+  Script: utf8string;
+  filename1: utf8string;
+  //Data: utf8string;
   Data: TStringList;
   h: integer;
   len: integer;
@@ -494,9 +494,9 @@ end;
 function Talk(L: Plua_state): integer; cdecl;
 var
   rnum, dismode: integer;
-  content: WideString;
+  content: utf8string;
   len, headx, heady, diagx, diagy, Width, line, w1, l1, i: integer;
-  str: WideString;
+  str: utf8string;
 begin
   rnum := floor(lua_tonumber(L, -3));
   dismode := floor(lua_tonumber(L, -2));
@@ -561,7 +561,7 @@ begin
     if content[i] <> '*' then
     begin
       str := content[i];
-      DrawShadowText(screen, @str[1], diagx + w1 * 10, diagy + l1 * 22, ColColor($FF), ColColor($0));
+      DrawShadowText(screen, str, diagx + w1 * 10, diagy + l1 * 22, ColColor($FF), ColColor($0));
       if integer(str[1]) < 128 then
         w1 := w1 + 1
       else
@@ -623,12 +623,12 @@ end;
 function ShowString(L: Plua_state): integer; cdecl;
 var
   x, y: integer;
-  str: WideString;
+  str: utf8string;
 begin
   x := floor(lua_tonumber(L, -3));
   y := floor(lua_tonumber(L, -2));
   str := ' ' + UTF8Decode(lua_tostring(L, -1));
-  DrawShadowText(screen, @str[1], x, y, ColColor(5), ColColor(7));
+  DrawShadowText(screen, str, x, y, ColColor(5), ColColor(7));
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
   Result := 0;
 
@@ -637,7 +637,7 @@ end;
 function ShowStringWithBox(L: Plua_state): integer; cdecl;
 var
   x, y, i, w, h, wt: integer;
-  str: WideString;
+  str: utf8string;
 begin
   x := floor(lua_tonumber(L, -3));
   y := floor(lua_tonumber(L, -2));
@@ -661,7 +661,7 @@ begin
   end;
 
   DrawRectangle(screen, x, y - 2, w * 10 + 5, h * 22 + 5, 0, ColColor(255), 30);
-  DrawShadowText(screen, @str[1], x + 3, y, ColColor(5), ColColor(7));
+  DrawShadowText(screen, str, x + 3, y, ColColor(5), ColColor(7));
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
   Result := 0;
 
@@ -670,8 +670,8 @@ end;
 function Menu(L: Plua_state): integer; cdecl;
 var
   x, y, w, n, i, len: integer;
-  p: WideString;
-  menuString: array of WideString;
+  p: utf8string;
+  menuString: array of utf8string;
 begin
 
   n := floor(lua_tonumber(L, -5));
@@ -700,7 +700,7 @@ end;
 function AskYesOrNo(L: Plua_state): integer; cdecl;
 var
   x, y: integer;
-  menuString: array[0..1] of WideString;
+  menuString: array[0..1] of utf8string;
 begin
   //setlength(menustring, 2);
   menuString[0] := (' 否');
@@ -1224,9 +1224,9 @@ end;
 
 function GetNameAsString(L: Plua_state): integer; cdecl;
 var
-  str: AnsiString;
+  str: utf8string;
   typenum, num: integer;
-  p1: PAnsiChar;
+  p1: putf8char;
 begin
   typenum := floor(lua_tonumber(L, -2));
   num := floor(lua_tonumber(L, -1));
@@ -1239,7 +1239,7 @@ begin
   {$IFDEF fpc}
   str := CP950ToUTF8(p1);
   {$ELSE}
-  str := UTF8Encode(Big5ToUnicode(p1));
+  str := UTF8Encode(cp950toutf8(p1));
 
   {$ENDIF}
   lua_pushstring(L, @str[1]);
