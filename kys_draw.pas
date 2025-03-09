@@ -277,11 +277,16 @@ begin
   str := AppPath + 'head/' + IntToStr(num) + '.png';
   if FileExists(str) then
   begin
-    image := IMG_Load(PAnsiChar(str));
+    image := HeadSurface[num];
+    if image = nil then
+    begin
+      image := IMG_Load(PAnsiChar(str));
+      HeadSurface[num] := image;
+    end;
     dest.x := px;
     dest.y := py;
     SDL_BlitSurface(image, nil, scr, @dest);
-    SDL_FreeSurface(image);
+    //SDL_FreeSurface(image);
   end
   else
   begin
@@ -304,10 +309,23 @@ procedure DrawHeadPic(num, px, py, shadow, alpha, depth: integer; mixColor: uint
 var
   len, grp, idx: integer;
   str: AnsiString;
+  dest: TSDL_Rect;
+  image: PSDL_Surface;
 begin
   str := AppPath + 'head/' + IntToStr(num) + '.png';
   if FileExists(str) { *Converted from FileExists*  } then
-    display_img(@str[1], px, py - 60)
+  begin
+    //display_img(@str[1], px, py - 60)
+    image := HeadSurface[num];
+    if image = nil then
+    begin
+      image := IMG_Load(PAnsiChar(str));
+      HeadSurface[num] := image;
+    end;
+    dest.x := px;
+    dest.y := py - 60;
+    SDL_BlitSurface(image, nil, screen, @dest);
+  end
   else
   begin
     if (num >= 0) and (num < HPicAmount) then

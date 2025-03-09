@@ -370,7 +370,7 @@ var
 
   MSurface: PSDL_Surface;
   SSurface: PSDL_Surface;
-  BHead: array of PSDL_Surface; //半即时用于画头像
+  HeadSurface, BHead: array of PSDL_Surface; //用于画头像
 
   //音频部分设置
   VOLUME, VOLUMEWAV, SOUND3D: integer; //音乐音量 音效音量 是否启用3D音效

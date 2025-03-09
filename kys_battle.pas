@@ -152,7 +152,11 @@ begin
     setlength(BHead, BRoleAmount);
     for i := 0 to BRoleAmount - 1 do
     begin
-      BHead[i] := LoadSurfaceFromFile(AppPath + 'head/' + IntToStr(Rrole[Brole[i].rnum].HeadNum) + '.png');
+      if HeadSurface[Rrole[Brole[i].rnum].HeadNum] = nil then
+      begin
+        HeadSurface[Rrole[Brole[i].rnum].HeadNum] := LoadSurfaceFromFile(AppPath + 'head/' + IntToStr(Rrole[Brole[i].rnum].HeadNum) + '.png');
+      end;
+      BHead[i] := HeadSurface[Rrole[Brole[i].rnum].HeadNum];
       if BHead[i] = nil then
       begin
         BHead[i] := SDL_CreateRGBSurface(screen.flags, 56, 71, 32, 0, 0, 0, 0);

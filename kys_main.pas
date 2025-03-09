@@ -553,6 +553,8 @@ begin
   LoadIdxGrp('resource/kdef.idx', 'resource/kdef.grp', KIdx, KDef);
   LoadIdxGrp('resource/talk.idx', 'resource/talk.grp', TIdx, TDef);
 
+  setlength(HeadSurface, 999);
+
 end;
 
 //Main game.
