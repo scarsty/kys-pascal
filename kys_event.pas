@@ -1668,24 +1668,6 @@ begin
     8: //Read talk to string.
     begin
       t1 := e_GetValue(0, e1, e2);
-        {idx := fileopen(AppPath + 'resource/talk.idx', fmopenread);
-        grp := fileopen(AppPath + 'resource/talk.grp', fmopenread);
-        if t1 = 0 then
-        begin
-          offset := 0;
-          fileread(idx, len, 4);
-        end
-        else
-        begin
-          fileseek(idx, (t1 - 1) * 4, 0);
-          fileread(idx, offset, 4);
-          fileread(idx, len, 4);
-        end;
-        len := (len - offset);
-        fileseek(grp, offset, 0);
-        //fileread(grp, x50[e3], len);
-        fileclose(idx);
-        fileclose(grp);}
       len := 0;
       if t1 = 0 then
       begin

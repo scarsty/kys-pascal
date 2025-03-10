@@ -68,10 +68,10 @@ procedure DrawRLE8Pic(colorPanel: putf8char; num, px, py: integer; Pidx: Pintege
 procedure DrawRLE8Pic(colorPanel: putf8char; num, px, py: integer; Pidx: Pinteger; Ppic: pbyte; RectArea: putf8char; Image: PSDL_Surface; widthI, heightI, sizeI: integer; shadow, alpha: integer; BlockImageW: putf8char; BlockPosition: putf8char; widthW, heightW, sizeW: integer; depth: integer; mixColor: uint32; mixAlpha: integer); overload;
 function GetPositionOnScreen(x, y, CenterX, CenterY: integer): TPosition;
 
-
 //显示文字的子程
 function cp950toutf8(str: pansichar; len: integer = -1): utf8string; overload;
 function utf8tocp950(str: utf8string): ansistring; overload;
+function transcode(str: utf8string; input, output: integer): utf8string;
 procedure DrawText(sur: PSDL_Surface; word: utf8string; x_pos, y_pos: integer; color: uint32);
 procedure DrawEngText(sur: PSDL_Surface; word: utf8string; x_pos, y_pos: integer; color: uint32);
 procedure DrawShadowText(sur: PSDL_Surface; word: utf8string; x_pos, y_pos: integer; color1, color2: uint32); overload;
@@ -81,7 +81,6 @@ procedure DrawBig5Text(sur: PSDL_Surface; str: pansichar; x_pos, y_pos: integer;
 procedure DrawBig5ShadowText(sur: PSDL_Surface; word: pansichar; x_pos, y_pos: integer; color1, color2: uint32);
 procedure DrawTextWithRect(word: utf8string; x, y, w: integer; color1, color2: uint32); overload;
 procedure DrawTextWithRect(sur: PSDL_Surface; word: utf8string; x, y, w: integer; color1, color2: uint32); overload;
-
 
 //PNG贴图相关的子程
 procedure DrawPNGTile(PNGIndex: TPNGIndex; FrameNum: integer; RectArea: putf8char; scr: PSDL_Surface; px, py: integer); overload;
@@ -116,6 +115,10 @@ function RegionParameter(x, x1, x2: integer): integer;
 
 procedure QuickSortB(var a: array of TBuildInfo; l, r: integer);
 
+//简繁体转换
+function Simplified2Traditional(str: utf8string): utf8string;
+function Traditional2Simplified(str: utf8string): utf8string;
+
 //计时, 测速用
 procedure tic;
 procedure toc;
@@ -133,10 +136,8 @@ begin
   Result := 1;
   {or (e.type_ = SDL_FINGERMOTION)}
   case e.type_ of
-    SDL_FINGERUP, SDL_FINGERDOWN, SDL_CONTROLLERAXISMOTION, SDL_CONTROLLERBUTTONDOWN, SDL_CONTROLLERBUTTONUP:
-      Result := 0;
-    SDL_FINGERMOTION:
-      if CellPhone = 0 then
+    SDL_FINGERUP, SDL_FINGERDOWN, SDL_CONTROLLERAXISMOTION, SDL_CONTROLLERBUTTONDOWN, SDL_CONTROLLERBUTTONUP: Result := 0;
+    SDL_FINGERMOTION: if CellPhone = 0 then
         Result := 0;
   end;
 end;
@@ -151,7 +152,7 @@ begin
   BASS_Set3DFactors(1, 0, 0);
   sf.font := BASS_MIDI_FontInit(putf8char(AppPath + 'music/mid.sf2'), 0);
   BASS_MIDI_StreamSetFonts(0, sf, 1);
-  sf.preset := -1; // use all presets
+  sf.preset := -1; //use all presets
   sf.bank := 0;
   Flag := 0;
   if SOUND3D = 1 then
@@ -206,8 +207,6 @@ begin
 
 end;
 
-
-
 //播放mp3音乐
 procedure PlayMP3(MusicNum, times: integer; frombeginning: integer = 1); overload;
 var
@@ -218,7 +217,7 @@ begin
   else
     repeatable := False;
   try
-    if (MusicNum >= Low(Music)) and (MusicNum <= High(Music)) and (VOLUME > 0) then
+    if (MusicNum >= low(Music)) and (MusicNum <= high(Music)) and (VOLUME > 0) then
       if Music[MusicNum] > 0 then
       begin
         //BASS_ChannelSlideAttribute(Music[nowmusic], BASS_ATTRIB_VOL, 0, 1000);
@@ -240,7 +239,7 @@ begin
         else
           BASS_ChannelFlags(Music[MusicNum], 0, BASS_SAMPLE_LOOP);
         BASS_ChannelPlay(Music[MusicNum], False);
-        nowmusic := musicnum;
+        nowmusic := MusicNum;
       end;
   finally
 
@@ -278,13 +277,13 @@ begin
     repeatable := True
   else
     repeatable := False;
-  if (SoundNum >= Low(Esound)) and (SoundNum <= High(Esound)) and (VOLUME > 0) then
-    if Esound[SoundNum] <> 0 then
+  if (SoundNum >= low(ESound)) and (SoundNum <= high(ESound)) and (VOLUME > 0) then
+    if ESound[SoundNum] <> 0 then
     begin
       //Mix_VolumeChunk(Esound[SoundNum], Volume);
       //Mix_PlayChannel(-1, Esound[SoundNum], 0);
-      BASS_SampleStop(Esound[soundnum]);
-      ch := BASS_SampleGetChannel(Esound[soundnum], False);
+      BASS_SampleStop(ESound[SoundNum]);
+      ch := BASS_SampleGetChannel(ESound[SoundNum], False);
       BASS_ChannelSetAttribute(ch, BASS_ATTRIB_VOL, VOLUMEWAV / 100.0);
       if repeatable then
         BASS_ChannelFlags(ch, BASS_SAMPLE_LOOP, BASS_SAMPLE_LOOP)
@@ -297,7 +296,7 @@ end;
 
 procedure PlaySoundE(SoundNum: integer); overload;
 begin
-  PlaySoundE(Soundnum, 0);
+  PlaySoundE(SoundNum, 0);
 
 end;
 
@@ -314,13 +313,13 @@ begin
   else
     repeatable := False;
 
-  if (SoundNum >= Low(Esound)) and (SoundNum <= High(Esound)) and (VOLUMEWAV > 0) then
-    if Esound[SoundNum] <> 0 then
+  if (SoundNum >= low(ESound)) and (SoundNum <= high(ESound)) and (VOLUMEWAV > 0) then
+    if ESound[SoundNum] <> 0 then
     begin
       //Mix_VolumeChunk(Esound[SoundNum], Volume);
       //Mix_PlayChannel(-1, Esound[SoundNum], 0);
-      BASS_SampleStop(Esound[soundnum]);
-      ch := BASS_SampleGetChannel(Esound[soundnum], False);
+      BASS_SampleStop(ESound[SoundNum]);
+      ch := BASS_SampleGetChannel(ESound[SoundNum], False);
       //BASS_ChannelSet3DAttributes(ch, BASS_3DMODE_RELATIVE, -1, -1, -1, -1, -1);
       if ch = 0 then
         ShowMessage(IntToStr(BASS_ErrorGetCode));
@@ -358,13 +357,13 @@ begin
     repeatable := True
   else
     repeatable := False;
-  if (SoundNum >= Low(Asound)) and (SoundNum <= High(Asound)) and (VOLUMEWAV > 0) then
-    if Asound[SoundNum] <> 0 then
+  if (SoundNum >= low(ASound)) and (SoundNum <= high(ASound)) and (VOLUMEWAV > 0) then
+    if ASound[SoundNum] <> 0 then
     begin
       //Mix_VolumeChunk(Esound[SoundNum], Volume);
       //Mix_PlayChannel(-1, Esound[SoundNum], 0);
-      BASS_SampleStop(Esound[soundnum]);
-      ch := BASS_SampleGetChannel(Asound[soundnum], False);
+      BASS_SampleStop(ESound[SoundNum]);
+      ch := BASS_SampleGetChannel(ASound[SoundNum], False);
       BASS_ChannelSetAttribute(ch, BASS_ATTRIB_VOL, VOLUMEWAV / 100.0);
       if repeatable then
         BASS_ChannelFlags(ch, BASS_SAMPLE_LOOP, BASS_SAMPLE_LOOP)
@@ -374,7 +373,6 @@ begin
     end;
 
 end;
-
 
 {procedure InitialMusic;
 var
@@ -477,7 +475,6 @@ begin
 
 end;}
 
-
 procedure ReadTiles;
 var
   i: integer;
@@ -531,11 +528,11 @@ begin
     if malloc = 1 then
     begin
       //GetMem(result, size + 4);
-      {$ifdef fpc}
+      {$IFDEF fpc}
       Result := StrAlloc(size + 4);
-      {$else}
+      {$ELSE}
       Result := AnsiStrAlloc(size + 4);
-      {$endif}
+      {$ENDIF}
       p := Result;
       //writeln(StrBufSize(p));
     end;
@@ -543,8 +540,7 @@ begin
     FileRead(i, p^, size);
     FileClose(i);
   end
-  else
-  if malloc = 1 then
+  else if malloc = 1 then
     Result := nil;
 end;
 
@@ -598,11 +594,11 @@ begin
     p := ReadFileToBuffer(nil, AppPath + path + '.imz', -1, 1);
     if p <> nil then
     begin
-      Result := pinteger(p)^;
+      Result := Pinteger(p)^;
       //最大的有帧数的数量作为贴图的最大编号
       for i := Result - 1 downto 0 do
       begin
-        if pinteger(p + pinteger(p + 4 + i * 4)^ + 4)^ > 0 then
+        if Pinteger(p + Pinteger(p + 4 + i * 4)^ + 4)^ > 0 then
         begin
           Result := i + 1;
           break;
@@ -614,24 +610,22 @@ begin
       Count := 0;
       for i := 0 to Result - 1 do
       begin
-        pngoff := pinteger(p + 4 + i * 4)^;
+        pngoff := Pinteger(p + 4 + i * 4)^;
         with PNGIndexArray[i] do
         begin
-          Num := Count;
+          num := Count;
           x := psmallint(p + pngoff)^;
           y := psmallint(p + pngoff + 2)^;
-          Frame := pinteger(p + pngoff + 4)^;
-          Count := Count + frame;
+          Frame := Pinteger(p + pngoff + 4)^;
+          Count := Count + Frame;
           CurPointer := nil;
           Loaded := 0;
         end;
       end;
     end
-    else
-    if IsConsole then
+    else if IsConsole then
       writeln('Can''t find imz file.');
   end;
-
 
   if (PNG_TILE = 1) or (p = nil) then
   begin
@@ -646,8 +640,7 @@ begin
 
     for i := size div 4 downto 0 do
     begin
-      if FileExists(AppPath + path + IntToStr(i) + '.png') or FileExists(AppPath + path +
-        IntToStr(i) + '_0.png') then
+      if FileExists(AppPath + path + IntToStr(i) + '.png') or FileExists(AppPath + path + IntToStr(i) + '_0.png') then
       begin
         Result := i + 1;
         break;
@@ -661,12 +654,12 @@ begin
     begin
       with PNGIndexArray[i] do
       begin
-        Num := -1;
+        num := -1;
         Frame := 0;
         CurPointer := nil;
         if FileExists(AppPath + path + IntToStr(i) + '.png') then
         begin
-          Num := Count;
+          num := Count;
           Frame := 1;
           Count := Count + 1;
         end
@@ -677,7 +670,7 @@ begin
           begin
             k := k + 1;
             if k = 1 then
-              Num := Count;
+              num := Count;
             Count := Count + 1;
           end;
           Frame := k;
@@ -722,18 +715,18 @@ begin
     path := path + '/';
   with PNGIndex do
   begin
-    if ((Loaded = 0) or (forceLoad = 1)) and (Num >= 0) and (Frame > 0) then
+    if ((Loaded = 0) or (forceLoad = 1)) and (num >= 0) and (Frame > 0) then
     begin
       Loaded := 1;
-      Inc(SurfacePointer, Num);
+      Inc(SurfacePointer, num);
       CurPointer := SurfacePointer;
       if Frame = 1 then
       begin
         if frommem then
         begin
-          off := pinteger(p + 4 + filenum * 4)^ + 8;
-          index := pinteger(p + off)^;
-          len := pinteger(p + off + 4)^;
+          off := Pinteger(p + 4 + filenum * 4)^ + 8;
+          index := Pinteger(p + off)^;
+          len := Pinteger(p + off + 4)^;
           SurfacePointer^ := LoadSurfaceFromMem(p + index, len);
         end
         else
@@ -747,9 +740,9 @@ begin
         begin
           if frommem then
           begin
-            off := pinteger(p + 4 + filenum * 4)^ + 8;
-            index := pinteger(p + off + j * 8)^;
-            len := pinteger(p + off + j * 8 + 4)^;
+            off := Pinteger(p + 4 + filenum * 4)^ + 8;
+            index := Pinteger(p + off + j * 8)^;
+            len := Pinteger(p + off + j * 8 + 4)^;
             SurfacePointer^ := LoadSurfaceFromMem(p + index, len);
           end
           else
@@ -828,11 +821,11 @@ end;
 //获取某像素信息
 function GetPixel(surface: PSDL_Surface; x: integer; y: integer): uint32;
 type
-  TByteArray = array[0..2] of byte;
+  TByteArray = array [0 .. 2] of byte;
   PByteArray = ^TByteArray;
 var
   bpp: integer;
-  p: PInteger;
+  p: Pinteger;
 begin
   if (x >= 0) and (x < surface.w) and (y >= 0) and (y < surface.h) then
   begin
@@ -862,11 +855,11 @@ end;
 //画像素
 procedure PutPixel(surface: PSDL_Surface; x: integer; y: integer; pixel: uint32);
 type
-  TByteArray = array[0..2] of byte;
+  TByteArray = array [0 .. 2] of byte;
   PByteArray = ^TByteArray;
 var
   bpp: integer;
-  p: PInteger;
+  p: Pinteger;
 begin
   if (x >= 0) and (x < surface.w) and (y >= 0) and (y < surface.h) then
   begin
@@ -899,17 +892,16 @@ begin
   end;
 end;
 
-
 //显示bmp文件
 procedure display_bmp(file_name: putf8char; x, y: integer);
 var
-  image: PSDL_Surface;
+  Image: PSDL_Surface;
   dest: TSDL_Rect;
 begin
-  if FileExists(file_name) { *Converted from FileExists*  } then
+  if FileExists(file_name){*Converted from FileExists*} then
   begin
-    image := SDL_LoadBMP(file_name);
-    if (image = nil) then
+    Image := SDL_LoadBMP(file_name);
+    if (Image = nil) then
     begin
       //MessageBox(0, putf8char(Format('Couldn''t load %s : %s', [file_name, SDL_GetError])), 'Error', MB_OK or MB_ICONHAND);
       exit;
@@ -917,32 +909,32 @@ begin
     dest.x := x;
     dest.y := y;
     //if (SDL_BlitSurface(image, nil, screen, @dest) < 0) then
-    //  MessageBox(0, putf8char(Format('BlitSurface error : %s', [SDL_GetError])), 'Error', MB_OK or MB_ICONHAND);
+    //MessageBox(0, putf8char(Format('BlitSurface error : %s', [SDL_GetError])), 'Error', MB_OK or MB_ICONHAND);
     //SDL_UpdateRect2(screen, 0, 0, image.w, image.h);
-    SDL_FreeSurface(image);
+    SDL_FreeSurface(Image);
   end;
 end;
 
 //显示tif, png, jpg等格式图片
 procedure display_img(file_name: putf8char; x, y: integer);
 var
-  image: PSDL_Surface;
+  Image: PSDL_Surface;
   dest: TSDL_Rect;
 begin
-  if FileExists(file_name) { *Converted from FileExists*  } then
+  if FileExists(file_name){*Converted from FileExists*} then
   begin
-    image := IMG_Load(file_name);
-    if (image = nil) then
+    Image := IMG_Load(file_name);
+    if (Image = nil) then
     begin
       //MessageBox(0, putf8char(Format('Couldn''t load %s : %s', [file_name, SDL_GetError])), 'Error', MB_OK or MB_ICONHAND);
       exit;
     end;
     dest.x := x;
     dest.y := y;
-    SDL_BlitSurface(image, nil, screen, @dest);
-    //  MessageBox(0, putf8char(Format('BlitSurface error : %s', [SDL_GetError])), 'Error', MB_OK or MB_ICONHAND);
+    SDL_BlitSurface(Image, nil, screen, @dest);
+    //MessageBox(0, putf8char(Format('BlitSurface error : %s', [SDL_GetError])), 'Error', MB_OK or MB_ICONHAND);
     //SDL_UpdateRect2(screen, 0, 0, image.w, image.h);
-    SDL_FreeSurface(image);
+    SDL_FreeSurface(Image);
   end;
 end;
 
@@ -960,7 +952,6 @@ begin
 
 end;
 
-
 //判断像素是否在屏幕内
 function JudgeInScreen(px, py, w, h, xs, ys: integer): boolean;
 begin
@@ -976,15 +967,14 @@ end;
 //RLE8图片绘制子程, 所有相关子程均对此封装. 最后一个参数为亮度, 仅在绘制战场选择对方时使用
 procedure DrawRLE8Pic(colorPanel: putf8char; num, px, py: integer; Pidx: Pinteger; Ppic: pbyte; RectArea: putf8char; Image: PSDL_Surface; widthI, heightI, sizeI: integer; shadow: integer); overload;
 begin
-  DrawRLE8Pic(colorPanel, num, px, py, Pidx, Ppic, RectArea, Image, widthI, heightI, sizeI, Shadow, 0);
+  DrawRLE8Pic(colorPanel, num, px, py, Pidx, Ppic, RectArea, Image, widthI, heightI, sizeI, shadow, 0);
 
 end;
 
 //增加透明度选项
 procedure DrawRLE8Pic(colorPanel: putf8char; num, px, py: integer; Pidx: Pinteger; Ppic: pbyte; RectArea: putf8char; Image: PSDL_Surface; widthI, heightI, sizeI: integer; shadow, alpha: integer); overload;
 begin
-  DrawRLE8Pic(colorPanel, num, px, py, Pidx, Ppic, RectArea, Image, widthI, heightI, sizeI,
-    Shadow, alpha, nil, nil, 0, 0, 0, 0, 0, 0);
+  DrawRLE8Pic(colorPanel, num, px, py, Pidx, Ppic, RectArea, Image, widthI, heightI, sizeI, shadow, alpha, nil, nil, 0, 0, 0, 0, 0, 0);
 
 end;
 
@@ -1022,13 +1012,13 @@ begin
   end;
 
   Inc(Ppic, offset);
-  w := Psmallint((Ppic))^;
+  w := psmallint((Ppic))^;
   Inc(Ppic, 2);
-  h := Psmallint((Ppic))^;
+  h := psmallint((Ppic))^;
   Inc(Ppic, 2);
-  xs := Psmallint((Ppic))^;
+  xs := psmallint((Ppic))^;
   Inc(Ppic, 2);
-  ys := Psmallint((Ppic))^;
+  ys := psmallint((Ppic))^;
   Inc(Ppic, 2);
   pixdepth := 0;
 
@@ -1049,12 +1039,11 @@ begin
   end;
   if (BlockPosition <> nil) then
   begin
-    blockx := pinteger(BlockPosition)^;
-    blocky := pinteger(BlockPosition + 4)^;
+    blockx := Pinteger(BlockPosition)^;
+    blocky := Pinteger(BlockPosition + 4)^;
   end;
   alpha1 := (alpha shr 8) and $FF;
-  if ((w > 1) or (h > 1)) and (px - xs + w >= area.x) and (px - xs < area.x + area.w) and
-    (py - ys + h >= area.y) and (py - ys < area.y + area.h) then
+  if ((w > 1) or (h > 1)) and (px - xs + w >= area.x) and (px - xs < area.x + area.w) and (py - ys + h >= area.y) and (py - ys < area.y + area.h) then
   begin
     for iy := 1 to h do
     begin
@@ -1087,7 +1076,7 @@ begin
             pix3 := pbyte(colorPanel + l1 * 3 + 2)^ * (4 + shadow);
             pix4 := 0;
             //pix := sdl_maprgba(screen.format, pix1, pix2, pix3, pix4);
-            if image = screen then
+            if Image = screen then
             begin
               if mixAlpha <> 0 then
               begin
@@ -1123,7 +1112,7 @@ begin
                       isAlpha := 0;
                   end;
                 end;
-                if (isAlpha = 1) and (Alpha < 100) then
+                if (isAlpha = 1) and (alpha < 100) then
                 begin
                   colorin := GetPixel(screen, x, y);
                   SDL_GetRGBA(colorin, screen.format, @color1, @color2, @color3, @color4);
@@ -1141,7 +1130,7 @@ begin
                   pix4 := (alpha * color4 + (100 - alpha) * pix4) div 100;
                   //pix := pix1 + pix2 shl 8 + pix3 shl 16 + pix4 shl 24;
                 end;
-                if (isAlpha = 0) and (alpha1 > 0) and (Alpha1 <= 100) then
+                if (isAlpha = 0) and (alpha1 > 0) and (alpha1 <= 100) then
                 begin
                   colorin := GetPixel(screen, x, y);
                   SDL_GetRGBA(colorin, screen.format, @color1, @color2, @color3, @color4);
@@ -1161,7 +1150,7 @@ begin
                 end;
               end;
               pix := SDL_MapRGBA(screen.format, pix1, pix2, pix3, pix4);
-              if (Alpha < 100) or (pixdepth <= curdepth) then
+              if (alpha < 100) or (pixdepth <= curdepth) then
                 PutPixel(screen, x, y, pix);
             end
             else
@@ -1172,7 +1161,7 @@ begin
                 begin
                   //if (depth < 0) then
                   //depth := (py div 9 - 1);
-                  Psmallint(BlockImageW + (x * heightI + y) * sizeI)^ := depth;
+                  psmallint(BlockImageW + (x * heightI + y) * sizeI)^ := depth;
                 end;
                 pix := SDL_MapRGBA(screen.format, pix1, pix2, pix3, pix4);
                 PutPixel(Image, x, y, pix);
@@ -1191,7 +1180,6 @@ begin
 
 end;
 
-
 //获取游戏中坐标在屏幕上的位置
 function GetPositionOnScreen(x, y, CenterX, CenterY: integer): TPosition;
 begin
@@ -1201,42 +1189,38 @@ end;
 
 //big5转utf8
 function cp950toutf8(str: pansichar; len: integer = -1): utf8string;
-var
-  str1: utf8string;
-  strw: WideString;
 begin
-  {$IFDEF fpc}
-  str1:= str;
-  Result := CP950ToUTF8(str1);
-  {$ELSE}
-  len := MultiByteToWideChar(950, 0, str, -1, nil, 0);
-  setlength(strw, len - 1);
-  MultiByteToWideChar(950, 0, str, length(str), @strw[1], len);
-  len := WideCharToMultiByte(65001, 0, @strw[1], -1, nil, 0, nil, nil);
-  setlength(Result, len);
-  WideCharToMultiByte(65001, 0, @strw[1], length(strw), @Result[1], len - 1, nil, nil);
-  {$ENDIF}
-  //Result := ' ' + Result;
-  {if len >= 0 then
-  begin
-    if length(Result) > len then
-      setlength(Result, len);
-  end;}
-
+  Result := transcode(utf8string(str), 950, 65001);
 end;
 
 //utf8转big5
 function utf8tocp950(str: utf8string): ansistring;
+begin
+  Result := transcode(str, 65001, 950);
+end;
+
+function transcode(str: utf8string; input, output: integer): utf8string;
 var
   len: integer;
   strw: WideString;
+  instr, outstr: ansistring;
 begin
-  len := MultiByteToWideChar(65001, 0, @str[1], -1, nil, 0);
+  {$ifdef fpc}
+  instr:='cp'+inttostr(input);
+  outstr := 'cp'+inttostr(output);
+  if input=65001 then
+  instr:='utf8';
+  if output=65001 then
+  outstr:='utf8';
+  result:=ConvertEncoding(str, instr, outstr);
+  {$else}
+  len := MultiByteToWideChar(input, 0, @str[1], -1, nil, 0);
   setlength(strw, len - 1);
-  MultiByteToWideChar(65001, 0, @str[1], length(str), @strw[1], len + 1);
-  len := WideCharToMultiByte(950, 0, @strw[1], -1, nil, 0, nil, nil);
+  MultiByteToWideChar(input, 0, @str[1], length(str), @strw[1], len + 1);
+  len := WideCharToMultiByte(output, 0, @strw[1], -1, nil, 0, nil, nil);
   setlength(Result, len - 1);
-  WideCharToMultiByte(950, 0, @strw[1], length(strw), @Result[1], len - 1, nil, nil);
+  WideCharToMultiByte(output, 0, @strw[1], length(strw), @Result[1], len - 1, nil, nil);
+  {$endif}
 end;
 
 //显示unicode文字
@@ -1245,7 +1229,7 @@ var
   dest, src: TSDL_Rect;
   tempcolor: TSDL_Color;
   len, i, k: integer;
-  word0: array[0..4] of utf8char;
+  word0: array [0 .. 4] of utf8char;
   Text: PSDL_Surface;
   r, g, b: byte;
   got: bool;
@@ -1256,7 +1240,8 @@ begin
   tempcolor.b := 255;
   dest.x := x_pos;
   len := length(word);
-  if len = 0 then exit;
+  if len = 0 then
+    exit;
   i := 1;
   while True do
   begin
@@ -1299,7 +1284,8 @@ begin
     end;
     x_pos := x_pos + 10;
     i := i + 1;
-    if i > len then break;
+    if i > len then
+      break;
   end;
 end;
 
@@ -1353,7 +1339,7 @@ var
   len: integer;
   words: utf8string;
 begin
-  words := CP950ToUTF8(str);
+  words := cp950toutf8(str);
   DrawText(sur, words, x_pos, y_pos, color);
 
 end;
@@ -1364,7 +1350,7 @@ var
   len: integer;
   words: utf8string;
 begin
-  words := CP950ToUTF8(word);
+  words := cp950toutf8(word);
   DrawText(sur, words, x_pos + 1, y_pos, color2);
   DrawText(sur, words, x_pos, y_pos, color1);
 end;
@@ -1418,8 +1404,7 @@ begin
         PutPixel(tempscr, i1, i2, 0);
       end;
       //框线
-      if (((l1 >= 4) and (l2 >= 4) and (l3 >= 4) and (l4 >= 4) and ((i1 = 0) or (i1 = w) or
-        (i2 = 0) or (i2 = h))) or ((l1 = 4) or (l2 = 4) or (l3 = 4) or (l4 = 4))) then
+      if (((l1 >= 4) and (l2 >= 4) and (l3 >= 4) and (l4 >= 4) and ((i1 = 0) or (i1 = w) or (i2 = 0) or (i2 = h))) or ((l1 = 4) or (l2 = 4) or (l3 = 4) or (l4 = 4))) then
       begin
         //a := round(200 - min(abs(i1/w-0.5),abs(i2/h-0.5))*2 * 100);
         a := round(250 - abs(i1 / w + i2 / h - 1) * 150);
@@ -1446,8 +1431,8 @@ begin
   begin
     SDL_LockSurface(screen);
   end;}
-  tempscr := SDL_CreateRGBSurface(sur.flags, w, h, 32, RMASK, GMASK, BMASK, AMASK);
-  SDL_FillRect(tempscr, nil, colorin or $ff000000);
+  tempscr := SDL_CreateRGBSurface(sur.flags, w, h, 32, RMask, GMask, BMask, AMask);
+  SDL_FillRect(tempscr, nil, colorin or $FF000000);
   SDL_SetSurfaceAlphaMod(tempscr, alpha * 255 div 100);
   dest.x := x;
   dest.y := y;
@@ -1461,12 +1446,11 @@ begin
 
 end;
 
-
 //调色板变化, 贴图闪烁效果
 procedure ChangeCol;
 var
   i, i1, i2, a, b, add0, len: integer;
-  temp: array[0..2] of byte;
+  temp: array [0 .. 2] of byte;
   now, next_time: uint32;
   p, p0, p1, p2: real;
 begin
@@ -1490,20 +1474,20 @@ begin
       Acol1[b + 1] := min(trunc(Acol2[b + 1] * p1), 63);
       Acol1[b + 2] := min(trunc(Acol2[b + 2] * p2), 63);
     end;
-    move(ACol1[0], ACol[0], 768);
+    move(Acol1[0], Acol[0], 768);
   end;
 
   add0 := $E0;
   len := 8;
   a := now div 200 mod len;
-  move(ACol1[add0 * 3], ACol[add0 * 3 + a * 3], (len - a) * 3);
-  move(ACol1[add0 * 3 + (len - a) * 3], ACol[add0 * 3], a * 3);
+  move(Acol1[add0 * 3], Acol[add0 * 3 + a * 3], (len - a) * 3);
+  move(Acol1[add0 * 3 + (len - a) * 3], Acol[add0 * 3], a * 3);
 
   add0 := $F4;
   len := 9;
   a := now div 200 mod len;
-  move(ACol1[add0 * 3], ACol[add0 * 3 + a * 3], (len - a) * 3);
-  move(ACol1[add0 * 3 + (len - a) * 3], ACol[add0 * 3], a * 3);
+  move(Acol1[add0 * 3], Acol[add0 * 3 + a * 3], (len - a) * 3);
+  move(Acol1[add0 * 3 + (len - a) * 3], Acol[add0 * 3], a * 3);
 
 end;
 
@@ -1528,7 +1512,7 @@ var
   tran: byte;
   bigtran, pixel, Mask, AlphaValue: uint32;
   x1, x2, y1, y2: integer;
-  lenint: integer;
+  lenInt: integer;
 begin
   {with PNGIndex do
   begin
@@ -1681,8 +1665,7 @@ begin
             //游戏中的遮挡实际上可由绘图顺序决定, 即绘图顺序靠后的应有最大遮挡值
             //绘图顺序比较的优先级为: x, y的最小值; 坐标差绝对值; y较小(或x较大)
             //保存遮挡需要一个数组, 但是如果利用Surface可能会更快
-            if ((GetPixel(CurSurface, i1, i2) and CurSurface.format.AMask) <> 0) and
-              (x1 + i1 >= 0) and (x1 + i1 < Width) and (y1 + i2 >= 0) and (y1 + i2 < Height) then
+            if ((GetPixel(CurSurface, i1, i2) and CurSurface.format.AMask) <> 0) and (x1 + i1 >= 0) and (x1 + i1 < Width) and (y1 + i2 >= 0) and (y1 + i2 < Height) then
             begin
               psmallint(BlockImageW + ((x1 + i1) * Height + y1 + i2) * size)^ := depth;
             end;
@@ -1705,7 +1688,7 @@ var
   tempscr: PSDL_Surface;
   now, Next: uint32;
   dest: TSDL_Rect;
-  p: Pointer;
+  p: pointer;
   //TextureID: GLUint;
 begin
   dest.x := x;
@@ -1718,8 +1701,8 @@ begin
     dest.h := CENTER_Y * 2;
   if scr1 = screen then
   begin
-    // Here p is the address to the pixel we want to set
-    p := Pointer(nativeuint(screen.pixels) + y * screen.pitch + x * screen.format.BytesPerPixel);
+    //Here p is the address to the pixel we want to set
+    p := pointer(nativeuint(screen.pixels) + y * screen.pitch + x * screen.format.BytesPerPixel);
     SDL_UpdateTexture(screenTex, @dest, p, screen.pitch);
     SDL_RenderCopy(render, screenTex, nil, nil);
     SDL_RenderPresent(render);
@@ -1780,7 +1763,6 @@ begin
   end;}
 end;
 
-
 procedure SDL_GetMouseState2(var x, y: integer);
 var
   tempx, tempy: integer;
@@ -1817,7 +1799,7 @@ end;
 procedure QuitConfirm;
 var
   tempscr: PSDL_Surface;
-  menuString: array[0..1] of utf8string;
+  menuString: array [0 .. 1] of utf8string;
 begin
   if (EXIT_GAME = 0) or (AskingQuit = True) then
   begin
@@ -1875,13 +1857,13 @@ var
   function inVirtualKey(x, y: integer; var key: uint32): uint32;
   begin
     Result := 0;
-    if inregion(x, y, VirtualKeyX, VirtualKeyY, VirtualKeySize, VirtualKeySize) then
+    if InRegion(x, y, VirtualKeyX, VirtualKeyY, VirtualKeySize, VirtualKeySize) then
       Result := SDLK_UP;
-    if inregion(x, y, VirtualKeyX - VirtualKeySize, VirtualKeyY + VirtualKeySize, VirtualKeySize, VirtualKeySize) then
+    if InRegion(x, y, VirtualKeyX - VirtualKeySize, VirtualKeyY + VirtualKeySize, VirtualKeySize, VirtualKeySize) then
       Result := SDLK_LEFT;
-    if inregion(x, y, VirtualKeyX, VirtualKeyY + VirtualKeySize, VirtualKeySize, VirtualKeySize) then
+    if InRegion(x, y, VirtualKeyX, VirtualKeyY + VirtualKeySize, VirtualKeySize, VirtualKeySize) then
       Result := SDLK_DOWN;
-    if inregion(x, y, VirtualKeyX + VirtualKeySize, VirtualKeyY + VirtualKeySize, VirtualKeySize, VirtualKeySize) then
+    if InRegion(x, y, VirtualKeyX + VirtualKeySize, VirtualKeyY + VirtualKeySize, VirtualKeySize, VirtualKeySize) then
       Result := SDLK_RIGHT;
     key := Result;
   end;
@@ -1942,8 +1924,7 @@ begin
         SDL_HAT_RIGHT: event.key.keysym.sym := SDLK_RIGHT;
       end;
     end;
-    SDL_FINGERMOTION:
-      if CellPhone = 1 then
+    SDL_FINGERMOTION: if CellPhone = 1 then
       begin
         if event.tfinger.fingerId = 1 then
         begin
@@ -1962,12 +1943,9 @@ begin
           end;
         end;
       end;
-    SDL_FINGERUP:
-      ;
-    SDL_MULTIGESTURE:
-      ;
-    SDL_QUITEV:
-      QuitConfirm;
+    SDL_FINGERUP: ;
+    SDL_MULTIGESTURE: ;
+    SDL_QUITEV: QuitConfirm;
     SDL_WindowEvent:
     begin
       if event.window.event = SDL_WINDOWEVENT_RESIZED then
@@ -1975,10 +1953,8 @@ begin
         ResizeWindow(event.window.data1, event.window.data2);
       end;
     end;
-    SDL_APP_DIDENTERFOREGROUND:
-      PlayMP3(nowmusic, -1, 0);
-    SDL_APP_DIDENTERBACKGROUND:
-      StopMP3(0);
+    SDL_APP_DIDENTERFOREGROUND: PlayMP3(nowmusic, -1, 0);
+    SDL_APP_DIDENTERBACKGROUND: StopMP3(0);
     {SDL_MOUSEBUTTONDOWN:
     if (CellPhone = 1) and (event.button.button = SDL_BUTTON_LEFT) then
     begin
@@ -2038,7 +2014,7 @@ begin
         end
         else if inSwitchShowVirtualKey(x, y) then
         begin
-          ShowVirtualKey := not ShowVirtualKey;
+          showVirtualKey := not showVirtualKey;
         end
         //手机在战场仅有确认键有用
         else if (where = 2) and (BattleSelecting) then
@@ -2178,7 +2154,6 @@ begin
   Result := (x1 >= x) and (y1 >= y) and (x1 < x + w) and (y1 < y + h);
 end;
 
-
 //限制变量的范围
 function RegionParameter(x, x1, x2: integer): integer;
 var
@@ -2190,7 +2165,6 @@ begin
     x := x2;
   Result := x;
 end;
-
 
 procedure QuickSortB(var a: array of TBuildInfo; l, r: integer);
 var
@@ -2220,7 +2194,32 @@ begin
     QuickSortB(a, l, j);
 end;
 
-{$ifdef mswindows}
+function Simplified2Traditional(str: utf8string): utf8string;
+var
+  l: integer;
+begin
+  str := transcode(str, 65001, 936);
+  l := length(str);
+  setlength(Result, l + 3);
+  Result[l + 1] := char(0);
+  if l > 0 then
+    LCMapStringA($0800, $4000000, @str[1], l, @Result[1], l);
+  Result := transcode(Result, 936, 65001);
+  //writeln(L,str,',',result,GetUserDefaultLCID);
+end;
+
+function Traditional2Simplified(str: utf8string): utf8string;
+var
+  l: integer;
+begin
+  l := length(str);
+  setlength(Result, l + 3);
+  Result[l + 1] := char(0);
+  if l > 0 then
+    LCMapStringA($0800, $2000000, @str[1], l, @Result[1], l);
+end;
+
+{$IFDEF mswindows}
 
 procedure tic;
 begin
@@ -2232,10 +2231,10 @@ end;
 procedure toc;
 begin
   QueryPerformanceCounter(cccc2);
-  Message(' %3.2f us', [(cccc2 - cccc1) / tttt * 1e6]);
+  message(' %3.2f us', [(cccc2 - cccc1) / tttt * 1E6]);
 end;
 
-{$else}
+{$ELSE}
 
 procedure tic;
 begin
@@ -2244,30 +2243,29 @@ end;
 
 procedure toc;
 begin
-  Message(' %d ms', [SDL_GetTicks - tttt]);
+  message(' %d ms', [SDL_GetTicks - tttt]);
 end;
 
-{$endif}
-
+{$ENDIF}
 
 procedure Message(formatstring: utf8string; content: array of const; cr: boolean = True); overload;
 var
   i: integer;
   str: utf8string;
 begin
-  {$ifdef console}
-  Write(format(formatstring, content));
+  {$IFDEF console}
+  write(format(formatstring, content));
   //if cr then
-  //  writeln();
-  {$endif}
-  {$ifdef android}
+  //writeln();
+  {$ENDIF}
+  {$IFDEF android}
   str := format(formatstring, content);
   mythoutput.mythoutput(putf8char(str));
   {i := fileopen(SDL_AndroidGetExternalStoragePath()+'/pig3_place_game_here',fmopenwrite);
   fileseek(i, 0, 2);
   filewrite(i, str[1], length(str));
   fileclose(i);}
-  {$endif}
+  {$ENDIF}
 end;
 
 procedure Message(formatstring: string = ''; cr: boolean = True); overload;
@@ -2275,19 +2273,19 @@ var
   i: integer;
   str: utf8string;
 begin
-  {$ifdef console}
-  Write(format(formatstring, []));
+  {$IFDEF console}
+  write(format(formatstring, []));
   //if cr then
-  //  writeln();
-  {$endif}
-  {$ifdef android}
+  //writeln();
+  {$ENDIF}
+  {$IFDEF android}
   str := format(formatstring, []);
   mythoutput.mythoutput(putf8char(str));
   {i := fileopen(SDL_AndroidGetExternalStoragePath()+'/pig3_place_game_here',fmopenwrite);
   fileseek(i, 0, 2);
   filewrite(i, str[1], length(str));
   fileclose(i);}
-  {$endif}
+  {$ENDIF}
 end;
 
 end.
