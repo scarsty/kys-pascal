@@ -38,3 +38,9 @@ sfe0.72.22/
 *.xlsx
 *.local
 *.identcache
+*.rsm
+*.dsk
+*.~dsk
+*.dsv
+*.tvsconfig
+.vscode/
