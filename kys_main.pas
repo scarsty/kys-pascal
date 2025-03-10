@@ -43,13 +43,15 @@ uses
   {$ENDIF}
   kys_type,
   SysUtils,
+  StrUtils,
   Dialogs,
   Math,
   SDL2_TTF,
   SDL2,
   SDL2_image,
   iniFiles,
-  bass;
+  bass,
+  Generics.Collections;
 
 //程序重要子程
 procedure Run; stdcall; export;
@@ -555,6 +557,7 @@ begin
   LoadIdxGrp('resource/talk.idx', 'resource/talk.grp', TIdx, TDef);
 
   setlength(HeadSurface, 999);
+  fonts := TDictionary<integer, PSDL_Surface>.Create;
 
 end;
 
@@ -714,12 +717,12 @@ end;
 procedure StartAmi;
 var
   x, y, i, len: integer;
-  str: utf8string;
+  str, str1: utf8string;
   p: integer;
 begin
   instruct_14;
   Redraw;
-  i := FileOpen(putf8char(AppPath + 'list/start.txt'), fmOpenRead);
+  i := FileOpen(AppPath + 'list/start.txt', fmOpenRead);
   len := FileSeek(i, 0, 2);
   FileSeek(i, 0, 0);
   setlength(str, len + 1);
@@ -731,17 +734,18 @@ begin
   DrawRectangleWithoutFrame(screen, 0, 0, CENTER_X * 2, CENTER_Y * 2, 0, 60);
   for i := 1 to len + 1 do
   begin
-    if str[i] = widechar(10) then
+    if str[i] = utf8char(10) then
       str[i] := ' ';
-    if str[i] = widechar(13) then
+    if str[i] = utf8char(13) then
     begin
-      str[i] := widechar(0);
-      DrawShadowText(screen, str, x, y, ColColor($FF), ColColor($FF));
+      str[i] := utf8char(0);
+      str1 := midstr(str, p, i);
+      DrawShadowText(screen, str1, x, y, ColColor($FF), ColColor($FF));
       p := i + 1;
       y := y + 25;
       SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
     end;
-    if str[i] = widechar($2A) then
+    if str[i] = utf8char($2A) then
     begin
       str[i] := ' ';
       y := 80;
@@ -762,7 +766,7 @@ var
   i: integer;
   p: array[0..14] of integer;
   str, str0: utf8string;
-  str1, str2, tempname: Utf8String;
+  str1, str2, tempname: utf8string;
   {$IFDEF fpc}
   Name, homename: utf8string;
   {$ELSE}
@@ -873,17 +877,10 @@ begin
       Name := ' ';
     end;
 
-    {$IFDEF fpc}
     str1 := UTF8ToCP950(Name);
     if (length(str1) in [1..7]) and (Name <> ' ') then
       homename := Name + '居';
     str2 := UTF8ToCP950(homename);
-    {$ELSE}
-    str1 := UnicodeToBig5(@Name[1]);
-    if (length(str1[1]) in [1..7]) and (Name <> ' ') then
-      homename := Name + '居';
-    str2 := UnicodeToBig5(@homename[1]);
-    {$ENDIF}
     p0 := @Rrole[0].Name;
     p1 := @str1[1];
     for i := 0 to 4 do
@@ -1972,8 +1969,8 @@ begin
       SDL_KEYUP:
       begin
         keystate := putf8char(SDL_GetKeyboardState(nil));
-        if (puint8(keystate + SDL_scancode_LEFT)^ = 0) and (puint8(keystate + SDL_scancode_RIGHT)^ = 0) and
-          (puint8(keystate + SDL_scancode_UP)^ = 0) and (puint8(keystate + SDL_scancode_DOWN)^ = 0) then
+        if (pbyte(keystate + SDL_scancode_LEFT)^ = 0) and (pbyte(keystate + SDL_scancode_RIGHT)^ = 0) and
+          (pbyte(keystate + SDL_scancode_UP)^ = 0) and (pbyte(keystate + SDL_scancode_DOWN)^ = 0) then
         begin
           walking := 0;
           speed := 0;
@@ -2475,8 +2472,8 @@ begin
       SDL_KEYUP:
       begin
         keystate := putf8char(SDL_GetKeyboardState(nil));
-        if (puint8(keystate + SDL_scancode_LEFT)^ = 0) and (puint8(keystate + SDL_scancode_RIGHT)^ = 0) and
-          (puint8(keystate + SDL_scancode_UP)^ = 0) and (puint8(keystate + SDL_scancode_DOWN)^ = 0) then
+        if (pbyte(keystate + SDL_scancode_LEFT)^ = 0) and (pbyte(keystate + SDL_scancode_RIGHT)^ = 0) and
+          (pbyte(keystate + SDL_scancode_UP)^ = 0) and (pbyte(keystate + SDL_scancode_DOWN)^ = 0) then
         begin
           walking := 0;
           speed := 0;
@@ -2795,9 +2792,9 @@ end;
 
 procedure FindWay(x1, y1: integer);
 var
-  Xlist: array[0..4096] of SmallInt;
-  Ylist: array[0..4096] of SmallInt;
-  steplist: array[0..4096] of SmallInt;
+  Xlist: array[0..4096] of smallint;
+  Ylist: array[0..4096] of smallint;
+  steplist: array[0..4096] of smallint;
   curgrid, totalgrid: integer;
   Bgrid: array[1..4] of integer; //0空位, 1可过, 2已走过 ,3越界
   Xinc, Yinc: array[1..4] of integer;
@@ -3812,7 +3809,7 @@ begin
     else
     begin
       //drawtext(screen, @word[i][1], 11, 32 + 22 * i, colcolor($7));
-      DrawShadowText(screen,word[i], 30, 32 + 22 * i, ColColor($5), ColColor($7));
+      DrawShadowText(screen, word[i], 30, 32 + 22 * i, ColColor($5), ColColor($7));
     end;
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
 
@@ -5760,7 +5757,7 @@ end;
 //事件系统
 procedure CallEvent(num: integer);
 var
-  e: array of SmallInt;
+  e: array of smallint;
   i, offset, len, p, temppic: integer;
   check: boolean;
   k: array[0..67] of integer;

@@ -205,7 +205,7 @@ begin
   begin
     for i := 0 to BRoleAmount - 1 do
     begin
-      SDL_FreeSurface(BHead[i]);
+      //SDL_FreeSurface(BHead[i]);
     end;
     setlength(BHead, 0);
   end;
@@ -343,13 +343,13 @@ begin
   begin
     if Teamlist[i] >= 0 then
     begin
-      menuString[i + 1] := CP950ToUtf8(utf8string(@Rrole[Teamlist[i]].Name));
+      menuString[i + 1] := CP950ToUtf8(@Rrole[Teamlist[i]].Name);
       max := max + 1;
     end;
   end;
-  menuString[0] := ('   全員參戰');
-  menuString[max] := ('   開始戰鬥');
-  str := ('選擇參戰人物');
+  menuString[0] := '   全員參戰';
+  menuString[max] := '   開始戰鬥';
+  str := '選擇參戰人物';
   DrawTextWithRect(str, CENTER_X - 63, 100, 126, ColColor($21), ColColor($23));
   UpdateAllScreen;
   RecordFreshScreen(0, 0, CENTER_X * 2, CENTER_Y * 2);
@@ -1006,7 +1006,7 @@ function MoveAmination(bnum: integer): boolean;
 var
   s, i, a, tempx, tempy: integer;
   Xinc, Yinc: array[1..4] of integer;
-  linebx, lineby: array[0..4096] of SmallInt;
+  linebx, lineby: array[0..4096] of smallint;
   seekError: boolean;
 begin
   Result := abs(Ax - Bx) + abs(Ay - By) > 0;
@@ -1817,12 +1817,11 @@ var
   str: utf8string;
 begin
   Redraw;
-  str := CP950ToUtf8(utf8string(@Rmagic[mnum].Name));
+  str := CP950ToUtf8(@Rmagic[mnum].Name);
   if mode = 1 then
-    str := CP950ToUtf8(utf8string(@Ritem[mnum].Name));
-  str := MidStr(str, 1, 6);
-  l := length(str);
-  DrawTextWithRect(screen, str, CENTER_X - l * 10, CENTER_Y - 150, l * 20 + 6, ColColor($14), ColColor($16));
+    str := CP950ToUtf8(@Ritem[mnum].Name);
+  l := drawlength(str);
+  DrawTextWithRect(screen, str, CENTER_X - l * 5, CENTER_Y - 150, l * 10 + 6, ColColor($14), ColColor($16));
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
   SDL_Delay(500);
 
@@ -1843,7 +1842,7 @@ begin
     if Rrole[rnum].Magic[i] > 0 then
     begin
       MenuStatus := MenuStatus or (1 shl i);
-      menuString[i] := cp950toutf8(utf8string(@Rmagic[Rrole[rnum].Magic[i]].Name));
+      menuString[i] := cp950toutf8(@Rmagic[Rrole[rnum].Magic[i]].Name);
       menuEngString[i] := format('%3d', [Rrole[rnum].MagLevel[i] div 100 + 1]);
       max := max + 1;
     end;
@@ -3127,7 +3126,7 @@ end;
 function TeamModeMenu: boolean;
 var
   menup, x, y, w, h, menu, i, amount, xm, ym: integer;
-  a: array of SmallInt;
+  a: array of smallint;
   tempmode: array of integer;
   modestring: array[0..3] of utf8string;
   namestr: array of utf8string;
@@ -3175,7 +3174,7 @@ begin
       amount := amount + 1;
       setlength(namestr, amount);
       setlength(a, amount);
-      namestr[amount - 1] := ' ' + cp950toutf8(utf8string(@Rrole[Brole[i].rnum].Name[0]));
+      namestr[amount - 1] := ' ' + cp950toutf8(@Rrole[Brole[i].rnum].Name[0]);
       a[amount - 1] := i;
     end;
   end;

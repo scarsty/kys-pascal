@@ -27,7 +27,9 @@ SDL2的pas文件请从<https://github.com/PascalGameDevelopment/SDL2-for-Pascal>
 
 未包含Android的工程。
 
+## 整理
 
+进行一次整理，让Free Pascal与Delphi中的字串行为一致，即显示时仅使用utf=8编码，存档维持Big5编码。不再使用widestring和widechar。
 
 ## 注意
 建议改用c++版：<https://github.com/scarsty/kys-cpp>。

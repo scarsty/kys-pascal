@@ -270,7 +270,7 @@ var
   str: utf8string;
   Area: TSDL_Rect;
   offset: integer;
-  y: SmallInt;
+  y: smallint;
 begin
   str := AppPath + 'head/' + IntToStr(num) + '.png';
   if FileExists(str) then
@@ -763,7 +763,7 @@ procedure DrawMMap;
 var
   i1, i2, i, sum, x, y, k, c, widthregion, sumregion, num, h: integer;
   //temp: array[0..479, 0..479] of smallint;
-  Width, Height, xoffset, yoffset: SmallInt;
+  Width, Height, xoffset, yoffset: smallint;
   pos: TPosition;
   BuildArray: array[0..2000] of TBuildInfo;
   tempb: TBuildInfo;
@@ -839,10 +839,10 @@ begin
           end
           else
           begin
-            Width := SmallInt(Mpic[MIdx[num - 1]]);
-            Height := SmallInt(Mpic[MIdx[num - 1] + 2]);
-            yoffset := SmallInt(Mpic[MIdx[num - 1] + 6]);
-            xoffset := SmallInt(Mpic[MIdx[num - 1] + 4]);
+            Width := smallint(Mpic[MIdx[num - 1]]);
+            Height := smallint(Mpic[MIdx[num - 1] + 2]);
+            yoffset := smallint(Mpic[MIdx[num - 1] + 6]);
+            xoffset := smallint(Mpic[MIdx[num - 1] + 4]);
           end;
           //根据图片的宽度计算图的中点的坐标和作为排序依据
           //y坐标为第二依据
@@ -1139,7 +1139,7 @@ procedure UpdateScence(xs, ys: integer);
 var
   i1, i2, x, y: integer;
   num, offset: integer;
-  xp, yp, w, h: SmallInt;
+  xp, yp, w, h: smallint;
 begin
   xp := -xs * 18 + ys * 18 + 1151;
   yp := xs * 9 + ys * 9 + 250;

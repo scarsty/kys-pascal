@@ -71,7 +71,7 @@ function GetPositionOnScreen(x, y, CenterX, CenterY: integer): TPosition;
 
 //显示文字的子程
 function cp950toutf8(str: pansichar; len: integer = -1): utf8string; overload;
-function UnicodeToBig5(str: utf8string): utf8string;
+function utf8tocp950(str: utf8string): ansistring; overload;
 procedure DrawText(sur: PSDL_Surface; word: utf8string; x_pos, y_pos: integer; color: uint32);
 procedure DrawEngText(sur: PSDL_Surface; word: utf8string; x_pos, y_pos: integer; color: uint32);
 procedure DrawShadowText(sur: PSDL_Surface; word: utf8string; x_pos, y_pos: integer; color1, color2: uint32); overload;
@@ -219,12 +219,15 @@ begin
     repeatable := False;
   try
     if (MusicNum >= Low(Music)) and (MusicNum <= High(Music)) and (VOLUME > 0) then
-      if Music[MusicNum] <> 0 then
+      if Music[MusicNum] > 0 then
       begin
         //BASS_ChannelSlideAttribute(Music[nowmusic], BASS_ATTRIB_VOL, 0, 1000);
-        BASS_ChannelStop(Music[nowmusic]);
-        if frombeginning = 1 then
-          BASS_ChannelSetPosition(Music[nowmusic], 0, BASS_POS_BYTE);
+        if nowmusic > 0 then
+        begin
+          BASS_ChannelStop(Music[nowmusic]);
+          if frombeginning = 1 then
+            BASS_ChannelSetPosition(Music[nowmusic], 0, BASS_POS_BYTE);
+        end;
         BASS_ChannelSetAttribute(Music[MusicNum], BASS_ATTRIB_VOL, VOLUME / 100.0);
         if SOUND3D = 1 then
         begin
@@ -582,7 +585,7 @@ var
   i, j, k, state, size, Count, pngoff: integer;
   //zipFile: unzFile;
   //info: unz_file_info;
-  offset: array of SmallInt;
+  offset: array of smallint;
   p: putf8char;
 begin
   //载入偏移值文件, 计算贴图的最大数量
@@ -835,7 +838,7 @@ var
 begin
   if (x >= 0) and (x < surface.w) and (y >= 0) and (y < surface.h) then
   begin
-    Result := PUint32(NativeUInt(surface.pixels) + y * surface.pitch + x * 4)^;
+    Result := PUint32(nativeuint(surface.pixels) + y * surface.pitch + x * 4)^;
     {bpp := surface.format.BytesPerPixel;
     // Here p is the address to the pixel we want to retrieve
     p := Pointer(uint32(surface.pixels) + y * surface.pitch + x * bpp);
@@ -869,7 +872,7 @@ var
 begin
   if (x >= 0) and (x < surface.w) and (y >= 0) and (y < surface.h) then
   begin
-    PUint32(NativeUInt(surface.pixels) + y * surface.pitch + x * 4)^ := pixel;
+    PUint32(nativeuint(surface.pixels) + y * surface.pitch + x * 4)^ := pixel;
     {bpp := surface.format.BytesPerPixel;
     // Here p is the address to the pixel we want to set
     p := Pointer(uint32(surface.pixels) + y * surface.pitch + x * bpp);
@@ -1005,7 +1008,7 @@ end;
 //MixColor: Uint32; MixAlpha: integer 图片的混合颜色和混合度, 仅在画到屏幕上时有效
 procedure DrawRLE8Pic(colorPanel: putf8char; num, px, py: integer; Pidx: Pinteger; Ppic: pbyte; RectArea: putf8char; Image: PSDL_Surface; widthI, heightI, sizeI: integer; shadow, alpha: integer; BlockImageW: putf8char; BlockPosition: putf8char; widthW, heightW, sizeW: integer; depth: integer; mixColor: uint32; mixAlpha: integer); overload;
 var
-  w, h, xs, ys, x, y, blockx, blocky: SmallInt;
+  w, h, xs, ys, x, y, blockx, blocky: smallint;
   offset, length, p, isAlpha, lenInt: integer;
   l, l1, ix, iy, pixdepth, curdepth, alpha1: integer;
   pix, colorin: uint32;
@@ -1081,9 +1084,9 @@ begin
           y := iy - ys + py;
           if (x >= area.x) and (y >= area.y) and (x < area.x + area.w) and (y < area.y + area.h) then
           begin
-            pix1 := puint8(colorPanel + l1 * 3)^ * (4 + shadow);
-            pix2 := puint8(colorPanel + l1 * 3 + 1)^ * (4 + shadow);
-            pix3 := puint8(colorPanel + l1 * 3 + 2)^ * (4 + shadow);
+            pix1 := pbyte(colorPanel + l1 * 3)^ * (4 + shadow);
+            pix2 := pbyte(colorPanel + l1 * 3 + 1)^ * (4 + shadow);
+            pix3 := pbyte(colorPanel + l1 * 3 + 2)^ * (4 + shadow);
             pix4 := 0;
             //pix := sdl_maprgba(screen.format, pix1, pix2, pix3, pix4);
             if image = screen then
@@ -1198,18 +1201,22 @@ begin
   Result.y := (x - CenterX) * 9 + (y - CenterY) * 9 + CENTER_Y;
 end;
 
-
-//big5转为unicode
+//big5转utf8
 function cp950toutf8(str: pansichar; len: integer = -1): utf8string;
 var
   str1: utf8string;
+  strw: WideString;
 begin
   {$IFDEF fpc}
-  Result := CP950ToUTF8(utf8string(str));
+  str1:= str;
+  Result := CP950ToUTF8(str1);
   {$ELSE}
-  len := MultiByteToWideChar(950, 0, putf8char(str), -1, nil, 0);
-  setlength(Result, len - 1);
-  MultiByteToWideChar(950, 0, putf8char(str), length(str), putf8char(Result), len + 1);
+  len := MultiByteToWideChar(950, 0, str, -1, nil, 0);
+  setlength(strw, len - 1);
+  MultiByteToWideChar(950, 0, str, length(str), @strw[1], len);
+  len := WideCharToMultiByte(65001, 0, @strw[1], -1, nil, 0, nil, nil);
+  setlength(Result, len);
+  WideCharToMultiByte(65001, 0, @strw[1], length(strw), @Result[1], len - 1, nil, nil);
   {$ENDIF}
   //Result := ' ' + Result;
   {if len >= 0 then
@@ -1220,19 +1227,18 @@ begin
 
 end;
 
-//unicode转为big5, 仅用于输入姓名
-function UnicodeToBig5(str: utf8string): utf8string;
+//utf8转big5
+function utf8tocp950(str: utf8string): ansistring;
 var
   len: integer;
+  strw: WideString;
 begin
-  {$IFDEF fpc}
-  Result := UTF8ToCP950((str));
-  {$ELSE}
-  len := WideCharToMultiByte(950, 0, putf8char(str), -1, nil, 0, nil, nil);
-  setlength(Result, len + 1);
-  WideCharToMultiByte(950, 0, putf8char(str), -1, putf8char(Result), len + 1, nil, nil);
-  {$ENDIF}
-
+  len := MultiByteToWideChar(65001, 0, @str[1], -1, nil, 0);
+  setlength(strw, len - 1);
+  MultiByteToWideChar(65001, 0, @str[1], length(str), @strw[1], len + 1);
+  len := WideCharToMultiByte(950, 0, @strw[1], -1, nil, 0, nil, nil);
+  setlength(Result, len - 1);
+  WideCharToMultiByte(950, 0, @strw[1], length(strw), @Result[1], len - 1, nil, nil);
 end;
 
 //显示unicode文字
@@ -1241,71 +1247,69 @@ var
   dest, src: TSDL_Rect;
   tempcolor: TSDL_Color;
   len, i, k: integer;
-  word0: array[0..2] of uint16;// = (32, 0, 0);
-  word1: utf8string;
-  word2: utf8string;
-  p1: pbyte;
-  p2: pbyte;
+  word0: array[0..4] of utf8char;
   Text: PSDL_Surface;
   r, g, b: byte;
+  got: bool;
 begin
-  word0[0] := 32;
-  word0[1] := 0;
-  word0[2] := 0;
-
   SDL_GetRGB(color, sur.format, @r, @g, @b);
-  tempcolor.r := r;
-  tempcolor.g := g;
-  tempcolor.b := b;
+  tempcolor.r := 255;
+  tempcolor.g := 255;
+  tempcolor.b := 255;
   dest.x := x_pos;
-  //注意每种字体的空格宽度不同
-  src.x := CHNFONT_SPACEWIDTH;
-  src.y := 0;
-  Text := TTF_RenderUTF8_blended(font, @word[1], tempcolor);
-  dest.x := x_pos;
-  dest.y := y_pos;
-  SDL_BlitSurface(Text, @src, sur, @dest);
-  SDL_FreeSurface(Text);
-  {
-  while word^ > 0 do
+  len := length(word);
+  if len = 0 then exit;
+  i := 1;
+  while True do
   begin
-    word0[1] := word^;
-    Inc(word);
-    if word0[1] > $1000 then
+    if (byte(word[i]) > 32) and (byte(word[1]) < 128) then
     begin
-      Text := TTF_RenderUTF8_blended(font, @word0[0], tempcolor);
-      dest.x := x_pos;
-      //dest.x := x_pos - CHNFONT_SPACEWIDTH;
-      dest.y := y_pos;
-      src.x := Text.w - 20;
-      src.w := Text.w - src.x;
-      src.h := Text.h;
-      SDL_BlitSurface(Text, @src, sur, @dest);
-      x_pos := x_pos + 20;
-    end
-    else
-    begin
-      //if word0[1] <> 20 then
+      word0[1] := word[i];
+      word0[2] := utf8char(0);
+      k := byte(word0[1]);
+      if not fonts.ContainsKey(k) then
       begin
-        Text := TTF_RenderUTF8_blended(engfont, @word0[1], tempcolor);
-        //showmessage(inttostr(pword[1]));
-        //dest.x := x_pos + 10;
-        dest.x := x_pos;
-        dest.y := y_pos + 2;
-        SDL_BlitSurface(Text, nil, sur, @dest);
+        fonts.add(k, TTF_RenderUTF8_blended(engfont, @word0[1], tempcolor));
       end;
-      x_pos := x_pos + 10;
+      Text := fonts.Items[k];
+      dest.x := x_pos;
+      dest.y := y_pos + 2;
+      SDL_SetSurfaceColorMod(Text, r, g, b);
+      SDL_BlitSurface(Text, nil, sur, @dest);
+      //SDL_FreeSurface(Text);
+      //i := i + 1;
     end;
-    SDL_FreeSurface(Text);
-  end;}
-
+    if (byte(word[i]) > 128) then
+    begin
+      word0[1] := word[i];
+      word0[2] := word[i + 1];
+      word0[3] := word[i + 2];
+      word0[4] := utf8char(0);
+      k := byte(word0[1]) + 256 * byte(word0[2]) + 65536 * byte(word0[3]);
+      if not fonts.ContainsKey(k) then
+      begin
+        fonts.add(k, TTF_RenderUTF8_blended(font, @word0[1], tempcolor));
+      end;
+      got := fonts.TryGetValue(k, Text);
+      dest.x := x_pos;
+      dest.y := y_pos;
+      SDL_SetSurfaceColorMod(Text, r, g, b);
+      SDL_BlitSurface(Text, nil, sur, @dest);
+      //SDL_FreeSurface(Text);
+      x_pos := x_pos + 10;
+      i := i + 2;
+    end;
+    x_pos := x_pos + 10;
+    i := i + 1;
+    if i > len then break;
+  end;
 end;
 
 //显示英文
 procedure DrawEngText(sur: PSDL_Surface; word: utf8string; x_pos, y_pos: integer; color: uint32);
 var
   dest: TSDL_Rect;
-  a: UInt8;
+  a: uint8;
   tempcolor: TSDL_Color;
   Text: PSDL_Surface;
   r, g, b: byte;
@@ -1315,7 +1319,7 @@ begin
   tempcolor.g := g;
   tempcolor.b := b;
 
-  Text := TTF_RenderUNICODE_blended(engfont, @word[1], tempcolor);
+  Text := TTF_RenderUTF8_blended(engfont, @word[1], tempcolor);
   dest.x := x_pos;
   dest.y := y_pos + 2;
   SDL_BlitSurface(Text, nil, sur, @dest);
@@ -1351,13 +1355,7 @@ var
   len: integer;
   words: utf8string;
 begin
-  {$IFDEF fpc}
   words := CP950ToUTF8(str);
-  {$ELSE}
-  len := MultiByteToWideChar(950, 0, putf8char(str), -1, nil, 0);
-  setlength(words, len - 1);
-  MultiByteToWideChar(950, 0, putf8char(str), length(str), putf8char(words), len + 1);
-  {$ENDIF}
   DrawText(sur, words, x_pos, y_pos, color);
 
 end;
@@ -1368,16 +1366,9 @@ var
   len: integer;
   words: utf8string;
 begin
-  {$IFDEF fpc}
   words := CP950ToUTF8(word);
-  {$ELSE}
-  len := MultiByteToWideChar(950, 0, putf8char(word), -1, nil, 0);
-  setlength(words, len - 1);
-  MultiByteToWideChar(950, 0, putf8char(word), length(word), putf8char(words), len + 1);
-  {$ENDIF}
   DrawText(sur, words, x_pos + 1, y_pos, color2);
   DrawText(sur, words, x_pos, y_pos, color1);
-
 end;
 
 //显示带边框的文字, 仅用于unicode, 需自定义宽度
@@ -1394,7 +1385,6 @@ begin
   DrawRectangle(sur, x, y, w, 28, 0, ColColor(255), 50);
   DrawShadowText(sur, word, x + 3, y + 2, color1, color2);
   SDL_UpdateRect2(screen, x, y, w + 1, 29);
-
 end;
 
 //画带边框矩形, (x坐标, y坐标, 宽度, 高度, 内部颜色, 边框颜色, 透明度）
@@ -1731,7 +1721,7 @@ begin
   if scr1 = screen then
   begin
     // Here p is the address to the pixel we want to set
-    p := Pointer(NativeUInt(screen.pixels) + y * screen.pitch + x * screen.format.BytesPerPixel);
+    p := Pointer(nativeuint(screen.pixels) + y * screen.pitch + x * screen.format.BytesPerPixel);
     SDL_UpdateTexture(screenTex, @dest, p, screen.pitch);
     SDL_RenderCopy(render, screenTex, nil, nil);
     SDL_RenderPresent(render);
@@ -2107,12 +2097,20 @@ function DrawLength(str: utf8string): integer; overload;
 var
   l, i: integer;
 begin
-  l := length(str);
-  Result := l;
-  for i := 1 to l do
+  i := 1;
+  Result := 0;
+  while i <= length(str) do
   begin
-    if uint16(str[i]) >= $1000 then
+    if byte(str[i]) >= 128 then
+    begin
+      Result := Result + 2;
+      i := i + 3;
+    end
+    else
+    begin
       Result := Result + 1;
+      i := i + 1;
+    end;
   end;
 end;
 
@@ -2120,14 +2118,7 @@ function DrawLength(p: putf8char): integer; overload;
 var
   l, i: integer;
 begin
-  l := length(p);
-  Result := l;
-  for i := 0 to l - 1 do
-  begin
-    if puint16(p)^ >= $1000 then
-      Result := Result + 1;
-    Inc(p);
-  end;
+  Result := DrawLength(utf8string(p));
 end;
 
 {$IFDEF fpc}

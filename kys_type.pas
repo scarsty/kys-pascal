@@ -8,12 +8,10 @@ uses
   SDL2,
   SDL2_ttf,
   bass,
-  lua52;
+  lua52,
+  Generics.Collections;
 
 type
-  //PUInt16 = pcuint16;
-  //PUInt8 = pcuint8;
-
   TPosition = record
     x, y: integer;
   end;
@@ -385,6 +383,8 @@ var
   MSurface: PSDL_Surface;
   SSurface: PSDL_Surface;
   HeadSurface, BHead: array of PSDL_Surface; //用于画头像
+
+  fonts: TDictionary<integer, PSDL_Surface>;
 
   //音频部分设置
   VOLUME, VOLUMEWAV, SOUND3D: integer; //音乐音量 音效音量 是否启用3D音效

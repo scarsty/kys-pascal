@@ -98,7 +98,7 @@ function instruct_50e(code, e1, e2, e3, e4, e5, e6: integer): integer;
 function HaveMagic(person, mnum, lv: integer): boolean;
 procedure StudyMagic(rnum, magicnum, newmagicnum, level, dismode: integer);
 procedure NewTalk(headnum, talknum, namenum, place, showhead, color, frame: integer);
-function EnterNumber(MinValue, MaxValue, x, y: integer; Default: integer = 0): SmallInt;
+function EnterNumber(MinValue, MaxValue, x, y: integer; Default: integer = 0): smallint;
 procedure SetAttribute(rnum, selecttype, modlevel, minlevel, maxlevel: integer);
 
 
@@ -220,7 +220,7 @@ begin
   begin
     if (talkarray[i] = 0) {or ((i mod 48 = 0) and (i > 0))} then
     begin
-      //DrawBig5ShadowText(screen, talkarray, diagx + 20, diagy + l * 22, ColColor($FF), ColColor($0));
+      DrawBig5ShadowText(screen, @talkarray[p], diagx + 20, diagy + l * 22, ColColor($FF), ColColor($0));
       p := i + 1;
       l := l + 1;
       if (l >= 4) and (i < len) then
@@ -230,7 +230,7 @@ begin
           key := WaitAnyKey;
         until (key <> SDLK_LEFT) and (key <> SDLK_RIGHT) and (key <> SDLK_UP) and (key <> SDLK_DOWN);
         Redraw;
-        DrawRectangleWithoutFrame(screen, 0, diagy - 10, 640, 120, 0, 60);
+        DrawRectangleWithoutFrame(screen, 0, diagy - 10, CENTER_X * 2, 120, 0, 60);
         if headx > 0 then
           DrawHeadPic(headnum, headx, heady);
         l := 0;
@@ -1214,7 +1214,7 @@ begin
   DrawRectangle(screen, CENTER_X - 75, 98, 145, 51, 0, ColColor(255), 50);
   word := ('武力增加');
   DrawShadowText(screen, word, CENTER_X - 70, 125, ColColor($5), ColColor($7));
-  DrawBig5ShadowText(screen,@ Rrole[rnum].Name, CENTER_X - 70, 100, ColColor($21), ColColor($23));
+  DrawBig5ShadowText(screen, @Rrole[rnum].Name, CENTER_X - 70, 100, ColColor($21), ColColor($23));
   word := format('%4d', [Attack]);
   DrawEngShadowText(screen, word, CENTER_X + 20, 125, ColColor($64), ColColor($66));
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
@@ -1294,7 +1294,7 @@ begin
   word := ('你的聲望指數為：');
   DrawShadowText(screen, word, CENTER_X - 105, 100, ColColor($5), ColColor($7));
   word := format('%3d', [Rrole[0].Repute]);
-  DrawEngShadowText(screen,word, CENTER_X + 65, 100, ColColor($64), ColColor($66));
+  DrawEngShadowText(screen, word, CENTER_X + 65, 100, ColColor($64), ColColor($66));
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
   WaitAnyKey;
   Redraw;
@@ -1881,9 +1881,9 @@ begin
         end;
         $051C83:
         begin
-          puint16(@Acol[e6])^ := e5;
-          puint16(@Acol1[e6])^ := e5;
-          puint16(@Acol2[e6])^ := e5;
+          PWord(@Acol[e6])^ := e5;
+          PWord(@Acol1[e6])^ := e5;
+          PWord(@Acol2[e6])^ := e5;
           //Acol2[e6] := e5 mod 256;
           //Acol2[e6 + 1] := e5 div 256;
         end;
@@ -2283,7 +2283,7 @@ begin
       {$ifdef fpc}
       str := UTF8ToCP950(word);
       {$else}
-      str := UnicodeToBig5(@word[1]);
+      //str := UnicodeToBig5(@word[1]);
       {$endif}
       p1 := @str[1];
       for i := 0 to min(e5, length(p1)) - 1 do
@@ -2372,12 +2372,12 @@ var
   offset, len, i1, i2, face, c, nx, ny, hx, hy, hw, hh, x, y, w, h, cell, row: integer;
   np3, np, np1, np2, tp, p1, ap: putf8char;
   actorarray, talkarray, namearray, name1, name2: array of byte;
-  pword: array[0..1] of uint16;
+  words: array[0..1] of uint16;
   {wd,} str: utf8string;
   temp2: utf8string;
   wd: utf8string;
 begin
-  pword[1] := 0;
+  words[1] := 0;
   face := 4900;
   case color of
     0: color := 28515;
@@ -2527,18 +2527,18 @@ begin
   end
   else if alen > 6 then
   begin
-    if ((puint16(ap)^ = $6EAB) and ((puint16(ap + 2)^ = $63AE))) or
-      ((puint16(ap)^ = $E8A6) and ((puint16(ap + 2)^ = $F9AA))) or ((puint16(ap)^ = $46AA) and
-      ((puint16(ap + 2)^ = $E8A4))) or ((puint16(ap)^ = $4FA5) and ((puint16(ap + 2)^ = $B0AA))) or
-      ((puint16(ap)^ = $7DBC) and ((puint16(ap + 2)^ = $65AE))) or ((puint16(ap)^ = $71A5) and
-      ((puint16(ap + 2)^ = $A8B0))) or ((puint16(ap)^ = $D1BD) and ((puint16(ap + 2)^ = $AFB8))) or
-      ((puint16(ap)^ = $71A5) and ((puint16(ap + 2)^ = $C5AA))) or ((puint16(ap)^ = $D3A4) and
-      ((puint16(ap + 2)^ = $76A5))) or ((puint16(ap)^ = $BDA4) and ((puint16(ap + 2)^ = $5DAE))) or
-      ((puint16(ap)^ = $DABC) and ((puint16(ap + 2)^ = $A7B6))) or ((puint16(ap)^ = $43AD) and
-      ((puint16(ap + 2)^ = $DFAB))) or ((puint16(ap)^ = $71A5) and ((puint16(ap + 2)^ = $7BAE))) or
-      ((puint16(ap)^ = $B9A7) and ((puint16(ap + 2)^ = $43C3))) or ((puint16(ap)^ = $61B0) and
-      ((puint16(ap + 2)^ = $D5C1))) or ((puint16(ap)^ = $74A6) and ((puint16(ap + 2)^ = $E5A4))) or
-      ((puint16(ap)^ = $DDA9) and ((puint16(ap + 2)^ = $5BB6))) then
+    if ((PWord(ap)^ = $6EAB) and ((PWord(ap + 2)^ = $63AE))) or
+      ((PWord(ap)^ = $E8A6) and ((PWord(ap + 2)^ = $F9AA))) or ((PWord(ap)^ = $46AA) and
+      ((PWord(ap + 2)^ = $E8A4))) or ((PWord(ap)^ = $4FA5) and ((PWord(ap + 2)^ = $B0AA))) or
+      ((PWord(ap)^ = $7DBC) and ((PWord(ap + 2)^ = $65AE))) or ((PWord(ap)^ = $71A5) and
+      ((PWord(ap + 2)^ = $A8B0))) or ((PWord(ap)^ = $D1BD) and ((PWord(ap + 2)^ = $AFB8))) or
+      ((PWord(ap)^ = $71A5) and ((PWord(ap + 2)^ = $C5AA))) or ((PWord(ap)^ = $D3A4) and
+      ((PWord(ap + 2)^ = $76A5))) or ((PWord(ap)^ = $BDA4) and ((PWord(ap + 2)^ = $5DAE))) or
+      ((PWord(ap)^ = $DABC) and ((PWord(ap + 2)^ = $A7B6))) or ((PWord(ap)^ = $43AD) and
+      ((PWord(ap + 2)^ = $DFAB))) or ((PWord(ap)^ = $71A5) and ((PWord(ap + 2)^ = $7BAE))) or
+      ((PWord(ap)^ = $B9A7) and ((PWord(ap + 2)^ = $43C3))) or ((PWord(ap)^ = $61B0) and
+      ((PWord(ap + 2)^ = $D5C1))) or ((PWord(ap)^ = $74A6) and ((PWord(ap + 2)^ = $E5A4))) or
+      ((PWord(ap)^ = $DDA9) and ((PWord(ap + 2)^ = $5BB6))) then
     begin
       setlength(name1, 5);
       np1 := @name1[0];
@@ -2646,7 +2646,7 @@ begin
 
   ch := 0;
 
-  while ((puint16(tp + ch))^ shl 8 <> 0) and ((puint16(tp + ch))^ shr 8 <> 0) do
+  while ((PWord(tp + ch))^ shl 8 <> 0) and ((PWord(tp + ch))^ shr 8 <> 0) do
   begin
     Redraw;
     c1 := 0;
@@ -2675,13 +2675,13 @@ begin
 
     while r1 < row do
     begin
-      pword[0] := (puint16(tp + ch))^;
-      if (pword[0] shr 8 <> 0) and (pword[0] shl 8 <> 0) then
+      words[0] := (PWord(tp + ch))^;
+      if (words[0] shr 8 <> 0) and (words[0] shl 8 <> 0) then
       begin
         ch := ch + 2;
-        if (pword[0] and $FF) = $5E then //^^改变文字颜色
+        if (words[0] and $FF) = $5E then //^^改变文字颜色
         begin
-          case SmallInt((pword[0] and $FF00) shr 8) - $30 of
+          case smallint((words[0] and $FF00) shr 8) - $30 of
             0: newcolor := 28515;
             1: newcolor := 28421;
             2: newcolor := 28435;
@@ -2695,17 +2695,17 @@ begin
           color1 := newcolor and $FF;
           color2 := (newcolor shr 8) and $FF;
         end
-        else if pword[0] = $2323 then //## 延时
+        else if words[0] = $2323 then //## 延时
         begin
           SDL_Delay(500);
         end
-        else if pword[0] = $2A2A then //**换行
+        else if words[0] = $2A2A then //**换行
         begin
           if c1 > 0 then
             Inc(r1);
           c1 := 0;
         end
-        else if pword[0] = $4040 then //@@等待击键
+        else if words[0] = $4040 then //@@等待击键
         begin
           SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
           k := WaitAnyKey;
@@ -2714,19 +2714,19 @@ begin
             k := WaitAnyKey;
           end;
         end
-        else if (pword[0] = $2626) or (pword[0] = $2525) or (pword[0] = $2424) then
+        else if (words[0] = $2626) or (words[0] = $2525) or (words[0] = $2424) then
         begin
-          case pword[0] of
+          case words[0] of
             $2626: np3 := ap; //&&显示姓名
             $2525: np3 := np2; //%%显示名
             $2424: np3 := np1; //$$显示姓
           end;
           i := 0;
-          while (puint16(np3 + i)^ shr 8 <> 0) and (puint16(np3 + i)^ shl 8 <> 0) do
+          while (PWord(np3 + i)^ shr 8 <> 0) and (PWord(np3 + i)^ shl 8 <> 0) do
           begin
-            pword[0] := puint16(np3 + i)^;
+            words[0] := PWord(np3 + i)^;
             i := i + 2;
-            DrawBig5ShadowText(screen, @pword[0], x + 6 + CHINESE_FONT_SIZE * c1, y + 4 +
+            DrawBig5ShadowText(screen, @words[0], x + 6 + CHINESE_FONT_SIZE * c1, y + 4 +
               CHINESE_FONT_SIZE * r1, ColColor(color1), ColColor(color2));
             Inc(c1);
             if c1 = cell then
@@ -2770,7 +2770,7 @@ begin
         end
         else //显示文字
         begin
-          DrawBig5ShadowText(screen, @pword[0], x + 6 + CHINESE_FONT_SIZE * c1, y + 4 +
+          DrawBig5ShadowText(screen, @words[0], x + 6 + CHINESE_FONT_SIZE * c1, y + 4 +
             CHINESE_FONT_SIZE * r1, ColColor(color1), ColColor(color2));
           Inc(c1);
           if c1 = cell then
@@ -2789,7 +2789,7 @@ begin
     begin
       k := WaitAnyKey;
     end;
-    if (pword[0] and $FF = 0) or (pword[0] and $FF00 = 0) then
+    if (words[0] and $FF = 0) or (words[0] and $FF00 = 0) then
       break;
   end;
   Redraw;
@@ -2800,7 +2800,7 @@ end;
 
 
 //输入数字, 最小值, 最大值, 坐标x, y. 当结果被范围修正时有提示.
-function EnterNumber(MinValue, MaxValue, x, y: integer; Default: integer = 0): SmallInt;
+function EnterNumber(MinValue, MaxValue, x, y: integer; Default: integer = 0): smallint;
 var
   Value, i, menu, sure, pvalue, pmenu, highButton: integer;
   str: array[0..13] of utf8string;
