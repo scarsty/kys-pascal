@@ -29,7 +29,12 @@ SDL2的pas文件请从<https://github.com/PascalGameDevelopment/SDL2-for-Pascal>
 
 ## 整理
 
-进行一次整理，让Free Pascal与Delphi中的字串行为一致，即显示时仅使用utf=8编码，存档维持Big5编码。不再使用widestring和widechar。
+进行一次整理，让Free Pascal与Delphi中的字串行为一致，即显示时仅使用utf-8编码，存档维持Big5编码。不再使用widestring和widechar。
 
 ## 注意
+
+除了用于怀旧和运行较老的mod之外，均不建议使用。
+
+很多设计现在来看很冗余，因此也不推荐深入研究此源码。
+
 建议改用c++版：<https://github.com/scarsty/kys-cpp>。

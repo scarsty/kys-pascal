@@ -500,7 +500,7 @@ var
 begin
   rnum := floor(lua_tonumber(L, -3));
   dismode := floor(lua_tonumber(L, -2));
-  content := UTF8Decode(lua_tostring(L, -1));
+  content := lua_tostring(L, -1);
 
   Width := 48;
   line := 4;
@@ -627,7 +627,7 @@ var
 begin
   x := floor(lua_tonumber(L, -3));
   y := floor(lua_tonumber(L, -2));
-  str := ' ' + UTF8Decode(lua_tostring(L, -1));
+  str := ' ' + lua_tostring(L, -1);
   DrawShadowText(screen, str, x, y, ColColor(5), ColColor(7));
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
   Result := 0;
@@ -642,7 +642,7 @@ begin
   x := floor(lua_tonumber(L, -3));
   y := floor(lua_tonumber(L, -2));
 
-  str := UTF8Decode(lua_tostring(L, -1));
+  str := lua_tostring(L, -1);
   h := 1;
   w := 0;
   wt := 0;
@@ -684,7 +684,7 @@ begin
   begin
     lua_pushnumber(L, i + 1);
     lua_gettable(L, -2);
-    p := UTF8Decode(lua_tostring(L, -1));
+    p := lua_tostring(L, -1);
     menuString[i] := p;
     lua_pop(L, 1);
   end;
@@ -703,8 +703,8 @@ var
   menuString: array[0..1] of utf8string;
 begin
   //setlength(menustring, 2);
-  menuString[0] := (' 否');
-  menuString[1] := (' 是');
+  menuString[0] := ' 否';
+  menuString[1] := ' 是';
   y := floor(lua_tonumber(L, -2));
   x := floor(lua_tonumber(L, -1));
   lua_pushnumber(L, CommonMenu2(x, y, 78, menuString));
@@ -1219,7 +1219,6 @@ begin
   i2 := floor(lua_tonumber(L, -1));
   instruct_27(t, i1, i2);
   Result := 0;
-
 end;
 
 function GetNameAsString(L: Plua_state): integer; cdecl;
@@ -1236,15 +1235,9 @@ begin
     2: p1 := @Rscence[num].Name;
     3: p1 := @Rmagic[num].Name;
   end;
-  {$IFDEF fpc}
   str := CP950ToUTF8(p1);
-  {$ELSE}
-  str := UTF8Encode(cp950toutf8(p1));
-
-  {$ENDIF}
   lua_pushstring(L, @str[1]);
   Result := 1;
-
 end;
 
 function ChangeScence(L: Plua_state): integer; cdecl;

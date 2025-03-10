@@ -130,9 +130,6 @@ procedure CloudCreateOnSide(num: integer);
 
 function IsCave(snum: integer): boolean;
 
-
-
-
 implementation
 
 uses
@@ -810,64 +807,12 @@ begin
   Name := tempname;
   named := True;
   {$else}
-  //named := InputQuery('Enter name', str1, utf8string(tempname));
-  r.x := CENTER_X - 43;
-  r.y := CENTER_Y + 10;
-  r.w := 86;
-  r.h := 100;
-  //SDL_SetTextInputRect(@r);
   for i := 0 to 4 do
     Rrole[0].Data[4 + i] := 0;
-  SDL_StartTextInput();
-  SDL_SetTextInputRect(@r);
+
   str := str1;
-  while True do
-  begin
-    Redraw;
-    DrawRectangleWithoutFrame(screen, 0, 0, screen.w, screen.h, 0, 50);
-    DrawTextWithRect(str1, CENTER_X - 133, CENTER_Y - 30, 266, ColColor($21), ColColor($23));
-    str0 := Name;
-    DrawTextWithRect(str0, CENTER_X - 43, CENTER_Y + 10, 86, ColColor($66), ColColor($63));
-    SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-    SDL_PollEvent(@event);
-    CheckBasicEvent;
-    case event.type_ of
-      SDL_TEXTINPUT:
-      begin
-        Name := Name + event.Text.Text;
-      end;
-      SDL_MOUSEBUTTONUP:
-      begin
-        if (event.button.button = SDL_BUTTON_RIGHT) then
-        begin
-          named := False;
-          break;
-        end;
-      end;
-      SDL_KEYUP:
-      begin
-        if event.key.keysym.sym = SDLK_RETURN then
-        begin
-          named := True;
-          break;
-        end;
-        if event.key.keysym.sym = SDLK_ESCAPE then
-        begin
-          named := False;
-          break;
-        end;
-        if event.key.keysym.sym = SDLK_BACKSPACE then
-        begin
-          if length(Name) > 0 then
-          begin
-            setlength(Name, length(Name) - 1);
-          end;
-        end;
-      end;
-    end;
-    SDL_Delay(16);
-  end;
-  SDL_StopTextInput();
+  DrawTextWithRect(str1, CENTER_X - 133, CENTER_Y - 30, 266, ColColor($21), ColColor($23));
+  named := EnterString(Name, CENTER_X - 43, CENTER_Y + 10, 86, 20);
   {$endif}
 
   if named then
@@ -904,7 +849,7 @@ begin
 
     Redraw;
 
-    str := ('資質');
+    str := '資質';
     repeat
       if MODVersion <> 21 then
       begin
@@ -3641,14 +3586,14 @@ var
   i: integer;
 begin
   NeedRefreshScence := 0;
-  word[0] := ('醫療');
-  word[1] := ('解毒');
-  word[2] := ('物品');
-  word[3] := ('狀態');
-  word[4] := ('離隊');
-  word[5] := ('系統');
+  word[0] := '醫療';
+  word[1] := '解毒';
+  word[2] := '物品';
+  word[3] := '狀態';
+  word[4] := '離隊';
+  word[5] := '系統';
   if MODVersion = 22 then
-    word[4] := ('特殊');
+    word[4] := '特殊';
 
   i := 0;
   while i >= 0 do
@@ -3784,14 +3729,14 @@ var
   word: array[0..5] of utf8string;
   i, max: integer;
 begin
-  word[0] := ('醫療');
-  word[1] := ('解毒');
-  word[2] := ('物品');
-  word[3] := ('狀態');
-  word[4] := ('離隊');
-  word[5] := ('系統');
+  word[0] := '醫療';
+  word[1] := '解毒';
+  word[2] := '物品';
+  word[3] := '狀態';
+  word[4] := '離隊';
+  word[5] := '系統';
   if MODVersion = 22 then
-    word[4] := ('特殊');
+    word[4] := '特殊';
   if where = 0 then
     max := 5
   else
@@ -3821,7 +3766,7 @@ var
   role1, role2, menu: integer;
   str: utf8string;
 begin
-  str := ('隊員醫療能力');
+  str := '隊員醫療能力';
   DrawTextWithRect(screen, str, 80, 30, 132, ColColor($21), ColColor($23));
   menu := SelectOneTeamMember(80, 65, '%4d', 46, 0);
   //ShowMenu(0);
@@ -3829,7 +3774,7 @@ begin
   if menu >= 0 then
   begin
     role1 := TeamList[menu];
-    str := ('隊員目前生命');
+    str := '隊員目前生命';
     DrawTextWithRect(screen, str, 230, 30, 132, ColColor($21), ColColor($23));
     menu := SelectOneTeamMember(230, 65, '%4d/%4d', 17, 18);
     if menu >= 0 then
@@ -3850,7 +3795,7 @@ var
   role1, role2, menu: integer;
   str: utf8string;
 begin
-  str := ('隊員解毒能力');
+  str := '隊員解毒能力';
   DrawTextWithRect(screen, str, 80, 30, 132, ColColor($21), ColColor($23));
   menu := SelectOneTeamMember(80, 65, '%4d', 48, 0);
   //ShowMenu(1);
@@ -3858,7 +3803,7 @@ begin
   if menu >= 0 then
   begin
     role1 := TeamList[menu];
-    str := ('隊員中毒程度');
+    str := '隊員中毒程度';
     DrawTextWithRect(screen, str, 230, 30, 132, ColColor($21), ColColor($23));
     menu := SelectOneTeamMember(230, 65, '%4d', 20, 0);
     if menu >= 0 then
@@ -3893,13 +3838,13 @@ begin
     begin
       max := 6;
       setlength(menuString, max + 1);
-      menuString[0] := ('全部物品');
-      menuString[1] := ('劇情物品');
-      menuString[2] := ('神兵寶甲');
-      menuString[3] := ('武功秘笈');
-      menuString[4] := ('靈丹妙藥');
-      menuString[5] := ('傷人暗器');
-      menuString[6] := ('整理物品');
+      menuString[0] := '全部物品';
+      menuString[1] := '劇情物品';
+      menuString[2] := '神兵寶甲';
+      menuString[3] := '武功秘笈';
+      menuString[4] := '靈丹妙藥';
+      menuString[5] := '傷人暗器';
+      menuString[6] := '整理物品';
       xm := 80;
       ym := 30;
     end;
@@ -3907,8 +3852,8 @@ begin
     begin
       max := 1;
       setlength(menuString, max + 1);
-      menuString[0] := ('靈丹妙藥');
-      menuString[1] := ('傷人暗器');
+      menuString[0] := '靈丹妙藥';
+      menuString[1] := '傷人暗器';
       xm := 150;
       ym := 150;
     end;
@@ -4200,76 +4145,76 @@ var
   p3: array[0..12] of integer;
   color1, color2: integer;
 begin
-  words[0] := ('劇情物品');
-  words[1] := ('神兵寶甲');
-  words[2] := ('武功秘笈');
-  words[3] := ('靈丹妙藥');
-  words[4] := ('傷人暗器');
-  words2[0] := ('生命');
-  words2[1] := ('生命');
-  words2[2] := ('中毒');
-  words2[3] := ('體力');
-  words2[4] := ('內力');
-  words2[5] := ('內力');
-  words2[6] := ('內力');
-  words2[7] := ('攻擊');
-  words2[8] := ('輕功');
-  words2[9] := ('防禦');
-  words2[10] := ('醫療');
-  words2[11] := ('用毒');
-  words2[12] := ('解毒');
-  words2[13] := ('抗毒');
-  words2[14] := ('拳掌');
-  words2[15] := ('御劍');
-  words2[16] := ('耍刀');
-  words2[17] := ('特殊');
-  words2[18] := ('暗器');
-  words2[19] := ('武學');
-  words2[20] := ('品德');
-  words2[21] := ('左右');
-  words2[22] := ('帶毒');
+  words[0] := '劇情物品';
+  words[1] := '神兵寶甲';
+  words[2] := '武功秘笈';
+  words[3] := '靈丹妙藥';
+  words[4] := '傷人暗器';
+  words2[0] := '生命';
+  words2[1] := '生命';
+  words2[2] := '中毒';
+  words2[3] := '體力';
+  words2[4] := '內力';
+  words2[5] := '內力';
+  words2[6] := '內力';
+  words2[7] := '攻擊';
+  words2[8] := '輕功';
+  words2[9] := '防禦';
+  words2[10] := '醫療';
+  words2[11] := '用毒';
+  words2[12] := '解毒';
+  words2[13] := '抗毒';
+  words2[14] := '拳掌';
+  words2[15] := '御劍';
+  words2[16] := '耍刀';
+  words2[17] := '特殊';
+  words2[18] := '暗器';
+  words2[19] := '武學';
+  words2[20] := '品德';
+  words2[21] := '左右';
+  words2[22] := '帶毒';
 
-  words3[0] := ('內力');
-  words3[1] := ('內力');
-  words3[2] := ('攻擊');
-  words3[3] := ('輕功');
-  words3[4] := ('用毒');
-  words3[5] := ('醫療');
-  words3[6] := ('解毒');
-  words3[7] := ('拳掌');
-  words3[8] := ('御劍');
-  words3[9] := ('耍刀');
-  words3[10] := ('特殊');
-  words3[11] := ('暗器');
-  words3[12] := ('資質');
+  words3[0] := '內力';
+  words3[1] := '內力';
+  words3[2] := '攻擊';
+  words3[3] := '輕功';
+  words3[4] := '用毒';
+  words3[5] := '醫療';
+  words3[6] := '解毒';
+  words3[7] := '拳掌';
+  words3[8] := '御劍';
+  words3[9] := '耍刀';
+  words3[10] := '特殊';
+  words3[11] := '暗器';
+  words3[12] := '資質';
 
   if MODVersion = 22 then
   begin
-    words2[4] := ('靈力');
-    words2[5] := ('靈力');
-    words2[6] := ('靈力');
-    words2[7] := ('武力');
-    words2[8] := ('移動');
-    words2[10] := ('仙術');
-    words2[11] := ('毒術');
-    words2[14] := ('火系');
-    words2[15] := ('水系');
-    words2[16] := ('雷系');
-    words2[17] := ('土系');
-    words2[18] := ('射擊');
+    words2[4] := '靈力';
+    words2[5] := '靈力';
+    words2[6] := '靈力';
+    words2[7] := '武力';
+    words2[8] := '移動';
+    words2[10] := '仙術';
+    words2[11] := '毒術';
+    words2[14] := '火系';
+    words2[15] := '水系';
+    words2[16] := '雷系';
+    words2[17] := '土系';
+    words2[18] := '射擊';
 
-    words3[0] := ('靈力');
-    words3[1] := ('靈力');
-    words3[2] := ('武力');
-    words3[3] := ('移動');
-    words3[4] := ('毒術');
-    words3[5] := ('仙術');
-    words3[7] := ('火系');
-    words3[8] := ('水系');
-    words3[9] := ('雷系');
-    words3[10] := ('土系');
-    words3[11] := ('射擊');
-    words3[12] := ('智力');
+    words3[0] := '靈力';
+    words3[1] := '靈力';
+    words3[2] := '武力';
+    words3[3] := '移動';
+    words3[4] := '毒術';
+    words3[5] := '仙術';
+    words3[7] := '火系';
+    words3[8] := '水系';
+    words3[9] := '雷系';
+    words3[10] := '土系';
+    words3[11] := '射擊';
+    words3[12] := '智力';
   end;
 
   LoadFreshScreen(0, 0, screen.w, screen.h);
@@ -4308,14 +4253,14 @@ begin
     //如有人使用则显示
     if Ritem[item].User >= 0 then
     begin
-      str := ('使用人：');
+      str := '使用人：';
       DrawShadowText(screen, str, 207, 315, ColColor($21), ColColor($23));
       DrawBig5ShadowText(screen, @Rrole[Ritem[item].User].Name, 297, 315, ColColor($64), ColColor($66));
     end;
     //如是罗盘则显示坐标
     if item = COMPASS_ID then
     begin
-      str := ('你的位置：');
+      str := '你的位置：';
       DrawShadowText(screen, str, 207, 315, ColColor($21), ColColor($23));
       str := format('%3d, %3d', [My, Mx]);
       DrawEngShadowText(screen, str, 317, 315, ColColor($64), ColColor($66));
@@ -4367,9 +4312,9 @@ begin
         str := format('%6d', [Ritem[item].Data[45 + i]]);
         if i = 4 then
           case Ritem[item].ChangeMPType of
-            0: str := ('    陰');
-            1: str := ('    陽');
-            2: str := ('  調和');
+            0: str := '    陰';
+            1: str := '    陽';
+            2: str := '  調和';
           end;
         if (i = 0) or (i = 5) then
         begin
@@ -4395,9 +4340,9 @@ begin
         str := format('%6d', [Ritem[item].Data[69 + i]]);
         if i = 0 then
           case Ritem[item].NeedMPType of
-            0: str := ('    陰');
-            1: str := ('    陽');
-            2: str := ('  調和');
+            0: str := '    陰';
+            1: str := '    陽';
+            2: str := '  調和';
           end;
         if (i = 1) then
         begin
@@ -4493,16 +4438,16 @@ begin
       begin
         Redraw;
         setlength(menuString, 2);
-        menuString[0] := ('取消');
-        menuString[1] := ('繼續');
-        str := ('此物品正有人裝備，是否繼續？');
+        menuString[0] := '取消';
+        menuString[1] := '繼續';
+        str := '此物品正有人裝備，是否繼續？';
         DrawTextWithRect(screen, str, 80, 30, 285, ColColor(5), ColColor(7));
         menu := CommonMenu(80, 65, 45, 1, menuString);
       end;
       if menu = 1 then
       begin
         Redraw;
-        str := ('誰要裝備');
+        str := '誰要裝備';
         str1 := cp950toutf8(@Ritem[inum].Name);
         DrawTextWithRect(screen, str, 80, 30, length(str1) * 22 + 80, ColColor($21), ColColor($23));
         DrawShadowText(screen, str1, 160, 32, ColColor($64), ColColor($66));
@@ -4525,7 +4470,7 @@ begin
           end
           else
           begin
-            str := ('此人不適合裝備此物品');
+            str := '此人不適合裝備此物品';
             DrawTextWithRect(screen, str, 80, 230, 205, ColColor($64), ColColor($66));
             WaitAnyKey;
             Redraw;
@@ -4541,16 +4486,16 @@ begin
       begin
         Redraw;
         setlength(menuString, 2);
-        menuString[0] := ('取消');
-        menuString[1] := ('繼續');
-        str := ('此秘笈正有人修煉，是否繼續？');
+        menuString[0] := '取消';
+        menuString[1] := '繼續';
+        str := '此秘笈正有人修煉，是否繼續？';
         DrawTextWithRect(screen, str, 80, 30, 285, ColColor(5), ColColor(7));
         menu := CommonMenu(80, 65, 45, 1, menuString);
       end;
       if menu = 1 then
       begin
         Redraw;
-        str := ('誰要修煉');
+        str := '誰要修煉';
         str1 := cp950toutf8(@Ritem[inum].Name);
         DrawTextWithRect(screen, str, 80, 30, length(str1) * 22 + 80, ColColor($21), ColColor($23));
         DrawShadowText(screen, str1, 160, 32, ColColor($64), ColColor($66));
@@ -4572,7 +4517,7 @@ begin
           end
           else
           begin
-            str := ('此人不適合修煉此秘笈');
+            str := '此人不適合修煉此秘笈';
             DrawTextWithRect(screen, str, 80, 230, 205, ColColor($64), ColColor($66));
             WaitAnyKey;
             Redraw;
@@ -4585,7 +4530,7 @@ begin
     begin
       if where <> 2 then
       begin
-        str := ('誰要服用');
+        str := '誰要服用';
         str1 := cp950toutf8(@Ritem[inum].Name);
         DrawTextWithRect(screen, str, 80, 30, length(str1) * 22 + 80, ColColor($21), ColColor($23));
         DrawShadowText(screen, str1, 160, 32, ColColor($64), ColColor($66));
@@ -4679,9 +4624,9 @@ begin
   if (inum in [78, 93]) and (Result = True) and (Rrole[rnum].Sexual <> 2) then
   begin
     Redraw;
-    menuString[0] := ('取消');
-    menuString[1] := ('繼續');
-    str := ('是否自宮？');
+    menuString[0] := '取消';
+    menuString[1] := '繼續';
+    str := '是否自宮？';
     DrawTextWithRect(screen, str, 80, 30, 105, ColColor(7), ColColor(5));
     if CommonMenu(80, 65, 45, 1, menuString) = 1 then
       Rrole[rnum].Sexual := 2
@@ -4698,7 +4643,7 @@ var
   menu, amount, i: integer;
   menuString, menuEngString: array of utf8string;
 begin
-  str := ('查看隊員狀態');
+  str := '查看隊員狀態';
   Redraw;
   RecordFreshScreen(0, 0, screen.w, screen.h);
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
@@ -4752,42 +4697,42 @@ var
   color1, color2: uint32;
   Name: utf8string;
 begin
-  strs[0] := ('等級');
-  strs[1] := ('生命');
-  strs[2] := ('內力');
-  strs[3] := ('體力');
-  strs[4] := ('經驗');
-  strs[5] := ('升級');
-  strs[6] := ('攻擊');
-  strs[7] := ('防禦');
-  strs[8] := ('輕功');
-  strs[9] := ('醫療能力');
-  strs[10] := ('用毒能力');
-  strs[11] := ('解毒能力');
-  strs[12] := ('拳掌功夫');
-  strs[13] := ('御劍能力');
-  strs[14] := ('耍刀技巧');
-  strs[15] := ('特殊兵器');
-  strs[16] := ('暗器技巧');
-  strs[17] := ('裝備物品');
-  strs[18] := ('修煉物品');
-  strs[19] := ('所會武功');
-  strs[20] := ('受傷');
-  strs[21] := ('中毒');
+  strs[0] := '等級';
+  strs[1] := '生命';
+  strs[2] := '內力';
+  strs[3] := '體力';
+  strs[4] := '經驗';
+  strs[5] := '升級';
+  strs[6] := '攻擊';
+  strs[7] := '防禦';
+  strs[8] := '輕功';
+  strs[9] := '醫療能力';
+  strs[10] := '用毒能力';
+  strs[11] := '解毒能力';
+  strs[12] := '拳掌功夫';
+  strs[13] := '御劍能力';
+  strs[14] := '耍刀技巧';
+  strs[15] := '特殊兵器';
+  strs[16] := '暗器技巧';
+  strs[17] := '裝備物品';
+  strs[18] := '修煉物品';
+  strs[19] := '所會武功';
+  strs[20] := '受傷';
+  strs[21] := '中毒';
 
   if MODVersion = 22 then
   begin
-    strs[2] := ('靈力');
-    strs[6] := ('武力');
-    strs[8] := ('移動');
-    strs[9] := ('仙術能力');
-    strs[10] := ('毒術能力');
-    strs[12] := ('火系能力');
-    strs[13] := ('水系能力');
-    strs[14] := ('雷系能力');
-    strs[15] := ('土系能力');
-    strs[16] := ('射擊能力');
-    strs[19] := ('所會法術');
+    strs[2] := '靈力';
+    strs[6] := '武力';
+    strs[8] := '移動';
+    strs[9] := '仙術能力';
+    strs[10] := '毒術能力';
+    strs[12] := '火系能力';
+    strs[13] := '水系能力';
+    strs[14] := '雷系能力';
+    strs[15] := '土系能力';
+    strs[16] := '射擊能力';
+    strs[19] := '所會法術';
   end;
 
   p[0] := 43;
@@ -5008,13 +4953,13 @@ var
   strs: array[0..3] of utf8string;
   color1, color2: uint32;
 begin
-  strs[0] := ('等級');
-  strs[1] := ('生命');
-  strs[2] := ('內力');
-  strs[3] := ('體力');
+  strs[0] := '等級';
+  strs[1] := '生命';
+  strs[2] := '內力';
+  strs[3] := '體力';
   if MODVersion = 22 then
   begin
-    strs[2] := ('靈力');
+    strs[2] := '靈力';
   end;
 
   DrawRectangle(screen, x, y, 145, 173, 0, ColColor(255), 50);
@@ -5104,7 +5049,7 @@ var
 begin
   if (where = 0) or (MODVersion = 22) then
   begin
-    str := ('要求誰離隊？');
+    str := '要求誰離隊？';
     if MODVersion = 22 then
       str := '選擇一個隊友';
     DrawTextWithRect(screen, str, 80, 30, 132, ColColor($21), ColColor($23));
@@ -5139,12 +5084,12 @@ var
   word: array[0..3] of utf8string;
   i: integer;
 begin
-  word[0] := ('讀取');
-  word[1] := ('存檔');
-  word[2] := ('全屏');
-  word[3] := ('離開');
+  word[0] := '讀取';
+  word[1] := '存檔';
+  word[2] := '全屏';
+  word[3] := '離開';
   if FULLSCREEN = 1 then
-    word[2] := ('窗口');
+    word[2] := '窗口';
 
   i := 0;
   while i >= 0 do
@@ -5280,12 +5225,12 @@ procedure ShowMenuSystem(menu: integer);
   word: array[0..3] of utf8string;
   i: integer;}
 begin
-  {Word[0] := (' 讀取');
-  Word[1] := (' 存檔');
-  Word[2] := (' 全屏');
-  Word[3] := (' 離開');
+  {Word[0] := ' 讀取');
+  Word[1] := ' 存檔');
+  Word[2] := ' 全屏');
+  Word[3] := ' 離開');
   if fullscreen = 1 then
-    Word[2] := (' 窗口');
+    Word[2] := ' 窗口');
 
   DrawRectangle(80, 30, 46, 92, 0, colcolor(255), 30);
   for i := 0 to 3 do
@@ -5312,12 +5257,12 @@ begin
   nowwhere := where;
   //setlength(menustring, 6);
   //setlength(Menuengstring, 0);
-  menuString[0] := ('進度一');
-  menuString[1] := ('進度二');
-  menuString[2] := ('進度三');
-  menuString[3] := ('進度四');
-  menuString[4] := ('進度五');
-  menuString[5] := ('自動檔');
+  menuString[0] := '進度一';
+  menuString[1] := '進度二';
+  menuString[2] := '進度三';
+  menuString[3] := '進度四';
+  menuString[4] := '進度五';
+  menuString[5] := '自動檔';
   menu := CommonMenu(133, 30, 67, 5, menuString);
   if menu >= 0 then
   begin
@@ -5349,20 +5294,20 @@ begin
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
   //setlength(menustring, 6);
   //setlength(Menuengstring, 0);
-  menuString[0] := ('載入進度一');
-  menuString[1] := ('載入進度二');
-  menuString[2] := ('載入進度三');
-  menuString[3] := ('載入進度四');
-  menuString[4] := ('載入進度五');
-  menuString[5] := ('載入自動檔');
+  menuString[0] := '載入進度一';
+  menuString[1] := '載入進度二';
+  menuString[2] := '載入進度三';
+  menuString[3] := '載入進度四';
+  menuString[4] := '載入進度五';
+  menuString[5] := '載入自動檔';
   if MODVersion = 23 then
   begin
-    menuString[0] := ('載入夢境一');
-    menuString[1] := ('載入夢境二');
-    menuString[2] := ('載入夢境三');
-    menuString[3] := ('載入夢境四');
-    menuString[4] := ('載入夢境五');
-    menuString[5] := ('最近的夢境');
+    menuString[0] := '載入夢境一';
+    menuString[1] := '載入夢境二';
+    menuString[2] := '載入夢境三';
+    menuString[3] := '載入夢境四';
+    menuString[4] := '載入夢境五';
+    menuString[5] := '最近的夢境';
   end;
   //writeln(pword(@menustring[0][2])^);
   menu := CommonMenu(TitlePosition.x - 10, TitlePosition.y - 20, 107, 5, menuString);
@@ -5385,11 +5330,11 @@ var
 begin
   //setlength(menustring, 5);
   //setlength(menuengstring, 0);
-  menuString[0] := ('進度一');
-  menuString[1] := ('進度二');
-  menuString[2] := ('進度三');
-  menuString[3] := ('進度四');
-  menuString[4] := ('進度五');
+  menuString[0] := '進度一';
+  menuString[1] := '進度二';
+  menuString[2] := '進度三';
+  menuString[3] := '進度四';
+  menuString[4] := '進度五';
   menu := CommonMenu(133, 30, 67, 4, menuString);
   if menu >= 0 then
     SaveR(menu + 1);
@@ -5408,9 +5353,9 @@ var
 begin
   //setlength(menustring, 3);
   //setlength(menuengstring, 0);
-  menuString[0] := ('取消');
-  menuString[1] := ('確認');
-  menuString[2] := ('腳本');
+  menuString[0] := '取消';
+  menuString[1] := '確認';
+  menuString[2] := '腳本';
   menu := CommonMenu(133, 30, 45, 2, menuString);
   if menu = 1 then
   begin
@@ -5466,11 +5411,11 @@ begin
     Redraw;
     DrawRectangle(screen, 115, 98, 155, 76, 0, ColColor(255), 30);
     DrawBig5ShadowText(screen, @Rrole[role2].Name, 120, 100, ColColor($21), ColColor($23));
-    word := ('增加生命');
+    word := '增加生命';
     DrawShadowText(screen, word, 120, 125, ColColor($5), ColColor($7));
     word := format('%4d', [addlife]);
     DrawEngShadowText(screen, word, 220, 125, ColColor($64), ColColor($66));
-    word := ('減少受傷');
+    word := '減少受傷';
     DrawShadowText(screen, word, 120, 150, ColColor($5), ColColor($7));
     word := format('%4d', [minushurt]);
     DrawEngShadowText(screen, word, 220, 150, ColColor($64), ColColor($66));
@@ -5498,7 +5443,7 @@ begin
   begin
     Redraw;
     DrawRectangle(screen, 115, 98, 155, 51, 0, ColColor(255), 30);
-    word := ('減少中毒');
+    word := '減少中毒';
     DrawShadowText(screen, word, 120, 125, ColColor($5), ColColor($7));
     DrawBig5ShadowText(screen, @Rrole[role2].Name, 120, 100, ColColor($21), ColColor($23));
     word := format('%4d', [minuspoi]);
@@ -5623,45 +5568,45 @@ begin
     Result := times;
   if display <> 0 then
   begin
-    word[0] := ('增加生命');
-    word[1] := ('增加生命最大值');
-    word[2] := ('中毒程度');
-    word[3] := ('增加體力');
-    word[4] := ('內力門路陰陽合一');
-    word[5] := ('增加內力');
-    word[6] := ('增加內力最大值');
-    word[7] := ('增加攻擊力');
-    word[8] := ('增加輕功');
-    word[9] := ('增加防禦力');
-    word[10] := ('增加醫療能力');
-    word[11] := ('增加用毒能力');
-    word[12] := ('增加解毒能力');
-    word[13] := ('增加抗毒能力');
-    word[14] := ('增加拳掌能力');
-    word[15] := ('增加御劍能力');
-    word[16] := ('增加耍刀能力');
-    word[17] := ('增加特殊兵器');
-    word[18] := ('增加暗器技巧');
-    word[19] := ('增加武學常識');
-    word[20] := ('增加品德指數');
-    word[21] := ('習得左右互搏');
-    word[22] := ('增加攻擊帶毒');
-    word[23] := ('受傷程度');
+    word[0] := '增加生命';
+    word[1] := '增加生命最大值';
+    word[2] := '中毒程度';
+    word[3] := '增加體力';
+    word[4] := '內力門路陰陽合一';
+    word[5] := '增加內力';
+    word[6] := '增加內力最大值';
+    word[7] := '增加攻擊力';
+    word[8] := '增加輕功';
+    word[9] := '增加防禦力';
+    word[10] := '增加醫療能力';
+    word[11] := '增加用毒能力';
+    word[12] := '增加解毒能力';
+    word[13] := '增加抗毒能力';
+    word[14] := '增加拳掌能力';
+    word[15] := '增加御劍能力';
+    word[16] := '增加耍刀能力';
+    word[17] := '增加特殊兵器';
+    word[18] := '增加暗器技巧';
+    word[19] := '增加武學常識';
+    word[20] := '增加品德指數';
+    word[21] := '習得左右互搏';
+    word[22] := '增加攻擊帶毒';
+    word[23] := '受傷程度';
 
     if MODVersion = 22 then
     begin
-      word[4] := ('靈力陰陽合一');
-      word[5] := ('增加靈力');
-      word[6] := ('增加靈力最大值');
-      word[7] := ('增加武力');
-      word[8] := ('增加移動');
-      word[10] := ('增加仙術能力');
-      word[11] := ('增加用毒術能力');
-      word[14] := ('增加火系能力');
-      word[15] := ('增加水系能力');
-      word[16] := ('增加雷系能力');
-      word[17] := ('增加土系能力');
-      word[18] := ('增加射擊能力');
+      word[4] := '靈力陰陽合一';
+      word[5] := '增加靈力';
+      word[6] := '增加靈力最大值';
+      word[7] := '增加武力';
+      word[8] := '增加移動';
+      word[10] := '增加仙術能力';
+      word[11] := '增加毒術能力';
+      word[14] := '增加火系能力';
+      word[15] := '增加水系能力';
+      word[16] := '增加雷系能力';
+      word[17] := '增加土系能力';
+      word[18] := '增加射擊能力';
     end;
 
     DrawRectangle(screen, 100, 70, 100 + length(putf8char(@Ritem[inum].Name)) * 10, 25, 0, ColColor(255), 50);
@@ -5691,7 +5636,7 @@ begin
     DrawBig5ShadowText(screen, @Rrole[rnum].Data[4], x + 20, 102, ColColor($21), ColColor($23));
     if p = 0 then
     begin
-      str := ('未增加屬性');
+      str := '未增加屬性';
       DrawShadowText(screen, str, 183, 102, ColColor(5), ColColor(7));
     end;
     p := 0;
@@ -6234,6 +6179,5 @@ function IsCave(snum: integer): boolean;
 begin
   Result := snum in [5, 7, 10, 41, 42, 46, 65, 66, 67, 72, 79];
 end;
-
 
 end.

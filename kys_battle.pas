@@ -443,7 +443,7 @@ begin
   x := CENTER_X - 105;
   y := 150;
   LoadFreshScreen(x + 30, y, 151, max * 22 + 29);
-  str1 := ('參戰');
+  str1 := '參戰';
   DrawRectangle(screen, x + 30, y, 150, max * 22 + 28, 0, ColColor(255), 50);
   for i := 0 to max do
     if i = menu then
@@ -775,7 +775,7 @@ begin
 
   Redraw;
   ShowSimpleStatus(Brole[bnum].rnum, CENTER_X + 100, 50);
-  str := (format('回合%d', [BattleRound]));
+  str := format('回合%d', [BattleRound]);
   DrawTextWithRect(screen, str, 160, 50, DrawLength(str) * 10 + 6, ColColor($21), ColColor($23));
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
   menu := 0;
@@ -876,16 +876,16 @@ var
   word: array[0..9] of utf8string;
 begin
 
-  word[0] := ('移動');
-  word[1] := ('攻擊');
-  word[2] := ('用毒');
-  word[3] := ('解毒');
-  word[4] := ('醫療');
-  word[5] := ('物品');
-  word[6] := ('等待');
-  word[7] := ('狀態');
-  word[8] := ('休息');
-  word[9] := ('自動');
+  word[0] := '移動';
+  word[1] := '攻擊';
+  word[2] := '用毒';
+  word[3] := '解毒';
+  word[4] := '醫療';
+  word[5] := '物品';
+  word[6] := '等待';
+  word[7] := '狀態';
+  word[8] := '休息';
+  word[9] := '自動';
 
   Redraw;
 
@@ -1290,7 +1290,7 @@ begin
   SetAminationPosition(1, step);
   DrawBFieldWithCursor(-1);
 
-  str := ('選擇攻擊方向');
+  str := '選擇攻擊方向';
   DrawTextWithRect(screen, str, 280, 200, 125, ColColor($23), ColColor($21));
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
   Result := False;
@@ -2514,7 +2514,7 @@ begin
       Rrole[rnum].ExpForItem := p;
       ShowSimpleStatus(rnum, 100, 50);
       DrawRectangle(screen, 100, 235, 145, 25, 0, ColColor(255), 50);
-      str := ('得經驗');
+      str := '得經驗';
       DrawShadowText(screen, str, 103, 237, ColColor($23), ColColor($21));
       str := format('%5d', [Brole[i].ExpGot + basicvalue]);
       DrawEngShadowText(screen, str, 188, 237, ColColor($66), ColColor($64));
@@ -2588,7 +2588,7 @@ begin
   if Brole[bnum].Team = 0 then
   begin
     ShowStatus(rnum);
-    str := ('昇級');
+    str := '昇級';
     DrawTextWithRect(screen, str, 58, CENTER_Y - 150, 46, ColColor($23), ColColor($21));
     WaitAnyKey;
   end;
@@ -2712,7 +2712,7 @@ begin
           begin
             ShowSimpleStatus(rnum, 350, 50);
             DrawRectangle(screen, 115, 63, 145, 25, 0, ColColor(255), 50);
-            str := ('製藥成功');
+            str := '製藥成功';
             DrawShadowText(screen, str, 147, 65, ColColor($23), ColColor($21));
 
             instruct_2(Ritem[inum].GetItem[p], 1 + random(5));

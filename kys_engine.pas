@@ -410,8 +410,6 @@ begin
 
 end;
 
-
-
 //播放mp3音乐
 procedure PlayMP3(MusicNum, times: integer); overload;
 begin
@@ -1262,7 +1260,7 @@ begin
   i := 1;
   while True do
   begin
-    if (byte(word[i]) > 32) and (byte(word[1]) < 128) then
+    if (byte(word[i]) > 32) and (byte(word[i]) < 128) then
     begin
       word0[1] := word[i];
       word0[2] := utf8char(0);
@@ -2120,16 +2118,6 @@ var
 begin
   Result := DrawLength(utf8string(p));
 end;
-
-{$IFDEF fpc}
-
-{$ELSE}
-
-{function UTF8Decode(str: utf8string): utf8string;
-begin
-  result := str;
-end;}
-{$ENDIF}
 
 function round(x: real): integer;
 begin

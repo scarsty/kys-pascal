@@ -99,6 +99,7 @@ function HaveMagic(person, mnum, lv: integer): boolean;
 procedure StudyMagic(rnum, magicnum, newmagicnum, level, dismode: integer);
 procedure NewTalk(headnum, talknum, namenum, place, showhead, color, frame: integer);
 function EnterNumber(MinValue, MaxValue, x, y: integer; Default: integer = 0): smallint;
+function EnterString(var str: utf8string; x, y, w, h: integer): bool;
 procedure SetAttribute(rnum, selecttype, modlevel, minlevel, maxlevel: integer);
 
 
@@ -259,12 +260,12 @@ begin
   DrawRectangle(screen, x - 85, 98, 170, 76, 0, ColColor(255), 50);
   //DrawMPic(ITEM_BEGIN_PIC + inum, x - 20, 100);
   if amount >= 0 then
-    word := ('得到物品')
+    word := '得到物品'
   else
-    word := ('失去物品');
+    word := '失去物品';
   DrawShadowText(screen, word, x - 80, 100, ColColor($21), ColColor($23));
   DrawBig5ShadowText(screen, @Ritem[inum].Name, x - 80, 125, ColColor($5), ColColor($7));
-  word := ('數量');
+  word := '數量';
   DrawShadowText(screen, word, x - 80, 150, ColColor($64), ColColor($66));
   word := format(' %5d', [amount]);
   DrawEngShadowText(screen, word, x - 0, 150, ColColor($64), ColColor($66));
@@ -400,9 +401,9 @@ var
   menuString: array[0..2] of utf8string;
 begin
   //setlength(menustring, 3);
-  menuString[0] := ('取消');
-  menuString[1] := ('戰鬥');
-  menuString[2] := ('是否與之戰鬥？');
+  menuString[0] := '取消';
+  menuString[1] := '戰鬥';
+  menuString[2] := '是否與之戰鬥？';
   DrawTextWithRect(screen, menuString[2], CENTER_X - 75, CENTER_Y - 85, 150, ColColor(5), ColColor(7));
   menu := CommonMenu2(CENTER_X - 49, CENTER_Y - 50, 98, menuString);
   if menu = 1 then
@@ -435,9 +436,9 @@ var
   menuString: array[0..2] of utf8string;
 begin
   //setlength(menustring, 3);
-  menuString[0] := ('取消');
-  menuString[1] := ('要求');
-  menuString[2] := ('是否要求加入？');
+  menuString[0] := '取消';
+  menuString[1] := '要求';
+  menuString[2] := '是否要求加入？';
   DrawTextWithRect(screen, menuString[2], CENTER_X - 75, CENTER_Y - 85, 150, ColColor(5), ColColor(7));
   menu := CommonMenu2(CENTER_X - 49, CENTER_Y - 50, 98, menuString);
   if menu = 1 then
@@ -483,11 +484,11 @@ var
   menuString: array[0..2] of utf8string;
 begin
   //setlength(menustring, 3);
-  menuString[0] := (' 否');
-  menuString[1] := (' 是');
-  menuString[2] := ('是否需要住宿？');
+  menuString[0] := ' 否';
+  menuString[1] := ' 是';
+  menuString[2] := '是否需要住宿？';
   if MODVersion <> 0 then
-    menuString[2] := ('请選擇是或者否');
+    menuString[2] := '请選擇是或者否';
   DrawTextWithRect(screen, menuString[2], CENTER_X - 75, CENTER_Y - 85, 150, ColColor(5), ColColor(7));
   menu := CommonMenu2(CENTER_X - 49, CENTER_Y - 50, 98, menuString);
   if menu = 1 then
@@ -565,9 +566,9 @@ var
 begin
   where := 4;
   Redraw;
-  str := (' 勝敗乃兵家常事，但是……');
+  str := ' 勝敗乃兵家常事，但是……';
   DrawShadowText(screen, str, CENTER_X - 120, 340, ColColor(255), ColColor(255));
-  str := (' 地球上又多了一失蹤人口');
+  str := ' 地球上又多了一失蹤人口';
   DrawShadowText(screen, str, CENTER_X - 110, 370, ColColor(255), ColColor(255));
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
   WaitAnyKey;
@@ -941,7 +942,7 @@ begin
   if dismode = 0 then
   begin
     DrawRectangle(screen, CENTER_X - 75, 98, 145, 76, 0, ColColor(255), 50);
-    word := ('學會');
+    word := '學會';
     DrawShadowText(screen, word, CENTER_X - 70, 125, ColColor($5), ColColor($7));
     DrawBig5ShadowText(screen, @Rrole[rnum].Name, CENTER_X - 70, 100, ColColor($21), ColColor($23));
     DrawBig5ShadowText(screen, @Rmagic[magicnum].Name, CENTER_X - 70, 150, ColColor($64), ColColor($66));
@@ -967,7 +968,7 @@ begin
   if iq > 0 then
   begin
     DrawRectangle(screen, CENTER_X - 75, 98, 145, 51, 0, ColColor(255), 50);
-    word := ('資質增加');
+    word := '資質增加';
     DrawShadowText(screen, word, CENTER_X - 70, 125, ColColor($5), ColColor($7));
     DrawBig5ShadowText(screen, @Rrole[rnum].Name, CENTER_X - 70, 100, ColColor($21), ColColor($23));
     word := format('%3d', [iq]);
@@ -1179,7 +1180,7 @@ var
 begin
   Rrole[rnum].Speed := Rrole[rnum].Speed + speed;
   DrawRectangle(screen, CENTER_X - 75, 98, 145, 51, 0, ColColor(255), 50);
-  word := ('輕功增加');
+  word := '輕功增加';
   DrawShadowText(screen, word, CENTER_X - 70, 125, ColColor($5), ColColor($7));
   DrawBig5ShadowText(screen, @Rrole[rnum].Name, CENTER_X - 70, 100, ColColor($21), ColColor($23));
   word := format('%4d', [speed]);
@@ -1196,7 +1197,7 @@ begin
   Rrole[rnum].MaxMP := Rrole[rnum].MaxMP + mp;
   Rrole[rnum].CurrentMP := Rrole[rnum].MaxMP;
   DrawRectangle(screen, CENTER_X - 75, 98, 145, 51, 0, ColColor(255), 50);
-  word := ('內力增加');
+  word := '內力增加';
   DrawShadowText(screen, word, CENTER_X - 70, 125, ColColor($5), ColColor($7));
   DrawBig5ShadowText(screen, @Rrole[rnum].Name, CENTER_X - 70, 100, ColColor($21), ColColor($23));
   word := format('%4d', [mp]);
@@ -1212,7 +1213,7 @@ var
 begin
   Rrole[rnum].Attack := Rrole[rnum].Attack + Attack;
   DrawRectangle(screen, CENTER_X - 75, 98, 145, 51, 0, ColColor(255), 50);
-  word := ('武力增加');
+  word := '武力增加';
   DrawShadowText(screen, word, CENTER_X - 70, 125, ColColor($5), ColColor($7));
   DrawBig5ShadowText(screen, @Rrole[rnum].Name, CENTER_X - 70, 100, ColColor($21), ColColor($23));
   word := format('%4d', [Attack]);
@@ -1229,7 +1230,7 @@ begin
   Rrole[rnum].MaxHP := Rrole[rnum].MaxHP + hp;
   Rrole[rnum].CurrentHP := Rrole[rnum].MaxHP;
   DrawRectangle(screen, CENTER_X - 75, 98, 145, 51, 0, ColColor(255), 50);
-  word := ('生命增加');
+  word := '生命增加';
   DrawShadowText(screen, word, CENTER_X - 70, 125, ColColor($5), ColColor($7));
   DrawBig5ShadowText(screen, @Rrole[rnum].Name, CENTER_X - 70, 100, ColColor($21), ColColor($23));
   word := format('%4d', [hp]);
@@ -1277,7 +1278,7 @@ var
   word: utf8string;
 begin
   DrawRectangle(screen, CENTER_X - 110, 98, 220, 26, 0, ColColor(255), 50);
-  word := ('你的品德指數為：');
+  word := '你的品德指數為：';
   DrawShadowText(screen, word, CENTER_X - 105, 100, ColColor($5), ColColor($7));
   word := format('%3d', [Rrole[0].Ethics]);
   DrawEngShadowText(screen, word, CENTER_X + 65, 100, ColColor($64), ColColor($66));
@@ -1291,7 +1292,7 @@ var
   word: utf8string;
 begin
   DrawRectangle(screen, CENTER_X - 110, 98, 220, 26, 0, ColColor(255), 50);
-  word := ('你的聲望指數為：');
+  word := '你的聲望指數為：';
   DrawShadowText(screen, word, CENTER_X - 105, 100, ColColor($5), ColColor($7));
   word := format('%3d', [Rrole[0].Repute]);
   DrawEngShadowText(screen, word, CENTER_X + 65, 100, ColColor($64), ColColor($66));
@@ -1597,14 +1598,10 @@ function instruct_50e(code, e1, e2, e3, e4, e5, e6: integer): integer;
 var
   i, t1, grp, idx, offset, len, i1, i2: integer;
   p, p1: putf8char;
-  //ps :pstring;
   str: utf8string;
-  {$ifdef fpc}
   word, word1: utf8string;
-  {$else}
-  word, word1: utf8string;
-  {$endif}
   menuString, menuEngString: array of utf8string;
+  got: bool;
 begin
   Result := 0;
   case code of
@@ -2271,38 +2268,21 @@ begin
         3: p := @Rscence[e3].Name[0];
       end;
       //ShowMessage(IntToStr(e4));
-      {$ifdef fpc}
       word1 := CP950ToUTF8(p);
-      {$else}
-      word1 := cp950toutf8(p);
-      //word1 := MidStr(word1, 2, length(word1) - 1);
-      {$endif}
       word := '請輸入名字：';
-      if FULLSCREEN = 0 then
-        word := InputBox('Enter name', word, word1);
-      {$ifdef fpc}
-      str := UTF8ToCP950(word);
-      {$else}
-      //str := UnicodeToBig5(@word[1]);
-      {$endif}
-      p1 := @str[1];
-      for i := 0 to min(e5, length(p1)) - 1 do
-        (p + i)^ := (p1 + i)^;
+      DrawTextWithRect(word, CENTER_X - 133, CENTER_Y - 30, 266, ColColor($21), ColColor($23));
+      got := EnterString(word, CENTER_X - 43, CENTER_Y + 10, 86, 20);
+      if got then
+      begin
+        str := UTF8ToCP950(word);
+        p1 := @str[1];
+        for i := 0 to min(e5, length(p1)) - 1 do
+          (p + i)^ := (p1 + i)^;
+      end;
     end;
     51: //Enter a number.
     begin
-      if FULLSCREEN = 0 then
-        while (True) do
-        begin
-          word := InputBox('输入数量 ', '输入数量', '0');
-          try
-            i := StrToInt(word);
-            break;
-          except
-            ShowMessage('输入错误，请重新输入!');
-          end;
-        end;
-      x50[e1] := i;
+      x50[e1] := EnterNumber(0, 32767, CENTER_X, CENTER_Y - 100);;
     end;
     52: //Judge someone grasp some mggic.
     begin
@@ -2356,7 +2336,7 @@ begin
   if dismode = 0 then
   begin
     DrawRectangle(screen, CENTER_X - 75, 98, 145, 76, 0, ColColor(255), 30);
-    word := (' 學會');
+    word := ' 學會';
     DrawShadowText(screen, word, CENTER_X - 90, 125, ColColor($5), ColColor($7));
     DrawBig5ShadowText(screen, @Rrole[rnum].Name, CENTER_X - 90, 100, ColColor($21), ColColor($23));
     DrawBig5ShadowText(screen, @Rmagic[newmagicnum].Name, CENTER_X - 90, 150, ColColor($64), ColColor($66));
@@ -2853,7 +2833,7 @@ begin
   end;
   UpdateAllScreen;
   RecordFreshScreen(x, y, 181, 181);
-  strv := UTF8Decode(format('%d~%d', [MinValue, MaxValue]));
+  strv := format('%d~%d', [MinValue, MaxValue]);
   DrawTextWithRect(strv, x, y - 35, DrawLength(strv) * 10 + 7, ColColor($21), ColColor($27));
   //在循环中写字体是为了字体分层模式容易处理
   menu := -1;
@@ -2954,13 +2934,71 @@ begin
   begin
     Redraw;
     UpdateAllScreen;
-    strv := UTF8Decode(format('依據範圍自動調整為%d！', [Result]));
+    strv := format('依據範圍自動調整為%d！', [Result]);
     DrawTextWithRect(strv, x, y, DrawLength(strv) * 10 + 7, ColColor($64), ColColor($66));
     WaitAnyKey;
   end;
   CleanKeyValue;
   //FreeFreshScreen;
 end;
+
+
+function EnterString(var str: utf8string; x, y, w, h: integer): bool;
+var
+  r: TSDL_Rect;
+begin
+  r.x := x;
+  r.y := y;
+  r.w := w;
+  r.h := h;
+  SDL_StartTextInput();
+  SDL_SetTextInputRect(@r);
+  while True do
+  begin
+    Redraw;
+    DrawTextWithRect(str, x, y, w, ColColor($66), ColColor($63));
+    SDL_UpdateRect2(screen, x, y, w, h);
+    SDL_PollEvent(@event);
+    CheckBasicEvent;
+    case event.type_ of
+      SDL_TEXTINPUT:
+      begin
+        str := str + event.Text.Text;
+      end;
+      SDL_MOUSEBUTTONUP:
+      begin
+        if (event.button.button = SDL_BUTTON_RIGHT) then
+        begin
+          Result := False;
+          break;
+        end;
+      end;
+      SDL_KEYUP:
+      begin
+        if event.key.keysym.sym = SDLK_RETURN then
+        begin
+          Result := True;
+          break;
+        end;
+        if event.key.keysym.sym = SDLK_ESCAPE then
+        begin
+          Result := False;
+          break;
+        end;
+        if event.key.keysym.sym = SDLK_BACKSPACE then
+        begin
+          if length(str) > 0 then
+          begin
+            setlength(str, length(str) - 1);
+          end;
+        end;
+      end;
+    end;
+    SDL_Delay(16);
+  end;
+  SDL_StopTextInput();
+end;
+
 
 procedure SetAttribute(rnum, selecttype, modlevel, minlevel, maxlevel: integer);
 begin
