@@ -1035,7 +1035,7 @@ begin
     for i2 := 0 to 63 do
     begin
       CalPosOnImage(i1, i2, x, y);
-      if SData[CurScence, 4, i1, i2] <= 0 then
+      if (CurScence >= 0) and (SData[CurScence, 4, i1, i2] <= 0) then
       begin
         num := SData[CurScence, 0, i1, i2] div 2;
         if num > 0 then
@@ -1102,6 +1102,7 @@ var
   i, x, y, num: integer;
 begin
   CalPosOnImage(i1, i2, x, y);
+  if (CurScence<0) then exit;
   //InitialSPic2(SData[CurScence, 0, i1, i2] div 2, x, y, x1, y1, w, h, 1);
   if SData[CurScence, 4, i1, i2] > 0 then
   begin

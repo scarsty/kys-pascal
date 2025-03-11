@@ -1589,6 +1589,7 @@ end;
 
 function CutRegion(x: integer): integer;
 begin
+  Result := x;
   if (x >= $8000) or (x < -$8000) then
     Result := (x + $8000) mod $10000 - $8000;
 end;
@@ -1597,13 +1598,14 @@ end;
 function instruct_50e(code, e1, e2, e3, e4, e5, e6: integer): integer;
 var
   i, t1, grp, idx, offset, len, i1, i2: integer;
-  p, p1: putf8char;
+  p, p1, p2: putf8char;
   str: utf8string;
   word, word1: utf8string;
   menuString, menuEngString: array of utf8string;
   got: bool;
 begin
   Result := 0;
+  //message('50e: %d %d %d %d %d %d %d', [code, e1, e2,e3, e4, e5, e6]);
   case code of
     0: //Give a value to a papameter.
     begin
@@ -1682,6 +1684,7 @@ begin
       //setlength(talkarray, len + 1);
       move(TDef[offset], x50[e3], len);
       p := @x50[e3];
+      p1 := p;
       for i := 0 to len - 2 do //最后一位为0, 不处理
       begin
         p^ := utf8char(byte(p^) xor $FF);
@@ -1697,9 +1700,10 @@ begin
       p1 := @x50[e3];
       str := utf8string(p1);
       str := format(str, [e4]);
+      p2 := @str[1];
       for i := 0 to length(str) do
       begin
-        p^ := utf8char(@str[i + 1]);
+        p^ := str[i + 1];
         p := p + 1;
       end;
     end;

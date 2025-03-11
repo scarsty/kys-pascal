@@ -2199,7 +2199,7 @@ begin
       Sx := Rscence[CurScence].EntranceX;
       Sy := Rscence[CurScence].EntranceY;
       //如达成条件, 进入场景并初始化场景坐标
-      SaveR(6);
+      SaveR(11);
       WalkInScence(0);
       event.key.keysym.sym := 0;
       event.button.button := 0;
@@ -2878,6 +2878,11 @@ end;
 //判定场景内某个位置能否行走
 function CanWalkInScence(x, y: integer): boolean; overload;
 begin
+  if (CurScence < 0) or (x < 0) or (y < 0) then
+  begin
+    Result := False;
+    exit;
+  end;
   if (Sdata[CurScence, 1, x, y] = 0) then
     Result := True
   else
@@ -5175,19 +5180,34 @@ end;
 //读档选单
 procedure MenuLoad;
 var
-  menu, nowwhere: integer;
-  menuString: array [0 .. 5] of utf8string;
+  menu, nowwhere, i: integer;
+  menuString: array [0 .. 10] of utf8string;
+  filename: utf8string;
 begin
   nowwhere := where;
   //setlength(menustring, 6);
   //setlength(Menuengstring, 0);
+  //setlength(menuengstring, 0);
   menuString[0] := '進度一';
   menuString[1] := '進度二';
   menuString[2] := '進度三';
   menuString[3] := '進度四';
   menuString[4] := '進度五';
-  menuString[5] := '自動檔';
-  menu := CommonMenu(133, 30, 67, 5, menuString);
+  menuString[5] := '進度六';
+  menuString[6] := '進度七';
+  menuString[7] := '進度八';
+  menuString[8] := '進度九';
+  menuString[9] := '進度十';
+  menuString[10] := '自動檔';
+  for i := 0 to 10 do
+  begin
+    filename := AppPath + 'save/r' + IntToStr(i + 1) + '.grp';
+    if FileExists(filename) then
+      menuString[i] := menuString[i] + ' ' + FormatDateTime('yyyy-mm-dd hh:mm:ss', FileDateToDateTime(FileAge(filename)))
+    else
+      menuString[i] := menuString[i] + ' -------------------';
+  end;
+  menu := CommonMenu(133, 30, 267, 10, menuString);
   if menu >= 0 then
   begin
     LoadR(menu + 1);
@@ -5211,8 +5231,9 @@ end;
 //特殊的读档选单, 仅用在开始时读档
 function MenuLoadAtBeginning: integer;
 var
-  menu: integer;
-  menuString: array [0 .. 5] of utf8string;
+  menu, i: integer;
+  menuString: array [0 .. 10] of utf8string;
+  filename: utf8string;
 begin
   Redraw;
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
@@ -5223,18 +5244,24 @@ begin
   menuString[2] := '載入進度三';
   menuString[3] := '載入進度四';
   menuString[4] := '載入進度五';
-  menuString[5] := '載入自動檔';
-  if MODVersion = 23 then
+  menuString[5] := '載入進度六';
+  menuString[6] := '載入進度七';
+  menuString[7] := '載入進度八';
+  menuString[8] := '載入進度九';
+  menuString[9] := '載入進度十';
+  menuString[10] := '載入自動檔';
+
+  for i := 0 to 10 do
   begin
-    menuString[0] := '載入夢境一';
-    menuString[1] := '載入夢境二';
-    menuString[2] := '載入夢境三';
-    menuString[3] := '載入夢境四';
-    menuString[4] := '載入夢境五';
-    menuString[5] := '最近的夢境';
+    filename := AppPath + 'save/r' + IntToStr(i + 1) + '.grp';
+    if FileExists(filename) then
+      menuString[i] := menuString[i] + ' ' + FormatDateTime('yyyy-mm-dd hh:mm:ss', FileDateToDateTime(FileAge(filename)))
+    else
+      menuString[i] := menuString[i] + ' -------------------';
   end;
+
   //writeln(pword(@menustring[0][2])^);
-  menu := CommonMenu(TitlePosition.x - 10, TitlePosition.y - 20, 107, 5, menuString);
+  menu := CommonMenu(TitlePosition.x - 100, TitlePosition.y - 20, 307, 10, menuString);
   if menu >= 0 then
   begin
     LoadR(menu + 1);
@@ -5249,8 +5276,9 @@ end;
 //存档选单
 procedure MenuSave;
 var
-  menu: integer;
-  menuString: array [0 .. 4] of utf8string;
+  menu, i: integer;
+  menuString: array [0 .. 9] of utf8string;
+  filename: utf8string;
 begin
   //setlength(menustring, 5);
   //setlength(menuengstring, 0);
@@ -5259,7 +5287,20 @@ begin
   menuString[2] := '進度三';
   menuString[3] := '進度四';
   menuString[4] := '進度五';
-  menu := CommonMenu(133, 30, 67, 4, menuString);
+  menuString[5] := '進度六';
+  menuString[6] := '進度七';
+  menuString[7] := '進度八';
+  menuString[8] := '進度九';
+  menuString[9] := '進度十';
+  for i := 0 to 9 do
+  begin
+    filename := AppPath + 'save/r' + IntToStr(i + 1) + '.grp';
+    if FileExists(filename) then
+      menuString[i] := menuString[i] + ' ' + FormatDateTime('yyyy-mm-dd hh:mm:ss', FileDateToDateTime(FileAge(filename)))
+    else
+      menuString[i] := menuString[i] + ' -------------------';
+  end;
+  menu := CommonMenu(133, 30, 267, 9, menuString);
   if menu >= 0 then
     SaveR(menu + 1);
   //Redraw;
@@ -5675,14 +5716,7 @@ begin
     end;}
     i := 0;
     len := length(e);
-    if IsConsole then
-    begin
-      writeln('Event ', num);
-      //', Run instruct ', e[i], ' ');
-      {if e[i] = 50 then
-        Write(e[i + 1], ',', e[i + 2], ',', e[i + 3], ',', e[i + 4], ',', e[i + 5], ',', e[i + 6], ',', e[i + 7]);}
-      //writeln;
-    end;
+    message('Event %d', [num]);
     //普通事件写成子程, 需跳转事件写成函数
     while SDL_PollEvent(@event) >= 0 do
     begin

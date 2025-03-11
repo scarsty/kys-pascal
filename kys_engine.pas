@@ -25,6 +25,7 @@ uses
   //unzip,
   kys_main,
   kys_type,
+  StrUtils,
   mythoutput;
 
 function EventFilter(p: pointer; e: PSDL_Event): longint; cdecl;
@@ -1252,6 +1253,7 @@ begin
       k := byte(word0[1]);
       if not fonts.ContainsKey(k) then
       begin
+        message('%s(%d)', [midstr(word, i, 1), fonts.Count], False);
         fonts.add(k, TTF_RenderUTF8_blended(engfont, @word0[1], tempcolor));
       end;
       Text := fonts.Items[k];
@@ -1271,6 +1273,7 @@ begin
       k := byte(word0[1]) + 256 * byte(word0[2]) + 65536 * byte(word0[3]);
       if not fonts.ContainsKey(k) then
       begin
+        message('%s(%d)', [midstr(word, i, 3), fonts.Count], False);
         fonts.add(k, TTF_RenderUTF8_blended(font, @word0[1], tempcolor));
       end;
       got := fonts.TryGetValue(k, Text);
@@ -1330,7 +1333,6 @@ procedure DrawEngShadowText(sur: PSDL_Surface; word: utf8string; x_pos, y_pos: i
 begin
   DrawEngText(sur, word, x_pos + 1, y_pos, color2);
   DrawEngText(sur, word, x_pos, y_pos, color1);
-
 end;
 
 //显示big5文字
@@ -1341,7 +1343,6 @@ var
 begin
   words := cp950toutf8(str);
   DrawText(sur, words, x_pos, y_pos, color);
-
 end;
 
 //显示big5阴影文字
@@ -2255,8 +2256,8 @@ var
 begin
   {$IFDEF console}
   write(format(formatstring, content));
-  //if cr then
-  //writeln();
+  if cr then
+    writeln();
   {$ENDIF}
   {$IFDEF android}
   str := format(formatstring, content);
@@ -2275,8 +2276,8 @@ var
 begin
   {$IFDEF console}
   write(format(formatstring, []));
-  //if cr then
-  //writeln();
+  if cr then
+    writeln();
   {$ENDIF}
   {$IFDEF android}
   str := format(formatstring, []);
