@@ -31,6 +31,7 @@
             <IncludeFiles Value="$(ProjOutDir)"/>
             <Libraries Value=".;\usr\local\lib;\lib"/>
             <OtherUnitFiles Value="lib"/>
+            <UnitOutputDirectory Value="Release"/>
           </SearchPaths>
           <Parsing>
             <SyntaxOptions>
@@ -48,6 +49,7 @@
           </CodeGeneration>
           <Linking>
             <Debugging>
+              <GenerateDebugInfo Value="False"/>
               <DebugInfoType Value="dsDwarf2Set"/>
               <UseValgrind Value="True"/>
               <StripSymbols Value="True"/>
@@ -76,6 +78,7 @@
             <IncludeFiles Value="$(ProjOutDir)"/>
             <Libraries Value="lib;.;\usr\local\lib;\lib;D:\soft\develop_adt\ndk\platforms\android-12\arch-arm\usr\lib\"/>
             <OtherUnitFiles Value="lib"/>
+            <UnitOutputDirectory Value="Android"/>
           </SearchPaths>
           <Parsing>
             <SyntaxOptions>
@@ -173,6 +176,7 @@
       <IncludeFiles Value="$(ProjOutDir)"/>
       <Libraries Value=".;\usr\local\lib;\lib"/>
       <OtherUnitFiles Value="lib"/>
+      <UnitOutputDirectory Value="Debug"/>
     </SearchPaths>
     <Parsing>
       <SyntaxOptions>
@@ -185,7 +189,7 @@
     <CodeGeneration>
       <SmartLinkUnit Value="True"/>
       <Optimizations>
-        <OptimizationLevel Value="3"/>
+        <OptimizationLevel Value="0"/>
       </Optimizations>
     </CodeGeneration>
     <Linking>

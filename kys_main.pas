@@ -5261,7 +5261,7 @@ begin
   end;
 
   //writeln(pword(@menustring[0][2])^);
-  menu := CommonMenu(TitlePosition.x - 100, TitlePosition.y - 20, 307, 10, menuString);
+  menu := CommonMenu(CENTER_X - 150, CENTER_Y - 100, 307, 10, menuString);
   if menu >= 0 then
   begin
     LoadR(menu + 1);
