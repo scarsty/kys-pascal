@@ -6,14 +6,14 @@ interface
 
 uses
   SysUtils,
-  {$IFDEF fpc}
+{$IFDEF fpc}
   LMessages,
   LConvEncoding,
   LCLType,
   LCLIntf,
-  {$ELSE}
+{$ELSE}
   Windows,
-  {$ENDIF}
+{$ENDIF}
   kys_type,
   StrUtils,
   SDL2_TTF,
@@ -214,7 +214,7 @@ begin
   begin
     for i := 0 to BRoleAmount - 1 do
     begin
-      for j := Low(FPNGTile[i]) to High(FPNGTile[i]) do
+      for j := low(FPNGTile[i]) to high(FPNGTile[i]) do
       begin
         SDL_FreeSurface(FPNGTile[i][j]);
         FPNGIndex[i][j].CurPointer := nil;
@@ -247,7 +247,7 @@ end;
 //Structure of Brole arrays:
 //the 1st pointer is "Battle Num";
 //The 2nd: 0: rnum, 1: Friend or enemy, 2: y, 3: x, 4: Face, 5: Dead or alive,
-//         7: Acted, 8: Pic Num, 9: The number, 10, 11, 12: Auto, 13: Exp gotten.
+//7: Acted, 8: Pic Num, 9: The number, 10, 11, 12: Auto, 13: Exp gotten.
 //初始化战场
 function InitialBField: boolean;
 var
@@ -308,7 +308,7 @@ end;
 
 procedure InitialBRole(i, rnum, team, x, y: integer);
 begin
-  if i in [low(Brole)..high(Brole)] then
+  if i in [low(Brole) .. high(Brole)] then
   begin
     Brole[i].rnum := rnum;
     Brole[i].Team := team;
@@ -332,7 +332,7 @@ end;
 function SelectTeamMembers: integer;
 var
   i, menu, max, menup: integer;
-  menuString: array[0..8] of utf8string;
+  menuString: array [0 .. 8] of utf8string;
   str: utf8string;
 begin
   Result := 0;
@@ -394,10 +394,7 @@ begin
       end;
       SDL_MOUSEBUTTONUP:
       begin
-        if (round(event.button.x / (RESOLUTIONX / screen.w)) >= CENTER_X - 75) and
-          (round(event.button.x / (RESOLUTIONX / screen.w)) < CENTER_X + 75) and
-          (round(event.button.y / (RESOLUTIONY / screen.h)) >= 150) and
-          (round(event.button.y / (RESOLUTIONY / screen.h)) < max * 22 + 178) then
+        if (round(event.button.x / (RESOLUTIONX / screen.w)) >= CENTER_X - 75) and (round(event.button.x / (RESOLUTIONX / screen.w)) < CENTER_X + 75) and (round(event.button.y / (RESOLUTIONY / screen.h)) >= 150) and (round(event.button.y / (RESOLUTIONY / screen.h)) < max * 22 + 178) then
         begin
           if (event.button.button = SDL_BUTTON_LEFT) and (menu <> max) then
           begin
@@ -418,10 +415,7 @@ begin
       end;
       SDL_MOUSEMOTION:
       begin
-        if (round(event.button.x / (RESOLUTIONX / screen.w)) >= CENTER_X - 75) and
-          (round(event.button.x / (RESOLUTIONX / screen.w)) < CENTER_X + 75) and
-          (round(event.button.y / (RESOLUTIONY / screen.h)) >= 150) and
-          (round(event.button.y / (RESOLUTIONY / screen.h)) < max * 22 + 178) then
+        if (round(event.button.x / (RESOLUTIONX / screen.w)) >= CENTER_X - 75) and (round(event.button.x / (RESOLUTIONX / screen.w)) < CENTER_X + 75) and (round(event.button.y / (RESOLUTIONY / screen.h)) >= 150) and (round(event.button.y / (RESOLUTIONY / screen.h)) < max * 22 + 178) then
         begin
           menup := menu;
           menu := (round(event.button.y / (RESOLUTIONY / screen.h)) - 152) div 22;
@@ -673,8 +667,7 @@ begin
 
     if SEMIREAL = 1 then
     begin
-      Brole[i].RealSpeed := trunc((Rrole[rnum].Speed + addspeed) / (log10(MaxProList[44]) - 1)) -
-        Rrole[rnum].Hurt div 10 - Rrole[rnum].Poison div 30;
+      Brole[i].RealSpeed := trunc((Rrole[rnum].Speed + addspeed) / (log10(MaxProList[44]) - 1)) - Rrole[rnum].Hurt div 10 - Rrole[rnum].Poison div 30;
       if Brole[i].RealSpeed > 200 then
         Brole[i].RealSpeed := 200 + (Brole[i].RealSpeed - 200) div 3;
       if Brole[i].Step > 7 then
@@ -714,7 +707,7 @@ end;
 function BattleMenu(bnum: integer): integer;
 var
   i, p, MenuStatus, menu, max, rnum, menup: integer;
-  realmenu: array[0..9] of integer;
+  realmenu: array [0 .. 9] of integer;
   str: utf8string;
 begin
   MenuStatus := $3E0;
@@ -812,21 +805,18 @@ begin
             menu := 0;
           ShowBMenu(MenuStatus, menu, max);
         end;
-          {if (event.key.keysym.sym = sdlk_return) and (event.key.keysym.modifier = kmod_lalt) then
+        {if (event.key.keysym.sym = sdlk_return) and (event.key.keysym.modifier = kmod_lalt) then
           begin
-            if fullscreen = 1 then
-              screen := SDL_SetVideoMode(CENTER_X * 2, CENTER_Y * 2, 32, ScreenFlag)
-            else
-              screen := SDL_SetVideoMode(CENTER_X * 2, CENTER_Y * 2, 32, SDL_FULLSCREEN);
-            fullscreen := 1 - fullscreen;
+          if fullscreen = 1 then
+          screen := SDL_SetVideoMode(CENTER_X * 2, CENTER_Y * 2, 32, ScreenFlag)
+          else
+          screen := SDL_SetVideoMode(CENTER_X * 2, CENTER_Y * 2, 32, SDL_FULLSCREEN);
+          fullscreen := 1 - fullscreen;
           end;}
       end;
       SDL_MOUSEBUTTONUP:
       begin
-        if (event.button.button = SDL_BUTTON_LEFT) and (round(event.button.x / (RESOLUTIONX / screen.w)) >=
-          100) and (round(event.button.x / (RESOLUTIONX / screen.w)) < 147) and
-          (round(event.button.y / (RESOLUTIONY / screen.h)) >= 50) and
-          (round(event.button.y / (RESOLUTIONY / screen.h)) < max * 22 + 78) then
+        if (event.button.button = SDL_BUTTON_LEFT) and (round(event.button.x / (RESOLUTIONX / screen.w)) >= 100) and (round(event.button.x / (RESOLUTIONX / screen.w)) < 147) and (round(event.button.y / (RESOLUTIONY / screen.h)) >= 50) and (round(event.button.y / (RESOLUTIONY / screen.h)) < max * 22 + 78) then
           break;
         if (event.button.button = SDL_BUTTON_RIGHT) then
         begin
@@ -836,10 +826,7 @@ begin
       end;
       SDL_MOUSEMOTION:
       begin
-        if (round(event.button.x / (RESOLUTIONX / screen.w)) >= 100) and
-          (round(event.button.x / (RESOLUTIONX / screen.w)) < 147) and
-          (round(event.button.y / (RESOLUTIONY / screen.h)) >= 50) and
-          (round(event.button.y / (RESOLUTIONY / screen.h)) < max * 22 + 78) then
+        if (round(event.button.x / (RESOLUTIONX / screen.w)) >= 100) and (round(event.button.x / (RESOLUTIONX / screen.w)) < 147) and (round(event.button.y / (RESOLUTIONY / screen.h)) >= 50) and (round(event.button.y / (RESOLUTIONY / screen.h)) < max * 22 + 78) then
         begin
           menup := menu;
           menu := (round(event.button.y / (RESOLUTIONY / screen.h)) - 52) div 22;
@@ -873,7 +860,7 @@ end;
 procedure ShowBMenu(MenuStatus, menu, max: integer);
 var
   i, p: integer;
-  word: array[0..9] of utf8string;
+  word: array [0 .. 9] of utf8string;
 begin
 
   word[0] := '移動';
@@ -925,9 +912,9 @@ end;
 //移动动画
 
 {procedure MoveAmination(bnum: integer);
-var
+  var
   s, i: integer;
-begin
+  begin
   //CalCanSelect(bnum, 0);
   //if SelectAim(bnum,Brole[bnum,6]) then
   brole[bnum].Step := brole[bnum].Step - abs(Ax - Bx) - abs(Ay - By);
@@ -936,39 +923,39 @@ begin
   if s > 0 then Brole[bnum].Face := 3;
   i := Bx + s;
   if s <> 0 then
-    while s * (Ax - i) >= 0 do
-    begin
-      sdl_delay(20);
-      if Bfield[2, Bx, By] = bnum then Bfield[2, Bx, By] := -1;
-      Bx := i;
-      if Bfield[2, Bx, By] = -1 then Bfield[2, Bx, By] := bnum;
-      Redraw;
-      SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-      i := i + s;
-    end;
+  while s * (Ax - i) >= 0 do
+  begin
+  sdl_delay(20);
+  if Bfield[2, Bx, By] = bnum then Bfield[2, Bx, By] := -1;
+  Bx := i;
+  if Bfield[2, Bx, By] = -1 then Bfield[2, Bx, By] := bnum;
+  Redraw;
+  SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+  i := i + s;
+  end;
   s := sign(Ay - By);
   if s < 0 then Brole[bnum].Face := 2;
   if s > 0 then Brole[bnum].Face := 1;
   i := By + s;
   if s <> 0 then
-    while s * (Ay - i) >= 0 do
-    begin
-      sdl_delay(20);
-      if Bfield[2, Bx, By] = bnum then Bfield[2, Bx, By] := -1;
-      By := i;
-      if Bfield[2, Bx, By] = -1 then Bfield[2, Bx, By] := bnum;
-      Redraw;
-      SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-      i := i + s;
-    end;
+  while s * (Ay - i) >= 0 do
+  begin
+  sdl_delay(20);
+  if Bfield[2, Bx, By] = bnum then Bfield[2, Bx, By] := -1;
+  By := i;
+  if Bfield[2, Bx, By] = -1 then Bfield[2, Bx, By] := bnum;
+  Redraw;
+  SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+  i := i + s;
+  end;
   Brole[bnum].X := Bx;
   Brole[bnum].Y := By;
   Bfield[2, Bx, By] := bnum;
 
-end;}
+  end;}
 {var
   s, i, tempx, tempy, index, totalstep: integer;
-begin
+  begin
   tempx := Ax;
   tempy := Ay;
   totalstep := brole[bnum].Step;
@@ -978,35 +965,35 @@ begin
 
   for i := 0 to totalstep - index - 1 do
   begin
-    if (movetable[i].x > Bx) and (movetable[i].y = By) then
-      Brole[bnum].Face := 3
-    else if (movetable[i].x < Bx) and (movetable[i].y = By) then
-      Brole[bnum].Face := 0
-    else if (movetable[i].x = Bx) and (movetable[i].y > By) then
-      Brole[bnum].Face := 1
-    else if (movetable[i].x = Bx) and (movetable[i].y < By) then
-      Brole[bnum].Face := 2;
+  if (movetable[i].x > Bx) and (movetable[i].y = By) then
+  Brole[bnum].Face := 3
+  else if (movetable[i].x < Bx) and (movetable[i].y = By) then
+  Brole[bnum].Face := 0
+  else if (movetable[i].x = Bx) and (movetable[i].y > By) then
+  Brole[bnum].Face := 1
+  else if (movetable[i].x = Bx) and (movetable[i].y < By) then
+  Brole[bnum].Face := 2;
 
-    if Bfield[2, Bx, By] = bnum then Bfield[2, Bx, By] := -1;
-    Bx := movetable[i].x;
-    By := movetable[i].y;
-    if Bfield[2, Bx, By] = -1 then Bfield[2, Bx, By] := bnum;
-    Redraw;
-    SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-    SDL_delay(30);
+  if Bfield[2, Bx, By] = bnum then Bfield[2, Bx, By] := -1;
+  Bx := movetable[i].x;
+  By := movetable[i].y;
+  if Bfield[2, Bx, By] = -1 then Bfield[2, Bx, By] := bnum;
+  Redraw;
+  SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+  SDL_delay(30);
   end;
   Brole[bnum].X := Bx;
   Brole[bnum].Y := By;
   Bfield[2, Bx, By] := bnum;
   brole[bnum].Step := index;
 
-end;}
+  end;}
 
 function MoveAmination(bnum: integer): boolean;
 var
   s, i, a, tempx, tempy: integer;
-  Xinc, Yinc: array[1..4] of integer;
-  linebx, lineby: array[0..4096] of smallint;
+  Xinc, Yinc: array [1 .. 4] of integer;
+  linebx, lineby: array [0 .. 4096] of smallint;
   seekError: boolean;
 begin
   Result := abs(Ax - Bx) + abs(Ay - By) > 0;
@@ -1104,8 +1091,7 @@ begin
       begin
         if (event.key.keysym.sym = SDLK_RETURN) or (event.key.keysym.sym = SDLK_SPACE) then
         begin
-          if (Ax >= 0) and (Ax <= 63) and (Ay >= 0) and (Ay <= 63) and
-            (abs(Ax - Bx) + abs(Ay - By) <= step) and (Bfield[3, Ax, Ay] >= 0) then
+          if (Ax >= 0) and (Ax <= 63) and (Ay >= 0) and (Ay <= 63) and (abs(Ax - Bx) + abs(Ay - By) <= step) and (Bfield[3, Ax, Ay] >= 0) then
           begin
             Result := True;
             x50[28927] := 1;
@@ -1129,8 +1115,7 @@ begin
           SDLK_DOWN: Ax := Ax + 1;
           SDLK_UP: Ax := Ax - 1;
         end;
-        if (abs(Ax - Bx) + abs(Ay - By) > step) or (Bfield[3, Ax, Ay] < 0) or (Ax < 0) or
-          (Ax > 63) or (Ay < 0) or (Ay > 63) then
+        if (abs(Ax - Bx) + abs(Ay - By) > step) or (Bfield[3, Ax, Ay] < 0) or (Ax < 0) or (Ax > 63) or (Ay < 0) or (Ay > 63) then
         begin
           Ax := Axp;
           Ay := Ayp;
@@ -1152,10 +1137,8 @@ begin
       end;
       SDL_MOUSEMOTION:
       begin
-        Axp := (-round(event.button.x / (RESOLUTIONX / screen.w)) + CENTER_X + 2 *
-          round(event.button.y / (RESOLUTIONY / screen.h)) - 2 * CENTER_Y + 18) div 36 + Bx;
-        Ayp := (round(event.button.x / (RESOLUTIONX / screen.w)) - CENTER_X + 2 *
-          round(event.button.y / (RESOLUTIONY / screen.h)) - 2 * CENTER_Y + 18) div 36 + By;
+        Axp := (-round(event.button.x / (RESOLUTIONX / screen.w)) + CENTER_X + 2 * round(event.button.y / (RESOLUTIONY / screen.h)) - 2 * CENTER_Y + 18) div 36 + Bx;
+        Ayp := (round(event.button.x / (RESOLUTIONX / screen.w)) - CENTER_X + 2 * round(event.button.y / (RESOLUTIONY / screen.h)) - 2 * CENTER_Y + 18) div 36 + By;
         if (abs(Axp - Bx) + abs(Ayp - By) <= step) and (Bfield[3, Axp, Ayp] >= 0) then
         begin
           Ax := Axp;
@@ -1173,9 +1156,9 @@ begin
 end;
 
 {function SelectAim(bnum, step: integer): boolean;
-var
+  var
   Axp, Ayp: integer;
-begin
+  begin
   Ax := Bx;
   Ay := By;
   //DrawBFieldWithCursor(0, step, 0);
@@ -1186,91 +1169,91 @@ begin
   begin
   CheckBasicEvent;
   case event.type_ of
-      SDL_KEYUP:
-        begin
-          if (event.key.keysym.sym = sdlk_return) or (event.key.keysym.sym = sdlk_space) then
-          begin
-            result := true;
-            x50[28927] := 1;
-            break;
-          end;
-          if (event.key.keysym.sym = sdlk_escape) then
-          begin
-            result := false;
-            x50[28927] := 0;
-            break;
-          end;
-        end;
-      SDL_KEYDOWN:
-        begin
-          if (event.key.keysym.sym = sdlk_left) or (event.key.keysym.sym = sdlk_kp4) then
-          begin
-            Ay := Ay - 1;
-            if (abs(Ax - Bx) + abs(Ay - By) > step) or (Bfield[3, Ax, Ay] < 0) then Ay := Ay + 1;
-          end;
-          if (event.key.keysym.sym = sdlk_right) or (event.key.keysym.sym = sdlk_kp6) then
-          begin
-            Ay := Ay + 1;
-            if (abs(Ax - Bx) + abs(Ay - By) > step) or (Bfield[3, Ax, Ay] < 0) then Ay := Ay - 1;
-          end;
-          if (event.key.keysym.sym = sdlk_down) or (event.key.keysym.sym = sdlk_kp2) then
-          begin
-            Ax := Ax + 1;
-            if (abs(Ax - Bx) + abs(Ay - By) > step) or (Bfield[3, Ax, Ay] < 0) then Ax := Ax - 1;
-          end;
-          if (event.key.keysym.sym = sdlk_up) or (event.key.keysym.sym = sdlk_kp8) then
-          begin
-            Ax := Ax - 1;
-            if (abs(Ax - Bx) + abs(Ay - By) > step) or (Bfield[3, Ax, Ay] < 0) then Ax := Ax + 1;
-          end;
-          DrawBFieldWithCursor(0, step, 0);
-          if (Bfield[2, AX, AY] >= 0) and (Brole[Bfield[2, AX, AY]].Dead = 0) then
-            showsimpleStatus(Brole[Bfield[2, AX, AY]].rnum, 330, 330);
-          SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-        end;
-      SDL_MOUSEBUTTONUP:
-        begin
-          if (event.button.button = sdl_button_left) then
-          begin
-            result := true;
-            break;
-          end;
-          if (event.button.button = sdl_button_right) then
-          begin
-            result := false;
-            break;
-          end;
-        end;
-      SDL_MOUSEMOTION:
-        begin
-          Axp := (-round(event.button.x/(resolutionx / screen.w)) + CENTER_x + 2 * round(event.button.y/(resolutiony / screen.h)) - 2 * CENTER_y + 18) div 36 + Bx;
-          Ayp := (round(event.button.x/(resolutionx / screen.w)) - CENTER_x + 2 * round(event.button.y/(resolutiony / screen.h)) - 2 * CENTER_y + 18) div 36 + By;
-          if (abs(Axp - Bx) + abs(Ayp - By) <= step) and (Bfield[3, Ax, Ay] >= 0) then
-          begin
-            Ax := Axp;
-            Ay := Ayp;
-            DrawBFieldWithCursor(0, step, 0);
-            if (Bfield[2, AX, AY] >= 0) and (Brole[Bfield[2, Ax, Ay]].Dead = 0) then
-              showsimpleStatus(Brole[Bfield[2, AX, AY]].rnum, 330, 330);
-            SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-          end;
-        end;
-    end;
-    if (Bfield[2, AX, AY] >= 0) and (Brole[Bfield[2, AX, AY]].Dead = 0) then
-    begin
-      if (rrole[brole[Bfield[2, AX, AY]].rnum].Poison > 0) or (rrole[brole[Bfield[2, AX, AY]].rnum].Hurt > 0) then
-      begin
-        showsimpleStatus(Brole[Bfield[2, AX, AY]].rnum, 330, 330);
-        SDL_UpdateRect2(screen, 352, 394 - 77, 58, 60);
-      end;
-    end;
-    event.key.keysym.sym := 0;
-    event.button.button := 0;
-    sdl_delay((20 * GameSpeed) div 10);
+  SDL_KEYUP:
+  begin
+  if (event.key.keysym.sym = sdlk_return) or (event.key.keysym.sym = sdlk_space) then
+  begin
+  result := true;
+  x50[28927] := 1;
+  break;
+  end;
+  if (event.key.keysym.sym = sdlk_escape) then
+  begin
+  result := false;
+  x50[28927] := 0;
+  break;
+  end;
+  end;
+  SDL_KEYDOWN:
+  begin
+  if (event.key.keysym.sym = sdlk_left) or (event.key.keysym.sym = sdlk_kp4) then
+  begin
+  Ay := Ay - 1;
+  if (abs(Ax - Bx) + abs(Ay - By) > step) or (Bfield[3, Ax, Ay] < 0) then Ay := Ay + 1;
+  end;
+  if (event.key.keysym.sym = sdlk_right) or (event.key.keysym.sym = sdlk_kp6) then
+  begin
+  Ay := Ay + 1;
+  if (abs(Ax - Bx) + abs(Ay - By) > step) or (Bfield[3, Ax, Ay] < 0) then Ay := Ay - 1;
+  end;
+  if (event.key.keysym.sym = sdlk_down) or (event.key.keysym.sym = sdlk_kp2) then
+  begin
+  Ax := Ax + 1;
+  if (abs(Ax - Bx) + abs(Ay - By) > step) or (Bfield[3, Ax, Ay] < 0) then Ax := Ax - 1;
+  end;
+  if (event.key.keysym.sym = sdlk_up) or (event.key.keysym.sym = sdlk_kp8) then
+  begin
+  Ax := Ax - 1;
+  if (abs(Ax - Bx) + abs(Ay - By) > step) or (Bfield[3, Ax, Ay] < 0) then Ax := Ax + 1;
+  end;
+  DrawBFieldWithCursor(0, step, 0);
+  if (Bfield[2, AX, AY] >= 0) and (Brole[Bfield[2, AX, AY]].Dead = 0) then
+  showsimpleStatus(Brole[Bfield[2, AX, AY]].rnum, 330, 330);
+  SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+  end;
+  SDL_MOUSEBUTTONUP:
+  begin
+  if (event.button.button = sdl_button_left) then
+  begin
+  result := true;
+  break;
+  end;
+  if (event.button.button = sdl_button_right) then
+  begin
+  result := false;
+  break;
+  end;
+  end;
+  SDL_MOUSEMOTION:
+  begin
+  Axp := (-round(event.button.x/(resolutionx / screen.w)) + CENTER_x + 2 * round(event.button.y/(resolutiony / screen.h)) - 2 * CENTER_y + 18) div 36 + Bx;
+  Ayp := (round(event.button.x/(resolutionx / screen.w)) - CENTER_x + 2 * round(event.button.y/(resolutiony / screen.h)) - 2 * CENTER_y + 18) div 36 + By;
+  if (abs(Axp - Bx) + abs(Ayp - By) <= step) and (Bfield[3, Ax, Ay] >= 0) then
+  begin
+  Ax := Axp;
+  Ay := Ayp;
+  DrawBFieldWithCursor(0, step, 0);
+  if (Bfield[2, AX, AY] >= 0) and (Brole[Bfield[2, Ax, Ay]].Dead = 0) then
+  showsimpleStatus(Brole[Bfield[2, AX, AY]].rnum, 330, 330);
+  SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+  end;
+  end;
+  end;
+  if (Bfield[2, AX, AY] >= 0) and (Brole[Bfield[2, AX, AY]].Dead = 0) then
+  begin
+  if (rrole[brole[Bfield[2, AX, AY]].rnum].Poison > 0) or (rrole[brole[Bfield[2, AX, AY]].rnum].Hurt > 0) then
+  begin
+  showsimpleStatus(Brole[Bfield[2, AX, AY]].rnum, 330, 330);
+  SDL_UpdateRect2(screen, 352, 394 - 77, 58, 60);
+  end;
   end;
   event.key.keysym.sym := 0;
   event.button.button := 0;
-end;}
+  sdl_delay((20 * GameSpeed) div 10);
+  end;
+  event.key.keysym.sym := 0;
+  event.button.button := 0;
+  end;}
 
 //选择方向
 function SelectDirector(bnum, step: integer): boolean;
@@ -1355,17 +1338,13 @@ begin
         //按照所点击位置设置方向
         Ax := Bx;
         Ay := By;
-        if (round(event.button.x / (RESOLUTIONX / screen.w)) < CENTER_X) and
-          (round(event.button.y / (RESOLUTIONY / screen.h)) < CENTER_Y) then
+        if (round(event.button.x / (RESOLUTIONX / screen.w)) < CENTER_X) and (round(event.button.y / (RESOLUTIONY / screen.h)) < CENTER_Y) then
           Ay := By - 1;
-        if (round(event.button.x / (RESOLUTIONX / screen.w)) < CENTER_X) and
-          (round(event.button.y / (RESOLUTIONY / screen.h)) >= CENTER_Y) then
+        if (round(event.button.x / (RESOLUTIONX / screen.w)) < CENTER_X) and (round(event.button.y / (RESOLUTIONY / screen.h)) >= CENTER_Y) then
           Ax := Bx + 1;
-        if (round(event.button.x / (RESOLUTIONX / screen.w)) >= CENTER_X) and
-          (round(event.button.y / (RESOLUTIONY / screen.h)) < CENTER_Y) then
+        if (round(event.button.x / (RESOLUTIONX / screen.w)) >= CENTER_X) and (round(event.button.y / (RESOLUTIONY / screen.h)) < CENTER_Y) then
           Ax := Bx - 1;
-        if (round(event.button.x / (RESOLUTIONX / screen.w)) >= CENTER_X) and
-          (round(event.button.y / (RESOLUTIONY / screen.h)) >= CENTER_Y) then
+        if (round(event.button.x / (RESOLUTIONX / screen.w)) >= CENTER_X) and (round(event.button.y / (RESOLUTIONY / screen.h)) >= CENTER_Y) then
           Ay := By + 1;
       end;
     end;
@@ -1380,110 +1359,110 @@ end;
 //利用递归确定
 
 {procedure SeekPath(x, y, step: integer);
-begin
+  begin
   if step > 0 then
   begin
-    step := step - 1;
-    if Bfield[3, x, y] = 0 then
-    begin
-      if Bfield[5, x, y] < step then
-        Bfield[5, x, y] := step;
-      if Bfield[3, x + 1, y] = 0 then
-      begin
-        SeekPath(x + 1, y, step);
-      end;
-      if Bfield[3, x, y + 1] = 0 then
-      begin
-        SeekPath(x, y + 1, step);
-      end;
-      if Bfield[3, x - 1, y] = 0 then
-      begin
-        SeekPath(x - 1, y, step);
-      end;
-      if Bfield[3, x, y - 1] = 0 then
-      begin
-        SeekPath(x, y - 1, step);
-      end;
-    end;
+  step := step - 1;
+  if Bfield[3, x, y] = 0 then
+  begin
+  if Bfield[5, x, y] < step then
+  Bfield[5, x, y] := step;
+  if Bfield[3, x + 1, y] = 0 then
+  begin
+  SeekPath(x + 1, y, step);
+  end;
+  if Bfield[3, x, y + 1] = 0 then
+  begin
+  SeekPath(x, y + 1, step);
+  end;
+  if Bfield[3, x - 1, y] = 0 then
+  begin
+  SeekPath(x - 1, y, step);
+  end;
+  if Bfield[3, x, y - 1] = 0 then
+  begin
+  SeekPath(x, y - 1, step);
+  end;
+  end;
   end;
 
-end;}
+  end;}
 
 //寻找某一地点坐标是否在移动范围之内, 递归算法
 
 {function SeekPath2(x, y, step: integer): integer;
-var
+  var
   i: integer;
-begin
+  begin
   i := 0;
   if step > 0 then
   begin
-    step := step - 1;
-    if Bfield[5, x, y] >= 0 then
-    begin
-      if (x = Bx) and (y = By) then
-      begin
-        i := 1;
-      end
-      else
-      begin
-        if (Bfield[5, x + 1, y] = Bfield[5, x, y] + 1) and (i = 0) then
-        begin
-          i := SeekPath2(x + 1, y, step);
-          if i = 1 then
-          begin
-            movetable[step - 1].x := x;
-            movetable[step - 1].y := y;
-          end;
-        end;
-        if (Bfield[5, x, y + 1] = Bfield[5, x, y] + 1) and (i = 0) then
-        begin
-          i := SeekPath2(x, y + 1, step);
-          if i = 1 then
-          begin
-            movetable[step - 1].x := x;
-            movetable[step - 1].y := y;
-          end;
-        end;
-        if (Bfield[5, x - 1, y] = Bfield[5, x, y] + 1) and (i = 0) then
-        begin
-          i := SeekPath2(x - 1, y, step);
-          if i = 1 then
-          begin
-            movetable[step - 1].x := x;
-            movetable[step - 1].y := y;
-          end;
-        end;
-        if (Bfield[5, x, y - 1] = Bfield[5, x, y] + 1) and (i = 0) then
-        begin
-          i := SeekPath2(x, y - 1, step);
-          if i = 1 then
-          begin
-            movetable[step - 1].x := x;
-            movetable[step - 1].y := y;
-          end;
-        end;
-      end;
-    end;
+  step := step - 1;
+  if Bfield[5, x, y] >= 0 then
+  begin
+  if (x = Bx) and (y = By) then
+  begin
+  i := 1;
+  end
+  else
+  begin
+  if (Bfield[5, x + 1, y] = Bfield[5, x, y] + 1) and (i = 0) then
+  begin
+  i := SeekPath2(x + 1, y, step);
+  if i = 1 then
+  begin
+  movetable[step - 1].x := x;
+  movetable[step - 1].y := y;
+  end;
+  end;
+  if (Bfield[5, x, y + 1] = Bfield[5, x, y] + 1) and (i = 0) then
+  begin
+  i := SeekPath2(x, y + 1, step);
+  if i = 1 then
+  begin
+  movetable[step - 1].x := x;
+  movetable[step - 1].y := y;
+  end;
+  end;
+  if (Bfield[5, x - 1, y] = Bfield[5, x, y] + 1) and (i = 0) then
+  begin
+  i := SeekPath2(x - 1, y, step);
+  if i = 1 then
+  begin
+  movetable[step - 1].x := x;
+  movetable[step - 1].y := y;
+  end;
+  end;
+  if (Bfield[5, x, y - 1] = Bfield[5, x, y] + 1) and (i = 0) then
+  begin
+  i := SeekPath2(x, y - 1, step);
+  if i = 1 then
+  begin
+  movetable[step - 1].x := x;
+  movetable[step - 1].y := y;
+  end;
+  end;
+  end;
+  end;
   end;
   if i = 1 then
-    result := 1
+  result := 1
   else
-    result := 0;
+  result := 0;
 
-end;}
+  end;}
 
 //计算可以被选中的位置
 //利用队列
 //移动过程中, 旁边有敌人, 则不能继续移动
 procedure SeekPath2(x, y, step, myteam, mode: integer);
 var
-  Xlist: array[0..4096] of integer;
-  Ylist: array[0..4096] of integer;
-  steplist: array[0..4096] of integer;
+  Xlist: array [0 .. 4096] of integer;
+  Ylist: array [0 .. 4096] of integer;
+  steplist: array [0 .. 4096] of integer;
   curgrid, totalgrid: integer;
-  Bgrid: array[1..4] of integer; //0空位, 1建筑, 2友军, 3敌军, 4出界, 5已走过, 6水面, 7敌人身旁, 8首次无法达到(由第6层标记)
-  Xinc, Yinc: array[1..4] of integer;
+  Bgrid: array [1 .. 4] of integer; //0空位, 1建筑, 2友军, 3敌军, 4出界, 5已走过, 6水面, 7敌人身旁, 8首次无法达到(由第6层标记)
+  Xinc, Yinc: array [1 .. 4] of integer;
   curX, curY, curstep, nextX, nextY, nextnextX, nextnextY: integer;
   i, j, minBeside: integer;
 begin
@@ -1528,10 +1507,7 @@ begin
           else
             Bgrid[i] := 3;
         end
-        else if ((Bfield[0, nextX, nextY] div 2 >= 179) and (Bfield[0, nextX, nextY] div 2 <= 190)) or
-          (Bfield[0, nextX, nextY] div 2 = 261) or (Bfield[0, nextX, nextY] div 2 = 511) or
-          ((Bfield[0, nextX, nextY] div 2 >= 224) and (Bfield[0, nextX, nextY] div 2 <= 232)) or
-          ((Bfield[0, nextX, nextY] div 2 >= 662) and (Bfield[0, nextX, nextY] div 2 <= 674)) then
+        else if ((Bfield[0, nextX, nextY] div 2 >= 179) and (Bfield[0, nextX, nextY] div 2 <= 190)) or (Bfield[0, nextX, nextY] div 2 = 261) or (Bfield[0, nextX, nextY] div 2 = 511) or ((Bfield[0, nextX, nextY] div 2 >= 224) and (Bfield[0, nextX, nextY] div 2 <= 232)) or ((Bfield[0, nextX, nextY] div 2 >= 662) and (Bfield[0, nextX, nextY] div 2 <= 674)) then
           Bgrid[i] := 6
         else if Bfield[6, nextX, nextY] < 0 then
           Bgrid[i] := 8
@@ -1544,8 +1520,7 @@ begin
           nextnextX := nextX + Xinc[j];
           nextnextY := nextY + Yinc[j];
           if (nextnextX >= 0) and (nextnextX < 63) and (nextnextY >= 0) and (nextnextY < 63) then
-            if (Bfield[2, nextnextX, nextnextY] >= 0) and (Brole[Bfield[2, nextnextX, nextnextY]].Dead = 0) and
-              (Brole[Bfield[2, nextnextX, nextnextY]].Team <> myteam) then
+            if (Bfield[2, nextnextX, nextnextY] >= 0) and (Brole[Bfield[2, nextnextX, nextnextY]].Dead = 0) and (Brole[Bfield[2, nextnextX, nextnextY]].Team <> myteam) then
             begin
               BField[7, nextX, nextY] := 1;
             end;
@@ -1575,7 +1550,7 @@ begin
         end;
       end
       else
-        //非移动的情况, 攻击, 医疗等
+      //非移动的情况, 攻击, 医疗等
       begin
         for i := 1 to 4 do
         begin
@@ -1596,70 +1571,70 @@ begin
 end;
 
 {procedure CalCanSelect(bnum, mode: integer);
-var
+  var
   i, i1, i2: integer;
-begin
+  begin
   for i1 := 0 to 63 do
-    for i2 := 0 to 63 do
-    begin
-      Bfield[3, i1, i2] := 0;
-      //mode为0表示移动, 这时建筑和有人物(不包括自己)的位置不可选
-      if mode = 0 then
-      begin
-        if Bfield[1, i1, i2] > 0 then Bfield[3, i1, i2] := -1;
-        if Bfield[2, i1, i2] >= 0 then Bfield[3, i1, i2] := -1;
-        if Bfield[2, i1, i2] = bnum then Bfield[3, i1, i2] := 0;
-      end;
-    end;
+  for i2 := 0 to 63 do
+  begin
+  Bfield[3, i1, i2] := 0;
+  //mode为0表示移动, 这时建筑和有人物(不包括自己)的位置不可选
   if mode = 0 then
   begin
-    SeekPath(Brole[bnum].X, Brole[bnum].Y, Brole[bnum].Step + 2);
-    //递归算法的问题, 步数+2参与计算
-    for i1 := 0 to 63 do
-      for i2 := 0 to 63 do
-      begin
-        if Bfield[3, i1, i2] > 0 then
-          Bfield[3, i1, i2] := 0
-        else
-          Bfield[3, i1, i2] := 1;
-      end;
+  if Bfield[1, i1, i2] > 0 then Bfield[3, i1, i2] := -1;
+  if Bfield[2, i1, i2] >= 0 then Bfield[3, i1, i2] := -1;
+  if Bfield[2, i1, i2] = bnum then Bfield[3, i1, i2] := 0;
   end;
-end;}
+  end;
+  if mode = 0 then
+  begin
+  SeekPath(Brole[bnum].X, Brole[bnum].Y, Brole[bnum].Step + 2);
+  //递归算法的问题, 步数+2参与计算
+  for i1 := 0 to 63 do
+  for i2 := 0 to 63 do
+  begin
+  if Bfield[3, i1, i2] > 0 then
+  Bfield[3, i1, i2] := 0
+  else
+  Bfield[3, i1, i2] := 1;
+  end;
+  end;
+  end;}
 {var
   i1, i2: integer;
-begin
+  begin
   for i1 := 0 to 63 do
   begin
-    for i2 := 0 to 63 do
-    begin
-      Bfield[3, i1, i2] := 0;
-      //mode为0表示移动, 这时建筑和有人物(不包括自己)的位置不可选
-      if mode = 0 then
-      begin
-        Bfield[5, i1, i2] := -1; //对范围内移动标记设置为-1
-        if (Bfield[0, i1, i2] = 179 * 2) or (Bfield[0, i1, i2] = 511 * 2) then Bfield[3, i1, i2] := -1;
-        if Bfield[1, i1, i2] > 0 then Bfield[3, i1, i2] := -1;
-        if Bfield[2, i1, i2] >= 0 then Bfield[3, i1, i2] := -1;
-        if Bfield[2, i1, i2] = bnum then Bfield[3, i1, i2] := 0;
-      end;
-    end;
+  for i2 := 0 to 63 do
+  begin
+  Bfield[3, i1, i2] := 0;
+  //mode为0表示移动, 这时建筑和有人物(不包括自己)的位置不可选
+  if mode = 0 then
+  begin
+  Bfield[5, i1, i2] := -1; //对范围内移动标记设置为-1
+  if (Bfield[0, i1, i2] = 179 * 2) or (Bfield[0, i1, i2] = 511 * 2) then Bfield[3, i1, i2] := -1;
+  if Bfield[1, i1, i2] > 0 then Bfield[3, i1, i2] := -1;
+  if Bfield[2, i1, i2] >= 0 then Bfield[3, i1, i2] := -1;
+  if Bfield[2, i1, i2] = bnum then Bfield[3, i1, i2] := 0;
+  end;
+  end;
   end;
   if mode = 0 then
   begin
-    //递归算法的问题, 步数+1参与计算
-    //移动标记的处理
-    SeekPath(Brole[bnum].X, Brole[bnum].Y, Brole[bnum].Step + 1);
-    for i1 := 0 to 63 do
-    begin
-      for i2 := 0 to 63 do
-      begin
-        if Bfield[5, i1, i2] = -1 then
-          Bfield[3, i1, i2] := 1;
-      end;
-    end;
+  //递归算法的问题, 步数+1参与计算
+  //移动标记的处理
+  SeekPath(Brole[bnum].X, Brole[bnum].Y, Brole[bnum].Step + 1);
+  for i1 := 0 to 63 do
+  begin
+  for i2 := 0 to 63 do
+  begin
+  if Bfield[5, i1, i2] = -1 then
+  Bfield[3, i1, i2] := 1;
+  end;
+  end;
   end;
 
-end;}
+  end;}
 
 procedure CalCanSelect(bnum, mode, step: integer);
 var
@@ -1677,24 +1652,24 @@ begin
       move(Bfield[3, 0, 0], Bfield[6, 0, 0], sizeof(Bfield[3])); //保存第一次可以走到的位置, 后续的移动只能在此范围
     {else
       for i1 := 0 to 63 do
-        for i2 := 0 to 63 do
-        begin
-          if Bfield[6, i1, i2] = -1 then
-            Bfield[3, i1, i2] := -1;
-        end;}
+      for i2 := 0 to 63 do
+      begin
+      if Bfield[6, i1, i2] = -1 then
+      Bfield[3, i1, i2] := -1;
+      end;}
   end;
 
   if mode = 1 then
   begin
     {FillChar(Bfield[3, 0, 0], 4096 * 2, -1);
-    for i1 := max(Brole[bnum].X - step, 0) to min(Brole[bnum].X + step, 63) do
-    begin
+      for i1 := max(Brole[bnum].X - step, 0) to min(Brole[bnum].X + step, 63) do
+      begin
       step0 := abs(i1 - Brole[bnum].X);
       for i2 := max(Brole[bnum].Y - step + step0, 0) to min(Brole[bnum].Y + step - step0, 63) do
       begin
-        Bfield[3, i1, i2] := 0;
+      Bfield[3, i1, i2] := 0;
       end;
-    end;}
+      end;}
     for i1 := 0 to 63 do
       for i2 := 0 to 63 do
       begin
@@ -1756,8 +1731,7 @@ begin
         end;
         2:
         begin
-          SetAminationPosition(Rmagic[mnum].AttAreaType, Rmagic[mnum].MoveDistance[level - 1],
-            Rmagic[mnum].AttDistance[level - 1]);
+          SetAminationPosition(Rmagic[mnum].AttAreaType, Rmagic[mnum].MoveDistance[level - 1], Rmagic[mnum].AttDistance[level - 1]);
           DrawBFieldWithCursor(-1);
           SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
           i1 := 0;
@@ -1831,7 +1805,7 @@ end;
 function SelectMagic(rnum: integer): integer;
 var
   i, p, MenuStatus, max, menu, menup: integer;
-  menuString, menuEngString: array[0..9] of utf8string;
+  menuString, menuEngString: array [0 .. 9] of utf8string;
 begin
   MenuStatus := 0;
   max := 0;
@@ -1899,10 +1873,7 @@ begin
       end;
       SDL_MOUSEMOTION:
       begin
-        if (round(event.button.x / (RESOLUTIONX / screen.w)) >= 100) and
-          (round(event.button.x / (RESOLUTIONX / screen.w)) < 267) and
-          (round(event.button.y / (RESOLUTIONY / screen.h)) >= 50) and
-          (round(event.button.y / (RESOLUTIONY / screen.h)) < max * 22 + 78) then
+        if (round(event.button.x / (RESOLUTIONX / screen.w)) >= 100) and (round(event.button.x / (RESOLUTIONX / screen.w)) < 267) and (round(event.button.y / (RESOLUTIONY / screen.h)) >= 50) and (round(event.button.y / (RESOLUTIONY / screen.h)) < max * 22 + 78) then
         begin
           menup := menu;
           menu := (round(event.button.y / (RESOLUTIONY / screen.h)) - 52) div 22;
@@ -2060,11 +2031,11 @@ begin
   endpic := beginpic + effectlist[enum] - 1;
 
   {for i := beginpic to endpic do
-  begin
+    begin
     DrawBFieldWithEft(i);
     SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
     sdl_delay(20);
-  end;}
+    end;}
   i := beginpic;
   while (SDL_PollEvent(@event) >= 0) do
   begin
@@ -2130,8 +2101,7 @@ begin
           Rrole[rnum].CurrentMP := Rrole[rnum].MaxMP;
       end;
       //中毒
-      addpoi := Rrole[rnum].AttPoi div 5 + Rmagic[mnum].Poison * level div 2 *
-        (100 - Rrole[Brole[i].rnum].DefPoi) div 100;
+      addpoi := Rrole[rnum].AttPoi div 5 + Rmagic[mnum].Poison * level div 2 * (100 - Rrole[Brole[i].rnum].DefPoi) div 100;
       if addpoi + Rrole[Brole[i].rnum].Poison > 99 then
         addpoi := 99 - Rrole[Brole[i].rnum].Poison;
       if addpoi < 0 then
@@ -2154,11 +2124,9 @@ begin
   k2 := 0;
   for i := 0 to BRoleAmount - 1 do
   begin
-    if (Brole[i].Team = Brole[bnum1].Team) and (Brole[i].Dead = 0) and
-      (Rrole[Brole[i].rnum].Knowledge > MIN_KNOWLEDGE) then
+    if (Brole[i].Team = Brole[bnum1].Team) and (Brole[i].Dead = 0) and (Rrole[Brole[i].rnum].Knowledge > MIN_KNOWLEDGE) then
       k1 := k1 + Rrole[Brole[i].rnum].Knowledge;
-    if (Brole[i].Team = Brole[bnum2].Team) and (Brole[i].Dead = 0) and
-      (Rrole[Brole[i].rnum].Knowledge > MIN_KNOWLEDGE) then
+    if (Brole[i].Team = Brole[bnum2].Team) and (Brole[i].Dead = 0) and (Rrole[Brole[i].rnum].Knowledge > MIN_KNOWLEDGE) then
       k2 := k2 + Rrole[Brole[i].rnum].Knowledge;
   end;
   rnum1 := Brole[bnum1].rnum;
@@ -2347,8 +2315,7 @@ begin
     if (Rrole[Brole[i].rnum].Poison > 0) and (Brole[i].Dead = 0) and (Brole[i].Acted = 1) then
     begin
       if POISON_HURT <> 0 then
-        Rrole[Brole[i].rnum].CurrentHP :=
-          Rrole[Brole[i].rnum].CurrentHP - Rrole[Brole[i].rnum].Poison div POISON_HURT - 1;
+        Rrole[Brole[i].rnum].CurrentHP := Rrole[Brole[i].rnum].CurrentHP - Rrole[Brole[i].rnum].Poison div POISON_HURT - 1;
       if Rrole[Brole[i].rnum].CurrentHP <= 0 then
         Rrole[Brole[i].rnum].CurrentHP := 1;
       //Brole[i].ShowNumber := Rrole[Brole[i].rnum, 20] div 2+1;
@@ -2421,7 +2388,6 @@ begin
       bfield[2, Brole[i].X, Brole[i].Y] := i;
 
 end;
-
 
 //等待, 似乎不太完善
 procedure Wait(bnum: integer);
@@ -2536,8 +2502,7 @@ begin
   for i := 0 to BRoleAmount - 1 do
   begin
     rnum := Brole[i].rnum;
-    while (uint16(Rrole[rnum].Exp) >= uint16(LevelUplist[Rrole[rnum].Level - 1])) and
-      (Rrole[rnum].Level < MAX_LEVEL) do
+    while (uint16(Rrole[rnum].Exp) >= uint16(LevelUplist[Rrole[rnum].Level - 1])) and (Rrole[rnum].Level < MAX_LEVEL) do
     begin
       Rrole[rnum].Exp := Rrole[rnum].Exp - LevelUplist[Rrole[rnum].Level - 1];
       Rrole[rnum].Level := Rrole[rnum].Level + 1;
@@ -2643,10 +2608,10 @@ begin
             if (p >= 10) or (mlevel > 10) then
               break;
             {if (mnum <= 0) and not eat then
-            begin
+              begin
               WaitAnyKey;
               break;
-            end;}
+              end;}
             //ShowStatus(rnum);
             //waitanykey;
           end
@@ -2672,7 +2637,7 @@ begin
       end;
 
       {if (Rrole[rnum].ExpForBook >= needexp) and (mlevel < 10) then
-      begin
+        begin
         redraw;
         EatOneItem(rnum, inum);
         waitanykey;
@@ -2680,14 +2645,13 @@ begin
         SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
 
         if mnum > 0 then
-          instruct_33(rnum, mnum, 1);
+        instruct_33(rnum, mnum, 1);
         Rrole[rnum].ExpForBook := 0;
         //ShowStatus(rnum);
         //waitanykey;
-      end;}
+        end;}
       //是否能够炼出物品
-      if (Rrole[rnum].ExpForItem >= Ritem[inum].NeedExpForItem) and (Ritem[inum].NeedExpForItem > 0) and
-        (Brole[i].Team = 0) then
+      if (Rrole[rnum].ExpForItem >= Ritem[inum].NeedExpForItem) and (Ritem[inum].NeedExpForItem > 0) and (Brole[i].Team = 0) then
       begin
         Redraw;
         p := 0;
@@ -2873,8 +2837,7 @@ begin
     begin
       if (Brole[i].Dead = 0) and (Brole[i].Team <> Brole[bnum].Team) then
       begin
-        if (Rrole[Brole[i].rnum].DefPoi <= minDefPoi) and (Rrole[Brole[i].rnum].Poison < 99) and
-          (Bfield[3, Brole[i].X, Brole[i].Y] >= 0) then
+        if (Rrole[Brole[i].rnum].DefPoi <= minDefPoi) and (Rrole[Brole[i].rnum].Poison < 99) and (Bfield[3, Brole[i].X, Brole[i].Y] >= 0) then
         begin
           //bnum1 := i;
           minDefPoi := Rrole[Brole[i].rnum].DefPoi;
@@ -2928,24 +2891,24 @@ begin
   else
   begin
     {minHP := Max_HP;
-    //showmessage(inttostr(mindefpoi));
-    for i := 0 to BRoleAmount - 1 do
-    begin
+      //showmessage(inttostr(mindefpoi));
+      for i := 0 to BRoleAmount - 1 do
+      begin
       if (Brole[i].Dead = 0) and (Brole[i].Team = Brole[bnum].Team) then
       begin
-        if (Rrole[Brole[i].rnum].CurrentHP <= minHP)
-          and (Rrole[Brole[i].rnum].CurrentHP < Rrole[Brole[i].rnum].MaxHP * 2 div 3)
-          and (Bfield[3, Brole[i].X, Brole[i].Y] >= 0) then
-        begin
-          //bnum1 := i;
-          minHP := Rrole[Brole[i].rnum].CurrentHP;
-          //showmessage(inttostr(mindefpoi));
-          Select := True;
-          Ax := Brole[i].X;
-          Ay := Brole[i].Y;
-        end;
+      if (Rrole[Brole[i].rnum].CurrentHP <= minHP)
+      and (Rrole[Brole[i].rnum].CurrentHP < Rrole[Brole[i].rnum].MaxHP * 2 div 3)
+      and (Bfield[3, Brole[i].X, Brole[i].Y] >= 0) then
+      begin
+      //bnum1 := i;
+      minHP := Rrole[Brole[i].rnum].CurrentHP;
+      //showmessage(inttostr(mindefpoi));
+      Select := True;
+      Ax := Brole[i].X;
+      Ay := Brole[i].Y;
       end;
-    end;}
+      end;
+      end;}
     if Bfield[3, Ax, Ay] >= 0 then
       select := True;
   end;
@@ -3065,8 +3028,7 @@ begin
           for i := 0 to 3 do
           begin
             if (Rrole[rnum].TakingItemAmount[i] > 0) and (Rrole[rnum].TakingItem[i] >= 0) then
-              if (Ritem[Rrole[rnum].TakingItem[i]].ItemType = 4) and
-                (Ritem[Rrole[rnum].TakingItem[i]].AddCurrentHP < maxhurt) then
+              if (Ritem[Rrole[rnum].TakingItem[i]].ItemType = 4) and (Ritem[Rrole[rnum].TakingItem[i]].AddCurrentHP < maxhurt) then
               begin
                 maxhurt := Ritem[RItemList[i].Number].AddCurrentHP;
                 inum := RItemList[i].Number;
@@ -3093,8 +3055,7 @@ begin
           Brole[bnum1].ShowNumber := hurt;
           Brole[bnum1].ExpGot := Brole[bnum1].ExpGot + hurt;
           Rrole[rnum1].Hurt := min(Rrole[rnum1].Hurt + hurt div LIFE_HURT, 99);
-          Rrole[rnum1].Poison := min(Rrole[rnum1].Poison + Ritem[inum].AddPoi *
-            (100 - Rrole[rnum1].DefPoi) div 100, 99);
+          Rrole[rnum1].Poison := min(Rrole[rnum1].Poison + Ritem[inum].AddPoi * (100 - Rrole[rnum1].DefPoi) div 100, 99);
           SetAminationPosition(0, 0);
           ShowMagicName(inum, 1);
           PlayActionAmination(bnum, 0);
@@ -3114,12 +3075,9 @@ var
 begin
   Brole[bnum].Acted := 1;
   rnum := Brole[bnum].rnum;
-  Rrole[rnum].CurrentHP := min(Rrole[rnum].CurrentHP + (5 + Brole[bnum].Step) * Rrole[rnum].MaxHP div
-    200, Rrole[rnum].MaxHP);
-  Rrole[rnum].CurrentMP := min(Rrole[rnum].CurrentMP + (5 + Brole[bnum].Step) * Rrole[rnum].MaxMP div
-    200, Rrole[rnum].MaxMP);
-  Rrole[rnum].PhyPower := min(Rrole[rnum].PhyPower + (5 + Brole[bnum].Step) * MAX_PHYSICAL_POWER div
-    200, MAX_PHYSICAL_POWER);
+  Rrole[rnum].CurrentHP := min(Rrole[rnum].CurrentHP + (5 + Brole[bnum].Step) * Rrole[rnum].MaxHP div 200, Rrole[rnum].MaxHP);
+  Rrole[rnum].CurrentMP := min(Rrole[rnum].CurrentMP + (5 + Brole[bnum].Step) * Rrole[rnum].MaxMP div 200, Rrole[rnum].MaxMP);
+  Rrole[rnum].PhyPower := min(Rrole[rnum].PhyPower + (5 + Brole[bnum].Step) * MAX_PHYSICAL_POWER div 200, MAX_PHYSICAL_POWER);
 
 end;
 
@@ -3128,7 +3086,7 @@ var
   menup, x, y, w, h, menu, i, amount, xm, ym: integer;
   a: array of smallint;
   tempmode: array of integer;
-  modestring: array[0..3] of utf8string;
+  modestring: array [0 .. 3] of utf8string;
   namestr: array of utf8string;
   str: utf8string;
 
@@ -3143,14 +3101,12 @@ var
       if (i = menu) then
       begin
         DrawShadowText(namestr[i], x + 3, y + 3 + 22 * i, ColColor($64), ColColor($66));
-        DrawShadowText(modestring[Brole[a[i]].AutoMode], x + 120 - 17, y + 3 + 22 * i,
-          ColColor($64), ColColor($66));
+        DrawShadowText(modestring[Brole[a[i]].AutoMode], x + 120 - 17, y + 3 + 22 * i, ColColor($64), ColColor($66));
       end
       else
       begin
         DrawShadowText(namestr[i], x + 3, y + 3 + 22 * i, ColColor($21), ColColor($23));
-        DrawShadowText(modestring[Brole[a[i]].AutoMode], x + 120 - 17, y + 3 + 22 * i,
-          ColColor($21), ColColor($23));
+        DrawShadowText(modestring[Brole[a[i]].AutoMode], x + 120 - 17, y + 3 + 22 * i, ColColor($21), ColColor($23));
       end;
     end;
     if menu = -2 then
@@ -3295,7 +3251,6 @@ begin
 
 end;
 
-
 //The AI. Some codes were written by little samll pig.
 procedure AutoBattle(bnum: integer);
 var
@@ -3324,7 +3279,7 @@ begin
         end
         else
         begin
-          // if can't medcine, eat the item which can add the most life on its body.
+          //if can't medcine, eat the item which can add the most life on its body.
           //无法医疗则选择身上加生命最多的药品, 我方从物品栏选择
           AutoUseItem(bnum, 45);
         end;
@@ -3353,8 +3308,7 @@ begin
   end;
 
   //我方在AI类型为策略或者辅助(傻子或呆子)时才会选择医疗, 解毒, 用毒, 暗器
-  if ((Brole[bnum].Team = 0) and ((Brole[bnum].AutoMode = 2) {or (Brole[bnum].AutoMode = 3)})) or
-    (Brole[bnum].Team <> 0) then
+  if ((Brole[bnum].Team = 0) and ((Brole[bnum].AutoMode = 2) {or (Brole[bnum].AutoMode = 3)} )) or (Brole[bnum].Team <> 0) then
   begin
     //When Medcine is more than 50, and physical power is more than 70, 50% probability to cure one teammate.
     if (Brole[bnum].Acted <> 1) and (Rrole[rnum].Medcine > 50) and (Rrole[rnum].PhyPower >= 70) then
@@ -3425,8 +3379,7 @@ begin
     end;
   end;
 
-  if ((Brole[bnum].Team = 0) and ((Brole[bnum].AutoMode = 1) or (Brole[bnum].AutoMode = 2))) or
-    (Brole[bnum].Team <> 0) then
+  if ((Brole[bnum].Team = 0) and ((Brole[bnum].AutoMode = 1) or (Brole[bnum].AutoMode = 2))) or (Brole[bnum].Team <> 0) then
   begin
     //尝试攻击
     if (Brole[bnum].Acted <> 1) and (Rrole[rnum].PhyPower >= 10) then
@@ -3480,8 +3433,7 @@ begin
         Ay := curAy1;
         mnum := curMnum;
         level := curlevel;
-        SetAminationPosition(Rmagic[mnum].AttAreaType, Rmagic[mnum].MoveDistance[level - 1],
-          Rmagic[mnum].AttDistance[level - 1]);
+        SetAminationPosition(Rmagic[mnum].AttAreaType, Rmagic[mnum].MoveDistance[level - 1], Rmagic[mnum].AttDistance[level - 1]);
         Brole[bnum].Acted := 1;
         AttackAction(bnum, p, mnum, level);
       end;
@@ -3489,158 +3441,158 @@ begin
   end;
 
   {//在敌方选择一个人物
-  eneamount := Calrnum(1 - Brole[bnum].Team);
-  aim := random(eneamount) + 1;
-  //showmessage(inttostr(eneamount));
-  for i := 0 to broleamount - 1 do
-  begin
+    eneamount := Calrnum(1 - Brole[bnum].Team);
+    aim := random(eneamount) + 1;
+    //showmessage(inttostr(eneamount));
+    for i := 0 to broleamount - 1 do
+    begin
     if (Brole[bnum].Team <> Brole[i].Team) and (Brole[i].Dead = 0) then
     begin
-      aim := aim - 1;
-      if aim <= 0 then
-        break;
-      //如果有贴身则优先
-      if abs(Brole[i].X - Bx) + abs(Brole[i].Y - By) <= 1 then
-        break;
+    aim := aim - 1;
+    if aim <= 0 then
+    break;
+    //如果有贴身则优先
+    if abs(Brole[i].X - Bx) + abs(Brole[i].Y - By) <= 1 then
+    break;
     end;
-  end;
+    end;
 
-  //Seclect one enemy randomly and try to close it.
-  //尝试走到离敌人最近的位置
-  Ax := Bx;
-  Ay := By;
-  Ax1 := Brole[i].X;
-  Ay1 := Brole[i].Y;
-  CalCanSelect(bnum, 0, brole[bnum].Step);
-  dis0 := abs(Ax1 - Bx) + abs(Ay1 - By);
-  for i1 := min(Ax1, Bx) to max(Ax1, Bx) do
+    //Seclect one enemy randomly and try to close it.
+    //尝试走到离敌人最近的位置
+    Ax := Bx;
+    Ay := By;
+    Ax1 := Brole[i].X;
+    Ay1 := Brole[i].Y;
+    CalCanSelect(bnum, 0, brole[bnum].Step);
+    dis0 := abs(Ax1 - Bx) + abs(Ay1 - By);
+    for i1 := min(Ax1, Bx) to max(Ax1, Bx) do
     for i2 := min(Ay1, By) to max(Ay1, By) do
     begin
-      if Bfield[3, i1, i2] >= 0 then
-      begin
-        dis := abs(Ax1 - i1) + abs(Ay1 - i2);
-        if (dis < dis0) and (abs(i1 - Bx) + abs(i2 - By) <= brole[bnum].Step) then
-        begin
-          Ax := i1;
-          Ay := i2;
-          dis0 := dis;
-        end;
-      end;
-    end;
-  if Bfield[3, Ax, Ay] >= 0 then
-    MoveAmination(bnum);
-  Ax := Brole[i].X;
-  Ay := Brole[i].Y;
-
-  //Try to attack it. select the best WUGONG.
-  //使用目前最强的武功攻击
-  p := 0;
-  a := 0;
-  temp := 0;
-  for i1 := 0 to 9 do
-  begin
-    mnum := Rrole[rnum].Magic[i1];
-    if mnum > 0 then
+    if Bfield[3, i1, i2] >= 0 then
     begin
-      a := a + 1;
-      level := Rrole[rnum].MagLevel[i1] div 100 + 1;
-      if RRole[rnum].CurrentMP < rmagic[mnum].NeedMP * ((level + 1) div 2) then
-        level := RRole[rnum].CurrentMP div rmagic[mnum].NeedMP * 2;
-      if level > 10 then
-        level := 10;
-      if level <= 0 then
-        level := 1;
-      if rmagic[mnum].Attack[level - 1] > temp then
-      begin
-        p := i1;
-        temp := rmagic[mnum].Attack[level - 1];
-      end;
+    dis := abs(Ax1 - i1) + abs(Ay1 - i2);
+    if (dis < dis0) and (abs(i1 - Bx) + abs(i2 - By) <= brole[bnum].Step) then
+    begin
+    Ax := i1;
+    Ay := i2;
+    dis0 := dis;
     end;
-  end;
-  //50% probility to re-select WUGONG randomly.
-  //50%的可能重新选择武功
-  if random(100) < 50 then
-    p := random(a);
+    end;
+    end;
+    if Bfield[3, Ax, Ay] >= 0 then
+    MoveAmination(bnum);
+    Ax := Brole[i].X;
+    Ay := Brole[i].Y;
 
-  //If the most powerful Wugong can't attack the aim,
-  //re-select the one which has the longest attatck-distance.
-  //如最强武功打不到, 选择攻击距离最远的武功
-  if abs(Ax - Bx) + abs(Ay - By) > step then
-  begin
+    //Try to attack it. select the best WUGONG.
+    //使用目前最强的武功攻击
     p := 0;
     a := 0;
     temp := 0;
     for i1 := 0 to 9 do
     begin
-      mnum := Rrole[rnum].Magic[i1];
-      if mnum > 0 then
-      begin
-        level := Rrole[rnum].MagLevel[i1] div 100 + 1;
-        a := rmagic[mnum].MoveDistance[level - 1];
-        if rmagic[mnum].AttAreaType = 3 then
-          a := a + rmagic[mnum].AttDistance[level - 1];
-        if a > temp then
-        begin
-          p := i1;
-          temp := a;
-        end;
-      end;
+    mnum := Rrole[rnum].Magic[i1];
+    if mnum > 0 then
+    begin
+    a := a + 1;
+    level := Rrole[rnum].MagLevel[i1] div 100 + 1;
+    if RRole[rnum].CurrentMP < rmagic[mnum].NeedMP * ((level + 1) div 2) then
+    level := RRole[rnum].CurrentMP div rmagic[mnum].NeedMP * 2;
+    if level > 10 then
+    level := 10;
+    if level <= 0 then
+    level := 1;
+    if rmagic[mnum].Attack[level - 1] > temp then
+    begin
+    p := i1;
+    temp := rmagic[mnum].Attack[level - 1];
     end;
-  end;
+    end;
+    end;
+    //50% probility to re-select WUGONG randomly.
+    //50%的可能重新选择武功
+    if random(100) < 50 then
+    p := random(a);
 
-  mnum := Rrole[rnum].Magic[p];
-  level := Rrole[rnum].MagLevel[p] div 100 + 1;
-  step := rmagic[mnum].MoveDistance[level - 1];
-  step1 := 0;
-  if rmagic[mnum].AttAreaType = 3 then
+    //If the most powerful Wugong can't attack the aim,
+    //re-select the one which has the longest attatck-distance.
+    //如最强武功打不到, 选择攻击距离最远的武功
+    if abs(Ax - Bx) + abs(Ay - By) > step then
+    begin
+    p := 0;
+    a := 0;
+    temp := 0;
+    for i1 := 0 to 9 do
+    begin
+    mnum := Rrole[rnum].Magic[i1];
+    if mnum > 0 then
+    begin
+    level := Rrole[rnum].MagLevel[i1] div 100 + 1;
+    a := rmagic[mnum].MoveDistance[level - 1];
+    if rmagic[mnum].AttAreaType = 3 then
+    a := a + rmagic[mnum].AttDistance[level - 1];
+    if a > temp then
+    begin
+    p := i1;
+    temp := a;
+    end;
+    end;
+    end;
+    end;
+
+    mnum := Rrole[rnum].Magic[p];
+    level := Rrole[rnum].MagLevel[p] div 100 + 1;
+    step := rmagic[mnum].MoveDistance[level - 1];
+    step1 := 0;
+    if rmagic[mnum].AttAreaType = 3 then
     step1 := rmagic[mnum].AttDistance[level - 1];
-  if abs(Ax - Bx) + abs(Ay - By) <= step + step1 then
-  begin
+    if abs(Ax - Bx) + abs(Ay - By) <= step + step1 then
+    begin
     //step := Rmagic[mnum, 28+level-1];
     if (rmagic[mnum].AttAreaType = 3) then
     begin
-      //step1 := Rmagic[mnum, 38+level-1];
-      dis := 0;
-      Ax1 := Bx;
-      Ay1 := By;
-      for i1 := min(Ax, Bx) to max(Ax, Bx) do
-        for i2 := min(Ay, By) to max(Ay, By) do
-        begin
-          if (abs(i1 - Ax) <= step1) and (abs(i2 - Ay) <= step1) and
-            (abs(i1 - Bx) + abs(i2 - By) <= step + step1) then
-          begin
-            if dis < abs(i1 - Bx) + abs(i2 - By) then
-            begin
-              dis := abs(i1 - Bx) + abs(i2 - By);
-              Ax1 := i1;
-              Ay1 := i2;
-            end;
-          end;
-        end;
-      Ax := Ax1;
-      Ay := Ay1;
+    //step1 := Rmagic[mnum, 38+level-1];
+    dis := 0;
+    Ax1 := Bx;
+    Ay1 := By;
+    for i1 := min(Ax, Bx) to max(Ax, Bx) do
+    for i2 := min(Ay, By) to max(Ay, By) do
+    begin
+    if (abs(i1 - Ax) <= step1) and (abs(i2 - Ay) <= step1) and
+    (abs(i1 - Bx) + abs(i2 - By) <= step + step1) then
+    begin
+    if dis < abs(i1 - Bx) + abs(i2 - By) then
+    begin
+    dis := abs(i1 - Bx) + abs(i2 - By);
+    Ax1 := i1;
+    Ay1 := i2;
+    end;
+    end;
+    end;
+    Ax := Ax1;
+    Ay := Ay1;
     end;
     if Rmagic[mnum].AttAreaType <> 3 then
-      SetAminationPosition(Rmagic[mnum].AttAreaType, step)
+    SetAminationPosition(Rmagic[mnum].AttAreaType, step)
     else
-      SetAminationPosition(Rmagic[mnum].AttAreaType, step1);
+    SetAminationPosition(Rmagic[mnum].AttAreaType, step1);
 
     if bfield[4, Ax, Ay] <> 0 then
     begin
-      Brole[bnum].Acted := 1;
-      for i1 := 0 to sign(Rrole[rnum].AttTwice) do
-      begin
-        Rrole[rnum].MagLevel[p] := Rrole[rnum].MagLevel[p] + random(2) + 1;
-        if Rrole[rnum].MagLevel[p] > 999 then
-          Rrole[rnum].MagLevel[p] := 999;
-        if rmagic[mnum].UnKnow[4] > 0 then
-          callevent(rmagic[mnum].UnKnow[4])
-        else
-          AttackAction(bnum, mnum, level);
-      end;
+    Brole[bnum].Acted := 1;
+    for i1 := 0 to sign(Rrole[rnum].AttTwice) do
+    begin
+    Rrole[rnum].MagLevel[p] := Rrole[rnum].MagLevel[p] + random(2) + 1;
+    if Rrole[rnum].MagLevel[p] > 999 then
+    Rrole[rnum].MagLevel[p] := 999;
+    if rmagic[mnum].UnKnow[4] > 0 then
+    callevent(rmagic[mnum].UnKnow[4])
+    else
+    AttackAction(bnum, mnum, level);
     end;
-  end;
-end;}
+    end;
+    end;
+    end;}
 
   //If all other actions fail, try to move closest to the nearest enemy and rest.
   //如果上面行动全部失败, 尽量靠近最近的敌人, 休息
@@ -3648,8 +3600,7 @@ end;}
   if Brole[bnum].Acted <> 1 then
   begin
     //CalCanSelect(bnum, 0, Brole[bnum].step);
-    if ((Brole[bnum].Team = 0) and ((Brole[bnum].AutoMode = 1) or (Brole[bnum].AutoMode = 2))) or
-      (Brole[bnum].Team <> 0) then
+    if ((Brole[bnum].Team = 0) and ((Brole[bnum].AutoMode = 1) or (Brole[bnum].AutoMode = 2))) or (Brole[bnum].Team <> 0) then
     begin
       NearestMove(Ax, Ay, bnum);
       MoveAmination(bnum);
@@ -3728,7 +3679,7 @@ var
   curX, curY, curstep, nextX, nextY, dis, dis0, temphurt: integer;
   i, i1, i2, eneamount, aim: integer;
   step, distance, range, AttAreaType, myteam: integer;
-  aimHurt: array[0..63, 0..63] of integer;
+  aimHurt: array [0 .. 63, 0 .. 63] of integer;
 begin
   step := Brole[bnum].Step;
   Mx1 := -1;
@@ -3755,9 +3706,9 @@ begin
           3: dis := distance; //calarea(Mx1, My1, Ax1, Ay1, tempmaxhurt, curX, curY, bnum, mnum, level);
           {4:
             caldirdiamond(Mx1, My1, Ax1, Ay1, tempmaxhurt, curX, curY, bnum, mnum, level);
-          5:
+            5:
             caldirangle(Mx1, My1, Ax1, Ay1, tempmaxhurt, curX, curY, bnum, mnum, level);
-          6:
+            6:
             calfar(Mx1, My1, Ax1, Ay1, tempmaxhurt, curX, curY, bnum, mnum, level);}
         end;
 
@@ -3780,9 +3731,7 @@ begin
               for i := 0 to BRoleAmount - 1 do
               begin
                 //特别处理面攻击, 因为当面积较大时设置动画位置比较慢
-                if (Brole[i].Team <> myteam) and (Brole[i].Dead = 0) and
-                  (((AttAreaType <> 3) and (Bfield[4, Brole[i].X, Brole[i].Y] > 0)) or
-                  ((AttAreaType = 3) and (abs(i1 - Brole[i].X) <= range) and (abs(i2 - Brole[i].Y) <= range))) then
+                if (Brole[i].Team <> myteam) and (Brole[i].Dead = 0) and (((AttAreaType <> 3) and (Bfield[4, Brole[i].X, Brole[i].Y] > 0)) or ((AttAreaType = 3) and (abs(i1 - Brole[i].X) <= range) and (abs(i2 - Brole[i].Y) <= range))) then
                 begin
                   temphurt := temphurt + CalHurtValue2(bnum, i, mnum, level);
                 end;
@@ -4042,42 +3991,42 @@ begin
   NearestMoveByPro(Mx1, My1, temp1, temp2, bnum, 0, 1, 0, 0, 0);
 
   {myteam := brole[bnum].Team;
-  mindis := 9999;
-  step := brole[bnum].Step;
+    mindis := 9999;
+    step := brole[bnum].Step;
 
-  //CalCanSelect(bnum, 0, step);
+    //CalCanSelect(bnum, 0, step);
 
-  Mx1 := Bx;
-  My1 := By;
-  //选择一个最近的敌人
-  for i := 0 to broleamount - 1 do
-  begin
+    Mx1 := Bx;
+    My1 := By;
+    //选择一个最近的敌人
+    for i := 0 to broleamount - 1 do
+    begin
     if (myteam <> Brole[i].Team) and (Brole[i].Dead = 0) then
     begin
-      tempdis := abs(Brole[i].X - Bx) + abs(Brole[i].Y - By);
-      if tempdis < mindis then
-      begin
-        mindis := tempdis;
-        aimX := Brole[i].X;
-        aimY := Brole[i].Y;
-      end;
+    tempdis := abs(Brole[i].X - Bx) + abs(Brole[i].Y - By);
+    if tempdis < mindis then
+    begin
+    mindis := tempdis;
+    aimX := Brole[i].X;
+    aimY := Brole[i].Y;
     end;
-  end;
+    end;
+    end;
 
-  for curX := 0 to 63 do
+    for curX := 0 to 63 do
     for curY := 0 to 63 do
     begin
-      if Bfield[3, curX, curY] >= 0 then
-      begin
-        tempdis := abs(curX - aimX) + abs(curY - aimY);
-        if tempdis < mindis then
-        begin
-          mindis := tempdis;
-          Mx1 := curX;
-          My1 := curY;
-          //showmessage(inttostr(mindis));
-        end;
-      end;
+    if Bfield[3, curX, curY] >= 0 then
+    begin
+    tempdis := abs(curX - aimX) + abs(curY - aimY);
+    if tempdis < mindis then
+    begin
+    mindis := tempdis;
+    Mx1 := curX;
+    My1 := curY;
+    //showmessage(inttostr(mindis));
+    end;
+    end;
     end;}
 
 end;
@@ -4119,18 +4068,19 @@ begin
     for i := 0 to BRoleAmount - 1 do
     begin
       rnum := Brole[i].rnum;
-      if (((TeamMate = 0) and (myteam <> Brole[i].Team)) or ((TeamMate <> 0) and (myteam = Brole[i].Team))) and
-        (Brole[i].Dead = 0) and (Rrole[rnum].Data[Prolist] * sign(MaxMinPro) > tempPro * sign(MaxMinPro)) then
+      if (((TeamMate = 0) and (myteam <> Brole[i].Team)) or ((TeamMate <> 0) and (myteam = Brole[i].Team))) and (Brole[i].Dead = 0) and (Rrole[rnum].Data[Prolist] * sign(MaxMinPro) > tempPro * sign(MaxMinPro)) then
       begin
         if abs(Brole[i].X - Bx) + abs(Brole[i].Y - By) <= KeepDis + step then
         begin
           check := False;
           case mode of
             0: check := True;
-            1: if (Rrole[rnum].CurrentHP < Rrole[rnum].MaxHP * 2 div 3) then
-                check := True;
-            2: if (Rrole[rnum].Poison > 33) then
-                check := True;
+            1:
+            if (Rrole[rnum].CurrentHP < Rrole[rnum].MaxHP * 2 div 3) then
+              check := True;
+            2:
+            if (Rrole[rnum].Poison > 33) then
+              check := True;
           end;
           if check then
           begin
@@ -4153,8 +4103,7 @@ begin
   begin
     for i := 0 to BRoleAmount - 1 do
     begin
-      if (((TeamMate = 0) and (myteam <> Brole[i].Team)) or ((TeamMate <> 0) and (myteam = Brole[i].Team))) and
-        (Brole[i].Dead = 0) then
+      if (((TeamMate = 0) and (myteam <> Brole[i].Team)) or ((TeamMate <> 0) and (myteam = Brole[i].Team))) and (Brole[i].Dead = 0) then
       begin
         tempdis := abs(Brole[i].X - Bx) + abs(Brole[i].Y - By);
         if tempdis < mindis then

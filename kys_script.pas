@@ -5,11 +5,11 @@
 interface
 
 uses
-  {$IFDEF fpc}
+{$IFDEF fpc}
   LConvEncoding,
-  {$ELSE}
+{$ELSE}
   Windows,
-  {$ENDIF}
+{$ENDIF}
   SysUtils,
   SDL2,
   Math,
@@ -350,7 +350,7 @@ var
   h: integer;
   len: integer;
 begin
-  if FileExists(filename) { *Converted from FileExists*  } then
+  if FileExists(filename) {*Converted from FileExists*} then
   begin
     h := FileOpen(filename, fmopenread);
     len := FileSeek(h, 0, 2);
@@ -358,15 +358,15 @@ begin
     FileSeek(h, 0, 0);
     FileRead(h, Script[1], len);
     FileClose(h);
-    {$IFDEF UNIX}
+{$IFDEF UNIX}
     Script := LowerCase(Script);
-    {$ELSE}
-    {$IFDEF FPC}
+{$ELSE}
+{$IFDEF FPC}
     Script := LowerCase(Script);
-    {$ELSE}
+{$ELSE}
     Script := LowerCase(Script);
-    {$ENDIF}
-    {$ENDIF}
+{$ENDIF}
+{$ENDIF}
     //writeln(script);
     lual_loadbuffer(Lua_script, @script[1], length(script), 'code');
     lua_pcall(Lua_script, 0, 0, 0);
@@ -652,10 +652,10 @@ begin
     if integer(str[i]) > 128 then
       wt := wt + 1;
     {if str[i] = '*' then
-    begin
+      begin
       h := h + 1;
       wt := 0;
-    end;}
+      end;}
     if wt > w then
       w := wt;
   end;
@@ -700,7 +700,7 @@ end;
 function AskYesOrNo(L: Plua_state): integer; cdecl;
 var
   x, y: integer;
-  menuString: array[0..1] of utf8string;
+  menuString: array [0 .. 1] of utf8string;
 begin
   //setlength(menustring, 2);
   menuString[0] := ' 否';
@@ -1117,8 +1117,7 @@ end;
 //读场景图信息
 function GetScenceMapPro(L: Plua_state): integer; cdecl;
 begin
-  lua_pushnumber(L, sdata[floor(lua_tonumber(L, -4)), floor(lua_tonumber(L, -3)),
-    floor(lua_tonumber(L, -2)), floor(lua_tonumber(L, -1))]);
+  lua_pushnumber(L, sdata[floor(lua_tonumber(L, -4)), floor(lua_tonumber(L, -3)), floor(lua_tonumber(L, -2)), floor(lua_tonumber(L, -1))]);
   Result := 1;
 
 end;
@@ -1126,15 +1125,14 @@ end;
 //写场景图信息
 function PutScenceMapPro(L: Plua_state): integer; cdecl;
 begin
-  sdata[floor(lua_tonumber(L, -4)), floor(lua_tonumber(L, -3)), floor(lua_tonumber(L, -2)),
-    floor(lua_tonumber(L, -1))] := floor(lua_tonumber(L, -5));
+  sdata[floor(lua_tonumber(L, -4)), floor(lua_tonumber(L, -3)), floor(lua_tonumber(L, -2)), floor(lua_tonumber(L, -1))] := floor(lua_tonumber(L, -5));
   Result := 0;
 
 end;
 
 function OldPutScenceMapPro(L: Plua_state): integer; cdecl;
 var
-  list: array[0..4] of integer;
+  list: array [0 .. 4] of integer;
   i: integer;
 begin
   for i := -5 to -1 do
@@ -1155,8 +1153,7 @@ end;
 //写场景事件信息
 function PutScenceEventPro(L: Plua_state): integer; cdecl;
 begin
-  ddata[floor(lua_tonumber(L, -3)), floor(lua_tonumber(L, -2)), floor(lua_tonumber(L, -1))] :=
-    floor(lua_tonumber(L, -4));
+  ddata[floor(lua_tonumber(L, -3)), floor(lua_tonumber(L, -2)), floor(lua_tonumber(L, -1))] := floor(lua_tonumber(L, -4));
   Result := 0;
 
 end;
@@ -1509,15 +1506,14 @@ end;
 
 function Add3EventNum(L: Plua_state): integer; cdecl;
 begin
-  instruct_26(floor(lua_tonumber(L, -5)), floor(lua_tonumber(L, -4)), floor(lua_tonumber(L, -3)),
-    floor(lua_tonumber(L, -2)), floor(lua_tonumber(L, -1)));
+  instruct_26(floor(lua_tonumber(L, -5)), floor(lua_tonumber(L, -4)), floor(lua_tonumber(L, -3)), floor(lua_tonumber(L, -2)), floor(lua_tonumber(L, -1)));
   Result := 0;
 end;
 
 function Judge5Item(L: Plua_state): integer; cdecl;
 var
   n, i: integer;
-  list: array[0..6] of integer;
+  list: array [0 .. 6] of integer;
 begin
   for i := 0 to 6 do
     list[i] := floor(lua_tonumber(L, i - 7));
@@ -1531,8 +1527,7 @@ var
   n: integer;
 begin
   n := lua_gettop(L);
-  lua_pushboolean(L, instruct_28(floor(lua_tonumber(L, -n)), floor(lua_tonumber(L, 1 - n)),
-    floor(lua_tonumber(L, 2 - n)), 1, 0) = 1);
+  lua_pushboolean(L, instruct_28(floor(lua_tonumber(L, -n)), floor(lua_tonumber(L, 1 - n)), floor(lua_tonumber(L, 2 - n)), 1, 0) = 1);
   Result := 1;
 end;
 
@@ -1541,8 +1536,7 @@ var
   n: integer;
 begin
   n := lua_gettop(L);
-  lua_pushboolean(L, instruct_29(floor(lua_tonumber(L, -n)), floor(lua_tonumber(L, 1 - n)),
-    floor(lua_tonumber(L, 2 - n)), 1, 0) = 1);
+  lua_pushboolean(L, instruct_29(floor(lua_tonumber(L, -n)), floor(lua_tonumber(L, 1 - n)), floor(lua_tonumber(L, 2 - n)), 1, 0) = 1);
   Result := 1;
 end;
 
@@ -1563,8 +1557,7 @@ end;
 
 function SetOneMagic(L: Plua_state): integer; cdecl;
 begin
-  instruct_35(floor(lua_tonumber(L, -4)), floor(lua_tonumber(L, -3)), floor(lua_tonumber(L, -2)),
-    floor(lua_tonumber(L, -1)));
+  instruct_35(floor(lua_tonumber(L, -4)), floor(lua_tonumber(L, -3)), floor(lua_tonumber(L, -2)), floor(lua_tonumber(L, -1)));
   Result := 0;
 end;
 
@@ -1582,8 +1575,7 @@ end;
 
 function ChangeScencePic(L: Plua_state): integer; cdecl;
 begin
-  instruct_38(floor(lua_tonumber(L, -4)), floor(lua_tonumber(L, -3)), floor(lua_tonumber(L, -2)),
-    floor(lua_tonumber(L, -1)));
+  instruct_38(floor(lua_tonumber(L, -4)), floor(lua_tonumber(L, -3)), floor(lua_tonumber(L, -2)), floor(lua_tonumber(L, -1)));
   Result := 0;
 end;
 
@@ -1601,8 +1593,7 @@ end;
 
 function Play2Amination(L: Plua_state): integer; cdecl;
 begin
-  instruct_44(floor(lua_tonumber(L, -6)), floor(lua_tonumber(L, -5)), floor(lua_tonumber(L, -4)),
-    floor(lua_tonumber(L, -3)), floor(lua_tonumber(L, -2)), floor(lua_tonumber(L, -1)));
+  instruct_44(floor(lua_tonumber(L, -6)), floor(lua_tonumber(L, -5)), floor(lua_tonumber(L, -4)), floor(lua_tonumber(L, -3)), floor(lua_tonumber(L, -2)), floor(lua_tonumber(L, -1)));
   Result := 0;
 end;
 
@@ -1668,8 +1659,7 @@ var
   n: integer;
 begin
   n := lua_gettop(L);
-  lua_pushboolean(L, instruct_60(floor(lua_tonumber(L, -n)), floor(lua_tonumber(L, 1 - n)),
-    floor(lua_tonumber(L, 2 - n)), 1, 0) = 1);
+  lua_pushboolean(L, instruct_60(floor(lua_tonumber(L, -n)), floor(lua_tonumber(L, 1 - n)), floor(lua_tonumber(L, 2 - n)), 1, 0) = 1);
   Result := 1;
 end;
 
@@ -1687,8 +1677,7 @@ end;
 
 function BackHome(L: Plua_state): integer; cdecl;
 begin
-  instruct_62(floor(lua_tonumber(L, -6)), floor(lua_tonumber(L, -5)), floor(lua_tonumber(L, -4)),
-    floor(lua_tonumber(L, -3)), floor(lua_tonumber(L, -2)), floor(lua_tonumber(L, -1)));
+  instruct_62(floor(lua_tonumber(L, -6)), floor(lua_tonumber(L, -5)), floor(lua_tonumber(L, -4)), floor(lua_tonumber(L, -3)), floor(lua_tonumber(L, -2)), floor(lua_tonumber(L, -1)));
   Result := 0;
 end;
 
@@ -1704,8 +1693,7 @@ end;
 
 function SelectOneTeamMemberScript(L: Plua_state): integer; cdecl;
 begin
-  lua_pushnumber(L, SelectOneTeamMember(floor(lua_tonumber(L, -5)), floor(lua_tonumber(L, -4)),
-    lua_tostring(L, -3), floor(lua_tonumber(L, -2)), floor(lua_tonumber(L, -1))));
+  lua_pushnumber(L, SelectOneTeamMember(floor(lua_tonumber(L, -5)), floor(lua_tonumber(L, -4)), lua_tostring(L, -3), floor(lua_tonumber(L, -2)), floor(lua_tonumber(L, -1))));
   Result := 1;
 end;
 

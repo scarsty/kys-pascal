@@ -6,10 +6,10 @@ interface
 
 uses
   SysUtils,
-  {$IFDEF fpc}
-  {$ELSE}
+{$IFDEF fpc}
+{$ELSE}
   Windows,
-  {$ENDIF}
+{$ENDIF}
   Math,
   SDL2_image,
   SDL2,
@@ -123,16 +123,14 @@ begin
           Framenum := SDL_GetTicks div 200;
         //瀑布场景的闪烁需要
         //DrawPNGTile(MPNGIndex[num], Framenum, nil, screen, px, py, shadow)
-        DrawPNGTile(MPNGIndex[num], Framenum, nil, screen, px, py, shadow, alpha, mixColor, mixAlpha,
-          0, nil, 0, 0, 0, 0, 0);
+        DrawPNGTile(MPNGIndex[num], Framenum, nil, screen, px, py, shadow, alpha, mixColor, mixAlpha, 0, nil, 0, 0, 0, 0, 0);
       end
       else
         NeedGRP := 1;
     end;
     if (PNG_TILE = 0) or (NeedGRP = 1) then
     begin
-      DrawRLE8Pic(@ACol[0], num, px, py, @Midx[0], @Mpic[0], nil, nil, 0, 0, 0, shadow, alpha,
-        nil, nil, 0, 0, 0, 4096, mixColor, mixAlpha);
+      DrawRLE8Pic(@ACol[0], num, px, py, @Midx[0], @Mpic[0], nil, nil, 0, 0, 0, shadow, alpha, nil, nil, 0, 0, 0, 4096, mixColor, mixAlpha);
     end;
   end;
 end;
@@ -178,8 +176,7 @@ begin
       py := py - 50;
     end;
     if PNG_TILE > 0 then
-      DrawPNGTile(SPNGIndex[num], 0, nil, screen, px, py, shadow, alpha, mixColor, mixAlpha,
-        depth, @BlockImg[0], ImageWidth, ImageHeight, sizeof(BlockImg[0]), BlockScreen.x, BlockScreen.y)
+      DrawPNGTile(SPNGIndex[num], 0, nil, screen, px, py, shadow, alpha, mixColor, mixAlpha, depth, @BlockImg[0], ImageWidth, ImageHeight, sizeof(BlockImg[0]), BlockScreen.x, BlockScreen.y)
     else
     begin
       DrawRLE8Pic(@ACol[0], num, px, py, @SIdx[0], @SPic[0], nil, nil, 0, 0, 0, shadow, alpha, @BlockImg[0], @BlockScreen, ImageWidth, ImageHeight, sizeof(BlockImg[0]), depth, mixColor, mixAlpha);
@@ -247,12 +244,10 @@ begin
     begin
       if needBlock <> 0 then
       begin
-        DrawRLE8Pic(@ACol[0], num, px, py, @SIdx[0], @SPic[0], @Area, pImg, ImageWidth, ImageHeight,
-          sizeof(BlockImg[0]), 0, 0, pBlock, nil, 0, 0, 0, depth, 0, 0);
+        DrawRLE8Pic(@ACol[0], num, px, py, @SIdx[0], @SPic[0], @Area, pImg, ImageWidth, ImageHeight, sizeof(BlockImg[0]), 0, 0, pBlock, nil, 0, 0, 0, depth, 0, 0);
       end
       else
-        DrawRLE8Pic(@ACol[0], num, px, py, @SIdx[0], @SPic[0], @Area, pImg, ImageWidth,
-          ImageHeight, sizeof(BlockImg[0]), 0);
+        DrawRLE8Pic(@ACol[0], num, px, py, @SIdx[0], @SPic[0], @Area, pImg, ImageWidth, ImageHeight, sizeof(BlockImg[0]), 0);
     end;
   end;
 end;
@@ -298,8 +293,7 @@ begin
     y := Psmallint(@HPic[offset + 6])^;
     //showmessage(inttostr(y));
     if (num >= 0) and (num < HPicAmount) then
-      DrawRLE8Pic(@ACol1[0], num, px, py + y, @HIdx[0], @HPic[0], @Area, scr, scr.w, scr.h, 0,
-        0, 0, nil, nil, 0, 0, 0, 0, 0, 0);
+      DrawRLE8Pic(@ACol1[0], num, px, py + y, @HIdx[0], @HPic[0], @Area, scr, scr.w, scr.h, 0, 0, 0, nil, nil, 0, 0, 0, 0, 0, 0);
   end;
 end;
 
@@ -311,7 +305,7 @@ var
   image: PSDL_Surface;
 begin
   str := AppPath + 'head/' + IntToStr(num) + '.png';
-  if FileExists(str) { *Converted from FileExists*  } then
+  if FileExists(str) {*Converted from FileExists*} then
   begin
     //display_img(@str[1], px, py - 60)
     image := HeadSurface[num];
@@ -327,8 +321,7 @@ begin
   else
   begin
     if (num >= 0) and (num < HPicAmount) then
-      DrawRLE8Pic(@ACol1[0], num, px, py, @HIdx[0], @HPic[0], nil, nil, 0, 0, 0, shadow, alpha,
-        nil, nil, 0, 0, 0, depth, mixColor, mixAlpha);
+      DrawRLE8Pic(@ACol1[0], num, px, py, @HIdx[0], @HPic[0], nil, nil, 0, 0, 0, shadow, alpha, nil, nil, 0, 0, 0, depth, mixColor, mixAlpha);
   end;
 
 end;
@@ -348,8 +341,7 @@ begin
     if PNG_TILE > 0 then
     begin
       //LoadOnePNGTile('resource/wmap/', num, BPNGIndex[num], @BPNGTile[0]);
-      DrawPNGTile(BPNGIndex[num], 0, nil, screen, px, py, shadow, alpha, mixColor, mixAlpha,
-        depth, @BlockImg2[0], ImageWidth, ImageHeight, sizeof(BlockImg2[0]), BlockScreen.x, BlockScreen.y);
+      DrawPNGTile(BPNGIndex[num], 0, nil, screen, px, py, shadow, alpha, mixColor, mixAlpha, depth, @BlockImg2[0], ImageWidth, ImageHeight, sizeof(BlockImg2[0]), BlockScreen.x, BlockScreen.y);
     end
     else
     begin
@@ -410,11 +402,9 @@ begin
     else
     begin
       if needBlock <> 0 then
-        DrawRLE8Pic(@ACol[0], num, px, py, @WIdx[0], @WPic[0], nil, ImgBBuild, ImageWidth, ImageHeight,
-          sizeof(BlockImg2[0]), 0, 0, @BlockImg2[0], nil, 0, 0, 0, depth, 0, 0)
+        DrawRLE8Pic(@ACol[0], num, px, py, @WIdx[0], @WPic[0], nil, ImgBBuild, ImageWidth, ImageHeight, sizeof(BlockImg2[0]), 0, 0, @BlockImg2[0], nil, 0, 0, 0, depth, 0, 0)
       else
-        DrawRLE8Pic(@ACol[0], num, px, py, @WIdx[0], @WPic[0], nil, ImgBfield, ImageWidth,
-          ImageHeight, sizeof(BlockImg2[0]), 0);
+        DrawRLE8Pic(@ACol[0], num, px, py, @WIdx[0], @WPic[0], nil, ImgBfield, ImageWidth, ImageHeight, sizeof(BlockImg2[0]), 0);
     end;
   end;
 end;
@@ -432,13 +422,11 @@ begin
   begin
     if PNG_TILE > 0 then
     begin
-      DrawPNGTile(EPNGIndex[num], 0, nil, screen, px, py, shadow, alpha, mixColor, mixAlpha,
-        depth, nil, 0, 0, 0, 0, 0);
+      DrawPNGTile(EPNGIndex[num], 0, nil, screen, px, py, shadow, alpha, mixColor, mixAlpha, depth, nil, 0, 0, 0, 0, 0);
     end;
     if PNG_TILE = 0 then
     begin
-      DrawRLE8Pic(@ACol[0], num, px, py, @EIdx[0], @EPic[0], nil, nil, 0, 0, 0, shadow, alpha,
-        nil, nil, 0, 0, 0, depth, mixColor, mixAlpha);
+      DrawRLE8Pic(@ACol[0], num, px, py, @EIdx[0], @EPic[0], nil, nil, 0, 0, 0, shadow, alpha, nil, nil, 0, 0, 0, depth, mixColor, mixAlpha);
     end;
   end;
 end;
@@ -457,16 +445,13 @@ begin
     1, 2:
     begin
       if (index >= 0) and (index < BRoleAmount) then
-        if (num >= Low(FPNGIndex[index])) and (num <= High(FPNGIndex[index])) then
-          DrawPNGTile(FPNGIndex[index][num], 0, nil, screen, px, py, shadow, alpha, mixColor, mixAlpha,
-            depth, @BlockImg2[0], ImageWidth, ImageHeight, sizeof(BlockImg2[0]), BlockScreen.x, BlockScreen.y);
+        if (num >= low(FPNGIndex[index])) and (num <= high(FPNGIndex[index])) then
+          DrawPNGTile(FPNGIndex[index][num], 0, nil, screen, px, py, shadow, alpha, mixColor, mixAlpha, depth, @BlockImg2[0], ImageWidth, ImageHeight, sizeof(BlockImg2[0]), BlockScreen.x, BlockScreen.y);
     end;
     0:
     begin
       if num < FPicAmount then
-        DrawRLE8Pic(@ACol[0], num, px, py, @FIdx[0], @FPic[0], nil, nil, 0, 0, 0, shadow,
-          alpha, @BlockImg2[0], @BlockScreen, ImageWidth, ImageHeight, sizeof(BlockImg2[0]),
-          depth, mixColor, mixAlpha);
+        DrawRLE8Pic(@ACol[0], num, px, py, @FIdx[0], @FPic[0], nil, nil, 0, 0, 0, shadow, alpha, @BlockImg2[0], @BlockScreen, ImageWidth, ImageHeight, sizeof(BlockImg2[0]), depth, mixColor, mixAlpha);
     end;
   end;
 end;
@@ -480,8 +465,7 @@ begin
   end;
   if PNG_TILE = 0 then
   begin
-    DrawRLE8Pic(@ACol1[0], num, px, py, @CIdx[0], @CPic[0], nil, nil, 0, 0, 0, shadow, alpha,
-      nil, nil, 0, 0, 0, 0, mixColor, mixAlpha);
+    DrawRLE8Pic(@ACol1[0], num, px, py, @CIdx[0], @CPic[0], nil, nil, 0, 0, 0, shadow, alpha, nil, nil, 0, 0, 0, 0, mixColor, mixAlpha);
   end;
 end;
 
@@ -534,230 +518,230 @@ end;
 //显示主地图场景于屏幕
 
 {procedure DrawMMap;
-var
+  var
   i1, i2, i, sum, x, y: integer;
   temp: array[0..479, 0..479] of smallint;
   pos: TPosition;
-begin
+  begin
   if (SDL_MustLock(screen)) then
   begin
-    if (SDL_LockSurface(screen) < 0) then
-    begin
-      MessageBox(0, putf8char(Format('Can''t lock screen : %s', [SDL_GetError])), 'Error', MB_OK or MB_ICONHAND);
-      exit;
-    end;
+  if (SDL_LockSurface(screen) < 0) then
+  begin
+  MessageBox(0, putf8char(Format('Can''t lock screen : %s', [SDL_GetError])), 'Error', MB_OK or MB_ICONHAND);
+  exit;
+  end;
   end;
 
   //由上到下绘制, 先绘制中心点靠上的建筑
   for sum := -29 to 40 do
-    for i := -15 to 15 do
-    begin
-      i1 := Mx + i + (sum div 2);
-      i2 := My - i + (sum - sum div 2);
-      Pos := GetPositionOnScreen(i1, i2, Mx, My);
-      if (i1 >= 0) and (i1 < 480) and (i2 >= 0) and (i2 < 480) then
-      begin
-        if (sum >= -27) and (sum <= 28) and (i >= -9) and (i <= 9) then
-        begin
-          DrawMPic(earth[i1, i2] div 2, pos.x, pos.y);
-          if surface[i1, i2] > 0 then
-            DrawMPic(surface[i1, i2] div 2, pos.x, pos.y);
-        end;
-        temp[i1, i2] := building[i1, i2];
-      end
-      else
-        DrawMPic(0, pos.x, pos.y);
+  for i := -15 to 15 do
+  begin
+  i1 := Mx + i + (sum div 2);
+  i2 := My - i + (sum - sum div 2);
+  Pos := GetPositionOnScreen(i1, i2, Mx, My);
+  if (i1 >= 0) and (i1 < 480) and (i2 >= 0) and (i2 < 480) then
+  begin
+  if (sum >= -27) and (sum <= 28) and (i >= -9) and (i <= 9) then
+  begin
+  DrawMPic(earth[i1, i2] div 2, pos.x, pos.y);
+  if surface[i1, i2] > 0 then
+  DrawMPic(surface[i1, i2] div 2, pos.x, pos.y);
+  end;
+  temp[i1, i2] := building[i1, i2];
+  end
+  else
+  DrawMPic(0, pos.x, pos.y);
 
-    end;
+  end;
   for sum := -29 to 40 do
-    for i := -15 to 15 do
-    begin
-      i1 := Mx + i + (sum div 2);
-      i2 := My - i + (sum - sum div 2);
-      if (i1 >= 0) and (i1 < 480) and (i2 >= 0) and (i2 < 480) then
-      begin
-        x := buildy[i1, i2];
-        y := buildx[i1, i2];
-        Pos := GetPositionOnScreen(x, y, Mx, My);
-        if (buildx[i1, i2] > 0) and (((buildx[i1 - 1, i2 - 1] <> buildx[i1, i2]) and (buildx[i1 + 1, i2 + 1] <> buildx[i1, i2]))
-          or ((buildy[i1 - 1, i2 - 1] <> buildy[i1, i2]) and (buildy[i1 + 1, i2 + 1] <> buildy[i1, i2]))) then
-        begin
+  for i := -15 to 15 do
+  begin
+  i1 := Mx + i + (sum div 2);
+  i2 := My - i + (sum - sum div 2);
+  if (i1 >= 0) and (i1 < 480) and (i2 >= 0) and (i2 < 480) then
+  begin
+  x := buildy[i1, i2];
+  y := buildx[i1, i2];
+  Pos := GetPositionOnScreen(x, y, Mx, My);
+  if (buildx[i1, i2] > 0) and (((buildx[i1 - 1, i2 - 1] <> buildx[i1, i2]) and (buildx[i1 + 1, i2 + 1] <> buildx[i1, i2]))
+  or ((buildy[i1 - 1, i2 - 1] <> buildy[i1, i2]) and (buildy[i1 + 1, i2 + 1] <> buildy[i1, i2]))) then
+  begin
 
-          if temp[x, y] > 0 then
-          begin
-            DrawMPic(building[x, y] div 2, pos.x, pos.y);
-            temp[x, y] := 0;
-          end;
-        end;
+  if temp[x, y] > 0 then
+  begin
+  DrawMPic(building[x, y] div 2, pos.x, pos.y);
+  temp[x, y] := 0;
+  end;
+  end;
 
-        //如在水面上则绘制船的贴图
-        if (i1 = Mx) and (i2 = My) then
-          if (InShip = 0) then
-            if still = 0 then
-              DrawMPic(2501 + MFace * 7 + MStep, CENTER_X, CENTER_Y)
-            else
-              DrawMPic(2528 + Mface * 6 + MStep, CENTER_X, CENTER_Y)
-          else
-            DrawMPic(3714 + MFace * 4 + (MStep + 1) div 2, CENTER_X, CENTER_Y);
-        if (temp[i1, i2] > 0) and (buildx[i1, i2] = i2) then
-        begin
-          DrawMPic(building[i1, i2] div 2, pos.x, pos.y);
-          temp[i1, i2] := 0;
-        end;
-      end;
+  //如在水面上则绘制船的贴图
+  if (i1 = Mx) and (i2 = My) then
+  if (InShip = 0) then
+  if still = 0 then
+  DrawMPic(2501 + MFace * 7 + MStep, CENTER_X, CENTER_Y)
+  else
+  DrawMPic(2528 + Mface * 6 + MStep, CENTER_X, CENTER_Y)
+  else
+  DrawMPic(3714 + MFace * 4 + (MStep + 1) div 2, CENTER_X, CENTER_Y);
+  if (temp[i1, i2] > 0) and (buildx[i1, i2] = i2) then
+  begin
+  DrawMPic(building[i1, i2] div 2, pos.x, pos.y);
+  temp[i1, i2] := 0;
+  end;
+  end;
 
-    end;
+  end;
 
   if (SDL_MustLock(screen)) then
   begin
-    SDL_UnlockSurface(screen);
+  SDL_UnlockSurface(screen);
   end;
   //SDL_UpdateRect2(screen, 0,0,screen.w,screen.h);
 
-end;}
+  end;}
 
 
 //注意: 按照主地图的定义, 以下排序方式应该是准确的, 但是原版有些地方的引用建筑值设置不正确, 效果并不好
 
 {procedure DrawMMap;
-var
+  var
   i1, i2, i, sum, x, y, k, j1, j2, BAmount, mini1, mini2, swaptemp, a, b, col: integer;
   temp, tempindex: array[0..479, 0..479] of smallint;
   width, height: smallint;
   pos: TPosition;
   List, ListIndex, BuildingPic: array[0..10000] of integer;
   BuildingPos: array[0..10000] of TPosition;
-begin
+  begin
   if (SDL_MustLock(screen)) then
   begin
-    if (SDL_LockSurface(screen) < 0) then
-    begin
-      MessageBox(0, putf8char(Format('Can''t lock screen : %s', [SDL_GetError])), 'Error', MB_OK or MB_ICONHAND);
-      exit;
-    end;
+  if (SDL_LockSurface(screen) < 0) then
+  begin
+  MessageBox(0, putf8char(Format('Can''t lock screen : %s', [SDL_GetError])), 'Error', MB_OK or MB_ICONHAND);
+  exit;
+  end;
   end;
 
   for i1 := 0 to 479 do
-    for i2 := 0 to 479 do
-    begin
-    temp[i1, i2] := -1;
-      tempindex[i1, i2] := -1;
-    end;
+  for i2 := 0 to 479 do
+  begin
+  temp[i1, i2] := -1;
+  tempindex[i1, i2] := -1;
+  end;
 
   mini1 := Mx - 16 - 14;
   mini2 := My - 16 - 15;
   k := 0;
   for sum := -29 to 41 do
-    for i := -16 to 16 do
-    begin
-      i1 := Mx + i + (sum div 2);
-      i2 := My - i + (sum - sum div 2);
-      Pos := GetPositionOnScreen(i1, i2, Mx, My);
-      if (i1 >= 0) and (i1 < 480) and (i2 >= 0) and (i2 < 480) then
-      begin
-        if (sum >= -27) and (sum <= 28) and (i >= -9) and (i <= 9) then
-        begin
-          DrawMPic(earth[i1, i2] div 2, pos.x, pos.y);
-          if surface[i1, i2] > 0 then
-            DrawMPic(surface[i1, i2] div 2, pos.x, pos.y);
-        end;
-      end
-      else
-        DrawMPic(0, pos.x, pos.y);
+  for i := -16 to 16 do
+  begin
+  i1 := Mx + i + (sum div 2);
+  i2 := My - i + (sum - sum div 2);
+  Pos := GetPositionOnScreen(i1, i2, Mx, My);
+  if (i1 >= 0) and (i1 < 480) and (i2 >= 0) and (i2 < 480) then
+  begin
+  if (sum >= -27) and (sum <= 28) and (i >= -9) and (i <= 9) then
+  begin
+  DrawMPic(earth[i1, i2] div 2, pos.x, pos.y);
+  if surface[i1, i2] > 0 then
+  DrawMPic(surface[i1, i2] div 2, pos.x, pos.y);
+  end;
+  end
+  else
+  DrawMPic(0, pos.x, pos.y);
 
-      if building[i1, i2] > 0 then
-      begin
-        List[k] := k;
-        ListIndex[k] := k;
-        BuildingPos[k].x := i1;
-        BuildingPos[k].y := i2;
-        BuildingPic[k] := building[i1, i2] div 2;
-        temp[i1, i2] := k;
-        for j1 := i1 downto mini1 do
-        begin
-          for j2 := i2 downto mini2 do
-          begin
-            if j1 + j2 < Mx + My - 29 then
-              continue;
-            if (BuildX[j1, j2] = i2) and (BuildY[j1, j2] = i1) then
-            begin
-              tempindex[j1, j2] := k;
-            end;
-          end;
-        end;
-        k := k + 1;
-      end;
-      if (i1 = Mx) and (i2 = My) then
-      begin
-        List[k] := k;
-        ListIndex[k] := k;
-        BuildingPos[k].x := i1;
-        BuildingPos[k].y := i2;
-        temp[i1, i2] := k;
-        tempindex[i1, i2] := k;
-        if InShip = 0 then
-          if still = 0 then
-            BuildingPic[k] := 2501 + MFace * 7 + MStep
-          else
-            BuildingPic[k] := 2528 + Mface * 6 + MStep
-          else
-            BuildingPic[k] := 3714 + MFace * 4 + (MStep + 1) div 2;
-        k := k + 1;
-      end;
-    end;
+  if building[i1, i2] > 0 then
+  begin
+  List[k] := k;
+  ListIndex[k] := k;
+  BuildingPos[k].x := i1;
+  BuildingPos[k].y := i2;
+  BuildingPic[k] := building[i1, i2] div 2;
+  temp[i1, i2] := k;
+  for j1 := i1 downto mini1 do
+  begin
+  for j2 := i2 downto mini2 do
+  begin
+  if j1 + j2 < Mx + My - 29 then
+  continue;
+  if (BuildX[j1, j2] = i2) and (BuildY[j1, j2] = i1) then
+  begin
+  tempindex[j1, j2] := k;
+  end;
+  end;
+  end;
+  k := k + 1;
+  end;
+  if (i1 = Mx) and (i2 = My) then
+  begin
+  List[k] := k;
+  ListIndex[k] := k;
+  BuildingPos[k].x := i1;
+  BuildingPos[k].y := i2;
+  temp[i1, i2] := k;
+  tempindex[i1, i2] := k;
+  if InShip = 0 then
+  if still = 0 then
+  BuildingPic[k] := 2501 + MFace * 7 + MStep
+  else
+  BuildingPic[k] := 2528 + Mface * 6 + MStep
+  else
+  BuildingPic[k] := 3714 + MFace * 4 + (MStep + 1) div 2;
+  k := k + 1;
+  end;
+  end;
   BAmount := k;
 
   for sum := -29 to 41 do
   begin
-    for i := -16 to 16 do
-    begin
-      i1 := Mx + i + (sum div 2);
-      i2 := My - i + (sum - sum div 2);
-      if temp[i1, i2] < 0 then
-      begin
-        continue;
-      end;
-      for j1 := i1 downto mini1 do
-      begin
-        for j2 := i2 downto mini2 do
-        begin
-          if j1 + j2 < Mx + My - 29 then
-            continue;
-          b := temp[i1, i2];
-          a := tempindex[j1, j2];
-          if (ListIndex[b] < ListIndex[a]) and (a < BAmount) then
-          begin
-            swaptemp := List[ListIndex[a]];
-            for k := ListIndex[a] downto ListIndex[b] + 1 do
-              List[k] := List[k - 1];
-            List[ListIndex[b]] := swaptemp;
-            for k := 0 to BAmount - 1 do
-            begin
-              ListIndex[List[k]] := k;
-            end;
-          end;
-        end;
-      end;
-    end;
+  for i := -16 to 16 do
+  begin
+  i1 := Mx + i + (sum div 2);
+  i2 := My - i + (sum - sum div 2);
+  if temp[i1, i2] < 0 then
+  begin
+  continue;
+  end;
+  for j1 := i1 downto mini1 do
+  begin
+  for j2 := i2 downto mini2 do
+  begin
+  if j1 + j2 < Mx + My - 29 then
+  continue;
+  b := temp[i1, i2];
+  a := tempindex[j1, j2];
+  if (ListIndex[b] < ListIndex[a]) and (a < BAmount) then
+  begin
+  swaptemp := List[ListIndex[a]];
+  for k := ListIndex[a] downto ListIndex[b] + 1 do
+  List[k] := List[k - 1];
+  List[ListIndex[b]] := swaptemp;
+  for k := 0 to BAmount - 1 do
+  begin
+  ListIndex[List[k]] := k;
+  end;
+  end;
+  end;
+  end;
+  end;
   end;
 
   for i := 0 to BAmount - 1 do
   begin
-    x := BuildingPos[List[i]].x;
-    y := BuildingPos[List[i]].y;
-    Pos := GetPositionOnScreen(x, y, Mx, My);
-    DrawMPic(BuildingPic[List[i]], pos.x, pos.y);
+  x := BuildingPos[List[i]].x;
+  y := BuildingPos[List[i]].y;
+  Pos := GetPositionOnScreen(x, y, Mx, My);
+  DrawMPic(BuildingPic[List[i]], pos.x, pos.y);
   end;
 
   DrawClouds;
 
   if (SDL_MustLock(screen)) then
   begin
-    SDL_UnlockSurface(screen);
+  SDL_UnlockSurface(screen);
   end;
   //SDL_UpdateRect2(screen, 0,0,screen.w,screen.h);
 
-end;}
+  end;}
 
 procedure DrawMMap;
 var
@@ -765,13 +749,13 @@ var
   //temp: array[0..479, 0..479] of smallint;
   Width, Height, xoffset, yoffset: smallint;
   pos: TPosition;
-  BuildArray: array[0..2000] of TBuildInfo;
+  BuildArray: array [0 .. 2000] of TBuildInfo;
   tempb: TBuildInfo;
   tempscr, tempscr1: PSDL_Surface;
   dest: TSDL_Rect;
 begin
   {if BIG_PNG_TILE = 1 then
-  begin
+    begin
     SDL_FillRect(screen, nil, 0);
     dest.x := (-Mx * 18 + My * 18 + 8640 - CENTER_X) div 2;
     dest.y := (Mx * 9 + My * 9 + 18 - CENTER_Y) div 2;
@@ -785,10 +769,10 @@ begin
     SDL_BlitSurface(tempscr1, nil, screen, nil);
     SDL_FreeSurface(tempscr);
     SDL_FreeSurface(tempscr1);
-  end;}
+    end;}
   //由上到下绘制, 先绘制地面和表面, 同时计算出现的建筑数
   k := 0;
-  h := High(BuildArray);
+  h := high(BuildArray);
   widthregion := CENTER_X div 36 + 3;
   sumregion := CENTER_Y div 9 + 2;
   for sum := -sumregion to sumregion + 15 do
@@ -861,12 +845,12 @@ begin
   {for i1 := 0 to k - 2 do
     for i2 := i1 + 1 to k - 1 do
     begin
-      if BuildArray[i1].c > BuildArray[i2].c then
-      begin
-        tempb := BuildArray[i1];
-        BuildArray[i1] := BuildArray[i2];
-        BuildArray[i2] := tempb;
-      end;
+    if BuildArray[i1].c > BuildArray[i2].c then
+    begin
+    tempb := BuildArray[i1];
+    BuildArray[i1] := BuildArray[i2];
+    BuildArray[i2] := tempb;
+    end;
     end;}
   QuickSortB(BuildArray, 0, k - 1);
   //toc;
@@ -878,7 +862,6 @@ begin
   DrawClouds;
   DrawVirtualKey;
 end;
-
 
 //画场景到屏幕
 procedure DrawScence;
@@ -1059,7 +1042,7 @@ begin
     x := x - 36;
     y := y - 100;
     for i1 := x to x + 72 do
-      //for i2:=y to y+100 do
+    //for i2:=y to y+100 do
     begin
       num := i1 * ImageHeight + y;
       //blockImg[num]:=blockImg2[num];
@@ -1095,14 +1078,14 @@ begin
   y := i1 * 9 + i2 * 9 + 9;
 end;
 
-
 //上面函数的子程
 procedure InitialScenceOnePosition(i1, i2, x1, y1, w, h, depth, temp: integer);
 var
   i, x, y, num: integer;
 begin
   CalPosOnImage(i1, i2, x, y);
-  if (CurScence<0) then exit;
+  if (CurScence < 0) then
+    exit;
   //InitialSPic2(SData[CurScence, 0, i1, i2] div 2, x, y, x1, y1, w, h, 1);
   if SData[CurScence, 4, i1, i2] > 0 then
   begin
@@ -1182,8 +1165,7 @@ begin
         if (SData[CurScence, 2, i1, i2] > 0) then
           InitialSPic(SData[CurScence, 2, i1, i2] div 2, x, y - SData[CurScence, 5, i1, i2], xp, yp, w, h);
         if (SData[CurScence, 3, i1, i2] >= 0) and (DData[CurScence, SData[CurScence, 3, i1, i2], 5] > 0) then
-          InitialSPic(DData[CurScence, SData[CurScence, 3, i1, i2], 5] div 2, x, y -
-            SData[CurScence, 4, i1, i2], xp, yp, w, h);
+          InitialSPic(DData[CurScence, SData[CurScence, 3, i1, i2], 5] div 2, x, y - SData[CurScence, 4, i1, i2], xp, yp, w, h);
         //if (i1=RScence[CurScence*26+15]) and (i2=RScence[CurScence*26+14]) then
         //DrawSPic(0,-(i1-Sx)*18+(i2-Sy)*18+CENTER_X,(i1-Sx)*9+(i2-Sy)*9+CENTER_Y);
         //if (i1=Sx) and (i2=Sy) then DrawSPic(2501+SFace*7+SStep,CENTER_X,CENTER_Y-SData[CurScence, 4, i1,i2]);
@@ -1220,13 +1202,13 @@ var
   i, i1, i2: integer;
 begin
   {if (SDL_MustLock(screen)) then
-  begin
+    begin
     if (SDL_LockSurface(screen) < 0) then
     begin
-      MessageBox(0, putf8char(Format('Can''t lock screen : %s', [SDL_GetError])), 'Error', MB_OK or MB_ICONHAND);
-      exit;
+    MessageBox(0, putf8char(Format('Can''t lock screen : %s', [SDL_GetError])), 'Error', MB_OK or MB_ICONHAND);
+    exit;
     end;
-  end;}
+    end;}
   DrawBfieldWithoutRole(Bx, By);
 
   for i1 := 0 to 63 do
@@ -1240,9 +1222,9 @@ begin
     DrawProgress;
   //BfieldDrawn := 1;
   {if (SDL_MustLock(screen)) then
-  begin
+    begin
     SDL_UnlockSurface(screen);
-  end;}
+    end;}
   DrawVirtualKey;
 end;
 
@@ -1272,20 +1254,18 @@ begin
   depth := CalBlock(x, y);
   if MODVersion = 62 then
   begin
-    DrawBPic(Rrole[Brole[Bfield[2, x, y]].rnum].ListNum * 4 + Brole[Bfield[2, x, y]].Face + BEGIN_BATTLE_ROLE_PIC,
-      pos.x, pos.y, 0, Alpha, depth, mixColor, mixAlpha);
+    DrawBPic(Rrole[Brole[Bfield[2, x, y]].rnum].ListNum * 4 + Brole[Bfield[2, x, y]].Face + BEGIN_BATTLE_ROLE_PIC, pos.x, pos.y, 0, Alpha, depth, mixColor, mixAlpha);
     exit;
   end;
-  DrawBPic(Rrole[Brole[Bfield[2, x, y]].rnum].HeadNum * 4 + Brole[Bfield[2, x, y]].Face + BEGIN_BATTLE_ROLE_PIC,
-    pos.x, pos.y, 0, Alpha, depth, mixColor, mixAlpha);
+  DrawBPic(Rrole[Brole[Bfield[2, x, y]].rnum].HeadNum * 4 + Brole[Bfield[2, x, y]].Face + BEGIN_BATTLE_ROLE_PIC, pos.x, pos.y, 0, Alpha, depth, mixColor, mixAlpha);
 
   //if (Bfield[1, i1, i2] > 0) then
   {begin
     pos1 := GetPositionOnScreen(i1, i2, Bx, By);
     DrawBPicInRect(Bfield[1, i1, i2] div 2, pos1.x, pos1.y, 0, pos.x - 20, pos.y - 60, 40, 60);
     if (Bfield[2, i1, i2] >= 0) and (Brole[Bfield[2, i1, i2]].Dead = 0) then
-      DrawBPicInRect(Rrole[Brole[Bfield[2, x, y]].rnum].HeadNum * 4 + Brole[Bfield[2, i1, i2]].Face + BEGIN_BATTLE_ROLE_PIC, pos1.x, pos1.y, 0, pos.x - 20, pos.y - 60, 40, 60);
-  end;}
+    DrawBPicInRect(Rrole[Brole[Bfield[2, x, y]].rnum].HeadNum * 4 + Brole[Bfield[2, i1, i2]].Face + BEGIN_BATTLE_ROLE_PIC, pos1.x, pos1.y, 0, pos.x - 20, pos.y - 60, 40, 60);
+    end;}
 
 end;
 
@@ -1371,28 +1351,28 @@ begin
   //SDL_SetAlpha(ImgBBuild, SDL_SRCALPHA, 255);
   {for i1 := 0 to screen.w - 1 do
     for i2 := 0 to screen.h - 1 do
-      if (x + i1 >= 0) and (y + i2 >= 0) and (x + i1 < 2304) and (y + i2 < 1152) and (BlockScreen[i1 * screen.h + i2] > 0) then
-      begin
-        pix := getpixel(Img, x + i1, y + i2);
-        if alpha <> 0 then
-        begin
-          colorin := getpixel(screen, i1, i2);
-          pix1 := pix and $FF;
-          color1 := colorin and $FF;
-          pix2 := pix shr 8 and $FF;
-          color2 := colorin shr 8 and $FF;
-          pix3 := pix shr 16 and $FF;
-          color3 := colorin shr 16 and $FF;
-          pix4 := pix shr 24 and $FF;
-          color4 := colorin shr 24 and $FF;
-          pix1 := (alpha * color1 + (100 - alpha) * pix1) div 100;
-          pix2 := (alpha * color2 + (100 - alpha) * pix2) div 100;
-          pix3 := (alpha * color3 + (100 - alpha) * pix3) div 100;
-          pix4 := (alpha * color4 + (100 - alpha) * pix4) div 100;
-          pix := pix1 + pix2 shl 8 + pix3 shl 16 + pix4 shl 24;
-        end;
-        putpixel(screen, i1, i2, pix);
-      end;}
+    if (x + i1 >= 0) and (y + i2 >= 0) and (x + i1 < 2304) and (y + i2 < 1152) and (BlockScreen[i1 * screen.h + i2] > 0) then
+    begin
+    pix := getpixel(Img, x + i1, y + i2);
+    if alpha <> 0 then
+    begin
+    colorin := getpixel(screen, i1, i2);
+    pix1 := pix and $FF;
+    color1 := colorin and $FF;
+    pix2 := pix shr 8 and $FF;
+    color2 := colorin shr 8 and $FF;
+    pix3 := pix shr 16 and $FF;
+    color3 := colorin shr 16 and $FF;
+    pix4 := pix shr 24 and $FF;
+    color4 := colorin shr 24 and $FF;
+    pix1 := (alpha * color1 + (100 - alpha) * pix1) div 100;
+    pix2 := (alpha * color2 + (100 - alpha) * pix2) div 100;
+    pix3 := (alpha * color3 + (100 - alpha) * pix3) div 100;
+    pix4 := (alpha * color4 + (100 - alpha) * pix4) div 100;
+    pix := pix1 + pix2 shl 8 + pix3 shl 16 + pix4 shl 24;
+    end;
+    putpixel(screen, i1, i2, pix);
+    end;}
 
 end;
 
@@ -1411,7 +1391,7 @@ begin
       if Bfield[0, i1, i2] > 0 then
       begin
         pos := GetPositionOnScreen(i1, i2, Bx, By);
-        if {(i1 = Ax) and (i2 = Ay)}  Bfield[4, i1, i2] > 0 then
+        if {(i1 = Ax) and (i2 = Ay)} Bfield[4, i1, i2] > 0 then
           //DrawBPic(Bfield[0, i1, i2] div 2, pos.x, pos.y, 0, 0, 0, $FFFFFFFF, 20)
           DrawBPic(Bfield[0, i1, i2] div 2, pos.x, pos.y, 1)
         else if (BField[3, i1, i2] >= 0) and (abs(i1 - Bx) + abs(i2 - By) <= step) then
@@ -1432,11 +1412,9 @@ begin
       if (bnum >= 0) and (Brole[bnum].Dead = 0) then
       begin
         if (Brole[bnum].Team <> Brole[Bfield[2, Bx, By]].Team) and (Bfield[4, i1, i2] > 0) then
-          DrawBPic(Rrole[Brole[bnum].rnum].HeadNum * 4 + Brole[bnum].Face + BEGIN_BATTLE_ROLE_PIC,
-            pos.x, pos.y, 0, 75, CalBlock(i1, i2), $FFFFFFFF, 20)
+          DrawBPic(Rrole[Brole[bnum].rnum].HeadNum * 4 + Brole[bnum].Face + BEGIN_BATTLE_ROLE_PIC, pos.x, pos.y, 0, 75, CalBlock(i1, i2), $FFFFFFFF, 20)
         else
-          DrawBPic(Rrole[Brole[bnum].rnum].HeadNum * 4 + Brole[bnum].Face + BEGIN_BATTLE_ROLE_PIC,
-            pos.x, pos.y, 0, 75, CalBlock(i1, i2), 0, 0);
+          DrawBPic(Rrole[Brole[bnum].rnum].HeadNum * 4 + Brole[bnum].Face + BEGIN_BATTLE_ROLE_PIC, pos.x, pos.y, 0, 75, CalBlock(i1, i2), 0, 0);
 
       end;
     end;
@@ -1451,13 +1429,13 @@ var
   pos: TPosition;
 begin
   {if (SDL_MustLock(screen)) then
-  begin
+    begin
     if (SDL_LockSurface(screen) < 0) then
     begin
-      MessageBox(0, putf8char(Format('Can''t lock screen : %s', [SDL_GetError])), 'Error', MB_OK or MB_ICONHAND);
-      exit;
+    MessageBox(0, putf8char(Format('Can''t lock screen : %s', [SDL_GetError])), 'Error', MB_OK or MB_ICONHAND);
+    exit;
     end;
-  end;}
+    end;}
   DrawBfieldWithoutRole(Bx, By);
 
   for i1 := 0 to 63 do
@@ -1472,9 +1450,9 @@ begin
   DrawProgress;
   //BFieldDrawn := 1;
   {if (SDL_MustLock(screen)) then
-  begin
+    begin
     SDL_UnlockSurface(screen);
-  end;}
+    end;}
 
 end;
 
@@ -1491,8 +1469,7 @@ begin
       pos := GetPositionOnScreen(i1, i2, Bx, By);
       if (Bfield[2, i1, i2] >= 0) and (Brole[Bfield[2, i1, i2]].Dead = 0) then
         DrawRoleOnBfield(i1, i2, 0, 50);
-      if (Bfield[4, i1, i2] > 0) and (Epicnum - Bfield[4, i1, i2] + 1 >= beginpic) and
-        (Epicnum - Bfield[4, i1, i2] + 1 <= endpic) then
+      if (Bfield[4, i1, i2] > 0) and (Epicnum - Bfield[4, i1, i2] + 1 >= beginpic) and (Epicnum - Bfield[4, i1, i2] + 1 <= endpic) then
         DrawEPic(Epicnum - Bfield[4, i1, i2] + 1, pos.x, pos.y, 0, 25, 0, 0, 0);
     end;
   DrawProgress;
@@ -1529,8 +1506,7 @@ begin
         end;
         //行动人物的动作停留在最后一帧
         if (bnum = k) and (Brole[bnum].pic > 0) then
-          DrawFPic(Brole[bnum].pic, pos.x, pos.y, Brole[bnum].Bhead, 0, 75, CalBlock(i1, i2),
-            mixColor, flash * (10 + random(40)))
+          DrawFPic(Brole[bnum].pic, pos.x, pos.y, Brole[bnum].Bhead, 0, 75, CalBlock(i1, i2), mixColor, flash * (10 + random(40)))
         else
           DrawRoleOnBfield(i1, i2, mixColor, flash * (10 + random(40)));
       end;
@@ -1539,7 +1515,7 @@ begin
         k := Epicnum + curlevel - Bfield[4, i1, i2];
         if (k >= beginpic) and (k <= endpic) then
         begin
-          DrawEPic(k, pos.x, pos.y, 0, 25{ shl 8 + 75}, CalBlock(i1, i2), 0, 0);
+          DrawEPic(k, pos.x, pos.y, 0, 25 {shl 8 + 75} , CalBlock(i1, i2), 0, 0);
         end;
       end;
     end;
@@ -1569,7 +1545,6 @@ begin
   DrawProgress;
 
 end;
-
 
 //绘制云
 procedure DrawClouds;
@@ -1635,7 +1610,7 @@ begin
             {if (BField[4, Brole[range[i]].X, Brole[range[i]].Y] > 0)
               and (Brole[BField[2, Bx, By]].Team <> Brole[range[i]].Team) then
               DrawRectangleWithoutFrame(screen, dest.x, dest.y, tempscr.w, tempscr.h,
-                SDL_MapRGB(screen.format, 200, 2, 0), 40);}
+              SDL_MapRGB(screen.format, 200, 2, 0), 40);}
           end;
         end;
     end;

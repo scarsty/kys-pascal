@@ -6,13 +6,13 @@ interface
 
 uses
   SysUtils,
-  {$IFDEF fpc}
+{$IFDEF fpc}
   LConvEncoding,
   LCLType,
   LCLIntf,
-  {$ELSE}
+{$ELSE}
   Windows,
-  {$ENDIF}
+{$ENDIF}
   SDL2_image,
   SDL2,
   Math,
@@ -102,7 +102,6 @@ function EnterNumber(MinValue, MaxValue, x, y: integer; Default: integer = 0): s
 function EnterString(var str: utf8string; x, y, w, h: integer): bool;
 procedure SetAttribute(rnum, selecttype, modlevel, minlevel, maxlevel: integer);
 
-
 implementation
 
 uses
@@ -134,10 +133,10 @@ var
   color: uint32;
 begin
   {if MODVersion = 62 then
-  begin
+    begin
     NewTalk(headnum, talknum, -1, 1, 1, $ffffffff, 0);
     exit;
-  end;}
+    end;}
 
   case dismode of
     0:
@@ -373,11 +372,11 @@ begin
   Sdata[list[0], 3, Ddata[list[0], list[1], 10], Ddata[list[0], list[1], 9]] := list[1];
 
   {if DData[CurScence, CurEvent, 5] <> curPic then
-  begin
+    begin
     InitialScence(1);
     Redraw;
     //SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-  end;}
+    end;}
   if (list[0] = CurScence) and (preEventPic <> DData[list[0], list[1], 5]) then
   begin
     NeedRefreshScence := 1;
@@ -398,7 +397,7 @@ end;
 function instruct_5(jump1, jump2: integer): integer;
 var
   menu: integer;
-  menuString: array[0..2] of utf8string;
+  menuString: array [0 .. 2] of utf8string;
 begin
   //setlength(menustring, 3);
   menuString[0] := '取消';
@@ -433,7 +432,7 @@ end;
 function instruct_9(jump1, jump2: integer): integer;
 var
   menu: integer;
-  menuString: array[0..2] of utf8string;
+  menuString: array [0 .. 2] of utf8string;
 begin
   //setlength(menustring, 3);
   menuString[0] := '取消';
@@ -481,7 +480,7 @@ end;
 function instruct_11(jump1, jump2: integer): integer;
 var
   menu: integer;
-  menuString: array[0..2] of utf8string;
+  menuString: array [0 .. 2] of utf8string;
 begin
   //setlength(menustring, 3);
   menuString[0] := ' 否';
@@ -509,7 +508,7 @@ begin
   begin
     rnum := Teamlist[i];
     if rnum >= 0 then
-      if not ((Rrole[rnum].Hurt > 33) or (Rrole[rnum].Poison > 0)) then
+      if not((Rrole[rnum].Hurt > 33) or (Rrole[rnum].Poison > 0)) then
       begin
         Rrole[rnum].CurrentHP := Rrole[rnum].MaxHP;
         Rrole[rnum].CurrentMP := Rrole[rnum].MaxMP;
@@ -645,7 +644,7 @@ end;
 procedure instruct_21(rnum: integer);
 var
   i, p: integer;
-  newlist: array[0..5] of integer;
+  newlist: array [0 .. 5] of integer;
 begin
   p := 0;
   for i := 0 to 5 do
@@ -1342,7 +1341,7 @@ var
   i: integer;
 begin
   {for i:=0 to endpic1-beginpic1 do
-  begin
+    begin
     DData[CurScence, [enum1,5]:=beginpic1+i;
     DData[CurScence, [enum2,5]:=beginpic2+i;
     UpdateScence(DData[CurScence, [enum1,10],DData[CurScence, [enum1,9]);
@@ -1351,7 +1350,7 @@ begin
     DrawScenceByCenter(Sx,Sy);
     DrawScence;
     SDL_UpdateRect2(screen,0,0,screen.w,screen.h);
-  end;}
+    end;}
   instruct_27(-1, 3832 * 2, 3844 * 2);
   instruct_44e(2, 3845 * 2, 3873 * 2, 3, 3874 * 2, 4, 3903 * 2);
 end;
@@ -1360,14 +1359,13 @@ procedure instruct_58;
 var
   i, p: integer;
 const
-  headarray: array[0..29] of integer = (8, 21, 23, 31, 32, 43, 7, 11, 14, 20, 33, 34, 10, 12, 19,
-    22, 56, 68, 13, 55, 62, 67, 70, 71, 26, 57, 60, 64, 3, 69);
+  headarray: array [0 .. 29] of integer = (8, 21, 23, 31, 32, 43, 7, 11, 14, 20, 33, 34, 10, 12, 19, 22, 56, 68, 13, 55, 62, 67, 70, 71, 26, 57, 60, 64, 3, 69);
 begin
   for i := 0 to 14 do
   begin
     p := random(2);
     instruct_1(2854 + i * 2 + p, headarray[i * 2 + p], random(2) * 4 + random(2));
-    if not (Battle(102 + i * 2 + p, 0)) then
+    if not(Battle(102 + i * 2 + p, 0)) then
     begin
       instruct_15;
       break;
@@ -1519,8 +1517,8 @@ end;
 procedure instruct_64;
 var
   i, amount, shopnum, menu, price: integer;
-  list: array[0..4] of integer;
-  menuString, menuEngString: array[0..4] of utf8string;
+  list: array [0 .. 4] of integer;
+  menuString, menuEngString: array [0 .. 4] of utf8string;
 begin
   //setlength(Menustring, 5);
   //setlength(Menuengstring, 5);
@@ -1541,8 +1539,7 @@ begin
   instruct_1($B9E, $6F, 0);
   if amount >= 1 then
   begin
-    menu := CommonMenu(CENTER_X - 120, 150, 105 + length(menuEngString[0]) * 10, amount - 1,
-      menuString, menuEngString);
+    menu := CommonMenu(CENTER_X - 120, 150, 105 + length(menuEngString[0]) * 10, amount - 1, menuString, menuEngString);
     Redraw;
     if menu >= 0 then
     begin
@@ -1572,7 +1569,7 @@ begin
   PlaySoundA(Soundnum, 0);
   {if SoundNum in [Low(Asound)..High(Asound)] then
     if Asound[SoundNum] <> nil then
-      Mix_PlayChannel(-1, Asound[SoundNum], 0);}
+    Mix_PlayChannel(-1, Asound[SoundNum], 0);}
 end;
 
 //50指令中获取变量值
@@ -1634,12 +1631,15 @@ begin
         0: x50[e3] := x50[e4] + t1;
         1: x50[e3] := x50[e4] - t1;
         2: x50[e3] := x50[e4] * t1;
-        3: if t1 <> 0 then
-            x50[e3] := x50[e4] div t1;
-        4: if t1 <> 0 then
-            x50[e3] := x50[e4] mod t1;
-        5: if t1 <> 0 then
-            x50[e3] := uint16(x50[e4]) div t1;
+        3:
+        if t1 <> 0 then
+          x50[e3] := x50[e4] div t1;
+        4:
+        if t1 <> 0 then
+          x50[e3] := x50[e4] mod t1;
+        5:
+        if t1 <> 0 then
+          x50[e3] := uint16(x50[e4]) div t1;
       end;
     end;
     4: //Judge the parameter.
@@ -1647,25 +1647,31 @@ begin
       x50[$7000] := 0;
       t1 := e_GetValue(0, e1, e4);
       case e2 of
-        0: if not (x50[e3] < t1) then
-            x50[$7000] := 1;
-        1: if not (x50[e3] <= t1) then
-            x50[$7000] := 1;
-        2: if not (x50[e3] = t1) then
-            x50[$7000] := 1;
-        3: if not (x50[e3] <> t1) then
-            x50[$7000] := 1;
-        4: if not (x50[e3] >= t1) then
-            x50[$7000] := 1;
-        5: if not (x50[e3] > t1) then
-            x50[$7000] := 1;
+        0:
+        if not(x50[e3] < t1) then
+          x50[$7000] := 1;
+        1:
+        if not(x50[e3] <= t1) then
+          x50[$7000] := 1;
+        2:
+        if not(x50[e3] = t1) then
+          x50[$7000] := 1;
+        3:
+        if not(x50[e3] <> t1) then
+          x50[$7000] := 1;
+        4:
+        if not(x50[e3] >= t1) then
+          x50[$7000] := 1;
+        5:
+        if not(x50[e3] > t1) then
+          x50[$7000] := 1;
         6: x50[$7000] := 0;
         7: x50[$7000] := 1;
       end;
     end;
     5: //Zero all parameters.
     begin
-      fillchar(x50[Low(x50)], sizeof(x50), 0);
+      fillchar(x50[low(x50)], sizeof(x50), 0);
     end;
     8: //Read talk to string.
     begin
@@ -1735,7 +1741,7 @@ begin
       //p^:=char(0);
     end;
     12: //Build a string with spaces.
-      //Note: here the width of one 'space' is the same as one Chinese charactor.
+    //Note: here the width of one 'space' is the same as one Chinese charactor.
     begin
       e3 := e_GetValue(0, e1, e3);
       p := @x50[e2];
@@ -2065,8 +2071,7 @@ begin
         if byte(p^) = $2A then
         begin
           p^ := char(0);
-          DrawBig5ShadowText(screen, p1, e3 + 3, e4 + 22 * i + 2, ColColor(e5 and $FF),
-            ColColor((e5 and $FF00) shl 8));
+          DrawBig5ShadowText(screen, p1, e3 + 3, e4 + 22 * i + 2, ColColor(e5 and $FF), ColColor((e5 and $FF00) shl 8));
           i := i + 1;
           p1 := p + 1;
         end;
@@ -2170,7 +2175,7 @@ begin
       x50[$7101] := e4;
       x50[$7102] := e5;
       x50[$7103] := e6;
-      if e2 = 202 then  //得到物品
+      if e2 = 202 then //得到物品
       begin
         if e5 = 0 then
           instruct_2(e3, e4)
@@ -2192,7 +2197,7 @@ begin
         ShowScenceName(CurScence);
         CheckEvent3;
       end
-      else if (e2 = 176) and (MODVersion = 22) then  //菠萝三国输入数字
+      else if (e2 = 176) and (MODVersion = 22) then //菠萝三国输入数字
       begin
         x50[10032] := EnterNumber(0, 32767, CENTER_X, CENTER_Y - 100);
         x50[$7000] := 0;
@@ -2338,7 +2343,7 @@ var
   offset, len, i1, i2, face, c, nx, ny, hx, hy, hw, hh, x, y, w, h, cell, row: integer;
   np3, np, np1, np2, tp, p1, ap: putf8char;
   actorarray, talkarray, namearray, name1, name2: array of byte;
-  words: array[0..1] of uint16;
+  words: array [0 .. 1] of uint16;
   {wd,} str: utf8string;
   temp2: utf8string;
   wd: utf8string;
@@ -2443,7 +2448,7 @@ begin
         for n := 0 to namelen - 1 do
         begin
           (np + n)^ := (p1 + n)^;
-          // if (p1 + n)^ = char(0) then break;
+          //if (p1 + n)^ = char(0) then break;
         end;
         (np + n)^ := char(0);
         (np + n + 1)^ := char(0);
@@ -2493,18 +2498,7 @@ begin
   end
   else if alen > 6 then
   begin
-    if ((PWord(ap)^ = $6EAB) and ((PWord(ap + 2)^ = $63AE))) or
-      ((PWord(ap)^ = $E8A6) and ((PWord(ap + 2)^ = $F9AA))) or ((PWord(ap)^ = $46AA) and
-      ((PWord(ap + 2)^ = $E8A4))) or ((PWord(ap)^ = $4FA5) and ((PWord(ap + 2)^ = $B0AA))) or
-      ((PWord(ap)^ = $7DBC) and ((PWord(ap + 2)^ = $65AE))) or ((PWord(ap)^ = $71A5) and
-      ((PWord(ap + 2)^ = $A8B0))) or ((PWord(ap)^ = $D1BD) and ((PWord(ap + 2)^ = $AFB8))) or
-      ((PWord(ap)^ = $71A5) and ((PWord(ap + 2)^ = $C5AA))) or ((PWord(ap)^ = $D3A4) and
-      ((PWord(ap + 2)^ = $76A5))) or ((PWord(ap)^ = $BDA4) and ((PWord(ap + 2)^ = $5DAE))) or
-      ((PWord(ap)^ = $DABC) and ((PWord(ap + 2)^ = $A7B6))) or ((PWord(ap)^ = $43AD) and
-      ((PWord(ap + 2)^ = $DFAB))) or ((PWord(ap)^ = $71A5) and ((PWord(ap + 2)^ = $7BAE))) or
-      ((PWord(ap)^ = $B9A7) and ((PWord(ap + 2)^ = $43C3))) or ((PWord(ap)^ = $61B0) and
-      ((PWord(ap + 2)^ = $D5C1))) or ((PWord(ap)^ = $74A6) and ((PWord(ap + 2)^ = $E5A4))) or
-      ((PWord(ap)^ = $DDA9) and ((PWord(ap + 2)^ = $5BB6))) then
+    if ((PWord(ap)^ = $6EAB) and ((PWord(ap + 2)^ = $63AE))) or ((PWord(ap)^ = $E8A6) and ((PWord(ap + 2)^ = $F9AA))) or ((PWord(ap)^ = $46AA) and ((PWord(ap + 2)^ = $E8A4))) or ((PWord(ap)^ = $4FA5) and ((PWord(ap + 2)^ = $B0AA))) or ((PWord(ap)^ = $7DBC) and ((PWord(ap + 2)^ = $65AE))) or ((PWord(ap)^ = $71A5) and ((PWord(ap + 2)^ = $A8B0))) or ((PWord(ap)^ = $D1BD) and ((PWord(ap + 2)^ = $AFB8))) or ((PWord(ap)^ = $71A5) and ((PWord(ap + 2)^ = $C5AA))) or ((PWord(ap)^ = $D3A4) and ((PWord(ap + 2)^ = $76A5))) or ((PWord(ap)^ = $BDA4) and ((PWord(ap + 2)^ = $5DAE))) or ((PWord(ap)^ = $DABC) and ((PWord(ap + 2)^ = $A7B6))) or ((PWord(ap)^ = $43AD) and ((PWord(ap + 2)^ = $DFAB))) or ((PWord(ap)^ = $71A5) and ((PWord(ap + 2)^ = $7BAE))) or ((PWord(ap)^ = $B9A7) and ((PWord(ap + 2)^ = $43C3))) or ((PWord(ap)^ = $61B0) and ((PWord(ap + 2)^ = $D5C1))) or ((PWord(ap)^ = $74A6) and ((PWord(ap + 2)^ = $E5A4))) or ((PWord(ap)^ = $DDA9) and ((PWord(ap + 2)^ = $5BB6))) then
     begin
       setlength(name1, 5);
       np1 := @name1[0];
@@ -2540,7 +2534,7 @@ begin
   begin
     setlength(wd, length(wd) + 1);
     wd[length(wd) - 1] := str[i];
-    if (integer(str[i]) in [$81..$FE]) {and (integer(str[i + 1]) <> $7E)} then
+    if (integer(str[i]) in [$81 .. $FE]) {and (integer(str[i + 1]) <> $7E)} then
     begin
       setlength(wd, length(wd) + 1);
       wd[length(wd) - 1] := str[i + 1];
@@ -2548,11 +2542,11 @@ begin
       Inc(i, 2);
       continue;
     end;
-    if (integer(str[i]) in [$20..$7F]) then
+    if (integer(str[i]) in [$20 .. $7F]) then
     begin
       if str[i] = '^' then
       begin
-        if (integer(str[i + 1]) in [$30..$39]) or (str[i + 1] = '^') then
+        if (integer(str[i + 1]) in [$30 .. $39]) or (str[i + 1] = '^') then
         begin
           setlength(wd, length(wd) + 1);
           wd[length(wd) - 1] := str[i + 1];
@@ -2655,8 +2649,7 @@ begin
             4: newcolor := 28466;
             5: newcolor := 28450;
             64: newcolor := color;
-            else
-              newcolor := color;
+            else newcolor := color;
           end;
           color1 := newcolor and $FF;
           color2 := (newcolor shr 8) and $FF;
@@ -2665,7 +2658,7 @@ begin
         begin
           SDL_Delay(500);
         end
-        else if words[0] = $2A2A then //**换行
+        else if words[0] = $2A2A then // **换行
         begin
           if c1 > 0 then
             Inc(r1);
@@ -2692,8 +2685,7 @@ begin
           begin
             words[0] := PWord(np3 + i)^;
             i := i + 2;
-            DrawBig5ShadowText(screen, @words[0], x + 6 + CHINESE_FONT_SIZE * c1, y + 4 +
-              CHINESE_FONT_SIZE * r1, ColColor(color1), ColColor(color2));
+            DrawBig5ShadowText(screen, @words[0], x + 6 + CHINESE_FONT_SIZE * c1, y + 4 + CHINESE_FONT_SIZE * r1, ColColor(color1), ColColor(color2));
             Inc(c1);
             if c1 = cell then
             begin
@@ -2736,8 +2728,7 @@ begin
         end
         else //显示文字
         begin
-          DrawBig5ShadowText(screen, @words[0], x + 6 + CHINESE_FONT_SIZE * c1, y + 4 +
-            CHINESE_FONT_SIZE * r1, ColColor(color1), ColColor(color2));
+          DrawBig5ShadowText(screen, @words[0], x + 6 + CHINESE_FONT_SIZE * c1, y + 4 + CHINESE_FONT_SIZE * r1, ColColor(color1), ColColor(color2));
           Inc(c1);
           if c1 = cell then
           begin
@@ -2764,19 +2755,18 @@ begin
   setlength(temp2, 0);
 end;
 
-
 //输入数字, 最小值, 最大值, 坐标x, y. 当结果被范围修正时有提示.
 function EnterNumber(MinValue, MaxValue, x, y: integer; Default: integer = 0): smallint;
 var
   Value, i, menu, sure, pvalue, pmenu, highButton: integer;
-  str: array[0..13] of utf8string;
+  str: array [0 .. 13] of utf8string;
   color: uint32;
   strv, strr: utf8string;
   //tempscr: psdl_surface;
-  Button: array[0..13] of TSDL_Rect;
+  Button: array [0 .. 13] of TSDL_Rect;
 begin
   CleanKeyValue;
-  Value := Default;
+  Value := default;
   MinValue := max(-32768, MinValue);
   MaxValue := min(32767, MaxValue);
   //13个按钮的位置和大小
@@ -2813,7 +2803,7 @@ begin
   DrawRectangle(screen, x, y, 180, 180, 0, ColColor(255), 50);
   DrawRectangle(screen, x + 20, y + 10, 140, 23, 0, ColColor(255), 75);
   highButton := high(Button);
-  for  i := 0 to highButton do
+  for i := 0 to highButton do
   begin
     DrawRectangle(screen, Button[i].x, Button[i].y, Button[i].w, Button[i].h, 0, ColColor(255), 50);
   end;
@@ -2833,8 +2823,8 @@ begin
       SDL_KEYUP:
       begin
         case event.key.keysym.sym of
-          SDLK_0..SDLK_9: menu := event.key.keysym.sym - SDLK_0;
-          SDLK_KP_1..SDLK_KP_9: menu := event.key.keysym.sym - SDLK_KP_1 + 1;
+          SDLK_0 .. SDLK_9: menu := event.key.keysym.sym - SDLK_0;
+          SDLK_KP_1 .. SDLK_KP_9: menu := event.key.keysym.sym - SDLK_KP_1 + 1;
           SDLK_KP_0: menu := 0;
           SDLK_MINUS, SDLK_KP_MINUS: menu := 10;
           SDLK_DELETE: menu := 12;
@@ -2882,8 +2872,7 @@ begin
       DrawShadowText(strv, x + 80, y + 10, ColColor($64), ColColor($66));
       if (menu >= 0) and (menu <= highButton) then
       begin
-        DrawRectangle(screen, Button[menu].x, Button[menu].y, Button[menu].w, Button[menu].h,
-          ColColor(20 * i + random(20)), ColColor(255), 50);
+        DrawRectangle(screen, Button[menu].x, Button[menu].y, Button[menu].w, Button[menu].h, ColColor(20 * i + random(20)), ColColor(255), 50);
       end;
       for i := 0 to highButton do
       begin
@@ -2898,15 +2887,15 @@ begin
     if sure > 0 then
     begin
       case menu of
-        0.. 9:
-          if Value * 10 < 1e5 then
-            Value := 10 * Value + menu;
+        0 .. 9:
+        if Value * 10 < 1E5 then
+          Value := 10 * Value + menu;
         10: Value := -Value;
         11: Value := Value div 10;
         12: Value := 0;
         else
-          if menu = highButton then
-            break;
+        if menu = highButton then
+          break;
       end;
       if sure = 1 then
         menu := -1;
@@ -2927,7 +2916,6 @@ begin
   CleanKeyValue;
   //FreeFreshScreen;
 end;
-
 
 function EnterString(var str: utf8string; x, y, w, h: integer): bool;
 var
@@ -2985,11 +2973,9 @@ begin
   SDL_StopTextInput();
 end;
 
-
 procedure SetAttribute(rnum, selecttype, modlevel, minlevel, maxlevel: integer);
 begin
 
 end;
-
 
 end.

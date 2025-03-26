@@ -6,14 +6,14 @@ interface
 
 uses
   SysUtils,
-  {$IFDEF fpc}
+{$IFDEF fpc}
   LConvEncoding,
   LCLType,
   LCLIntf,
-  {$ENDIF}
-  {$IFDEF mswindows}
+{$ENDIF}
+{$IFDEF mswindows}
   Windows,
-  {$ENDIF}
+{$ENDIF}
   Math,
   Dialogs,
   SDL2_TTF,
@@ -138,8 +138,9 @@ begin
   {or (e.type_ = SDL_FINGERMOTION)}
   case e.type_ of
     SDL_FINGERUP, SDL_FINGERDOWN, SDL_CONTROLLERAXISMOTION, SDL_CONTROLLERBUTTONDOWN, SDL_CONTROLLERBUTTONUP: Result := 0;
-    SDL_FINGERMOTION: if CellPhone = 0 then
-        Result := 0;
+    SDL_FINGERMOTION:
+    if CellPhone = 0 then
+      Result := 0;
   end;
 end;
 
@@ -376,105 +377,105 @@ begin
 end;
 
 {procedure InitialMusic;
-var
+  var
   i: integer;
   str: utf8string;
-begin
+  begin
   for i := 0 to 23 do
   begin
-    str := AppPath + 'music/' + inttostr(i) + '.mid';
-    if FileExists(putf8char(str)) then
-    begin
-      Music[i] := Mix_LoadMUS(putf8char(str));
-    end
-    else
-      Music[i] := nil;
+  str := AppPath + 'music/' + inttostr(i) + '.mid';
+  if FileExists(putf8char(str)) then
+  begin
+  Music[i] := Mix_LoadMUS(putf8char(str));
+  end
+  else
+  Music[i] := nil;
   end;
   for i := 0 to 52 do
   begin
-    str := AppPath + formatfloat('sound/e00', i) + '.wav';
-    if FileExists(putf8char(str)) then
-      ESound[i] := Mix_LoadWav(putf8char(str))
-    else
-      ESound[i] := nil;
+  str := AppPath + formatfloat('sound/e00', i) + '.wav';
+  if FileExists(putf8char(str)) then
+  ESound[i] := Mix_LoadWav(putf8char(str))
+  else
+  ESound[i] := nil;
   end;
   for i := 0 to 24 do
   begin
-    str := AppPath + formatfloat('sound/atk00', i) + '.wav';
-    if FileExists(putf8char(str)) then
-      ASound[i] := Mix_LoadWav(putf8char(str))
-    else
-      ASound[i] := nil;
+  str := AppPath + formatfloat('sound/atk00', i) + '.wav';
+  if FileExists(putf8char(str)) then
+  ASound[i] := Mix_LoadWav(putf8char(str))
+  else
+  ASound[i] := nil;
   end;
 
-end;
+  end;
 
-//播放mp3音乐
-procedure PlayMP3(MusicNum, times: integer); overload;
-begin
+  //播放mp3音乐
+  procedure PlayMP3(MusicNum, times: integer); overload;
+  begin
   if MusicNum in [Low(Music)..High(Music)] then
   begin
 
-    if Music[MusicNum] <> nil then
-    begin
-      Mix_PlayMusic(Music[MusicNum], times);
-    end;
+  if Music[MusicNum] <> nil then
+  begin
+  Mix_PlayMusic(Music[MusicNum], times);
+  end;
   end;
 
-end;
+  end;
 
-procedure PlayMP3(filename: putf8char; times: integer); overload;
-begin
+  procedure PlayMP3(filename: putf8char; times: integer); overload;
+  begin
   //if fileexists(filename) then
   //begin
-    //Music := Mix_LoadMUS(filename);
-    //Mix_volumemusic(MIX_MAX_VOLUME div 3);
-    //Mix_PlayMusic(music, times);
+  //Music := Mix_LoadMUS(filename);
+  //Mix_volumemusic(MIX_MAX_VOLUME div 3);
+  //Mix_PlayMusic(music, times);
   //end;
 
-end;
+  end;
 
-//停止当前播放的音乐
-procedure StopMP3;
-begin
+  //停止当前播放的音乐
+  procedure StopMP3;
+  begin
   Mix_HaltMusic;
 
-end;
+  end;
 
-//播放eft音效
-procedure PlaySoundE(SoundNum, times: integer); overload;
-begin
+  //播放eft音效
+  procedure PlaySoundE(SoundNum, times: integer); overload;
+  begin
   if SoundNum in [Low(Esound)..High(Esound)] then
-    if Esound[SoundNum] <> nil then
-      Mix_PlayChannel(-1, Esound[SoundNum], times);
+  if Esound[SoundNum] <> nil then
+  Mix_PlayChannel(-1, Esound[SoundNum], times);
 
-end;
+  end;
 
-procedure PlaySoundE(SoundNum: integer); overload;
-begin
+  procedure PlaySoundE(SoundNum: integer); overload;
+  begin
   if SoundNum in [Low(Esound)..High(Esound)] then
-    if Esound[SoundNum] <> nil then
-      Mix_PlayChannel(-1, Esound[SoundNum], 0);
+  if Esound[SoundNum] <> nil then
+  Mix_PlayChannel(-1, Esound[SoundNum], 0);
 
-end;
+  end;
 
-procedure PlaySoundE(filename: putf8char; times: integer); overload;
-begin
+  procedure PlaySoundE(filename: putf8char; times: integer); overload;
+  begin
   if fileexists(filename) then
   begin
-    Sound := Mix_LoadWav(filename);
-    Mix_PlayChannel(-1, sound, times);
+  Sound := Mix_LoadWav(filename);
+  Mix_PlayChannel(-1, sound, times);
   end;
-end;
+  end;
 
-//播放atk音效
-procedure PlaySoundA(SoundNum, times: integer);
-begin
+  //播放atk音效
+  procedure PlaySoundA(SoundNum, times: integer);
+  begin
   if SoundNum in [Low(ASound)..High(ASound)] then
-    if ASound[SoundNum] <> nil then
-      Mix_PlayChannel(-1, ASound[SoundNum], times);
+  if ASound[SoundNum] <> nil then
+  Mix_PlayChannel(-1, ASound[SoundNum], times);
 
-end;}
+  end;}
 
 procedure ReadTiles;
 var
@@ -499,7 +500,7 @@ begin
     SPicAmount := LoadPNGTiles('resource/smap', SPNGIndex, SPNGTile, 1);
     {for i := BeginScenceRolePic to BeginScenceRolePic + 27 do
       LoadOnePNGTile('resource/smap', nil,i, SPNGIndex[i], @SPNGTile[0]);
-    for i := 3410 to 4102 do
+      for i := 3410 to 4102 do
       LoadOnePNGTile('resource/smap', nil,i, SPNGIndex[i], @SPNGTile[0]);}
     BPicAmount := LoadPNGTiles('resource/wmap', BPNGIndex, BPNGTile, 1);
     EPicAmount := LoadPNGTiles('resource/eft', EPNGIndex, EPNGTile, 1);
@@ -509,7 +510,7 @@ begin
   if BIG_PNG_TILE > 0 then
   begin
     {MMapSurface :=  LoadSurfaceFromFile(AppPath + 'resource/bigpng/mmap.png');
-    if MMapSurface <> nil then
+      if MMapSurface <> nil then
       writeln('Main map loaded.');}
   end;
 end;
@@ -529,11 +530,11 @@ begin
     if malloc = 1 then
     begin
       //GetMem(result, size + 4);
-      {$IFDEF fpc}
+{$IFDEF fpc}
       Result := StrAlloc(size + 4);
-      {$ELSE}
+{$ELSE}
       Result := AnsiStrAlloc(size + 4);
-      {$ENDIF}
+{$ENDIF}
       p := Result;
       //writeln(StrBufSize(p));
     end;
@@ -784,13 +785,13 @@ begin
 end;
 
 {function LoadSurfaceFromZIPFile(zipFile: unzFile; filename: utf8string): PSDL_Surface;
-var
+  var
   //archiver: unzFile;
   //info: unz_file_info;
   buffer: putf8char;
-begin
+  begin
 
-end;}
+  end;}
 
 procedure FreeAllSurface;
 var
@@ -832,23 +833,23 @@ begin
   begin
     Result := PUint32(nativeuint(surface.pixels) + y * surface.pitch + x * 4)^;
     {bpp := surface.format.BytesPerPixel;
-    // Here p is the address to the pixel we want to retrieve
-    p := Pointer(uint32(surface.pixels) + y * surface.pitch + x * bpp);
-    case bpp of
+      // Here p is the address to the pixel we want to retrieve
+      p := Pointer(uint32(surface.pixels) + y * surface.pitch + x * bpp);
+      case bpp of
       1:
-        Result := longword(p^);
+      Result := longword(p^);
       2:
-        Result := puint16(p)^;
+      Result := puint16(p)^;
       3:
-        if (SDL_BYTEORDER = SDL_BIG_ENDIAN) then
-          Result := PByteArray(p)[0] shl 16 or PByteArray(p)[1] shl 8 or PByteArray(p)[2]
-        else
-          Result := PByteArray(p)[0] or PByteArray(p)[1] shl 8 or PByteArray(p)[2] shl 16;
-      4:
-        Result := puint32(p)^;
+      if (SDL_BYTEORDER = SDL_BIG_ENDIAN) then
+      Result := PByteArray(p)[0] shl 16 or PByteArray(p)[1] shl 8 or PByteArray(p)[2]
       else
-        Result := 0; // shouldn't happen, but avoids warnings
-    end;}
+      Result := PByteArray(p)[0] or PByteArray(p)[1] shl 8 or PByteArray(p)[2] shl 16;
+      4:
+      Result := puint32(p)^;
+      else
+      Result := 0; // shouldn't happen, but avoids warnings
+      end;}
   end;
 
 end;
@@ -866,30 +867,30 @@ begin
   begin
     PUint32(nativeuint(surface.pixels) + y * surface.pitch + x * 4)^ := pixel;
     {bpp := surface.format.BytesPerPixel;
-    // Here p is the address to the pixel we want to set
-    p := Pointer(uint32(surface.pixels) + y * surface.pitch + x * bpp);
+      // Here p is the address to the pixel we want to set
+      p := Pointer(uint32(surface.pixels) + y * surface.pitch + x * bpp);
 
-    case bpp of
+      case bpp of
       1:
-        longword(p^) := pixel;
+      longword(p^) := pixel;
       2:
-        puint16(p)^ := pixel;
+      puint16(p)^ := pixel;
       3:
-        if (SDL_BYTEORDER = SDL_BIG_ENDIAN) then
-        begin
-          PByteArray(p)[0] := (pixel shr 16) and $FF;
-          PByteArray(p)[1] := (pixel shr 8) and $FF;
-          PByteArray(p)[2] := pixel and $FF;
-        end
-        else
-        begin
-          PByteArray(p)[0] := pixel and $FF;
-          PByteArray(p)[1] := (pixel shr 8) and $FF;
-          PByteArray(p)[2] := (pixel shr 16) and $FF;
-        end;
+      if (SDL_BYTEORDER = SDL_BIG_ENDIAN) then
+      begin
+      PByteArray(p)[0] := (pixel shr 16) and $FF;
+      PByteArray(p)[1] := (pixel shr 8) and $FF;
+      PByteArray(p)[2] := pixel and $FF;
+      end
+      else
+      begin
+      PByteArray(p)[0] := pixel and $FF;
+      PByteArray(p)[1] := (pixel shr 8) and $FF;
+      PByteArray(p)[2] := (pixel shr 16) and $FF;
+      end;
       4:
-        puint32(p)^ := pixel;
-    end;}
+      puint32(p)^ := pixel;
+      end;}
   end;
 end;
 
@@ -899,7 +900,7 @@ var
   Image: PSDL_Surface;
   dest: TSDL_Rect;
 begin
-  if FileExists(file_name){*Converted from FileExists*} then
+  if FileExists(file_name) {*Converted from FileExists*} then
   begin
     Image := SDL_LoadBMP(file_name);
     if (Image = nil) then
@@ -922,7 +923,7 @@ var
   Image: PSDL_Surface;
   dest: TSDL_Rect;
 begin
-  if FileExists(file_name){*Converted from FileExists*} then
+  if FileExists(file_name) {*Converted from FileExists*} then
   begin
     Image := IMG_Load(file_name);
     if (Image = nil) then
@@ -1206,22 +1207,22 @@ var
   strw: WideString;
   instr, outstr: ansistring;
 begin
-  {$ifdef fpc}
-  instr:='cp'+inttostr(input);
-  outstr := 'cp'+inttostr(output);
-  if input=65001 then
-  instr:='utf8';
-  if output=65001 then
-  outstr:='utf8';
-  result:=ConvertEncoding(str, instr, outstr);
-  {$else}
+{$IFDEF fpc}
+  instr := 'cp' + inttostr(input);
+  outstr := 'cp' + inttostr(output);
+  if input = 65001 then
+    instr := 'utf8';
+  if output = 65001 then
+    outstr := 'utf8';
+  result := ConvertEncoding(str, instr, outstr);
+{$ELSE}
   len := MultiByteToWideChar(input, 0, @str[1], -1, nil, 0);
   setlength(strw, len - 1);
   MultiByteToWideChar(input, 0, @str[1], length(str), @strw[1], len + 1);
   len := WideCharToMultiByte(output, 0, @strw[1], -1, nil, 0, nil, nil);
   setlength(Result, len - 1);
   WideCharToMultiByte(output, 0, @strw[1], length(strw), @Result[1], len - 1, nil, nil);
-  {$endif}
+{$ENDIF}
 end;
 
 //显示unicode文字
@@ -1381,9 +1382,9 @@ var
   r, g, b, r1, g1, b1, a: byte;
 begin
   {if (SDL_MustLock(screen)) then
-  begin
+    begin
     SDL_LockSurface(screen);
-  end;}
+    end;}
   tempscr := SDL_CreateRGBSurface(sur.flags, w + 1, h + 1, 32, RMask, GMask, BMask, AMask);
   SDL_GetRGB(colorin, tempscr.format, @r, @g, @b);
   SDL_GetRGB(colorframe, tempscr.format, @r1, @g1, @b1);
@@ -1400,7 +1401,7 @@ begin
       l3 := (i1) - (i2 - h);
       l4 := -(i1 - w) - (i2 - h);
       //4边角
-      if not ((l1 >= 4) and (l2 >= 4) and (l3 >= 4) and (l4 >= 4)) then
+      if not((l1 >= 4) and (l2 >= 4) and (l3 >= 4) and (l4 >= 4)) then
       begin
         PutPixel(tempscr, i1, i2, 0);
       end;
@@ -1416,9 +1417,9 @@ begin
   SDL_BlitSurface(tempscr, nil, sur, @dest);
   SDL_FreeSurface(tempscr);
   {if (SDL_MustLock(screen)) then
-  begin
+    begin
     SDL_UnlockSurface(screen);
-  end;}
+    end;}
 
 end;
 
@@ -1429,9 +1430,9 @@ var
   dest: TSDL_Rect;
 begin
   {if (SDL_MustLock(screen)) then
-  begin
+    begin
     SDL_LockSurface(screen);
-  end;}
+    end;}
   tempscr := SDL_CreateRGBSurface(sur.flags, w, h, 32, RMask, GMask, BMask, AMask);
   SDL_FillRect(tempscr, nil, colorin or $FF000000);
   SDL_SetSurfaceAlphaMod(tempscr, alpha * 255 div 100);
@@ -1441,9 +1442,9 @@ begin
   SDL_FreeSurface(tempscr);
   //boxRGBA(sur, x, y, x+w-1, y+h-1, 0,0,0,alpha * 255 div 100);
   {if (SDL_MustLock(screen)) then
-  begin
+    begin
     SDL_UnlockSurface(screen);
-  end;}
+    end;}
 
 end;
 
@@ -1516,132 +1517,132 @@ var
   lenInt: integer;
 begin
   {with PNGIndex do
-  begin
+    begin
     if (CurPointer <> nil) and (Loaded = 1) and (Frame > 0) then
     begin
-      if frame > 1 then
-        Inc(CurPointer, FrameNum mod Frame);
-      CurSurface := CurPointer^;
-      if CurSurface <> nil then
-      begin
-        if RectArea <> nil then
-        begin
-          area := PSDL_Rect(RectArea)^;
-          x1 := area.x;
-          y1 := area.y;
-          x2 := x1 + area.w;
-          y2 := y1 + area.h;
-        end
-        else
-        begin
-          x1 := 0;
-          y1 := 0;
-          x2 := scr.w;
-          y2 := scr.h;
-        end;
-        dest.x := px - x + 1;
-        dest.y := py - y + 1;
-        dest.w := CurSurface.w;
-        dest.h := CurSurface.h;
-        if (dest.x + CurSurface.w >= x1) and (dest.y + CurSurface.h >= y1) and (dest.x < x2) and
-          (dest.y < y2) then
-        begin
-          if shadow > 0 then
-          begin
-            mixColor := $FFFFFFFF;
-            mixAlpha := shadow * 25;
-          end
-          else if shadow < 0 then
-          begin
-            mixColor := 0;
-            mixAlpha := -shadow * 25;
-          end;
-          if (mixAlpha = 0) and (BlockImgR = nil) then
-          begin
-            if (alpha > 0) then
-            begin
-              //注意, 使用以下特殊算法, 是由图片格式决定
-              //资源标准为带有透明通道的Surface, 因此总的Alpha和ColorKey值无效
-              //将所画图片直接画入背景, 再将结果与背景混合
-              tempscr := SDL_DisplayFormat(CurSurface);
-              SDL_BlitSurface(scr, @dest, tempscr, nil);
-              SDL_BlitSurface(CurSurface, nil, tempscr, nil);
-              SDL_SetAlpha(tempscr, SDL_SRCALPHA, 255 - alpha * 255 div 100);
-              SDL_BlitSurface(tempscr, nil, scr, @dest);
-              SDL_FreeSurface(tempscr);
-            end
-            else
-              SDL_BlitSurface(CurSurface, nil, scr, @dest);
-          end
-          else
-          begin
-            tempscr := SDL_DisplayFormatAlpha(CurSurface);
-            //SDL_BlitSurface(tempscr, nil, scr, @dest);
-            if (mixAlpha > 0) then
-            begin
-              //mixalpha := 100;
-              tran := mixAlpha * 255 div 100;
-              bigtran := tran * $01010101;
-              Mask := tempscr.format.AMask;
-              tempscrfront := SDL_DisplayFormatAlpha(CurSurface);
-              SDL_FillRect(tempscrfront, nil, (mixColor and (not Mask)) or (bigtran and Mask));
-              SDL_BlitSurface(tempscrfront, nil, tempscr, nil);
-              if (BlockImgR = nil) then
-              begin
-                if alpha > 0 then
-                begin
-                  tempscrback := SDL_DisplayFormat(CurSurface);
-                  SDL_BlitSurface(scr, @dest, tempscrback, nil);
-                  SDL_BlitSurface(tempscr, nil, tempscrback, nil);
-                  SDL_SetAlpha(tempscrback, SDL_SRCALPHA, 255 - alpha * 255 div 100);
-                  SDL_BlitSurface(tempscrback, nil, scr, @dest);
-                  SDL_FreeSurface(tempscrback);
-                end
-                else
-                begin
-                  SDL_BlitSurface(tempscr, nil, scr, @dest);
-                end;
-              end
-              else
-              begin
-                //SDL_BlitSurface(tempscrback, nil, scr, @dest);
-                //SDL_BlitSurface(tempscrback, nil, tempscr, nil);
-              end;
-              SDL_FreeSurface(tempscrfront);
-            end;
-            if (BlockImgR <> nil) then
-            begin
-              tran := 255 - alpha * 255 div 100;
-              //将透明通道的值写入所有位, 具体的位置由蒙板决定
-              bigtran := tran * $01010101;
-              Mask := tempscr.format.AMask;
-              for i1 := 0 to tempscr.w - 1 do
-              begin
-                for i2 := 0 to tempscr.h - 1 do
-                begin
-                  pixdepth := psmallint(BlockImgR + ((dest.x + leftupx + i1) * Height + dest.y +
-                    leftupy + i2) * size)^;
-                  pixel := GetPixel(tempscr, i1, i2);
-                  AlphaValue := pixel and Mask;
-                  if AlphaValue > 0 then
-                  begin
-                    if (pixdepth > depth) then
-                    begin
-                      //替换透明通道的值
-                      //注意: 这里如果效率较低, 则改用完全指针, 或者汇编编写. 设置偏移也相同
-                      PutPixel(tempscr, i1, i2, (pixel and (not Mask)) or (bigtran and Mask));
-                    end;
-                  end;
-                end;
-              end;
-              SDL_BlitSurface(tempscr, nil, scr, @dest);
-            end;
-            SDL_FreeSurface(tempscr);
-          end;
-        end;
-      end;
+    if frame > 1 then
+    Inc(CurPointer, FrameNum mod Frame);
+    CurSurface := CurPointer^;
+    if CurSurface <> nil then
+    begin
+    if RectArea <> nil then
+    begin
+    area := PSDL_Rect(RectArea)^;
+    x1 := area.x;
+    y1 := area.y;
+    x2 := x1 + area.w;
+    y2 := y1 + area.h;
+    end
+    else
+    begin
+    x1 := 0;
+    y1 := 0;
+    x2 := scr.w;
+    y2 := scr.h;
     end;
-  end;}
+    dest.x := px - x + 1;
+    dest.y := py - y + 1;
+    dest.w := CurSurface.w;
+    dest.h := CurSurface.h;
+    if (dest.x + CurSurface.w >= x1) and (dest.y + CurSurface.h >= y1) and (dest.x < x2) and
+    (dest.y < y2) then
+    begin
+    if shadow > 0 then
+    begin
+    mixColor := $FFFFFFFF;
+    mixAlpha := shadow * 25;
+    end
+    else if shadow < 0 then
+    begin
+    mixColor := 0;
+    mixAlpha := -shadow * 25;
+    end;
+    if (mixAlpha = 0) and (BlockImgR = nil) then
+    begin
+    if (alpha > 0) then
+    begin
+    //注意, 使用以下特殊算法, 是由图片格式决定
+    //资源标准为带有透明通道的Surface, 因此总的Alpha和ColorKey值无效
+    //将所画图片直接画入背景, 再将结果与背景混合
+    tempscr := SDL_DisplayFormat(CurSurface);
+    SDL_BlitSurface(scr, @dest, tempscr, nil);
+    SDL_BlitSurface(CurSurface, nil, tempscr, nil);
+    SDL_SetAlpha(tempscr, SDL_SRCALPHA, 255 - alpha * 255 div 100);
+    SDL_BlitSurface(tempscr, nil, scr, @dest);
+    SDL_FreeSurface(tempscr);
+    end
+    else
+    SDL_BlitSurface(CurSurface, nil, scr, @dest);
+    end
+    else
+    begin
+    tempscr := SDL_DisplayFormatAlpha(CurSurface);
+    //SDL_BlitSurface(tempscr, nil, scr, @dest);
+    if (mixAlpha > 0) then
+    begin
+    //mixalpha := 100;
+    tran := mixAlpha * 255 div 100;
+    bigtran := tran * $01010101;
+    Mask := tempscr.format.AMask;
+    tempscrfront := SDL_DisplayFormatAlpha(CurSurface);
+    SDL_FillRect(tempscrfront, nil, (mixColor and (not Mask)) or (bigtran and Mask));
+    SDL_BlitSurface(tempscrfront, nil, tempscr, nil);
+    if (BlockImgR = nil) then
+    begin
+    if alpha > 0 then
+    begin
+    tempscrback := SDL_DisplayFormat(CurSurface);
+    SDL_BlitSurface(scr, @dest, tempscrback, nil);
+    SDL_BlitSurface(tempscr, nil, tempscrback, nil);
+    SDL_SetAlpha(tempscrback, SDL_SRCALPHA, 255 - alpha * 255 div 100);
+    SDL_BlitSurface(tempscrback, nil, scr, @dest);
+    SDL_FreeSurface(tempscrback);
+    end
+    else
+    begin
+    SDL_BlitSurface(tempscr, nil, scr, @dest);
+    end;
+    end
+    else
+    begin
+    //SDL_BlitSurface(tempscrback, nil, scr, @dest);
+    //SDL_BlitSurface(tempscrback, nil, tempscr, nil);
+    end;
+    SDL_FreeSurface(tempscrfront);
+    end;
+    if (BlockImgR <> nil) then
+    begin
+    tran := 255 - alpha * 255 div 100;
+    //将透明通道的值写入所有位, 具体的位置由蒙板决定
+    bigtran := tran * $01010101;
+    Mask := tempscr.format.AMask;
+    for i1 := 0 to tempscr.w - 1 do
+    begin
+    for i2 := 0 to tempscr.h - 1 do
+    begin
+    pixdepth := psmallint(BlockImgR + ((dest.x + leftupx + i1) * Height + dest.y +
+    leftupy + i2) * size)^;
+    pixel := GetPixel(tempscr, i1, i2);
+    AlphaValue := pixel and Mask;
+    if AlphaValue > 0 then
+    begin
+    if (pixdepth > depth) then
+    begin
+    //替换透明通道的值
+    //注意: 这里如果效率较低, 则改用完全指针, 或者汇编编写. 设置偏移也相同
+    PutPixel(tempscr, i1, i2, (pixel and (not Mask)) or (bigtran and Mask));
+    end;
+    end;
+    end;
+    end;
+    SDL_BlitSurface(tempscr, nil, scr, @dest);
+    end;
+    SDL_FreeSurface(tempscr);
+    end;
+    end;
+    end;
+    end;
+    end;}
 end;
 
 procedure SetPNGTileBlock(PNGIndex: TPNGIndex; px, py, depth: integer; BlockImageW: putf8char; Width, Height, size: integer);
@@ -1679,9 +1680,9 @@ begin
 end;
 
 {function TestPNGTile(PNGTile: TPNGTile; num: integer): boolean;
-begin
+  begin
 
-end;}
+  end;}
 
 procedure SDL_UpdateRect2(scr1: PSDL_Surface; x, y, w, h: integer);
 var
@@ -1711,20 +1712,20 @@ begin
   //SDL_BlitSurface(screen, @dest, prescreen, @dest);
 
   {if GLHR = 1 then
-  begin
+    begin
     glGenTextures(1, @TextureID);
     glBindTexture(GL_TEXTURE_2D, TextureID);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, screen.w, screen.h, 0, GL_BGRA, GL_UNSIGNED_BYTE, prescreen.pixels);
 
     if SMOOTH = 1 then
     begin
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     end
     else
     begin
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     end;
 
     glEnable(GL_TEXTURE_2D);
@@ -1741,9 +1742,9 @@ begin
     glDisable(GL_TEXTURE_2D);
     SDL_GL_SwapBuffers;
     glDeleteTextures(1, @TextureID);
-  end
-  else
-  begin
+    end
+    else
+    begin
     //realx := x * resolutionx div scr1.w;
     //realw := (x + w + 2) * resolutionx div scr1.w - realx;
     //realy := y * resolutiony div scr1.h;
@@ -1752,16 +1753,16 @@ begin
     //if realh + realy > resolutiony then realh := resolutiony - realy;
     if (resolutionx = screen.w) and (resolutiony = screen.h) then
     begin
-      SDL_BlitSurface(prescreen, nil, RealScreen, nil);
+    SDL_BlitSurface(prescreen, nil, RealScreen, nil);
     end
     else
     begin
-      tempscr := sdl_gfx.zoomSurface(prescreen, resolutionx / screen.w, resolutiony / screen.h, SMOOTH);
-      SDL_BlitSurface(tempscr, nil, RealScreen, nil);
-      SDL_FreeSurface(tempscr);
+    tempscr := sdl_gfx.zoomSurface(prescreen, resolutionx / screen.w, resolutiony / screen.h, SMOOTH);
+    SDL_BlitSurface(tempscr, nil, RealScreen, nil);
+    SDL_FreeSurface(tempscr);
     end;
     SDL_UpdateRect(RealScreen, 0, 0, resolutionx, resolutiony);
-  end;}
+    end;}
 end;
 
 procedure SDL_GetMouseState2(var x, y: integer);
@@ -1779,22 +1780,22 @@ begin
   RESOLUTIONX := w;
   RESOLUTIONY := h;
   {RealScreen := SDL_SetVideoMode(w, h, 32, ScreenFlag);
-  event.type_ := 0;
-  SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);}
+    event.type_ := 0;
+    SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);}
 
 end;
 
 procedure SwitchFullscreen;
 begin
   {FULLSCREEN := 1 - FULLSCREEN;
-  if FULLSCREEN = 0 then
-  begin
+    if FULLSCREEN = 0 then
+    begin
     RealScreen := SDL_SetVideoMode(RESOLUTIONX, RESOLUTIONY, 32, ScreenFlag);
-  end
-  else
-  begin
+    end
+    else
+    begin
     RealScreen := SDL_SetVideoMode(CENTER_X * 2, CENTER_Y * 2, 32, ScreenFlag or SDL_FULLSCREEN);
-  end;}
+    end;}
 end;
 
 procedure QuitConfirm;
@@ -1925,27 +1926,28 @@ begin
         SDL_HAT_RIGHT: event.key.keysym.sym := SDLK_RIGHT;
       end;
     end;
-    SDL_FINGERMOTION: if CellPhone = 1 then
+    SDL_FINGERMOTION:
+    if CellPhone = 1 then
+    begin
+      if event.tfinger.fingerId = 1 then
       begin
-        if event.tfinger.fingerId = 1 then
+        msCount := SDL_GetTicks() - FingerTick;
+        msWait := 50;
+        if BattleSelecting then
+          msWait := 100;
+        if msCount > 500 then
+          FingerCount := 1;
+        if ((FingerCount <= 2) and (msCount > 200)) or ((FingerCount > 2) and (msCount > msWait)) then
         begin
-          msCount := SDL_GetTicks() - FingerTick;
-          msWait := 50;
-          if BattleSelecting then
-            msWait := 100;
-          if msCount > 500 then
-            FingerCount := 1;
-          if ((FingerCount <= 2) and (msCount > 200)) or ((FingerCount > 2) and (msCount > msWait)) then
-          begin
-            FingerCount := FingerCount + 1;
-            FingerTick := SDL_GetTicks();
-            event.type_ := SDL_KEYDOWN;
-            event.key.keysym.sym := AngleToDirection(event.tfinger.dy, event.tfinger.dx);
-          end;
+          FingerCount := FingerCount + 1;
+          FingerTick := SDL_GetTicks();
+          event.type_ := SDL_KEYDOWN;
+          event.key.keysym.sym := AngleToDirection(event.tfinger.dy, event.tfinger.dx);
         end;
       end;
-    SDL_FINGERUP: ;
-    SDL_MULTIGESTURE: ;
+    end;
+    SDL_FINGERUP:;
+    SDL_MULTIGESTURE:;
     SDL_QUITEV: QuitConfirm;
     SDL_WindowEvent:
     begin
@@ -1957,10 +1959,10 @@ begin
     SDL_APP_DIDENTERFOREGROUND: PlayMP3(nowmusic, -1, 0);
     SDL_APP_DIDENTERBACKGROUND: StopMP3(0);
     {SDL_MOUSEBUTTONDOWN:
-    if (CellPhone = 1) and (event.button.button = SDL_BUTTON_LEFT) then
-    begin
+      if (CellPhone = 1) and (event.button.button = SDL_BUTTON_LEFT) then
+      begin
       SDL_GetMouseState(@x, @y);
-    end;}
+      end;}
     SDL_MOUSEMOTION:
     begin
       if CellPhone = 1 then
@@ -2254,19 +2256,19 @@ var
   i: integer;
   str: utf8string;
 begin
-  {$IFDEF console}
+{$IFDEF console}
   write(format(formatstring, content));
   if cr then
     writeln();
-  {$ENDIF}
-  {$IFDEF android}
+{$ENDIF}
+{$IFDEF android}
   str := format(formatstring, content);
   mythoutput.mythoutput(putf8char(str));
   {i := fileopen(SDL_AndroidGetExternalStoragePath()+'/pig3_place_game_here',fmopenwrite);
-  fileseek(i, 0, 2);
-  filewrite(i, str[1], length(str));
-  fileclose(i);}
-  {$ENDIF}
+    fileseek(i, 0, 2);
+    filewrite(i, str[1], length(str));
+    fileclose(i);}
+{$ENDIF}
 end;
 
 procedure Message(formatstring: string = ''; cr: boolean = True); overload;
@@ -2274,19 +2276,19 @@ var
   i: integer;
   str: utf8string;
 begin
-  {$IFDEF console}
+{$IFDEF console}
   write(format(formatstring, []));
   if cr then
     writeln();
-  {$ENDIF}
-  {$IFDEF android}
+{$ENDIF}
+{$IFDEF android}
   str := format(formatstring, []);
   mythoutput.mythoutput(putf8char(str));
   {i := fileopen(SDL_AndroidGetExternalStoragePath()+'/pig3_place_game_here',fmopenwrite);
-  fileseek(i, 0, 2);
-  filewrite(i, str[1], length(str));
-  fileclose(i);}
-  {$ENDIF}
+    fileseek(i, 0, 2);
+    filewrite(i, str[1], length(str));
+    fileclose(i);}
+{$ENDIF}
 end;
 
 end.
