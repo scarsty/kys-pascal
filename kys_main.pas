@@ -2842,7 +2842,7 @@ begin
       begin
         tempx := linex[a - 1] + Xinc[i];
         tempy := liney[a - 1] + Yinc[i];
-        if Fway[tempx, tempy] = Fway[linex[a - 1], liney[a - 1]] - 1 then
+        if (tempx>=0)and(tempy>=0)and(Fway[tempx, tempy] = Fway[linex[a - 1], liney[a - 1]] - 1) then
         begin
           linex[a] := tempx;
           liney[a] := tempy;
