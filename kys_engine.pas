@@ -71,17 +71,17 @@ function GetPositionOnScreen(x, y, CenterX, CenterY: integer): TPosition;
 
 //显示文字的子程
 function cp950toutf8(str: pansichar; len: integer = -1): utf8string; overload;
-function utf8tocp950(str: utf8string): ansistring; overload;
-function transcode(str: utf8string; input, output: integer): utf8string;
-procedure DrawText(sur: PSDL_Surface; word: utf8string; x_pos, y_pos: integer; color: uint32);
-procedure DrawEngText(sur: PSDL_Surface; word: utf8string; x_pos, y_pos: integer; color: uint32);
-procedure DrawShadowText(sur: PSDL_Surface; word: utf8string; x_pos, y_pos: integer; color1, color2: uint32); overload;
-procedure DrawShadowText(word: utf8string; x_pos, y_pos: integer; color1, color2: uint32); overload;
-procedure DrawEngShadowText(sur: PSDL_Surface; word: utf8string; x_pos, y_pos: integer; color1, color2: uint32);
+function utf8tocp950(constref str: utf8string): ansistring; overload;
+function transcode(constref str: utf8string; input, output: integer): utf8string;
+procedure DrawText(sur: PSDL_Surface; constref word: utf8string; x_pos, y_pos: integer; color: uint32);
+procedure DrawEngText(sur: PSDL_Surface; constref word: utf8string; x_pos, y_pos: integer; color: uint32);
+procedure DrawShadowText(sur: PSDL_Surface; constref word: utf8string; x_pos, y_pos: integer; color1, color2: uint32); overload;
+procedure DrawShadowText(constref word: utf8string; x_pos, y_pos: integer; color1, color2: uint32); overload;
+procedure DrawEngShadowText(sur: PSDL_Surface; constref word: utf8string; x_pos, y_pos: integer; color1, color2: uint32);
 procedure DrawBig5Text(sur: PSDL_Surface; str: pansichar; x_pos, y_pos: integer; color: uint32);
 procedure DrawBig5ShadowText(sur: PSDL_Surface; word: pansichar; x_pos, y_pos: integer; color1, color2: uint32);
-procedure DrawTextWithRect(word: utf8string; x, y, w: integer; color1, color2: uint32); overload;
-procedure DrawTextWithRect(sur: PSDL_Surface; word: utf8string; x, y, w: integer; color1, color2: uint32); overload;
+procedure DrawTextWithRect(constref word: utf8string; x, y, w: integer; color1, color2: uint32); overload;
+procedure DrawTextWithRect(sur: PSDL_Surface; constref word: utf8string; x, y, w: integer; color1, color2: uint32); overload;
 
 //PNG贴图相关的子程
 procedure DrawPNGTile(PNGIndex: TPNGIndex; FrameNum: integer; RectArea: putf8char; scr: PSDL_Surface; px, py: integer); overload;
@@ -1196,12 +1196,12 @@ begin
 end;
 
 //utf8转big5
-function utf8tocp950(str: utf8string): ansistring;
+function utf8tocp950(constref str: utf8string): ansistring;
 begin
   Result := transcode(str, 65001, 950);
 end;
 
-function transcode(str: utf8string; input, output: integer): utf8string;
+function transcode(constref str: utf8string; input, output: integer): utf8string;
 var
   len: integer;
   strw: WideString;
@@ -1226,7 +1226,7 @@ begin
 end;
 
 //显示unicode文字
-procedure DrawText(sur: PSDL_Surface; word: utf8string; x_pos, y_pos: integer; color: uint32);
+procedure DrawText(sur: PSDL_Surface; constref word: utf8string; x_pos, y_pos: integer; color: uint32);
 var
   dest, src: TSDL_Rect;
   tempcolor: TSDL_Color;
@@ -1294,7 +1294,7 @@ begin
 end;
 
 //显示英文
-procedure DrawEngText(sur: PSDL_Surface; word: utf8string; x_pos, y_pos: integer; color: uint32);
+procedure DrawEngText(sur: PSDL_Surface; constref word: utf8string; x_pos, y_pos: integer; color: uint32);
 var
   dest: TSDL_Rect;
   a: uint8;
@@ -1316,13 +1316,13 @@ begin
 end;
 
 //显示unicode中文阴影文字, 即将同样内容显示2次, 间隔1像素
-procedure DrawShadowText(sur: PSDL_Surface; word: utf8string; x_pos, y_pos: integer; color1, color2: uint32); overload;
+procedure DrawShadowText(sur: PSDL_Surface; constref word: utf8string; x_pos, y_pos: integer; color1, color2: uint32); overload;
 begin
   DrawText(sur, word, x_pos + 1, y_pos, color2);
   DrawText(sur, word, x_pos, y_pos, color1);
 end;
 
-procedure DrawShadowText(word: utf8string; x_pos, y_pos: integer; color1, color2: uint32); overload;
+procedure DrawShadowText(constref word: utf8string; x_pos, y_pos: integer; color1, color2: uint32); overload;
 begin
   DrawText(screen, word, x_pos + 1, y_pos, color2);
   DrawText(screen, word, x_pos, y_pos, color1);
@@ -1330,7 +1330,7 @@ begin
 end;
 
 //显示英文阴影文字
-procedure DrawEngShadowText(sur: PSDL_Surface; word: utf8string; x_pos, y_pos: integer; color1, color2: uint32);
+procedure DrawEngShadowText(sur: PSDL_Surface; constref word: utf8string; x_pos, y_pos: integer; color1, color2: uint32);
 begin
   DrawEngText(sur, word, x_pos + 1, y_pos, color2);
   DrawEngText(sur, word, x_pos, y_pos, color1);
@@ -1358,12 +1358,12 @@ begin
 end;
 
 //显示带边框的文字, 仅用于unicode, 需自定义宽度
-procedure DrawTextWithRect(word: utf8string; x, y, w: integer; color1, color2: uint32); overload;
+procedure DrawTextWithRect(constref word: utf8string; x, y, w: integer; color1, color2: uint32); overload;
 begin
   DrawTextWithRect(screen, word, x, y, w, color1, color2);
 end;
 
-procedure DrawTextWithRect(sur: PSDL_Surface; word: utf8string; x, y, w: integer; color1, color2: uint32); overload;
+procedure DrawTextWithRect(sur: PSDL_Surface; constref word: utf8string; x, y, w: integer; color1, color2: uint32); overload;
 var
   len: integer;
   p: putf8char;

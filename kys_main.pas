@@ -750,7 +750,7 @@ var
   p: array [0 .. 14] of integer;
   str, str0: utf8string;
   str1, str2, tempname: utf8string;
-  Name, homename: utf8string;
+  name, homename: utf8string;
   p0, p1: putf8char;
   named: boolean;
 {$IFDEF android}
