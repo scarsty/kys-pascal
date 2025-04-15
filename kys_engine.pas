@@ -6,14 +6,14 @@ interface
 
 uses
   SysUtils,
-{$IFDEF fpc}
+  {$IFDEF fpc}
   LConvEncoding,
   LCLType,
   LCLIntf,
-{$ENDIF}
-{$IFDEF mswindows}
+  {$ENDIF}
+  {$IFDEF mswindows}
   Windows,
-{$ENDIF}
+  {$ENDIF}
   Math,
   Dialogs,
   SDL2_TTF,
@@ -139,8 +139,8 @@ begin
   case e.type_ of
     SDL_FINGERUP, SDL_FINGERDOWN, SDL_CONTROLLERAXISMOTION, SDL_CONTROLLERBUTTONDOWN, SDL_CONTROLLERBUTTONUP: Result := 0;
     SDL_FINGERMOTION:
-    if CellPhone = 0 then
-      Result := 0;
+      if CellPhone = 0 then
+        Result := 0;
   end;
 end;
 
@@ -530,11 +530,11 @@ begin
     if malloc = 1 then
     begin
       //GetMem(result, size + 4);
-{$IFDEF fpc}
+      {$IFDEF fpc}
       Result := StrAlloc(size + 4);
-{$ELSE}
+      {$ELSE}
       Result := AnsiStrAlloc(size + 4);
-{$ENDIF}
+      {$ENDIF}
       p := Result;
       //writeln(StrBufSize(p));
     end;
@@ -1204,10 +1204,10 @@ end;
 function transcode(constref str: utf8string; input, output: integer): utf8string;
 var
   len: integer;
-  strw: WideString;
+  strw: widestring;
   instr, outstr: ansistring;
 begin
-{$IFDEF fpc}
+  {$IFDEF fpc}
   instr := 'cp' + inttostr(input);
   outstr := 'cp' + inttostr(output);
   if input = 65001 then
@@ -1215,14 +1215,14 @@ begin
   if output = 65001 then
     outstr := 'utf8';
   result := ConvertEncoding(str, instr, outstr);
-{$ELSE}
+  {$ELSE}
   len := MultiByteToWideChar(input, 0, @str[1], -1, nil, 0);
   setlength(strw, len - 1);
   MultiByteToWideChar(input, 0, @str[1], length(str), @strw[1], len + 1);
   len := WideCharToMultiByte(output, 0, @strw[1], -1, nil, 0, nil, nil);
   setlength(Result, len - 1);
   WideCharToMultiByte(output, 0, @strw[1], length(strw), @Result[1], len - 1, nil, nil);
-{$ENDIF}
+  {$ENDIF}
 end;
 
 //显示unicode文字
@@ -1401,7 +1401,7 @@ begin
       l3 := (i1) - (i2 - h);
       l4 := -(i1 - w) - (i2 - h);
       //4边角
-      if not((l1 >= 4) and (l2 >= 4) and (l3 >= 4) and (l4 >= 4)) then
+      if not ((l1 >= 4) and (l2 >= 4) and (l3 >= 4) and (l4 >= 4)) then
       begin
         PutPixel(tempscr, i1, i2, 0);
       end;
@@ -1927,27 +1927,27 @@ begin
       end;
     end;
     SDL_FINGERMOTION:
-    if CellPhone = 1 then
-    begin
-      if event.tfinger.fingerId = 1 then
+      if CellPhone = 1 then
       begin
-        msCount := SDL_GetTicks() - FingerTick;
-        msWait := 50;
-        if BattleSelecting then
-          msWait := 100;
-        if msCount > 500 then
-          FingerCount := 1;
-        if ((FingerCount <= 2) and (msCount > 200)) or ((FingerCount > 2) and (msCount > msWait)) then
+        if event.tfinger.fingerId = 1 then
         begin
-          FingerCount := FingerCount + 1;
-          FingerTick := SDL_GetTicks();
-          event.type_ := SDL_KEYDOWN;
-          event.key.keysym.sym := AngleToDirection(event.tfinger.dy, event.tfinger.dx);
+          msCount := SDL_GetTicks() - FingerTick;
+          msWait := 50;
+          if BattleSelecting then
+            msWait := 100;
+          if msCount > 500 then
+            FingerCount := 1;
+          if ((FingerCount <= 2) and (msCount > 200)) or ((FingerCount > 2) and (msCount > msWait)) then
+          begin
+            FingerCount := FingerCount + 1;
+            FingerTick := SDL_GetTicks();
+            event.type_ := SDL_KEYDOWN;
+            event.key.keysym.sym := AngleToDirection(event.tfinger.dy, event.tfinger.dx);
+          end;
         end;
       end;
-    end;
-    SDL_FINGERUP:;
-    SDL_MULTIGESTURE:;
+    SDL_FINGERUP: ;
+    SDL_MULTIGESTURE: ;
     SDL_QUITEV: QuitConfirm;
     SDL_WindowEvent:
     begin
@@ -2256,19 +2256,19 @@ var
   i: integer;
   str: utf8string;
 begin
-{$IFDEF console}
+  {$IFDEF console}
   write(format(formatstring, content));
   if cr then
     writeln();
-{$ENDIF}
-{$IFDEF android}
+  {$ENDIF}
+  {$IFDEF android}
   str := format(formatstring, content);
   mythoutput.mythoutput(putf8char(str));
   {i := fileopen(SDL_AndroidGetExternalStoragePath()+'/pig3_place_game_here',fmopenwrite);
     fileseek(i, 0, 2);
     filewrite(i, str[1], length(str));
     fileclose(i);}
-{$ENDIF}
+  {$ENDIF}
 end;
 
 procedure Message(formatstring: string = ''; cr: boolean = True); overload;
@@ -2276,19 +2276,19 @@ var
   i: integer;
   str: utf8string;
 begin
-{$IFDEF console}
+  {$IFDEF console}
   write(format(formatstring, []));
   if cr then
     writeln();
-{$ENDIF}
-{$IFDEF android}
+  {$ENDIF}
+  {$IFDEF android}
   str := format(formatstring, []);
   mythoutput.mythoutput(putf8char(str));
   {i := fileopen(SDL_AndroidGetExternalStoragePath()+'/pig3_place_game_here',fmopenwrite);
     fileseek(i, 0, 2);
     filewrite(i, str[1], length(str));
     fileclose(i);}
-{$ENDIF}
+  {$ENDIF}
 end;
 
 end.

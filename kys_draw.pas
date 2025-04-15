@@ -6,10 +6,10 @@ interface
 
 uses
   SysUtils,
-{$IFDEF fpc}
-{$ELSE}
+  {$IFDEF fpc}
+  {$ELSE}
   Windows,
-{$ENDIF}
+  {$ENDIF}
   Math,
   SDL2_image,
   SDL2,
@@ -1042,7 +1042,7 @@ begin
     x := x - 36;
     y := y - 100;
     for i1 := x to x + 72 do
-    //for i2:=y to y+100 do
+      //for i2:=y to y+100 do
     begin
       num := i1 * ImageHeight + y;
       //blockImg[num]:=blockImg2[num];
@@ -1515,7 +1515,7 @@ begin
         k := Epicnum + curlevel - Bfield[4, i1, i2];
         if (k >= beginpic) and (k <= endpic) then
         begin
-          DrawEPic(k, pos.x, pos.y, 0, 25 {shl 8 + 75} , CalBlock(i1, i2), 0, 0);
+          DrawEPic(k, pos.x, pos.y, 0, 25 {shl 8 + 75}, CalBlock(i1, i2), 0, 0);
         end;
       end;
     end;

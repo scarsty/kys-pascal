@@ -29,16 +29,16 @@ interface
 
 uses
 
-{$IFDEF fpc}
+  {$IFDEF fpc}
   LConvEncoding,
   LCLType,
   LCLIntf,
-{$ELSE}
+  {$ELSE}
   Windows,
-{$ENDIF}
-{$IFDEF ANDROID}
+  {$ENDIF}
+  {$IFDEF ANDROID}
   jni,
-{$ENDIF}
+  {$ENDIF}
   kys_type,
   SysUtils,
   StrUtils,
@@ -146,12 +146,12 @@ var
   str: utf8string;
 begin
   word[0] := 32;
-{$IFDEF UNIX}
+  {$IFDEF UNIX}
   AppPath := ExtractFilePath(ParamStr(0));
-{$ELSE}
+  {$ELSE}
   AppPath := '';
-{$ENDIF}
-{$IFDEF android}
+  {$ENDIF}
+  {$IFDEF android}
   AppPath := SDL_AndroidGetExternalStoragePath() + '/game/';
   //for i := 1 to 4 do
   //AppPath:= ExtractFileDir(AppPath);
@@ -159,7 +159,7 @@ begin
   //if not fileexists(str) then
   FileClose(filecreate(str));
   CellPhone := 1;
-{$ENDIF}
+  {$ENDIF}
   ReadFiles;
 
   SetMODVersion;
@@ -409,11 +409,11 @@ begin
     end;
   end;
 
-{$IFDEF fpc}
+  {$IFDEF fpc}
   filename := AppPath + 'kysmod.ini';
-{$ELSE}
+  {$ELSE}
   filename := ExtractFilePath(ParamStr(0)) + 'kysmod.ini';
-{$ENDIF}
+  {$ENDIF}
   Kys_ini := TIniFile.Create(filename);
   try
     //RESOLUTIONX := Kys_ini.ReadInteger('system', 'RESOLUTIONX', CENTER_X * 2);
@@ -433,11 +433,11 @@ var
   LoadPNGTilesThread: PSDL_Thread;
 begin
 
-{$IFDEF fpc}
+  {$IFDEF fpc}
   filename := AppPath + 'kysmod.ini';
-{$ELSE}
+  {$ELSE}
   filename := ExtractFilePath(ParamStr(0)) + 'kysmod.ini';
-{$ENDIF}
+  {$ENDIF}
   Kys_ini := TIniFile.Create(filename);
 
   try
@@ -750,17 +750,17 @@ var
   p: array [0 .. 14] of integer;
   str, str0: utf8string;
   str1, str2, tempname: utf8string;
-  name, homename: utf8string;
+  input_name, homename: utf8string;
   p0, p1: putf8char;
   named: boolean;
-{$IFDEF android}
+  {$IFDEF android}
   env: PJNIEnv;
   jstr: jstring;
   cstr: putf8char;
   activity: jobject;
   clazz: jclass;
   method_id: jmethodID;
-{$ENDIF}
+  {$ENDIF}
   r: TSDL_Rect;
 begin
   LoadR(0);
@@ -773,7 +773,7 @@ begin
   Redraw;
   tempname := '我是主角';
   homename := '主角的家';
-{$IFDEF android}
+  {$IFDEF android}
   {ShowStatus(0);
     UpdateAllScreen;
     str0 := '點擊一下開始選屬性！';
@@ -788,23 +788,23 @@ begin
     env^.ReleaseStringUTFChars(env, jstr, cstr);}
   name := tempname;
   named := True;
-{$ELSE}
+  {$ELSE}
   for i := 0 to 4 do
     Rrole[0].Data[4 + i] := 0;
   str := str1;
   DrawTextWithRect(str1, CENTER_X - 83, CENTER_Y - 30, 166, ColColor($21), ColColor($23));
-  named := EnterString(name, CENTER_X - 43, CENTER_Y + 10, 86, 100);
-{$ENDIF}
+  named := EnterString(input_name, CENTER_X - 43, CENTER_Y + 10, 86, 100);
+  {$ENDIF}
   if named then
   begin
-    if name = '' then
+    if input_name = '' then
     begin
-      name := ' ';
+      input_name := ' ';
     end;
-    name := Simplified2Traditional(name);
-    str1 := UTF8ToCP950(name);
-    if (length(str1) in [1 .. 7]) and (name <> ' ') then
-      homename := name + '居';
+    input_name := Simplified2Traditional(input_name);
+    str1 := UTF8ToCP950(input_name);
+    if (length(str1) in [1 .. 7]) and (input_name <> ' ') then
+      homename := input_name + '居';
     str2 := UTF8ToCP950(homename);
     p0 := @Rrole[0].Name;
     p1 := @str1[1];
@@ -881,7 +881,7 @@ begin
 
     if MODVersion = 0 then
     begin
-      if name = 'TXDX尊使' then
+      if input_name = 'TXDX尊使' then
       begin
         Rrole[0].MaxHP := 50;
         Rrole[0].CurrentHP := 50;
@@ -921,7 +921,7 @@ begin
 
     if MODVersion = 22 then
     begin
-      if name = 'k小邪' then
+      if input_name = 'k小邪' then
       begin
         Rrole[0].MaxHP := 50;
         Rrole[0].CurrentHP := 50;
@@ -953,7 +953,7 @@ begin
         Rrole[0].AttPoi := 0;
       end;
 
-      if name = '龍吟星落' then
+      if input_name = '龍吟星落' then
       begin
         Rrole[0].MaxHP := 150;
         Rrole[0].CurrentHP := 120;
@@ -985,7 +985,7 @@ begin
         Rrole[0].Magic[4] := 172;
       end;
 
-      if name = '小隨' then
+      if input_name = '小隨' then
       begin
         Rrole[0].MaxHP := 150;
         Rrole[0].CurrentHP := 120;
@@ -1016,7 +1016,7 @@ begin
         Rrole[0].AttTwice := 1;
       end;
 
-      if name = '破大俠' then
+      if input_name = '破大俠' then
       begin
         Rrole[0].MaxHP := 1150;
         Rrole[0].CurrentHP := 1120;
@@ -1051,7 +1051,7 @@ begin
         //rrole[0].AttTwice := 1;
       end;
 
-      if name = '鳳凰' then
+      if input_name = '鳳凰' then
       begin
         Rrole[0].MaxHP := 250;
         Rrole[0].CurrentHP := 50;
@@ -1088,7 +1088,7 @@ begin
 
     if MODVersion = 23 then
     begin
-      if name = '小小豬' then
+      if input_name = '小小豬' then
       begin
         Rrole[0].MaxHP := 10;
         Rrole[0].CurrentHP := 10;
@@ -1125,7 +1125,7 @@ begin
         Rrole[0].AttPoi := 0;
       end;
 
-      if name = 'k小邪' then
+      if input_name = 'k小邪' then
       begin
         Rrole[0].MaxHP := 150;
         Rrole[0].CurrentHP := 120;
@@ -1168,7 +1168,7 @@ begin
         end;
       end;
 
-      if name = '南宮夢' then
+      if input_name = '南宮夢' then
       begin
         Rrole[0].MaxHP := 500;
         Rrole[0].CurrentHP := 500;
@@ -1201,7 +1201,7 @@ begin
         Rmagic[37].AttDistance[9] := 4;
       end;
 
-      if name = '游客' then
+      if input_name = '游客' then
       begin
         Rrole[0].MaxHP := 50;
         Rrole[0].CurrentHP := 50;
@@ -1232,7 +1232,7 @@ begin
         Rrole[0].AttTwice := 1;
       end;
 
-      if name = '飛蟲王' then
+      if input_name = '飛蟲王' then
       begin
         Rrole[0].MaxHP := 50;
         Rrole[0].CurrentHP := 50;
@@ -1263,7 +1263,7 @@ begin
         Rrole[0].AttPoi := 95;
       end;
 
-      if name = '破劍式' then
+      if input_name = '破劍式' then
       begin
         Rrole[0].MaxHP := 499;
         Rrole[0].CurrentHP := 499;
@@ -1300,7 +1300,7 @@ begin
         Rrole[0].AttPoi := 90;
       end;
 
-      if name = '9523' then
+      if input_name = '9523' then
       begin
         Rrole[0].MPType := 2;
         Rrole[0].IncLife := 10;
@@ -1334,7 +1334,7 @@ begin
         Rrole[0].Magic[2] := 17;
       end;
 
-      if name = '鳳凰ice' then
+      if input_name = '鳳凰ice' then
       begin
         Rrole[0].MPType := 2;
         Rrole[0].IncLife := 10;
@@ -1358,7 +1358,7 @@ begin
 
     if MODVersion = 11 then
     begin
-      if name = '小小豬' then
+      if input_name = '小小豬' then
       begin
         Rrole[0].MaxHP := 50;
         Rrole[0].CurrentHP := 50;
@@ -1395,7 +1395,7 @@ begin
 
       end;
 
-      if name = '晴空飛雪' then
+      if input_name = '晴空飛雪' then
       begin
         Rrole[0].MaxHP := 50;
         Rrole[0].CurrentHP := 50;
@@ -1435,7 +1435,7 @@ begin
 
     if MODVersion = 12 then
     begin
-      if name = '小小豬' then
+      if input_name = '小小豬' then
       begin
         Rrole[0].MaxHP := 50;
         Rrole[0].CurrentHP := 50;
@@ -1458,7 +1458,8 @@ begin
 
         Rrole[0].Aptitude := 100;
       end;
-      if name = '見賢思齊' then
+
+      if input_name = '見賢思齊' then
       begin
         Rrole[0].MaxHP := 50;
         Rrole[0].CurrentHP := 50;
@@ -1485,7 +1486,7 @@ begin
 
     if MODVersion = 31 then
     begin
-      if name = '南宮夢' then
+      if input_name = '南宮夢' then
       begin
         Rrole[0].MaxHP := 50;
         Rrole[0].CurrentHP := 50;
@@ -1513,7 +1514,7 @@ begin
 
     if MODVersion = 41 then
     begin
-      if name = 'leo' then
+      if input_name = 'leo' then
       begin
         Rrole[0].MaxHP := 50;
         Rrole[0].CurrentHP := 50;
@@ -1540,7 +1541,7 @@ begin
 
     if MODVersion = 21 then
     begin
-      if (name = '古天奇') or (name = '青狼火花') then
+      if (input_name = '古天奇') or (input_name = '青狼火花') then
       begin
         Rrole[0].MPType := 2;
         Rrole[0].IncLife := 20;
@@ -2842,7 +2843,7 @@ begin
       begin
         tempx := linex[a - 1] + Xinc[i];
         tempy := liney[a - 1] + Yinc[i];
-        if (tempx>=0)and(tempy>=0)and(Fway[tempx, tempy] = Fway[linex[a - 1], liney[a - 1]] - 1) then
+        if (tempx >= 0) and (tempy >= 0) and (Fway[tempx, tempy] = Fway[linex[a - 1], liney[a - 1]] - 1) then
         begin
           linex[a] := tempx;
           liney[a] := tempy;
@@ -4685,8 +4686,8 @@ begin
   //显示头像
   DrawHeadPic(Rrole[rnum].HeadNum, x + 60, y + 80);
   //显示姓名
-  name := cp950toutf8(@Rrole[rnum].Name, 5);
-  DrawShadowText(screen, name, x + 88 - DrawLength(name) * 5, y + 85, ColColor($66), ColColor($63));
+  Name := cp950toutf8(@Rrole[rnum].Name, 5);
+  DrawShadowText(screen, Name, x + 88 - DrawLength(Name) * 5, y + 85, ColColor($66), ColColor($63));
   //显示所需字符
   for i := 0 to 5 do
     DrawShadowText(screen, strs[i], x + 10, y + 110 + 21 * i, ColColor($21), ColColor($23));

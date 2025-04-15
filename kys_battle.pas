@@ -6,14 +6,14 @@ interface
 
 uses
   SysUtils,
-{$IFDEF fpc}
+  {$IFDEF fpc}
   LMessages,
   LConvEncoding,
   LCLType,
   LCLIntf,
-{$ELSE}
+  {$ELSE}
   Windows,
-{$ENDIF}
+  {$ENDIF}
   kys_type,
   StrUtils,
   SDL2_TTF,
@@ -1550,7 +1550,7 @@ begin
         end;
       end
       else
-      //非移动的情况, 攻击, 医疗等
+        //非移动的情况, 攻击, 医疗等
       begin
         for i := 1 to 4 do
         begin
@@ -3308,7 +3308,7 @@ begin
   end;
 
   //我方在AI类型为策略或者辅助(傻子或呆子)时才会选择医疗, 解毒, 用毒, 暗器
-  if ((Brole[bnum].Team = 0) and ((Brole[bnum].AutoMode = 2) {or (Brole[bnum].AutoMode = 3)} )) or (Brole[bnum].Team <> 0) then
+  if ((Brole[bnum].Team = 0) and ((Brole[bnum].AutoMode = 2) {or (Brole[bnum].AutoMode = 3)})) or (Brole[bnum].Team <> 0) then
   begin
     //When Medcine is more than 50, and physical power is more than 70, 50% probability to cure one teammate.
     if (Brole[bnum].Acted <> 1) and (Rrole[rnum].Medcine > 50) and (Rrole[rnum].PhyPower >= 70) then
@@ -4076,11 +4076,11 @@ begin
           case mode of
             0: check := True;
             1:
-            if (Rrole[rnum].CurrentHP < Rrole[rnum].MaxHP * 2 div 3) then
-              check := True;
+              if (Rrole[rnum].CurrentHP < Rrole[rnum].MaxHP * 2 div 3) then
+                check := True;
             2:
-            if (Rrole[rnum].Poison > 33) then
-              check := True;
+              if (Rrole[rnum].Poison > 33) then
+                check := True;
           end;
           if check then
           begin

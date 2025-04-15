@@ -6,13 +6,13 @@ interface
 
 uses
   SysUtils,
-{$IFDEF fpc}
+  {$IFDEF fpc}
   LConvEncoding,
   LCLType,
   LCLIntf,
-{$ELSE}
+  {$ELSE}
   Windows,
-{$ENDIF}
+  {$ENDIF}
   SDL2_image,
   SDL2,
   Math,
@@ -508,7 +508,7 @@ begin
   begin
     rnum := Teamlist[i];
     if rnum >= 0 then
-      if not((Rrole[rnum].Hurt > 33) or (Rrole[rnum].Poison > 0)) then
+      if not ((Rrole[rnum].Hurt > 33) or (Rrole[rnum].Poison > 0)) then
       begin
         Rrole[rnum].CurrentHP := Rrole[rnum].MaxHP;
         Rrole[rnum].CurrentMP := Rrole[rnum].MaxMP;
@@ -1365,7 +1365,7 @@ begin
   begin
     p := random(2);
     instruct_1(2854 + i * 2 + p, headarray[i * 2 + p], random(2) * 4 + random(2));
-    if not(Battle(102 + i * 2 + p, 0)) then
+    if not (Battle(102 + i * 2 + p, 0)) then
     begin
       instruct_15;
       break;
@@ -1632,14 +1632,14 @@ begin
         1: x50[e3] := x50[e4] - t1;
         2: x50[e3] := x50[e4] * t1;
         3:
-        if t1 <> 0 then
-          x50[e3] := x50[e4] div t1;
+          if t1 <> 0 then
+            x50[e3] := x50[e4] div t1;
         4:
-        if t1 <> 0 then
-          x50[e3] := x50[e4] mod t1;
+          if t1 <> 0 then
+            x50[e3] := x50[e4] mod t1;
         5:
-        if t1 <> 0 then
-          x50[e3] := uint16(x50[e4]) div t1;
+          if t1 <> 0 then
+            x50[e3] := uint16(x50[e4]) div t1;
       end;
     end;
     4: //Judge the parameter.
@@ -1648,23 +1648,23 @@ begin
       t1 := e_GetValue(0, e1, e4);
       case e2 of
         0:
-        if not(x50[e3] < t1) then
-          x50[$7000] := 1;
+          if not (x50[e3] < t1) then
+            x50[$7000] := 1;
         1:
-        if not(x50[e3] <= t1) then
-          x50[$7000] := 1;
+          if not (x50[e3] <= t1) then
+            x50[$7000] := 1;
         2:
-        if not(x50[e3] = t1) then
-          x50[$7000] := 1;
+          if not (x50[e3] = t1) then
+            x50[$7000] := 1;
         3:
-        if not(x50[e3] <> t1) then
-          x50[$7000] := 1;
+          if not (x50[e3] <> t1) then
+            x50[$7000] := 1;
         4:
-        if not(x50[e3] >= t1) then
-          x50[$7000] := 1;
+          if not (x50[e3] >= t1) then
+            x50[$7000] := 1;
         5:
-        if not(x50[e3] > t1) then
-          x50[$7000] := 1;
+          if not (x50[e3] > t1) then
+            x50[$7000] := 1;
         6: x50[$7000] := 0;
         7: x50[$7000] := 1;
       end;
@@ -1741,7 +1741,7 @@ begin
       //p^:=char(0);
     end;
     12: //Build a string with spaces.
-    //Note: here the width of one 'space' is the same as one Chinese charactor.
+      //Note: here the width of one 'space' is the same as one Chinese charactor.
     begin
       e3 := e_GetValue(0, e1, e3);
       p := @x50[e2];
@@ -2273,7 +2273,8 @@ begin
     end;
     51: //Enter a number.
     begin
-      x50[e1] := EnterNumber(0, 32767, CENTER_X, CENTER_Y - 100);;
+      x50[e1] := EnterNumber(0, 32767, CENTER_X, CENTER_Y - 100);
+      ;
     end;
     52: //Judge someone grasp some mggic.
     begin
@@ -2649,7 +2650,8 @@ begin
             4: newcolor := 28466;
             5: newcolor := 28450;
             64: newcolor := color;
-            else newcolor := color;
+            else
+              newcolor := color;
           end;
           color1 := newcolor and $FF;
           color2 := (newcolor shr 8) and $FF;
@@ -2888,14 +2890,14 @@ begin
     begin
       case menu of
         0 .. 9:
-        if Value * 10 < 1E5 then
-          Value := 10 * Value + menu;
+          if Value * 10 < 1E5 then
+            Value := 10 * Value + menu;
         10: Value := -Value;
         11: Value := Value div 10;
         12: Value := 0;
         else
-        if menu = highButton then
-          break;
+          if menu = highButton then
+            break;
       end;
       if sure = 1 then
         menu := -1;

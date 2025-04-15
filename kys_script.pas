@@ -5,11 +5,11 @@
 interface
 
 uses
-{$IFDEF fpc}
+  {$IFDEF fpc}
   LConvEncoding,
-{$ELSE}
+  {$ELSE}
   Windows,
-{$ENDIF}
+  {$ENDIF}
   SysUtils,
   SDL2,
   Math,
@@ -358,15 +358,15 @@ begin
     FileSeek(h, 0, 0);
     FileRead(h, Script[1], len);
     FileClose(h);
-{$IFDEF UNIX}
+    {$IFDEF UNIX}
     Script := LowerCase(Script);
-{$ELSE}
-{$IFDEF FPC}
+    {$ELSE}
+    {$IFDEF FPC}
     Script := LowerCase(Script);
-{$ELSE}
+    {$ELSE}
     Script := LowerCase(Script);
-{$ENDIF}
-{$ENDIF}
+    {$ENDIF}
+    {$ENDIF}
     //writeln(script);
     lual_loadbuffer(Lua_script, @script[1], length(script), 'code');
     lua_pcall(Lua_script, 0, 0, 0);
