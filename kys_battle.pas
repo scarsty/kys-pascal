@@ -3135,9 +3135,9 @@ begin
     end;
   end;
   h := amount * 22 + 28;
-  modestring[1] := '疯子';
-  modestring[2] := '傻子';
-  modestring[3] := '呆子';
+  modestring[1] := '全攻';
+  modestring[2] := '平衡';
+  modestring[3] := '混子';
   modestring[0] := '手動';
   str := ' 確認';
 
