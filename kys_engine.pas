@@ -1225,7 +1225,7 @@ begin
   {$ENDIF}
 end;
 
-//显示unicode文字
+//显示utf-8文字
 procedure DrawText(sur: PSDL_Surface; constref word: utf8string; x_pos, y_pos: integer; color: uint32);
 var
   dest, src: TSDL_Rect;
@@ -2092,8 +2092,6 @@ begin
 end;
 
 function DrawLength(p: putf8char): integer; overload;
-var
-  l, i: integer;
 begin
   Result := DrawLength(utf8string(p));
 end;
