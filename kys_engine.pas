@@ -754,7 +754,6 @@ begin
       end;
     end;
   end;
-
 end;
 
 function LoadSurfaceFromFile(filename: utf8string): PSDL_Surface;

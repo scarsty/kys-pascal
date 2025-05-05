@@ -407,6 +407,11 @@ begin
       TitlePosition.x := 100;
       TitlePosition.y := 270;
     end;
+    91:
+    begin
+      TitleString := 'All Heros in Kam Yung''s Stories - What''s Loving';
+      setlength(Music, 999);
+    end;
   end;
 
   {$IFDEF fpc}
@@ -680,7 +685,10 @@ begin
           begin
             CurScence := BEGIN_SCENCE;
             CurEvent := -1;
-            WalkInScence(1);
+            if CurScence >= 0 then
+              WalkInScence(1)
+            else
+              where := 0;
             Walk;
             //menu := -1;
           end;
@@ -722,7 +730,7 @@ begin
     if str[i] = utf8char(13) then
     begin
       str[i] := utf8char(0);
-      str1 := midstr(str, p, i);
+      str1 := midstr(str, p, i - p);
       DrawShadowText(screen, str1, x, y, ColColor($FF), ColColor($FF));
       p := i + 1;
       y := y + 25;
@@ -789,17 +797,19 @@ begin
   name := tempname;
   named := True;
   {$ELSE}
-  for i := 0 to 4 do
-    Rrole[0].Data[4 + i] := 0;
+  //for i := 0 to 4 do
+  //  Rrole[0].Data[4 + i] := 0;
   str := str1;
   DrawTextWithRect(str1, CENTER_X - 83, CENTER_Y - 30, 166, ColColor($21), ColColor($23));
+  named := True;
+  input_name := CP950toutf8(Rrole[0].Name);
   named := EnterString(input_name, CENTER_X - 43, CENTER_Y + 10, 86, 100);
   {$ENDIF}
   if named then
   begin
     if input_name = '' then
     begin
-      input_name := ' ';
+      input_name := CP950toutf8(Rrole[0].Name);
     end;
     input_name := Simplified2Traditional(input_name);
     str1 := UTF8ToCP950(input_name);
@@ -815,7 +825,7 @@ begin
       (p0 + i)^ := (p1 + i)^;
     end;
 
-    if (MODVersion <> 22) and (MODVersion <> 11) and (MODVersion <> 12) then
+    if (MODVersion <> 22) and (MODVersion <> 11) and (MODVersion <> 12) and (MODVersion <> 91) then
     begin
       p0 := @Rscence[BEGIN_SCENCE].Name;
       p1 := @str2[1];
