@@ -2923,6 +2923,8 @@ function EnterString(var str: utf8string; x, y, w, h: integer): bool;
 var
   r: TSDL_Rect;
   l: integer;
+  i: uint32;
+  str2: utf8string;
 begin
   r.x := x;
   r.y := y;
@@ -2932,8 +2934,11 @@ begin
   SDL_SetTextInputRect(@r);
   while True do
   begin
+    i := i + 1;
     Redraw;
-    DrawTextWithRect(str, x, y, w, ColColor($66), ColColor($63));
+    str2 := str;
+    if (i mod 16 < 8) then str2 := str2 + '_';
+    DrawTextWithRect(str2, x, y, w, ColColor($66), ColColor($63));
     SDL_UpdateRect2(screen, x, y, w, h);
     SDL_PollEvent(@event);
     CheckBasicEvent;
