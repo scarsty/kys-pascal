@@ -224,10 +224,10 @@ begin
     setlength(FPNGTile, 0);
   end;
 
-  if Rscence[CurScence].EntranceMusic >= 0 then
+  if Rscene[CurScene].EntranceMusic >= 0 then
   begin
     StopMP3;
-    PlayMP3(Rscence[CurScence].EntranceMusic, -1);
+    PlayMP3(Rscene[CurScene].EntranceMusic, -1);
   end
   else
     PlayMP3(PreMusic, -1);

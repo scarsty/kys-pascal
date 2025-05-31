@@ -58,8 +58,8 @@ function AskJoin(L: Plua_state): integer; cdecl;
 function Join(L: Plua_state): integer; cdecl;
 function AskRest(L: Plua_state): integer; cdecl;
 function Rest(L: Plua_state): integer; cdecl;
-function LightScence(L: Plua_state): integer; cdecl;
-function DarkScence(L: Plua_state): integer; cdecl;
+function LightScene(L: Plua_state): integer; cdecl;
+function DarkScene(L: Plua_state): integer; cdecl;
 function Dead(L: Plua_state): integer; cdecl;
 function InTeam(L: Plua_state): integer; cdecl;
 function TeamIsFull(L: Plua_state): integer; cdecl;
@@ -68,10 +68,10 @@ function LearnMagic(L: Plua_state): integer; cdecl;
 //function Sprintf(L: Plua_state): integer; cdecl;
 function GetMainMapPosition(L: Plua_state): integer; cdecl;
 function SetMainMapPosition(L: Plua_state): integer; cdecl;
-function GetScencePosition(L: Plua_state): integer; cdecl;
-function SetScencePosition(L: Plua_state): integer; cdecl;
-function GetScenceFace(L: Plua_state): integer; cdecl;
-function SetScenceFace(L: Plua_state): integer; cdecl;
+function GetScenePosition(L: Plua_state): integer; cdecl;
+function SetScenePosition(L: Plua_state): integer; cdecl;
+function GetSceneFace(L: Plua_state): integer; cdecl;
+function SetSceneFace(L: Plua_state): integer; cdecl;
 function Delay(L: Plua_state): integer; cdecl;
 function DrawRect(L: Plua_state): integer; cdecl;
 function MemberAmount(L: Plua_state): integer; cdecl;
@@ -83,23 +83,23 @@ function GetItemPro(L: Plua_state): integer; cdecl;
 function PutItemPro(L: Plua_state): integer; cdecl;
 function GetMagicPro(L: Plua_state): integer; cdecl;
 function PutMagicPro(L: Plua_state): integer; cdecl;
-function GetScencePro(L: Plua_state): integer; cdecl;
-function PutScencePro(L: Plua_state): integer; cdecl;
-function GetScenceMapPro(L: Plua_state): integer; cdecl;
-function PutScenceMapPro(L: Plua_state): integer; cdecl;
-function GetScenceEventPro(L: Plua_state): integer; cdecl;
-function PutScenceEventPro(L: Plua_state): integer; cdecl;
-function JudgeScenceEvent(L: Plua_state): integer; cdecl;
+function GetScenePro(L: Plua_state): integer; cdecl;
+function PutScenePro(L: Plua_state): integer; cdecl;
+function GetSceneMapPro(L: Plua_state): integer; cdecl;
+function PutSceneMapPro(L: Plua_state): integer; cdecl;
+function GetSceneEventPro(L: Plua_state): integer; cdecl;
+function PutSceneEventPro(L: Plua_state): integer; cdecl;
+function JudgeSceneEvent(L: Plua_state): integer; cdecl;
 function PlayMusic(L: Plua_state): integer; cdecl;
 function PlayWave(L: Plua_state): integer; cdecl;
 function WalkFromTo(L: Plua_state): integer; cdecl;
-function ScenceFromTo(L: Plua_state): integer; cdecl;
+function SceneFromTo(L: Plua_state): integer; cdecl;
 function PlayAnimation(L: Plua_state): integer; cdecl;
 function GetNameAsString(L: Plua_state): integer; cdecl;
-function ChangeScence(L: Plua_state): integer; cdecl;
+function ChangeScene(L: Plua_state): integer; cdecl;
 function ShowPicture(L: Plua_state): integer; cdecl;
 function GetItemList(L: Plua_state): integer; cdecl;
-function GetCurrentScence(L: Plua_state): integer; cdecl;
+function GetCurrentScene(L: Plua_state): integer; cdecl;
 function GetCurrentEvent(L: Plua_state): integer; cdecl;
 
 function GetBattleNumber(L: Plua_state): integer; cdecl;
@@ -115,12 +115,12 @@ function AddRoleIntoBattle(L: Plua_state): integer; cdecl;
 function ForceBattleResult(L: Plua_state): integer; cdecl;
 function AskSoftStar(L: Plua_state): integer; cdecl;
 function WeiShop(L: Plua_state): integer; cdecl;
-function OpenAllScence(L: Plua_state): integer; cdecl;
+function OpenAllScene(L: Plua_state): integer; cdecl;
 function ShowEthics(L: Plua_state): integer; cdecl;
 function ShowRepute(L: Plua_state): integer; cdecl;
-function OldPutScenceMapPro(L: Plua_state): integer; cdecl;
+function OldPutSceneMapPro(L: Plua_state): integer; cdecl;
 function ChangeMMapMusic(L: Plua_state): integer; cdecl;
-function OldSetScencePosition(L: Plua_state): integer; cdecl;
+function OldSetScenePosition(L: Plua_state): integer; cdecl;
 function ZeroAllMP(L: Plua_state): integer; cdecl;
 function SetOneUsePoi(L: Plua_state): integer; cdecl;
 function Add3EventNum(L: Plua_state): integer; cdecl;
@@ -133,8 +133,8 @@ function AddAptitude(L: Plua_state): integer; cdecl;
 function SetOneMagic(L: Plua_state): integer; cdecl;
 function JudgeSexual(L: Plua_state): integer; cdecl;
 function AddEthics(L: Plua_state): integer; cdecl;
-function ChangeScencePic(L: Plua_state): integer; cdecl;
-function OpenScence(L: Plua_state): integer; cdecl;
+function ChangeScenePic(L: Plua_state): integer; cdecl;
+function OpenScene(L: Plua_state): integer; cdecl;
 function JudgeFemaleInTeam(L: Plua_state): integer; cdecl;
 function Play2Amination(L: Plua_state): integer; cdecl;
 function AddSpeed(L: Plua_state): integer; cdecl;
@@ -146,7 +146,7 @@ function JudgeEventNum(L: Plua_state): integer; cdecl;
 function AddRepute(L: Plua_state): integer; cdecl;
 function BreakStoneGate(L: Plua_state): integer; cdecl;
 function FightForTop(L: Plua_state): integer; cdecl;
-function JudgeScencePic(L: Plua_state): integer; cdecl;
+function JudgeScenePic(L: Plua_state): integer; cdecl;
 function Judge14BooksPlaced(L: Plua_state): integer; cdecl;
 function SetSexual(L: Plua_state): integer; cdecl;
 function BackHome(L: Plua_state): integer; cdecl;
@@ -199,8 +199,8 @@ begin
   lua_register(Lua_script, 'join', Join);
   lua_register(Lua_script, 'askrest', AskRest);
   lua_register(Lua_script, 'rest', Rest);
-  lua_register(Lua_script, 'lightscence', LightScence);
-  lua_register(Lua_script, 'darkscence', DarkScence);
+  lua_register(Lua_script, 'lightscene', LightScene);
+  lua_register(Lua_script, 'darkscene', DarkScene);
   lua_register(Lua_script, 'dead', Dead);
   lua_register(Lua_script, 'inteam', InTeam);
   lua_register(Lua_script, 'teamisfull', TeamIsFull);
@@ -209,10 +209,10 @@ begin
   //lua_register(Lua_script, 'sprintf', Sprintf);
   lua_register(Lua_script, 'getmainmapposition', GetMainMapPosition);
   lua_register(Lua_script, 'setmainmapposition', SetMainMapPosition);
-  lua_register(Lua_script, 'getscenceposition', GetScencePosition);
-  lua_register(Lua_script, 'setscenceposition', SetScencePosition);
-  lua_register(Lua_script, 'getscenceface', GetScenceFace);
-  lua_register(Lua_script, 'setscenceface', SetScenceFace);
+  lua_register(Lua_script, 'getsceneposition', GetScenePosition);
+  lua_register(Lua_script, 'setsceneposition', SetScenePosition);
+  lua_register(Lua_script, 'getsceneface', GetSceneFace);
+  lua_register(Lua_script, 'setsceneface', SetSceneFace);
   lua_register(Lua_script, 'delay', Delay);
   lua_register(Lua_script, 'drawrect', DrawRect);
   lua_register(Lua_script, 'memberamount', MemberAmount);
@@ -224,23 +224,23 @@ begin
   lua_register(Lua_script, 'putitempro', PutItemPro);
   lua_register(Lua_script, 'getmagicpro', GetMagicPro);
   lua_register(Lua_script, 'putmagicpro', PutMagicPro);
-  lua_register(Lua_script, 'getscencepro', GetScencePro);
-  lua_register(Lua_script, 'putscencepro', PutScencePro);
-  lua_register(Lua_script, 'getscencemappro', GetScenceMapPro);
-  lua_register(Lua_script, 'putscencemappro', PutScenceMapPro);
-  lua_register(Lua_script, 'getscenceeventpro', GetScenceEventPro);
-  lua_register(Lua_script, 'putscenceeventpro', PutScenceEventPro);
-  lua_register(Lua_script, 'judgescenceevent', JudgeScenceEvent);
+  lua_register(Lua_script, 'getscenepro', GetScenePro);
+  lua_register(Lua_script, 'putscenepro', PutScenePro);
+  lua_register(Lua_script, 'getscenemappro', GetSceneMapPro);
+  lua_register(Lua_script, 'putscenemappro', PutSceneMapPro);
+  lua_register(Lua_script, 'getsceneeventpro', GetSceneEventPro);
+  lua_register(Lua_script, 'putsceneeventpro', PutSceneEventPro);
+  lua_register(Lua_script, 'judgesceneevent', JudgeSceneEvent);
   lua_register(Lua_script, 'playmusic', PlayMusic);
   lua_register(Lua_script, 'playwave', PlayWave);
   lua_register(Lua_script, 'walkfromto', WalkFromTo);
-  lua_register(Lua_script, 'scencefromto', ScenceFromTo);
+  lua_register(Lua_script, 'scenefromto', SceneFromTo);
   lua_register(Lua_script, 'playanimation', PlayAnimation);
   lua_register(Lua_script, 'getnameasstring', GetNameAsString);
-  lua_register(Lua_script, 'changescence', ChangeScence);
+  lua_register(Lua_script, 'changescene', ChangeScene);
   lua_register(Lua_script, 'showpicture', ShowPicture);
   lua_register(Lua_script, 'getitemlist', GetItemList);
-  lua_register(Lua_script, 'getcurrentscence', GetCurrentScence);
+  lua_register(Lua_script, 'getcurrentscene', GetCurrentScene);
   lua_register(Lua_script, 'getcurrentevent', GetCurrentEvent);
 
   lua_register(Lua_script, 'getbattlenumber', GetBattleNumber);
@@ -258,7 +258,7 @@ begin
   lua_register(Lua_script, 'asksoftstar', AskSoftStar);
   lua_register(Lua_script, 'showethics', ShowEthics);
   lua_register(Lua_script, 'showrepute', ShowRepute);
-  lua_register(Lua_script, 'openallscence', OpenAllScence);
+  lua_register(Lua_script, 'openallscene', OpenAllScene);
 
   lua_register(Lua_script, 'instruct_0', Clear);
   lua_register(Lua_script, 'instruct_1', OldTalk);
@@ -273,19 +273,19 @@ begin
   lua_register(Lua_script, 'instruct_10', Join);
   lua_register(Lua_script, 'instruct_11', AskRest);
   lua_register(Lua_script, 'instruct_12', Rest);
-  lua_register(Lua_script, 'instruct_13', LightScence);
-  lua_register(Lua_script, 'instruct_14', DarkScence);
+  lua_register(Lua_script, 'instruct_13', LightScene);
+  lua_register(Lua_script, 'instruct_14', DarkScene);
   lua_register(Lua_script, 'instruct_15', Dead);
   lua_register(Lua_script, 'instruct_16', InTeam);
-  lua_register(Lua_script, 'instruct_17', OldPutScenceMapPro);
+  lua_register(Lua_script, 'instruct_17', OldPutSceneMapPro);
   lua_register(Lua_script, 'instruct_18', HaveItemBool);
-  lua_register(Lua_script, 'instruct_19', OldSetScencePosition);
+  lua_register(Lua_script, 'instruct_19', OldSetScenePosition);
   lua_register(Lua_script, 'instruct_20', TeamIsFull);
   lua_register(Lua_script, 'instruct_21', LeaveTeam);
   lua_register(Lua_script, 'instruct_22', ZeroAllMP);
   lua_register(Lua_script, 'instruct_23', SetOneUsePoi);
   lua_register(Lua_script, 'instruct_24', Blank);
-  lua_register(Lua_script, 'instruct_25', ScenceFromTo);
+  lua_register(Lua_script, 'instruct_25', SceneFromTo);
   lua_register(Lua_script, 'instruct_26', Add3EventNum);
   lua_register(Lua_script, 'instruct_27', PlayAnimation);
   lua_register(Lua_script, 'instruct_28', JudgeEthics);
@@ -298,9 +298,9 @@ begin
   lua_register(Lua_script, 'instruct_35', SetOneMagic);
   lua_register(Lua_script, 'instruct_36', JudgeSexual);
   lua_register(Lua_script, 'instruct_37', AddEthics);
-  lua_register(Lua_script, 'instruct_38', ChangeScencePic);
-  lua_register(Lua_script, 'instruct_39', OpenScence);
-  lua_register(Lua_script, 'instruct_40', SetScenceFace);
+  lua_register(Lua_script, 'instruct_38', ChangeScenePic);
+  lua_register(Lua_script, 'instruct_39', OpenScene);
+  lua_register(Lua_script, 'instruct_40', SetSceneFace);
   lua_register(Lua_script, 'instruct_41', AnotherGetItem);
   lua_register(Lua_script, 'instruct_42', JudgeFemaleInTeam);
   lua_register(Lua_script, 'instruct_43', HaveItemBool);
@@ -314,13 +314,13 @@ begin
   lua_register(Lua_script, 'instruct_51', AskSoftStar);
   lua_register(Lua_script, 'instruct_52', ShowEthics);
   lua_register(Lua_script, 'instruct_53', ShowRepute);
-  lua_register(Lua_script, 'instruct_54', OpenAllScence);
+  lua_register(Lua_script, 'instruct_54', OpenAllScene);
   lua_register(Lua_script, 'instruct_55', JudgeEventNum);
   lua_register(Lua_script, 'instruct_56', AddRepute);
   lua_register(Lua_script, 'instruct_57', BreakStoneGate);
   lua_register(Lua_script, 'instruct_58', FightForTop);
   lua_register(Lua_script, 'instruct_59', AllLeave);
-  lua_register(Lua_script, 'instruct_60', JudgeScencePic);
+  lua_register(Lua_script, 'instruct_60', JudgeScenePic);
   lua_register(Lua_script, 'instruct_61', Judge14BooksPlaced);
   lua_register(Lua_script, 'instruct_62', BackHome);
   lua_register(Lua_script, 'instruct_63', SetSexual);
@@ -729,7 +729,7 @@ begin
   if n = 4 then
   begin
     if x[0] = -2 then
-      x[0] := CurScence;
+      x[0] := CurScene;
     if x[1] = -2 then
       x[1] := CurEvent;
     Ddata[x[0], x[1], x[2]] := x[3];
@@ -857,14 +857,14 @@ begin
 
 end;
 
-function LightScence(L: Plua_state): integer; cdecl;
+function LightScene(L: Plua_state): integer; cdecl;
 begin
   instruct_13;
   Result := 0;
 
 end;
 
-function DarkScence(L: Plua_state): integer; cdecl;
+function DarkScene(L: Plua_state): integer; cdecl;
 begin
   instruct_14;
   Result := 0;
@@ -950,7 +950,7 @@ begin
 end;
 
 //获取场景坐标
-function GetScencePosition(L: Plua_state): integer; cdecl;
+function GetScenePosition(L: Plua_state): integer; cdecl;
 begin
   lua_pushnumber(L, Sy);
   lua_pushnumber(L, Sx);
@@ -958,26 +958,26 @@ begin
 end;
 
 //改变场景坐标
-function SetScencePosition(L: Plua_state): integer; cdecl;
+function SetScenePosition(L: Plua_state): integer; cdecl;
 begin
   Sx := floor(lua_tonumber(L, -1));
   Sy := floor(lua_tonumber(L, -2));
   Result := 0;
 end;
 
-function OldSetScencePosition(L: Plua_state): integer; cdecl;
+function OldSetScenePosition(L: Plua_state): integer; cdecl;
 begin
   instruct_19(floor(lua_tonumber(L, -2)), floor(lua_tonumber(L, -1)));
   Result := 0;
 end;
 
-function GetScenceFace(L: Plua_state): integer; cdecl;
+function GetSceneFace(L: Plua_state): integer; cdecl;
 begin
   lua_pushnumber(L, SFace);
   Result := 1;
 end;
 
-function SetScenceFace(L: Plua_state): integer; cdecl;
+function SetSceneFace(L: Plua_state): integer; cdecl;
 begin
   Sface := floor(lua_tonumber(L, -1));
   Result := 0;
@@ -1099,23 +1099,23 @@ begin
 end;
 
 //读场景信息
-function GetScencePro(L: Plua_state): integer; cdecl;
+function GetScenePro(L: Plua_state): integer; cdecl;
 begin
-  lua_pushnumber(L, Rscence[floor(lua_tonumber(L, -2))].Data[floor(lua_tonumber(L, -1))]);
+  lua_pushnumber(L, Rscene[floor(lua_tonumber(L, -2))].Data[floor(lua_tonumber(L, -1))]);
   Result := 1;
 
 end;
 
 //写场景信息
-function PutScencePro(L: Plua_state): integer; cdecl;
+function PutScenePro(L: Plua_state): integer; cdecl;
 begin
-  Rscence[floor(lua_tonumber(L, -2))].Data[floor(lua_tonumber(L, -1))] := floor(lua_tonumber(L, -3));
+  Rscene[floor(lua_tonumber(L, -2))].Data[floor(lua_tonumber(L, -1))] := floor(lua_tonumber(L, -3));
   Result := 0;
 
 end;
 
 //读场景图信息
-function GetScenceMapPro(L: Plua_state): integer; cdecl;
+function GetSceneMapPro(L: Plua_state): integer; cdecl;
 begin
   lua_pushnumber(L, sdata[floor(lua_tonumber(L, -4)), floor(lua_tonumber(L, -3)), floor(lua_tonumber(L, -2)), floor(lua_tonumber(L, -1))]);
   Result := 1;
@@ -1123,14 +1123,14 @@ begin
 end;
 
 //写场景图信息
-function PutScenceMapPro(L: Plua_state): integer; cdecl;
+function PutSceneMapPro(L: Plua_state): integer; cdecl;
 begin
   sdata[floor(lua_tonumber(L, -4)), floor(lua_tonumber(L, -3)), floor(lua_tonumber(L, -2)), floor(lua_tonumber(L, -1))] := floor(lua_tonumber(L, -5));
   Result := 0;
 
 end;
 
-function OldPutScenceMapPro(L: Plua_state): integer; cdecl;
+function OldPutSceneMapPro(L: Plua_state): integer; cdecl;
 var
   list: array [0 .. 4] of integer;
   i: integer;
@@ -1143,7 +1143,7 @@ begin
 end;
 
 //读场景事件信息
-function GetScenceEventPro(L: Plua_state): integer; cdecl;
+function GetSceneEventPro(L: Plua_state): integer; cdecl;
 begin
   lua_pushnumber(L, ddata[floor(lua_tonumber(L, -3)), floor(lua_tonumber(L, -2)), floor(lua_tonumber(L, -1))]);
   Result := 1;
@@ -1151,19 +1151,19 @@ begin
 end;
 
 //写场景事件信息
-function PutScenceEventPro(L: Plua_state): integer; cdecl;
+function PutSceneEventPro(L: Plua_state): integer; cdecl;
 begin
   ddata[floor(lua_tonumber(L, -3)), floor(lua_tonumber(L, -2)), floor(lua_tonumber(L, -1))] := floor(lua_tonumber(L, -4));
   Result := 0;
 
 end;
 
-function JudgeScenceEvent(L: Plua_state): integer; cdecl;
+function JudgeSceneEvent(L: Plua_state): integer; cdecl;
 var
   t: integer;
 begin
   t := 0;
-  if DData[CurScence, floor(lua_tonumber(L, -3)), 2 + floor(lua_tonumber(L, -2))] = floor(lua_tonumber(L, -1)) then
+  if DData[CurScene, floor(lua_tonumber(L, -3)), 2 + floor(lua_tonumber(L, -2))] = floor(lua_tonumber(L, -1)) then
     t := 1;
   lua_pushnumber(L, t);
   Result := 1;
@@ -1194,7 +1194,7 @@ begin
 
 end;
 
-function ScenceFromTo(L: Plua_state): integer; cdecl;
+function SceneFromTo(L: Plua_state): integer; cdecl;
 var
   x1, x2, y1, y2: integer;
 begin
@@ -1229,7 +1229,7 @@ begin
   case typenum of
     0: p1 := @Rrole[num].Name;
     1: p1 := @Ritem[num].Name;
-    2: p1 := @Rscence[num].Name;
+    2: p1 := @Rscene[num].Name;
     3: p1 := @Rmagic[num].Name;
   end;
   str := CP950ToUTF8(p1);
@@ -1237,16 +1237,16 @@ begin
   Result := 1;
 end;
 
-function ChangeScence(L: Plua_state): integer; cdecl;
+function ChangeScene(L: Plua_state): integer; cdecl;
 var
   x, y, n: integer;
 begin
   n := lua_gettop(L);
-  CurScence := floor(lua_tonumber(L, -n));
+  CurScene := floor(lua_tonumber(L, -n));
   if n = 1 then
   begin
-    x := Rscence[CurScence].EntranceX;
-    y := Rscence[CurScence].EntranceY;
+    x := Rscene[CurScene].EntranceX;
+    y := Rscene[CurScene].EntranceY;
   end
   else
   begin
@@ -1258,10 +1258,10 @@ begin
   Sx := x;
   Sy := y;
   instruct_14;
-  InitialScence;
-  DrawScence;
+  InitialScene;
+  DrawScene;
   instruct_13;
-  ShowScenceName(CurScence);
+  ShowSceneName(CurScene);
   CheckEvent3;
   Result := 0;
 
@@ -1305,9 +1305,9 @@ begin
   Result := 2;
 end;
 
-function GetCurrentScence(L: Plua_state): integer; cdecl;
+function GetCurrentScene(L: Plua_state): integer; cdecl;
 begin
-  lua_pushnumber(L, CurScence);
+  lua_pushnumber(L, CurScene);
   Result := 1;
 
 end;
@@ -1468,7 +1468,7 @@ begin
   Result := 0;
 end;
 
-function OpenAllScence(L: Plua_state): integer; cdecl;
+function OpenAllScene(L: Plua_state): integer; cdecl;
 begin
   instruct_54;
   Result := 0;
@@ -1573,13 +1573,13 @@ begin
   Result := 0;
 end;
 
-function ChangeScencePic(L: Plua_state): integer; cdecl;
+function ChangeScenePic(L: Plua_state): integer; cdecl;
 begin
   instruct_38(floor(lua_tonumber(L, -4)), floor(lua_tonumber(L, -3)), floor(lua_tonumber(L, -2)), floor(lua_tonumber(L, -1)));
   Result := 0;
 end;
 
-function OpenScence(L: Plua_state): integer; cdecl;
+function OpenScene(L: Plua_state): integer; cdecl;
 begin
   instruct_39(floor(lua_tonumber(L, -1)));
   Result := 0;
@@ -1654,7 +1654,7 @@ begin
   Result := 0;
 end;
 
-function JudgeScencePic(L: Plua_state): integer; cdecl;
+function JudgeScenePic(L: Plua_state): integer; cdecl;
 var
   n: integer;
 begin

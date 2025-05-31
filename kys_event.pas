@@ -115,10 +115,10 @@ uses
 //场景重绘一般来说仅重绘可见部分, 当事件中转移了画面位置需要全重绘
 procedure instruct_0;
 begin
-  if NeedRefreshScence = 1 then
+  if NeedRefreshScene = 1 then
   begin
-    InitialScence(1);
-    NeedRefreshScence := 0;
+    InitialScene(1);
+    NeedRefreshScene := 0;
   end;
   Redraw;
   //SDL_UpdateRect2(screen,0,0,screen.w,screen.h);
@@ -344,9 +344,9 @@ var
   i, i1, i2, {curPic,} preEventPic: integer;
   ModifyS: boolean;
 begin
-  //curPic := DData[CurScence, CurEvent, 5];
+  //curPic := DData[CurScene, CurEvent, 5];
   if list[0] = -2 then
-    list[0] := CurScence;
+    list[0] := CurScene;
   if list[1] = -2 then
     list[1] := CurEvent;
   if list[11] = -2 then
@@ -357,7 +357,7 @@ begin
   //这里应该是原本z文件的bug, 如果不处于当前场景, 在连坐标值一起修改时, 并不会同时
   //对S数据进行修改. 而<苍龙逐日>中有几条语句无意中符合了这个bug而造成正确的结果
   ModifyS := True;
-  if ((MODVersion = 12) or (MODVersion = 31)) and (list[0] <> CurScence) then
+  if ((MODVersion = 12) or (MODVersion = 31)) and (list[0] <> CurScene) then
     ModifyS := False;
   if ModifyS then
     Sdata[list[0], 3, Ddata[list[0], list[1], 10], Ddata[list[0], list[1], 9]] := -1;
@@ -368,18 +368,18 @@ begin
       Ddata[list[0], list[1], i] := list[2 + i];
     end;
   end;
-  //if list[0] = CurScence then
+  //if list[0] = CurScene then
   Sdata[list[0], 3, Ddata[list[0], list[1], 10], Ddata[list[0], list[1], 9]] := list[1];
 
-  {if DData[CurScence, CurEvent, 5] <> curPic then
+  {if DData[CurScene, CurEvent, 5] <> curPic then
     begin
-    InitialScence(1);
+    InitialScene(1);
     Redraw;
     //SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
     end;}
-  if (list[0] = CurScence) and (preEventPic <> DData[list[0], list[1], 5]) then
+  if (list[0] = CurScene) and (preEventPic <> DData[list[0], list[1], 5]) then
   begin
-    NeedRefreshScence := 1;
+    NeedRefreshScene := 1;
   end;
 end;
 
@@ -425,7 +425,7 @@ end;
 
 procedure instruct_8(musicnum: integer);
 begin
-  exitscencemusicnum := musicnum;
+  exitscenemusicnum := musicnum;
 end;
 
 //询问是否加入
@@ -531,9 +531,9 @@ var
 begin
   //for i1:=0 to 199 do
   //for i2:=0 to 10 do
-  //DData[CurScence, [i1,i2]:=Ddata[CurScence,i1,i2];
-  InitialScence(0);
-  NeedRefreshScence := 0;
+  //DData[CurScene, [i1,i2]:=Ddata[CurScene,i1,i2];
+  InitialScene(0);
+  NeedRefreshScene := 0;
   for i := 0 to 5 do
   begin
     //Sdl_Delay(5);
@@ -593,10 +593,10 @@ var
   i1, i2: integer;
 begin
   if list[0] = -2 then
-    list[0] := CurScence;
+    list[0] := CurScene;
   sdata[list[0], list[1], list[3], list[2]] := list[4];
-  if list[0] = CurScence then
-    NeedRefreshScence := 1;
+  if list[0] = CurScene then
+    NeedRefreshScene := 1;
 
 end;
 
@@ -621,7 +621,7 @@ begin
   Sy := x;
   Cx := Sx;
   Cy := Sy;
-  InitialScence(0);
+  InitialScene(0);
   Redraw;
 end;
 
@@ -687,10 +687,10 @@ procedure instruct_25(x1, y1, x2, y2: integer);
 var
   i, s: integer;
 begin
-  if NeedRefreshScence = 1 then
+  if NeedRefreshScene = 1 then
   begin
-    InitialScence(0);
-    NeedRefreshScence := 0;
+    InitialScene(0);
+    NeedRefreshScene := 0;
   end;
   s := sign(x2 - x1);
   i := x1 + s;
@@ -699,9 +699,9 @@ begin
     begin
       CheckBasicEvent;
       SDL_Delay(50);
-      DrawScenceWithoutRole(y1, i);
+      DrawSceneWithoutRole(y1, i);
       //showmessage(inttostr(i));
-      DrawRoleOnScence(y1, i);
+      DrawRoleOnScene(y1, i);
       SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
       i := i + s;
       //showmessage(inttostr(s*(x2-i)));
@@ -715,9 +715,9 @@ begin
     begin
       CheckBasicEvent;
       SDL_Delay(50);
-      DrawScenceWithoutRole(i, x2);
+      DrawSceneWithoutRole(i, x2);
       //showmessage(inttostr(i));
-      DrawRoleOnScence(i, x2);
+      DrawRoleOnScene(i, x2);
       //Redraw;
       SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
       i := i + s;
@@ -734,14 +734,14 @@ end;
 procedure instruct_26(snum, enum, add1, add2, add3: integer);
 begin
   if snum = -2 then
-    snum := CurScence;
+    snum := CurScene;
   ddata[snum, enum, 2] := ddata[snum, enum, 2] + add1;
   ddata[snum, enum, 3] := ddata[snum, enum, 3] + add2;
   ddata[snum, enum, 4] := ddata[snum, enum, 4] + add3;
-  if snum = CurScence then
+  if snum = CurScene then
   begin
-    InitialScence(0);
-    NeedRefreshScence := 0;
+    InitialScene(0);
+    NeedRefreshScene := 0;
   end;
 end;
 
@@ -759,10 +759,10 @@ begin
     while SDL_PollEvent(@event) >= 0 do
     begin
       CheckBasicEvent;
-      CurScenceRolePic := i div 2;
+      CurSceneRolePic := i div 2;
       SDL_Delay(20);
-      //DData[CurScence, CurEvent, 5] := -1;
-      DrawScence;
+      //DData[CurScene, CurEvent, 5] := -1;
+      DrawScene;
       SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
       i := i + 1;
       if i > endpic then
@@ -775,20 +775,20 @@ begin
     while SDL_PollEvent(@event) >= 0 do
     begin
       CheckBasicEvent;
-      DData[CurScence, enum, 5] := i;
-      DData[CurScence, enum, 6] := i;
-      DData[CurScence, enum, 7] := i;
-      //UpdateScence(DData[CurScence, enum, 10], DData[CurScence, enum, 9]);
-      InitialScence(1);
+      DData[CurScene, enum, 5] := i;
+      DData[CurScene, enum, 6] := i;
+      DData[CurScene, enum, 7] := i;
+      //UpdateScene(DData[CurScene, enum, 10], DData[CurScene, enum, 9]);
+      InitialScene(1);
       SDL_Delay(20);
-      DrawScence;
+      DrawScene;
       SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
       i := i + 1;
       if i > endpic then
         break;
     end;
-    //DData[CurScence, enum, 5] := DData[CurScence, enum, 7];
-    //InitialScence(1);
+    //DData[CurScene, enum, 5] := DData[CurScene, enum, 7];
+    //InitialScene(1);
   end;
 
 end;
@@ -815,10 +815,10 @@ procedure instruct_30(x1, y1, x2, y2: integer);
 var
   s: integer;
 begin
-  if NeedRefreshScence = 1 then
+  if NeedRefreshScene = 1 then
   begin
-    InitialScence(0);
-    NeedRefreshScence := 0;
+    InitialScene(0);
+    NeedRefreshScene := 0;
   end;
   s := sign(x2 - x1);
   Sy := x1 + s;
@@ -831,12 +831,12 @@ begin
     begin
       CheckBasicEvent;
       SDL_Delay(50);
-      DrawScenceWithoutRole(Sx, Sy);
+      DrawSceneWithoutRole(Sx, Sy);
       SStep := SStep + 1;
       if SStep >= 7 then
         SStep := 1;
-      CurScenceRolePic := BEGIN_WALKPIC + SFace * 7 + SStep;
-      DrawRoleOnScence(Sx, Sy);
+      CurSceneRolePic := BEGIN_WALKPIC + SFace * 7 + SStep;
+      DrawRoleOnScene(Sx, Sy);
       SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
       Sy := Sy + s;
       if s * (x2 - Sy) < 0 then
@@ -853,12 +853,12 @@ begin
     begin
       CheckBasicEvent;
       SDL_Delay(50);
-      DrawScenceWithoutRole(Sx, Sy);
+      DrawSceneWithoutRole(Sx, Sy);
       SStep := SStep + 1;
       if SStep >= 7 then
         SStep := 1;
-      CurScenceRolePic := BEGIN_WALKPIC + SFace * 7 + SStep;
-      DrawRoleOnScence(Sx, Sy);
+      CurSceneRolePic := BEGIN_WALKPIC + SFace * 7 + SStep;
+      DrawRoleOnScene(Sx, Sy);
       SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
       Sx := Sx + s;
       if s * (y2 - Sx) < 0 then
@@ -869,9 +869,9 @@ begin
   SStep := 0;
   Cx := Sx;
   Cy := Sy;
-  CurScenceRolePic := 2501 + SFace * 7 + SStep;
-  DrawScenceWithoutRole(Sx, Sy);
-  DrawRoleOnScence(Sx, Sy);
+  CurSceneRolePic := 2501 + SFace * 7 + SStep;
+  DrawSceneWithoutRole(Sx, Sy);
+  DrawRoleOnScene(Sx, Sy);
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
 end;
 
@@ -1032,30 +1032,30 @@ var
   i1, i2: integer;
 begin
   if snum = -2 then
-    snum := CurScence;
+    snum := CurScene;
   for i1 := 0 to 63 do
     for i2 := 0 to 63 do
     begin
       if Sdata[snum, layernum, i1, i2] = oldpic then
         Sdata[snum, layernum, i1, i2] := newpic;
     end;
-  if snum = CurScence then
+  if snum = CurScene then
   begin
-    InitialScence(0);
-    NeedRefreshScence := 0;
+    InitialScene(0);
+    NeedRefreshScene := 0;
   end;
 end;
 
 procedure instruct_39(snum: integer);
 begin
-  Rscence[snum].EnCondition := 0;
+  Rscene[snum].EnCondition := 0;
 end;
 
 procedure instruct_40(director: integer);
 begin
   Sface := director;
-  CurScenceRolePic := 2500 + SFace * 7 + 1;
-  DrawScence;
+  CurSceneRolePic := 2500 + SFace * 7 + 1;
+  DrawScene;
 end;
 
 procedure instruct_41(rnum, inum, amount: integer);
@@ -1122,55 +1122,55 @@ procedure instruct_44(enum1, beginpic1, endpic1, enum2, beginpic2, endpic2: inte
 var
   i: integer;
 begin
-  SData[CurScence, 3, DData[CurScence, enum1, 10], DData[CurScence, enum1, 9]] := enum1;
-  SData[CurScence, 3, DData[CurScence, enum2, 10], DData[CurScence, enum2, 9]] := enum2;
+  SData[CurScene, 3, DData[CurScene, enum1, 10], DData[CurScene, enum1, 9]] := enum1;
+  SData[CurScene, 3, DData[CurScene, enum2, 10], DData[CurScene, enum2, 9]] := enum2;
   i := 0;
   while SDL_PollEvent(@event) >= 0 do
   begin
     CheckBasicEvent;
-    DData[CurScence, enum1, 5] := beginpic1 + i;
-    DData[CurScence, enum2, 5] := beginpic2 + i;
-    //UpdateScence(DData[CurScence, enum1, 10], DData[CurScence, enum1, 9]);
-    //UpdateScence(DData[CurScence, enum2, 10], DData[CurScence, enum2, 9]);
-    InitialScence(1);
+    DData[CurScene, enum1, 5] := beginpic1 + i;
+    DData[CurScene, enum2, 5] := beginpic2 + i;
+    //UpdateScene(DData[CurScene, enum1, 10], DData[CurScene, enum1, 9]);
+    //UpdateScene(DData[CurScene, enum2, 10], DData[CurScene, enum2, 9]);
+    InitialScene(1);
     SDL_Delay(20);
-    //DrawScenceWithoutRole(Sx, Sy);
-    DrawScence;
+    //DrawSceneWithoutRole(Sx, Sy);
+    DrawScene;
     SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
     i := i + 1;
     if i > endpic1 - beginpic1 then
       break;
   end;
-  //SData[CurScence, 3, DData[CurScence, [enum,10],DData[CurScence, [enum,9]]:=-1;
+  //SData[CurScene, 3, DData[CurScene, [enum,10],DData[CurScene, [enum,9]]:=-1;
 end;
 
 procedure instruct_44e(enum1, beginpic1, endpic1, enum2, beginpic2, enum3, beginpic3: integer);
 var
   i: integer;
 begin
-  SData[CurScence, 3, DData[CurScence, enum1, 10], DData[CurScence, enum1, 9]] := enum1;
-  SData[CurScence, 3, DData[CurScence, enum2, 10], DData[CurScence, enum2, 9]] := enum2;
-  SData[CurScence, 3, DData[CurScence, enum3, 10], DData[CurScence, enum3, 9]] := enum3;
+  SData[CurScene, 3, DData[CurScene, enum1, 10], DData[CurScene, enum1, 9]] := enum1;
+  SData[CurScene, 3, DData[CurScene, enum2, 10], DData[CurScene, enum2, 9]] := enum2;
+  SData[CurScene, 3, DData[CurScene, enum3, 10], DData[CurScene, enum3, 9]] := enum3;
   i := 0;
   while SDL_PollEvent(@event) >= 0 do
   begin
     CheckBasicEvent;
-    DData[CurScence, enum1, 5] := beginpic1 + i;
-    DData[CurScence, enum2, 5] := beginpic2 + i;
-    DData[CurScence, enum3, 5] := beginpic3 + i;
-    //UpdateScence(DData[CurScence, enum1, 10], DData[CurScence, enum1, 9]);
-    //UpdateScence(DData[CurScence, enum2, 10], DData[CurScence, enum2, 9]);
-    InitialScence(1);
+    DData[CurScene, enum1, 5] := beginpic1 + i;
+    DData[CurScene, enum2, 5] := beginpic2 + i;
+    DData[CurScene, enum3, 5] := beginpic3 + i;
+    //UpdateScene(DData[CurScene, enum1, 10], DData[CurScene, enum1, 9]);
+    //UpdateScene(DData[CurScene, enum2, 10], DData[CurScene, enum2, 9]);
+    InitialScene(1);
     SDL_Delay(20);
     //writeln(1);
-    //DrawScenceWithoutRole(Sx, Sy);
-    DrawScence;
+    //DrawSceneWithoutRole(Sx, Sy);
+    DrawScene;
     SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
     i := i + 1;
     if i > endpic1 - beginpic1 then
       break;
   end;
-  //SData[CurScence, 3, DData[CurScence, [enum,10],DData[CurScence, [enum,9]]:=-1;
+  //SData[CurScene, 3, DData[CurScene, [enum,10],DData[CurScene, [enum,9]]:=-1;
 end;
 
 procedure instruct_45(rnum, speed: integer);
@@ -1300,27 +1300,27 @@ begin
   Redraw;
 end;
 
-//Open all scences.
-//Note: in primary game, some scences are set to different entrancing condition.
+//Open all scenes.
+//Note: in primary game, some scenes are set to different entrancing condition.
 procedure instruct_54;
 var
   i: integer;
 begin
   for i := 0 to 100 do
   begin
-    Rscence[i].EnCondition := 0;
+    Rscene[i].EnCondition := 0;
   end;
-  Rscence[2].EnCondition := 2;
-  Rscence[38].EnCondition := 2;
-  Rscence[75].EnCondition := 1;
-  Rscence[80].EnCondition := 1;
+  Rscene[2].EnCondition := 2;
+  Rscene[38].EnCondition := 2;
+  Rscene[75].EnCondition := 1;
+  Rscene[80].EnCondition := 1;
 end;
 
 //Judge the event number.
 function instruct_55(enum, Value, jump1, jump2: integer): integer;
 begin
   Result := jump2;
-  if DData[CurScence, enum, 2] = Value then
+  if DData[CurScene, enum, 2] = Value then
     Result := jump1;
 end;
 
@@ -1342,13 +1342,13 @@ var
 begin
   {for i:=0 to endpic1-beginpic1 do
     begin
-    DData[CurScence, [enum1,5]:=beginpic1+i;
-    DData[CurScence, [enum2,5]:=beginpic2+i;
-    UpdateScence(DData[CurScence, [enum1,10],DData[CurScence, [enum1,9]);
-    UpdateScence(DData[CurScence, [enum2,10],DData[CurScence, [enum2,9]);
+    DData[CurScene, [enum1,5]:=beginpic1+i;
+    DData[CurScene, [enum2,5]:=beginpic2+i;
+    UpdateScene(DData[CurScene, [enum1,10],DData[CurScene, [enum1,9]);
+    UpdateScene(DData[CurScene, [enum2,10],DData[CurScene, [enum2,9]);
     sdl_delay(20);
-    DrawScenceByCenter(Sx,Sy);
-    DrawScence;
+    DrawSceneByCenter(Sx,Sy);
+    DrawScene;
     SDL_UpdateRect2(screen,0,0,screen.w,screen.h);
     end;}
   instruct_27(-1, 3832 * 2, 3844 * 2);
@@ -1407,7 +1407,7 @@ function instruct_60(snum, enum, pic, jump1, jump2: integer): integer;
 begin
   Result := jump2;
   if snum = -2 then
-    snum := CurScence;
+    snum := CurScene;
   if (Ddata[snum, enum, 5] = pic) or (Ddata[snum, enum, 6] = pic) or (Ddata[snum, enum, 7] = pic) then
     Result := jump1;
   //showmessage(inttostr(Ddata[snum,enum,5]));
@@ -1420,7 +1420,7 @@ begin
   Result := jump1;
   for i := 11 to 24 do
   begin
-    if Ddata[CurScence, i, 5] <> 4664 then
+    if Ddata[CurScene, i, 5] <> 4664 then
     begin
       Result := jump2;
     end;
@@ -1432,7 +1432,7 @@ var
   i: integer;
   str: utf8string;
 begin
-  CurScenceRolePic := -1;
+  CurSceneRolePic := -1;
   instruct_44(enum1, beginpic1, endpic1, enum2, beginpic2, endpic2);
   where := 3;
   Redraw;
@@ -1762,7 +1762,7 @@ begin
         case e2 of
           0: Rrole[e3].Data[e4 div 2] := e5;
           1: Ritem[e3].Data[e4 div 2] := e5;
-          2: Rscence[e3].Data[e4 div 2] := e5;
+          2: Rscene[e3].Data[e4 div 2] := e5;
           3: Rmagic[e3].Data[e4 div 2] := e5;
           4: Rshop[e3].Data[e4 div 2] := e5;
         end;
@@ -1777,7 +1777,7 @@ begin
         case e2 of
           0: x50[e5] := Rrole[e3].Data[e4 div 2];
           1: x50[e5] := Ritem[e3].Data[e4 div 2];
-          2: x50[e5] := Rscence[e3].Data[e4 div 2];
+          2: x50[e5] := Rscene[e3].Data[e4 div 2];
           3: x50[e5] := Rmagic[e3].Data[e4 div 2];
           4: x50[e5] := Rshop[e3].Data[e4 div 2];
         end;
@@ -1806,15 +1806,15 @@ begin
           break;
         end;
     end;
-    21: //Write event in scence.
+    21: //Write event in scene.
     begin
       e2 := e_GetValue(0, e1, e2);
       e3 := e_GetValue(1, e1, e3);
       e4 := e_GetValue(2, e1, e4);
       e5 := e_GetValue(3, e1, e5);
       Ddata[e2, e3, e4] := e5;
-      //if e2=CurScence then DData[CurScence, [e3,e4]:=e5;
-      //InitialScence;
+      //if e2=CurScene then DData[CurScene, [e3,e4]:=e5;
+      //InitialScene;
       //Redraw;
       //SDL_UpdateRect2(screen,0,0,screen.w,screen.h);
     end;
@@ -1833,8 +1833,8 @@ begin
       e5 := e_GetValue(3, e1, e5);
       e6 := e_GetValue(4, e1, e6);
       Sdata[e2, e3, e5, e4] := e6;
-      //if e2=CurScence then SData[CurScence, 3, e5,e4]:=e6;;
-      //InitialScence;
+      //if e2=CurScene then SData[CurScene, 3, e5,e4]:=e6;;
+      //InitialScene;
       //Redraw;
       //SDL_UpdateRect2(screen,0,0,screen.w,screen.h);
     end;
@@ -1878,7 +1878,7 @@ begin
         end;
         $01D295E:
         begin
-          CurScence := e5;
+          CurScene := e5;
         end;
       end;
       //redraw;
@@ -1890,7 +1890,7 @@ begin
       t1 := uint16(e3) + uint16(e4) * $10000 + uint(e6);
       i := uint16(e3) + uint16(e4) * $10000;
       case t1 of
-        $1D295E: x50[e5] := CurScence;
+        $1D295E: x50[e5] := CurScene;
         $1D295A: x50[e5] := Sx;
         $1D295C: x50[e5] := Sy;
         $1C0B88: x50[e5] := Mx;
@@ -1929,7 +1929,7 @@ begin
         case e2 of
           0: p1 := @Rrole[e3].Name;
           1: p1 := @Ritem[e3].Name;
-          2: p1 := @Rscence[e3].Name;
+          2: p1 := @Rscene[e3].Name;
           3: p1 := @Rmagic[e3].Name;
         end;
         len := min(10, length(p1));
@@ -2186,15 +2186,15 @@ begin
         NewTalk(e3, e4, e5, e6 mod 100, (e6 mod 100) div 10, e6 div 100, 0)
       else if (e2 = 999) and (MODVersion = 62) then
       begin
-        CurScence := e3;
+        CurScene := e3;
         Sx := e5;
         Sy := e4;
         Cx := Sx;
         Cy := Sy;
         instruct_14;
-        InitialScence;
-        DrawScence;
-        ShowScenceName(CurScence);
+        InitialScene;
+        DrawScene;
+        ShowSceneName(CurScene);
         CheckEvent3;
       end
       else if (e2 = 176) and (MODVersion = 22) then //菠萝三国输入数字
@@ -2256,7 +2256,7 @@ begin
         0: p := @Rrole[e3].Name[0];
         1: p := @Ritem[e3].Name[0];
         2: p := @Rmagic[e3].Name[0];
-        3: p := @Rscence[e3].Name[0];
+        3: p := @Rscene[e3].Name[0];
       end;
       //ShowMessage(IntToStr(e4));
       word1 := CP950ToUTF8(p);

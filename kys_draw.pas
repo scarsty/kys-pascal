@@ -45,18 +45,18 @@ procedure Redraw(WriteFresh: integer = 0);
 procedure RecordFreshScreen(x, y, w, h: integer);
 procedure LoadFreshScreen(x, y, w, h: integer);
 procedure DrawMMap;
-procedure DrawScence;
-procedure DrawScenceWithoutRole(x, y: integer);
-procedure DrawRoleOnScence(x, y: integer);
+procedure DrawScene;
+procedure DrawSceneWithoutRole(x, y: integer);
+procedure DrawRoleOnScene(x, y: integer);
 procedure ExpandGroundOnImg();
-procedure InitialScence(); overload;
-procedure InitialScence(Visible: integer); overload;
+procedure InitialScene(); overload;
+procedure InitialScene(Visible: integer); overload;
 function CalBlock(x, y: integer): integer;
 procedure CalPosOnImage(i1, i2: integer; var x, y: integer);
 procedure CalLTPosOnImageByCenter(i1, i2: integer; var x, y: integer);
-procedure InitialScenceOnePosition(i1, i2, x1, y1, w, h, depth, temp: integer);
-procedure UpdateScence(xs, ys: integer);
-procedure LoadScencePart(x, y: integer);
+procedure InitialSceneOnePosition(i1, i2, x1, y1, w, h, depth, temp: integer);
+procedure UpdateScene(xs, ys: integer);
+procedure LoadScenePart(x, y: integer);
 procedure DrawBField(needProgress: integer = 1);
 procedure DrawBfieldWithoutRole(x, y: integer);
 procedure DrawRoleOnBfield(x, y: integer; mixColor: uint32 = 0; mixAlpha: integer = 0; Alpha: integer = 75);
@@ -207,12 +207,12 @@ var
 begin
   if temp = 0 then
   begin
-    pImg := ImgScence;
+    pImg := ImgScene;
     pBlock := @BlockImg[0];
   end
   else
   begin
-    pImg := ImgScenceBack;
+    pImg := ImgSceneBack;
     pBlock := @BlockImg2[0];
   end;
   if (num >= 0) and (num < SPicAmount) then
@@ -474,7 +474,7 @@ procedure Redraw(WriteFresh: integer = 0);
 begin
   case where of
     0: DrawMMap;
-    1: DrawScence;
+    1: DrawScene;
     2: DrawBField;
     3:
     begin
@@ -864,7 +864,7 @@ begin
 end;
 
 //画场景到屏幕
-procedure DrawScence;
+procedure DrawScene;
 var
   i1, i2, x, y, xpoint, ypoint: integer;
 begin
@@ -873,43 +873,43 @@ begin
 
   if (CurEvent < 0) then
   begin
-    DrawScenceWithoutRole(Sx, Sy);
-    CurScenceRolePic := BEGIN_WALKPIC + SFace * 7 + SStep;
-    DrawRoleOnScence(Sx, Sy);
+    DrawSceneWithoutRole(Sx, Sy);
+    CurSceneRolePic := BEGIN_WALKPIC + SFace * 7 + SStep;
+    DrawRoleOnScene(Sx, Sy);
   end
   else
   begin
-    DrawScenceWithoutRole(Cx, Cy);
-    if (DData[CurScence, CurEvent, 10] = Sx) and (DData[CurScence, CurEvent, 9] = Sy) then
+    DrawSceneWithoutRole(Cx, Cy);
+    if (DData[CurScene, CurEvent, 10] = Sx) and (DData[CurScene, CurEvent, 9] = Sy) then
     begin
-      if DData[CurScence, CurEvent, 5] <= 0 then
+      if DData[CurScene, CurEvent, 5] <= 0 then
       begin
-        DrawRoleOnScence(Cx, Cy);
+        DrawRoleOnScene(Cx, Cy);
       end;
     end
     else
-      DrawRoleOnScence(Cx, Cy);
+      DrawRoleOnScene(Cx, Cy);
   end;
   DrawVirtualKey;
 end;
 
-//画不含主角的场景(与DrawScenceByCenter相同)
-procedure DrawScenceWithoutRole(x, y: integer);
+//画不含主角的场景(与DrawSceneByCenter相同)
+procedure DrawSceneWithoutRole(x, y: integer);
 var
   x1, y1: integer;
 begin
   CalLTPosOnImageByCenter(x, y, x1, y1);
-  LoadScencePart(x1, y1);
+  LoadScenePart(x1, y1);
 end;
 
 //画主角于场景
-procedure DrawRoleOnScence(x, y: integer);
+procedure DrawRoleOnScene(x, y: integer);
 var
   depth: integer;
   pos: TPosition;
 begin
   pos := GetPositionOnScreen(Sx, Sy, x, y);
-  DrawSPic(CurScenceRolePic, pos.x, pos.y - SData[CurScence, 4, Sx, Sy], 0, 100, CalBlock(Sx, Sy), 0, 0);
+  DrawSPic(CurSceneRolePic, pos.x, pos.y - SData[CurScene, 4, Sx, Sy], 0, 100, CalBlock(Sx, Sy), 0, 0);
 
 end;
 
@@ -926,7 +926,7 @@ begin
       for i2 := 0 to 63 do
       begin
         case where of
-          1: ExGround[i1, i2] := SData[CurScence, 0, i1, i2];
+          1: ExGround[i1, i2] := SData[CurScene, 0, i1, i2];
           2: ExGround[i1, i2] := Bfield[0, i1, i2];
         end;
       end;
@@ -967,16 +967,16 @@ begin
   end;
 end;
 
-//Save the image informations of the whole scence.
+//Save the image informations of the whole scene.
 //生成场景映像
-procedure InitialScence(); overload;
+procedure InitialScene(); overload;
 begin
-  InitialScence(0);
+  InitialScene(0);
 
 end;
 
 //如参数不为0, 仅修改可见部分的场景映像. 参数为0与无参数相同
-procedure InitialScence(Visible: integer); overload;
+procedure InitialScene(Visible: integer); overload;
 var
   i1, i2, x, y, x1, y1, w, h: integer;
   pos: TPosition;
@@ -984,15 +984,15 @@ var
   dest: TSDL_Rect;
 begin
   SDL_LockMutex(mutex);
-  LoadingScence := True;
+  LoadingScene := True;
   if Visible = 0 then
   begin
     x1 := 0;
     y1 := 0;
     w := ImageWidth;
     h := ImageHeight;
-    SDL_FillRect(ImgScence, nil, 0);
-    SDL_FillRect(ImgScenceBack, nil, 1);
+    SDL_FillRect(ImgScene, nil, 0);
+    SDL_FillRect(ImgSceneBack, nil, 1);
     ExpandGroundOnImg();
   end
   else
@@ -1018,20 +1018,20 @@ begin
     for i2 := 0 to 63 do
     begin
       CalPosOnImage(i1, i2, x, y);
-      if (CurScence >= 0) and (SData[CurScence, 4, i1, i2] <= 0) then
+      if (CurScene >= 0) and (SData[CurScene, 4, i1, i2] <= 0) then
       begin
-        num := SData[CurScence, 0, i1, i2] div 2;
+        num := SData[CurScene, 0, i1, i2] div 2;
         if num > 0 then
           InitialSPic(num, x, y, x1, y1, w, h, 1, 0, onback);
       end;
     end;
   for mini := 0 to 63 do
   begin
-    InitialScenceOnePosition(mini, mini, x1, y1, w, h, CalBlock(mini, mini), onback);
+    InitialSceneOnePosition(mini, mini, x1, y1, w, h, CalBlock(mini, mini), onback);
     for maxi := mini + 1 to 63 do
     begin
-      InitialScenceOnePosition(maxi, mini, x1, y1, w, h, CalBlock(maxi, mini), onback);
-      InitialScenceOnePosition(mini, maxi, x1, y1, w, h, CalBlock(mini, maxi), onback);
+      InitialSceneOnePosition(maxi, mini, x1, y1, w, h, CalBlock(maxi, mini), onback);
+      InitialSceneOnePosition(mini, maxi, x1, y1, w, h, CalBlock(mini, maxi), onback);
     end;
   end;
 
@@ -1053,9 +1053,9 @@ begin
     dest.y := y1;
     dest.w := w;
     dest.h := h;
-    SDL_BlitSurface(ImgScenceBack, @dest, ImgScence, @dest);
+    SDL_BlitSurface(ImgSceneBack, @dest, ImgScene, @dest);
   end;
-  LoadingScence := False;
+  LoadingScene := False;
   SDL_UnLockMutex(mutex);
 end;
 
@@ -1079,47 +1079,47 @@ begin
 end;
 
 //上面函数的子程
-procedure InitialScenceOnePosition(i1, i2, x1, y1, w, h, depth, temp: integer);
+procedure InitialSceneOnePosition(i1, i2, x1, y1, w, h, depth, temp: integer);
 var
   i, x, y, num: integer;
 begin
   CalPosOnImage(i1, i2, x, y);
-  if (CurScence < 0) then
+  if (CurScene < 0) then
     exit;
-  //InitialSPic2(SData[CurScence, 0, i1, i2] div 2, x, y, x1, y1, w, h, 1);
-  if SData[CurScence, 4, i1, i2] > 0 then
+  //InitialSPic2(SData[CurScene, 0, i1, i2] div 2, x, y, x1, y1, w, h, 1);
+  if SData[CurScene, 4, i1, i2] > 0 then
   begin
-    num := SData[CurScence, 0, i1, i2] div 2;
+    num := SData[CurScene, 0, i1, i2] div 2;
     InitialSPic(num, x, y, x1, y1, w, h, 1, depth, temp);
   end;
-  if (SData[CurScence, 1, i1, i2] > 0) {and (SData[CurScence, 4, i1, i2] > 0)} then
+  if (SData[CurScene, 1, i1, i2] > 0) {and (SData[CurScene, 4, i1, i2] > 0)} then
   begin
-    num := SData[CurScence, 1, i1, i2] div 2;
-    InitialSPic(num, x, y - SData[CurScence, 4, i1, i2], x1, y1, w, h, 1, depth, temp);
+    num := SData[CurScene, 1, i1, i2] div 2;
+    InitialSPic(num, x, y - SData[CurScene, 4, i1, i2], x1, y1, w, h, 1, depth, temp);
   end;
-  if (SData[CurScence, 2, i1, i2] > 0) then
+  if (SData[CurScene, 2, i1, i2] > 0) then
   begin
-    num := SData[CurScence, 2, i1, i2] div 2;
-    InitialSPic(num, x, y - SData[CurScence, 5, i1, i2], x1, y1, w, h, 1, depth, temp);
+    num := SData[CurScene, 2, i1, i2] div 2;
+    InitialSPic(num, x, y - SData[CurScene, 5, i1, i2], x1, y1, w, h, 1, depth, temp);
   end;
-  if (SData[CurScence, 3, i1, i2] >= 0) then
+  if (SData[CurScene, 3, i1, i2] >= 0) then
   begin
-    num := DData[CurScence, SData[CurScence, 3, i1, i2], 5] div 2;
+    num := DData[CurScene, SData[CurScene, 3, i1, i2], 5] div 2;
     if num > 0 then
     begin
-      for i := DData[CurScence, SData[CurScence, 3, i1, i2], 7] div 2 to DData[CurScence, SData[CurScence, 3, i1, i2], 6] div 2 do
+      for i := DData[CurScene, SData[CurScene, 3, i1, i2], 7] div 2 to DData[CurScene, SData[CurScene, 3, i1, i2], 6] div 2 do
         if (temp = 0) and (PNG_TILE > 0) then
           LoadOnePNGTile('resource/smap/', nil, i, SPNGIndex[i], @SPNGTile[0]);
-      if SCENCEAMI = 2 then
-        InitialSPic(num, x, y - SData[CurScence, 4, i1, i2], x1, y1, w, h, 1, depth, temp);
+      if SCENEAMI = 2 then
+        InitialSPic(num, x, y - SData[CurScene, 4, i1, i2], x1, y1, w, h, 1, depth, temp);
     end;
   end;
   //if (i1 = Sx) and (i2 = Sy) then
-  //InitialSPic(2501 + SFace * 7 + SStep, x, y - SData[CurScence, 4, Sx, Sy], x1, y1, w, h);
+  //InitialSPic(2501 + SFace * 7 + SStep, x, y - SData[CurScene, 4, Sx, Sy], x1, y1, w, h);
 end;
 
 //更改场景映像, 用于动画, 场景内动态效果
-procedure UpdateScence(xs, ys: integer);
+procedure UpdateScene(xs, ys: integer);
 var
   i1, i2, x, y: integer;
   num, offset: integer;
@@ -1130,11 +1130,11 @@ begin
   //如在事件中直接给定更新范围
   if CurEvent < 0 then
   begin
-    num := DData[CurScence, SData[CurScence, 3, xs, ys], 5] div 2;
+    num := DData[CurScene, SData[CurScene, 3, xs, ys], 5] div 2;
     if num > 0 then
       offset := SIdx[num - 1];
     xp := xp - (SPic[offset + 4] + 256 * SPic[offset + 5]) - 3;
-    yp := yp - (SPic[offset + 6] + 256 * SPic[offset + 7]) - 3 - SData[CurScence, 4, xs, ys];
+    yp := yp - (SPic[offset + 6] + 256 * SPic[offset + 7]) - 3 - SData[CurScene, 4, xs, ys];
     w := (SPic[offset] + 256 * SPic[offset + 1]) + 20;
     h := (SPic[offset + 2] + 256 * SPic[offset + 3]) + 6;
   end;
@@ -1152,30 +1152,30 @@ begin
     begin
       x := -i1 * 18 + i2 * 18 + 1151;
       y := i1 * 9 + i2 * 9 + 9 + 250;
-      InitialSPic(SData[CurScence, 0, i1, i2] div 2, x, y, xp, yp, w, h);
+      InitialSPic(SData[CurScene, 0, i1, i2] div 2, x, y, xp, yp, w, h);
       if (i1 < 0) or (i2 < 0) or (i1 > 63) or (i2 > 63) then
         InitialSPic(0, x, y, xp, yp, w, h)
       else
       begin
-        //InitialSPic(SData[CurScence, 0, i1,i2] div 2,x,y,xp,yp,w,h);
-        if (SData[CurScence, 1, i1, i2] > 0) then
-          InitialSPic(SData[CurScence, 1, i1, i2] div 2, x, y - SData[CurScence, 4, i1, i2], xp, yp, w, h);
+        //InitialSPic(SData[CurScene, 0, i1,i2] div 2,x,y,xp,yp,w,h);
+        if (SData[CurScene, 1, i1, i2] > 0) then
+          InitialSPic(SData[CurScene, 1, i1, i2] div 2, x, y - SData[CurScene, 4, i1, i2], xp, yp, w, h);
         //if (i1=Sx) and (i2=Sy) then
-        //InitialSPic(BEGIN_WALKPIC+SFace*7+SStep,x,y-SData[CurScence, 4, i1,i2],0,0,2304,1152);
-        if (SData[CurScence, 2, i1, i2] > 0) then
-          InitialSPic(SData[CurScence, 2, i1, i2] div 2, x, y - SData[CurScence, 5, i1, i2], xp, yp, w, h);
-        if (SData[CurScence, 3, i1, i2] >= 0) and (DData[CurScence, SData[CurScence, 3, i1, i2], 5] > 0) then
-          InitialSPic(DData[CurScence, SData[CurScence, 3, i1, i2], 5] div 2, x, y - SData[CurScence, 4, i1, i2], xp, yp, w, h);
-        //if (i1=RScence[CurScence*26+15]) and (i2=RScence[CurScence*26+14]) then
+        //InitialSPic(BEGIN_WALKPIC+SFace*7+SStep,x,y-SData[CurScene, 4, i1,i2],0,0,2304,1152);
+        if (SData[CurScene, 2, i1, i2] > 0) then
+          InitialSPic(SData[CurScene, 2, i1, i2] div 2, x, y - SData[CurScene, 5, i1, i2], xp, yp, w, h);
+        if (SData[CurScene, 3, i1, i2] >= 0) and (DData[CurScene, SData[CurScene, 3, i1, i2], 5] > 0) then
+          InitialSPic(DData[CurScene, SData[CurScene, 3, i1, i2], 5] div 2, x, y - SData[CurScene, 4, i1, i2], xp, yp, w, h);
+        //if (i1=RScene[CurScene*26+15]) and (i2=RScene[CurScene*26+14]) then
         //DrawSPic(0,-(i1-Sx)*18+(i2-Sy)*18+CENTER_X,(i1-Sx)*9+(i2-Sy)*9+CENTER_Y);
-        //if (i1=Sx) and (i2=Sy) then DrawSPic(2501+SFace*7+SStep,CENTER_X,CENTER_Y-SData[CurScence, 4, i1,i2]);
+        //if (i1=Sx) and (i2=Sy) then DrawSPic(2501+SFace*7+SStep,CENTER_X,CENTER_Y-SData[CurScene, 4, i1,i2]);
       end;
     end;
 
 end;
 
 //将场景映像画到屏幕并载入遮挡数据
-procedure LoadScencePart(x, y: integer);
+procedure LoadScenePart(x, y: integer);
 var
   i1, i2: integer;
   dest, dest2: TSDL_Rect;
@@ -1192,7 +1192,7 @@ begin
   BlockScreen.y := y;
   //if (x < 0) or (x >= 2304 - CENTER_X * 2) then
   //SDL_FillRect(screen, nil, 0);
-  SDL_BlitSurface(ImgScence, @dest, screen, nil);
+  SDL_BlitSurface(ImgScene, @dest, screen, nil);
 
 end;
 

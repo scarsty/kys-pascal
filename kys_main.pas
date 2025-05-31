@@ -67,13 +67,13 @@ function WaitAnyKey: integer;
 procedure Walk;
 function CanWalk(x, y: integer): boolean;
 function CheckEntrance: boolean;
-function UpdateScenceAmi(interval: uint32; param: pointer): uint32; cdecl;
-function WalkInScence(Open: integer): integer;
+function UpdateSceneAmi(interval: uint32; param: pointer): uint32; cdecl;
+function WalkInScene(Open: integer): integer;
 procedure FindWay(x1, y1: integer);
 procedure Moveman(x1, y1, x2, y2: integer);
-procedure ShowScenceName(snum: integer);
-function CanWalkInScence(x, y: integer): boolean; overload;
-function CanWalkInScence(x1, y1, x, y: integer): boolean; overload;
+procedure ShowSceneName(snum: integer);
+function CanWalkInScene(x, y: integer): boolean; overload;
+function CanWalkInScene(x1, y1, x, y: integer): boolean; overload;
 function CheckEvent1: boolean;
 procedure CheckEvent3;
 
@@ -241,12 +241,12 @@ begin
   ImageWidth := (36 * 32 + CENTER_X) * 2;
   ImageHeight := (18 * 32 + CENTER_Y) * 2;
 
-  ImgScence := SDL_CreateRGBSurface(screen.flags, ImageWidth, ImageHeight, 32, RMask, GMask, BMask, 0);
-  //ImgScence := SDL_DisplayFormat(ImgScence);
-  ImgScenceBack := SDL_CreateRGBSurface(screen.flags, ImageWidth, ImageHeight, 32, RMask, GMask, BMask, 0);
+  ImgScene := SDL_CreateRGBSurface(screen.flags, ImageWidth, ImageHeight, 32, RMask, GMask, BMask, 0);
+  //ImgScene := SDL_DisplayFormat(ImgScene);
+  ImgSceneBack := SDL_CreateRGBSurface(screen.flags, ImageWidth, ImageHeight, 32, RMask, GMask, BMask, 0);
   ImgBField := SDL_CreateRGBSurface(screen.flags, ImageWidth, ImageHeight, 32, RMask, GMask, BMask, 0);
   ImgBBuild := SDL_CreateRGBSurface(screen.flags, ImageWidth, ImageHeight, 32, RMask, GMask, BMask, 0);
-  SDL_SetColorKey(ImgScenceBack, 1, 1);
+  SDL_SetColorKey(ImgSceneBack, 1, 1);
   SDL_SetColorKey(ImgBBuild, 1, 1);
   setlength(BlockImg, ImageWidth * ImageHeight);
   setlength(BlockImg2, ImageWidth * ImageHeight);
@@ -270,7 +270,7 @@ begin
   SDL_SetEventFilter(@EventFilter, nil);
   mutex := SDL_CreateMutex();
 
-  SDL_AddTimer(200, UpdateScenceAmi, nil);
+  SDL_AddTimer(200, UpdateSceneAmi, nil);
 
   Start;
 
@@ -449,7 +449,7 @@ begin
     ITEM_BEGIN_PIC := Kys_ini.ReadInteger('constant', 'ITEM_BEGIN_PIC', 3501);
     MAX_HEAD_NUM := Kys_ini.ReadInteger('constant', 'MAX_HEAD_NUM', 189);
     BEGIN_EVENT := Kys_ini.ReadInteger('constant', 'BEGIN_EVENT', 691);
-    BEGIN_SCENCE := Kys_ini.ReadInteger('constant', 'BEGIN_SCENCE', 70);
+    BEGIN_SCENE := Kys_ini.ReadInteger('constant', 'BEGIN_SCENE', 70);
     BEGIN_Sx := Kys_ini.ReadInteger('constant', 'BEGIN_Sx', 20);
     BEGIN_Sy := Kys_ini.ReadInteger('constant', 'BEGIN_Sy', 19);
     SOFTSTAR_BEGIN_TALK := Kys_ini.ReadInteger('constant', 'SOFTSTAR_BEGIN_TALK', 2547);
@@ -485,7 +485,7 @@ begin
     VOLUMEWAV := Kys_ini.ReadInteger('music', 'VOLUMEWAV', 30);
     SOUND3D := Kys_ini.ReadInteger('music', 'SOUND3D', 1);
     MMAPAMI := Kys_ini.ReadInteger('system', 'MMAPAMI', 1);
-    SCENCEAMI := Kys_ini.ReadInteger('system', 'SCENCEAMI', 2);
+    SCENEAMI := Kys_ini.ReadInteger('system', 'SCENEAMI', 2);
     SEMIREAL := Kys_ini.ReadInteger('system', 'SEMIREAL', 0);
     MODVersion := Kys_ini.ReadInteger('system', 'MODVersion', 0);
     CHINESE_FONT_SIZE := Kys_ini.ReadInteger('system', 'CHINESE_FONT_SIZE', 20);
@@ -669,10 +669,10 @@ begin
           begin
             //redraw;
             //SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-            CurEvent := -1; //when CurEvent=-1, Draw scence by Sx, Sy. Or by Cx, Cy.
+            CurEvent := -1; //when CurEvent=-1, Draw scene by Sx, Sy. Or by Cx, Cy.
             if where = 1 then
             begin
-              WalkInScence(0);
+              WalkInScene(0);
             end;
             Walk;
             //menu := -1;
@@ -683,10 +683,10 @@ begin
           Selected := InitialRole;
           if Selected then
           begin
-            CurScence := BEGIN_SCENCE;
+            CurScene := BEGIN_SCENE;
             CurEvent := -1;
-            if CurScence >= 0 then
-              WalkInScence(1)
+            if CurScene >= 0 then
+              WalkInScene(1)
             else
               where := 0;
             Walk;
@@ -827,10 +827,10 @@ begin
 
     if (MODVersion <> 22) and (MODVersion <> 11) and (MODVersion <> 12) and (MODVersion <> 91) then
     begin
-      p0 := @Rscence[BEGIN_SCENCE].Name;
+      p0 := @Rscene[BEGIN_SCENE].Name;
       p1 := @str2[1];
       for i := 0 to 4 do
-        Rscence[BEGIN_SCENCE].Data[1 + i] := 0;
+        Rscene[BEGIN_SCENE].Data[1 + i] := 0;
       for i := 0 to 8 do
       begin
         (p0 + i)^ := (p1 + i)^;
@@ -1576,8 +1576,8 @@ end;
 procedure LoadR(num: integer);
 var
   filename: utf8string;
-  idx, grp, i1, i2, len, ScenceAmount: integer;
-  BasicOffset, RoleOffset, ItemOffset, ScenceOffset, MagicOffset, WeiShopOffset, i: integer;
+  idx, grp, i1, i2, len, SceneAmount: integer;
+  BasicOffset, RoleOffset, ItemOffset, SceneOffset, MagicOffset, WeiShopOffset, i: integer;
 begin
   SaveNum := num;
   filename := 'r' + IntToStr(num);
@@ -1589,7 +1589,7 @@ begin
 
   FileRead(idx, RoleOffset, 4);
   FileRead(idx, ItemOffset, 4);
-  FileRead(idx, ScenceOffset, 4);
+  FileRead(idx, SceneOffset, 4);
   FileRead(idx, MagicOffset, 4);
   FileRead(idx, WeiShopOffset, 4);
   FileRead(idx, len, 4);
@@ -1620,8 +1620,8 @@ begin
   FileRead(grp, RItemlist[0], sizeof(Titemlist) * MAX_ITEM_AMOUNT);
 
   FileRead(grp, Rrole[0], ItemOffset - RoleOffset);
-  FileRead(grp, Ritem[0], ScenceOffset - ItemOffset);
-  FileRead(grp, Rscence[0], MagicOffset - ScenceOffset);
+  FileRead(grp, Ritem[0], SceneOffset - ItemOffset);
+  FileRead(grp, Rscene[0], MagicOffset - SceneOffset);
   FileRead(grp, Rmagic[0], WeiShopOffset - MagicOffset);
   FileRead(grp, Rshop[0], len - WeiShopOffset);
   FileClose(idx);
@@ -1629,23 +1629,23 @@ begin
 
   //初始化入口
 
-  ScenceAmount := (MagicOffset - ScenceOffset) div 52;
-  for i := 0 to ScenceAmount - 1 do
+  SceneAmount := (MagicOffset - SceneOffset) div 52;
+  for i := 0 to SceneAmount - 1 do
   begin
-    if (Rscence[i].MainEntranceX1 >= 0) and (Rscence[i].MainEntranceX1 < 480) and (Rscence[i].MainEntranceY1 >= 0) and (Rscence[i].MainEntranceY1 < 480) then
-      Entrance[Rscence[i].MainEntranceX1, Rscence[i].MainEntranceY1] := i;
-    if (Rscence[i].MainEntranceX2 >= 0) and (Rscence[i].MainEntranceX2 < 480) and (Rscence[i].MainEntranceY2 >= 0) and (Rscence[i].MainEntranceY2 < 480) then
-      Entrance[Rscence[i].MainEntranceX2, Rscence[i].MainEntranceY2] := i;
+    if (Rscene[i].MainEntranceX1 >= 0) and (Rscene[i].MainEntranceX1 < 480) and (Rscene[i].MainEntranceY1 >= 0) and (Rscene[i].MainEntranceY1 < 480) then
+      Entrance[Rscene[i].MainEntranceX1, Rscene[i].MainEntranceY1] := i;
+    if (Rscene[i].MainEntranceX2 >= 0) and (Rscene[i].MainEntranceX2 < 480) and (Rscene[i].MainEntranceY2 >= 0) and (Rscene[i].MainEntranceY2 < 480) then
+      Entrance[Rscene[i].MainEntranceX2, Rscene[i].MainEntranceY2] := i;
   end;
   //showmessage(inttostr(useless1));
   if UseLess1 > 0 then
   begin
-    CurScence := UseLess1 - 1;
+    CurScene := UseLess1 - 1;
     where := 1;
   end
   else
   begin
-    CurScence := -1;
+    CurScene := -1;
     where := 0;
   end;
 
@@ -1653,13 +1653,13 @@ begin
   if num = 0 then
     filename := 'allsin';
   grp := FileOpen(AppPath + 'save/' + filename + '.grp', fmOpenRead);
-  FileRead(grp, Sdata[0, 0, 0, 0], ScenceAmount * 64 * 64 * 6 * 2);
+  FileRead(grp, Sdata[0, 0, 0, 0], SceneAmount * 64 * 64 * 6 * 2);
   FileClose(grp);
   filename := 'd' + IntToStr(num);
   if num = 0 then
     filename := 'alldef';
   grp := FileOpen(AppPath + 'save/' + filename + '.grp', fmOpenRead);
-  FileRead(grp, Ddata[0, 0, 0], ScenceAmount * 200 * 11 * 2);
+  FileRead(grp, Ddata[0, 0, 0], SceneAmount * 200 * 11 * 2);
   FileClose(grp);
 
 end;
@@ -1668,8 +1668,8 @@ end;
 procedure SaveR(num: integer);
 var
   filename: utf8string;
-  idx, grp, i1, i2, length, ScenceAmount: integer;
-  BasicOffset, RoleOffset, ItemOffset, ScenceOffset, MagicOffset, WeiShopOffset, i: integer;
+  idx, grp, i1, i2, length, SceneAmount: integer;
+  BasicOffset, RoleOffset, ItemOffset, SceneOffset, MagicOffset, WeiShopOffset, i: integer;
 begin
   SaveNum := num;
   filename := 'r' + IntToStr(num);
@@ -1681,7 +1681,7 @@ begin
   BasicOffset := 0;
   FileRead(idx, RoleOffset, 4);
   FileRead(idx, ItemOffset, 4);
-  FileRead(idx, ScenceOffset, 4);
+  FileRead(idx, SceneOffset, 4);
   FileRead(idx, MagicOffset, 4);
   FileRead(idx, WeiShopOffset, 4);
   FileRead(idx, length, 4);
@@ -1689,7 +1689,7 @@ begin
   FileWrite(grp, Inship, 2);
 
   if where = 1 then
-    UseLess1 := CurScence + 1
+    UseLess1 := CurScene + 1
   else
     UseLess1 := 0;
 
@@ -1710,26 +1710,26 @@ begin
   FileWrite(grp, RItemlist[0], sizeof(Titemlist) * MAX_ITEM_AMOUNT);
 
   FileWrite(grp, Rrole[0], ItemOffset - RoleOffset);
-  FileWrite(grp, Ritem[0], ScenceOffset - ItemOffset);
-  FileWrite(grp, Rscence[0], MagicOffset - ScenceOffset);
+  FileWrite(grp, Ritem[0], SceneOffset - ItemOffset);
+  FileWrite(grp, Rscene[0], MagicOffset - SceneOffset);
   FileWrite(grp, Rmagic[0], WeiShopOffset - MagicOffset);
   FileWrite(grp, Rshop[0], length - WeiShopOffset);
   FileClose(idx);
   FileClose(grp);
 
-  ScenceAmount := (MagicOffset - ScenceOffset) div 52;
+  SceneAmount := (MagicOffset - SceneOffset) div 52;
 
   filename := 's' + IntToStr(num);
   if num = 0 then
     filename := 'allsin';
   grp := filecreate(AppPath + 'save/' + filename + '.grp');
-  FileWrite(grp, Sdata[0, 0, 0, 0], ScenceAmount * 64 * 64 * 6 * 2);
+  FileWrite(grp, Sdata[0, 0, 0, 0], SceneAmount * 64 * 64 * 6 * 2);
   FileClose(grp);
   filename := 'd' + IntToStr(num);
   if num = 0 then
     filename := 'alldef';
   grp := filecreate(AppPath + 'save/' + filename + '.grp');
-  FileWrite(grp, Ddata[0, 0, 0], ScenceAmount * 200 * 11 * 2);
+  FileWrite(grp, Ddata[0, 0, 0], SceneAmount * 200 * 11 * 2);
   FileClose(grp);
 
 end;
@@ -2111,7 +2111,7 @@ begin
 
     if where = 1 then
     begin
-      WalkInScence(0);
+      WalkInScene(0);
     end;
 
     event.key.keysym.sym := 0;
@@ -2172,7 +2172,7 @@ begin
 
 end;
 
-//Check able or not to ertrance a scence.
+//Check able or not to ertrance a scene.
 //检测是否处于某入口, 并是否达成进入条件
 function CheckEntrance: boolean;
 var
@@ -2192,10 +2192,10 @@ begin
   begin
     Result := False;
     snum := Entrance[x, y];
-    if (Rscence[snum].EnCondition = 0) then
+    if (Rscene[snum].EnCondition = 0) then
       Result := True;
     //是否有人轻功超过70
-    if (Rscence[snum].EnCondition = 2) then
+    if (Rscene[snum].EnCondition = 2) then
       for i := 0 to 5 do
         if teamlist[i] >= 0 then
           if Rrole[teamlist[i]].Speed > 70 then
@@ -2203,15 +2203,15 @@ begin
     if Result = True then
     begin
       instruct_14;
-      CurScence := Entrance[x, y];
+      CurScene := Entrance[x, y];
       SFace := Mface;
       Mface := 3 - Mface;
       SStep := 0;
-      Sx := Rscence[CurScence].EntranceX;
-      Sy := Rscence[CurScence].EntranceY;
+      Sx := Rscene[CurScene].EntranceX;
+      Sy := Rscene[CurScene].EntranceY;
       //如达成条件, 进入场景并初始化场景坐标
       SaveR(11);
-      WalkInScence(0);
+      WalkInScene(0);
       event.key.keysym.sym := 0;
       event.button.button := 0;
       //waitanykey;
@@ -2222,28 +2222,28 @@ begin
 
 end;
 
-function UpdateScenceAmi(interval: uint32; param: pointer): uint32;
+function UpdateSceneAmi(interval: uint32; param: pointer): uint32;
 begin
   Result := 200;
   //while True do
   begin
-    if (where = 1) and (CurEvent < 0) and (not LoadingScence) and (NeedRefreshScence <> 0) then
-      InitialScence(2);
+    if (where = 1) and (CurEvent < 0) and (not LoadingScene) and (NeedRefreshScene <> 0) then
+      InitialScene(2);
     //if (where < 1) or (where > 2) then
     //break;
   end;
 
 end;
 
-//Walk in a scence, the returned value is the scence number when you exit. If it is -1.
-//WalkInScence(1) means the new game.
+//Walk in a scene, the returned value is the scene number when you exit. If it is -1.
+//WalkInScene(1) means the new game.
 //在内场景行走, 如参数为1表示新游戏
-function WalkInScence(Open: integer): integer;
+function WalkInScene(Open: integer): integer;
 var
   grp, idx, offset, just, i1, i2, x, y, haveAmi, preface, drawed: integer;
-  Sx1, Sy1, s, i, walking, Prescence, stillcount, Speed, axp, ayp, gotoevent, minstep, axp1, ayp1, step: integer;
+  Sx1, Sy1, s, i, walking, Prescene, stillcount, Speed, axp, ayp, gotoevent, minstep, axp1, ayp1, step: integer;
   filename: utf8string;
-  scencename: utf8string;
+  scenename: utf8string;
   now, next_time, next_time2: uint32;
   AmiCount: integer; //场景内动态效果计数
   keystate: putf8char;
@@ -2251,7 +2251,7 @@ var
   pos: Tposition;
 begin
 
-  //LockScence := false;
+  //LockScene := false;
   next_time := SDL_GetTicks;
 
   where := 1;
@@ -2262,16 +2262,16 @@ begin
   Speed := 0;
   stillcount := 0;
 
-  exitscencemusicnum := Rscence[CurScence].ExitMusic;
+  exitscenemusicnum := Rscene[CurScene].ExitMusic;
 
   //SDL_EnableKeyRepeat(50, 30);
 
-  InitialScence;
+  InitialScene;
 
   for i := 0 to 199 do
-    if (Ddata[CurScence, i, 7] < Ddata[CurScence, i, 6]) then
+    if (Ddata[CurScene, i, 7] < Ddata[CurScene, i, 6]) then
     begin
-      Ddata[CurScence, i, 5] := Ddata[CurScence, i, 7] + Ddata[CurScence, i, 8] * 2 mod (Ddata[CurScence, i, 6] - Ddata[CurScence, i, 7] + 2);
+      Ddata[CurScene, i, 5] := Ddata[CurScene, i, 7] + Ddata[CurScene, i, 8] * 2 mod (Ddata[CurScene, i, 6] - Ddata[CurScene, i, 7] + 2);
     end;
 
   if Open = 1 then
@@ -2280,7 +2280,7 @@ begin
     Sy := BEGIN_Sy;
     Cx := Sx;
     Cy := Sy;
-    CurScenceRolePic := 3445;
+    CurSceneRolePic := 3445;
     CurEvent := BEGIN_EVENT;
     CallEvent(BEGIN_EVENT);
     SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
@@ -2289,13 +2289,13 @@ begin
 
   SStep := 0;
 
-  DrawScence;
-  ShowScenceName(CurScence);
+  DrawScene;
+  ShowSceneName(CurScene);
   //是否有第3类事件位于场景入口
   CheckEvent3;
 
-  //if SCENCEAMI = 2 then
-  //UpDate := SDL_CreateThread(@UpdateScenceAmi, nil, nil);
+  //if SCENEAMI = 2 then
+  //UpDate := SDL_CreateThread(@UpdateSceneAmi, nil, nil);
   while (SDL_PollEvent(@event) >= 0) do
   begin
     if where <> 1 then
@@ -2317,19 +2317,19 @@ begin
     begin
       haveAmi := 0;
       for i := 0 to 199 do
-        if (Ddata[CurScence, i, 7] < Ddata[CurScence, i, 6]) {and (AmiCount > (DData[CurScence, i, 8] + 1))} then
+        if (Ddata[CurScene, i, 7] < Ddata[CurScene, i, 6]) {and (AmiCount > (DData[CurScene, i, 8] + 1))} then
         begin
-          Ddata[CurScence, i, 5] := Ddata[CurScence, i, 5] + 2;
-          if Ddata[CurScence, i, 5] > Ddata[CurScence, i, 6] then
-            Ddata[CurScence, i, 5] := Ddata[CurScence, i, 7];
+          Ddata[CurScene, i, 5] := Ddata[CurScene, i, 5] + 2;
+          if Ddata[CurScene, i, 5] > Ddata[CurScene, i, 6] then
+            Ddata[CurScene, i, 5] := Ddata[CurScene, i, 7];
           haveAmi := haveAmi + 1;
         end;
-      //if we never consider the change of color panel, there is no need to re-initial scence.
+      //if we never consider the change of color panel, there is no need to re-initial scene.
       //if (haveAmi > 0) then
-      //if not (IsCave(CurScence)) then
-      if SCENCEAMI = 1 then
+      //if not (IsCave(CurScene)) then
+      if SCENEAMI = 1 then
       begin
-        InitialScence(1);
+        InitialScene(1);
       end;
 
       if walking = 0 then
@@ -2345,12 +2345,12 @@ begin
       next_time := now + 200;
       AmiCount := AmiCount + 1;
       ChangeCol;
-      //DrawScence;
+      //DrawScene;
       //SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
     end;
 
     //检查是否位于出口, 如是则退出
-    if (((Sx = Rscence[CurScence].ExitX[0]) and (Sy = Rscence[CurScence].ExitY[0])) or ((Sx = Rscence[CurScence].ExitX[1]) and (Sy = Rscence[CurScence].ExitY[1])) or ((Sx = Rscence[CurScence].ExitX[2]) and (Sy = Rscence[CurScence].ExitY[2]))) then
+    if (((Sx = Rscene[CurScene].ExitX[0]) and (Sy = Rscene[CurScene].ExitY[0])) or ((Sx = Rscene[CurScene].ExitX[1]) and (Sy = Rscene[CurScene].ExitY[1])) or ((Sx = Rscene[CurScene].ExitX[2]) and (Sy = Rscene[CurScene].ExitY[2]))) then
     begin
       where := 0;
       Result := -1;
@@ -2358,37 +2358,37 @@ begin
     end;
     //检查是否位于跳转口, 如是则重新初始化场景
     //如果处于站立状态则不跳转, 防止连续跳转
-    if ((Sx = Rscence[CurScence].JumpX1) and (Sy = Rscence[CurScence].JumpY1)) and (Rscence[CurScence].JumpScence >= 0) {and (SStep <> 0)} then
+    if ((Sx = Rscene[CurScene].JumpX1) and (Sy = Rscene[CurScene].JumpY1)) and (Rscene[CurScene].JumpScene >= 0) {and (SStep <> 0)} then
     begin
       instruct_14;
-      Prescence := CurScence;
-      CurScence := Rscence[CurScence].JumpScence;
-      if Rscence[Prescence].MainEntranceX1 <> 0 then
+      Prescene := CurScene;
+      CurScene := Rscene[CurScene].JumpScene;
+      if Rscene[Prescene].MainEntranceX1 <> 0 then
       begin
-        Sx := Rscence[CurScence].EntranceX;
-        Sy := Rscence[CurScence].EntranceY;
+        Sx := Rscene[CurScene].EntranceX;
+        Sy := Rscene[CurScene].EntranceY;
       end
       else
       begin
-        Sx := Rscence[CurScence].JumpX2;
-        Sy := Rscence[CurScence].JumpY2;
+        Sx := Rscene[CurScene].JumpX2;
+        Sy := Rscene[CurScene].JumpY2;
       end;
       {if Sx = 0 then
         begin
-        Sx := RScence[CurScence].JumpX2;
-        Sy := RScence[CurScence].JumpY2;
+        Sx := RScene[CurScene].JumpX2;
+        Sy := RScene[CurScene].JumpY2;
         end;
         if Sx = 0 then
         begin
-        Sx := RScence[CurScence].EntranceX;
-        Sy := RScence[CurScence].EntranceY;
+        Sx := RScene[CurScene].EntranceX;
+        Sy := RScene[CurScene].EntranceY;
         end;}
 
-      InitialScence;
+      InitialScene;
       walking := 0;
       SStep := 0;
-      DrawScence;
-      ShowScenceName(CurScence);
+      DrawScene;
+      ShowSceneName(CurScene);
       CheckEvent3;
 
     end;
@@ -2483,10 +2483,10 @@ begin
           Speed := 0;
           if where = 0 then
           begin
-            if (CurScence >= 0) and (Rscence[CurScence].ExitMusic >= 0) then
+            if (CurScene >= 0) and (Rscene[CurScene].ExitMusic >= 0) then
             begin
               StopMP3;
-              PlayMP3(Rscence[CurScence].ExitMusic, -1);
+              PlayMP3(Rscene[CurScene].ExitMusic, -1);
             end;
             Redraw;
             SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
@@ -2502,13 +2502,13 @@ begin
           if walking = 0 then
           begin
             walking := 2;
-            GetMousePosition(axp, ayp, Sx, Sy, Sdata[CurScence, 4, Sx, Sy]);
+            GetMousePosition(axp, ayp, Sx, Sy, Sdata[CurScene, 4, Sx, Sy]);
             if (ayp in [0 .. 63]) and (axp in [0 .. 63]) then
             begin
               FillChar(Fway[0, 0], sizeof(Fway), -1);
               FindWay(Sx, Sy);
               gotoevent := -1;
-              if (Sdata[CurScence, 3, axp, ayp] >= 0) then
+              if (Sdata[CurScene, 3, axp, ayp] >= 0) then
               begin
                 if abs(axp - Sx) + abs(ayp - Sy) = 1 then
                 begin
@@ -2525,7 +2525,7 @@ begin
                 end
                 else
                 begin
-                  if (not CanWalkInScence(axp, ayp)) then
+                  if (not CanWalkInScene(axp, ayp)) then
                   begin
                     minstep := 4096;
                     for i := 0 to 3 do
@@ -2606,7 +2606,7 @@ begin
             SStep := SStep + 1;
             if SStep >= 7 then
               SStep := 1;
-            if CanWalkInScence(Sx1, Sy1) = True then
+            if CanWalkInScene(Sx1, Sy1) = True then
             begin
               Sx := Sx1;
               Sy := Sy1;
@@ -2670,23 +2670,23 @@ begin
 
     if walking or Speed = 0 then
     begin
-      if SCENCEAMI > 0 then
+      if SCENEAMI > 0 then
       begin
         Redraw;
         if walking = 0 then
         begin
-          GetMousePosition(axp, ayp, Sx, Sy, Sdata[CurScence, 4, Sx, Sy]);
+          GetMousePosition(axp, ayp, Sx, Sy, Sdata[CurScene, 4, Sx, Sy]);
           if (axp >= 0) and (axp < 64) and (ayp >= 0) and (ayp < 64) then
           begin
             pos := GetPositionOnScreen(axp, ayp, Sx, Sy);
-            DrawMPic(1, pos.x, pos.y - Sdata[CurScence, 4, axp, ayp], 0, 50, 0, 0);
+            DrawMPic(1, pos.x, pos.y - Sdata[CurScene, 4, axp, ayp], 0, 50, 0, 0);
             //DrawMPic(1, pos.x, pos.y);
-            {if not CanWalkInScence(axp, ayp) then
+            {if not CanWalkInScene(axp, ayp) then
               begin
-              if SData[CurScence, 3, axp, ayp] >= 0 then
-              DrawMPic(2001, pos.x, pos.y - SData[CurScence, 4, axp, ayp], 0, 75, 0, 0)
+              if SData[CurScene, 3, axp, ayp] >= 0 then
+              DrawMPic(2001, pos.x, pos.y - SData[CurScene, 4, axp, ayp], 0, 75, 0, 0)
               else
-              DrawMPic(2001, pos.x, pos.y - SData[CurScence, 4, axp, ayp], 0, 50, 0, 0);
+              DrawMPic(2001, pos.x, pos.y - SData[CurScene, 4, axp, ayp], 0, 50, 0, 0);
               end;}
           end;
         end;
@@ -2705,12 +2705,12 @@ begin
 
   //ReDraw;
   //SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-  //if SCENCEAMI = 2 then
+  //if SCENEAMI = 2 then
   //SDL_KillThread(UpDate);
-  if exitscencemusicnum > 0 then
+  if exitscenemusicnum > 0 then
   begin
     StopMP3;
-    PlayMP3(exitscencemusicnum, -1);
+    PlayMP3(exitscenemusicnum, -1);
   end;
 
 end;
@@ -2758,7 +2758,7 @@ begin
             Bgrid[i] := 3//越界
           else if Fway[nextX, nextY] >= 0 then
             Bgrid[i] := 2//已走过
-          else if not CanWalkInScence(curX, curY, nextX, nextY) then
+          else if not CanWalkInScene(curX, curY, nextX, nextY) then
             Bgrid[i] := 1//阻碍
           else
             Bgrid[i] := 0;
@@ -2864,22 +2864,22 @@ begin
   end;
 end;
 
-procedure ShowScenceName(snum: integer);
+procedure ShowSceneName(snum: integer);
 var
-  scencename: utf8string;
+  scenename: utf8string;
 begin
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
   //显示场景名
   if snum >= 0 then
   begin
-    scencename := cp950toutf8(@Rscence[snum].Name);
-    DrawTextWithRect(screen, scencename, CENTER_X - length(putf8char(@Rscence[snum].Name)) * 5 + 7, 100, length(putf8char(@Rscence[snum].Name)) * 10 + 6, ColColor(5), ColColor(7));
+    scenename := cp950toutf8(@Rscene[snum].Name);
+    DrawTextWithRect(screen, scenename, CENTER_X - length(putf8char(@Rscene[snum].Name)) * 5 + 7, 100, length(putf8char(@Rscene[snum].Name)) * 10 + 6, ColColor(5), ColColor(7));
 
     //改变音乐
-    if Rscence[snum].EntranceMusic >= 0 then
+    if Rscene[snum].EntranceMusic >= 0 then
     begin
       StopMP3;
-      PlayMP3(Rscence[snum].EntranceMusic, -1);
+      PlayMP3(Rscene[snum].EntranceMusic, -1);
     end;
   end;
   SDL_Delay(500);
@@ -2887,31 +2887,31 @@ begin
 end;
 
 //判定场景内某个位置能否行走
-function CanWalkInScence(x, y: integer): boolean; overload;
+function CanWalkInScene(x, y: integer): boolean; overload;
 begin
-  if (CurScence < 0) or (x < 0) or (y < 0) then
+  if (CurScene < 0) or (x < 0) or (y < 0) then
   begin
     Result := False;
     exit;
   end;
-  if (Sdata[CurScence, 1, x, y] = 0) then
+  if (Sdata[CurScene, 1, x, y] = 0) then
     Result := True
   else
     Result := False;
-  if (Sdata[CurScence, 3, x, y] >= 0) and (Result) and (Ddata[CurScence, Sdata[CurScence, 3, x, y], 0] = 1) then
+  if (Sdata[CurScene, 3, x, y] >= 0) and (Result) and (Ddata[CurScene, Sdata[CurScene, 3, x, y], 0] = 1) then
     Result := False;
   //直接判定贴图范围
-  if ((Sdata[CurScence, 0, x, y] >= 358) and (Sdata[CurScence, 0, x, y] <= 362)) or (Sdata[CurScence, 0, x, y] = 522) or (Sdata[CurScence, 0, x, y] = 1022) or ((Sdata[CurScence, 0, x, y] >= 1324) and (Sdata[CurScence, 0, x, y] <= 1330)) or (Sdata[CurScence, 0, x, y] = 1348) then
+  if ((Sdata[CurScene, 0, x, y] >= 358) and (Sdata[CurScene, 0, x, y] <= 362)) or (Sdata[CurScene, 0, x, y] = 522) or (Sdata[CurScene, 0, x, y] = 1022) or ((Sdata[CurScene, 0, x, y] >= 1324) and (Sdata[CurScene, 0, x, y] <= 1330)) or (Sdata[CurScene, 0, x, y] = 1348) then
     Result := False;
-  //if SData[CurScence, 0, x, y] = 1358 * 2 then result := true;
-  if (MODVersion = 23) and ((Sdata[CurScence, 1, x, y] = 1358 * 2) or (Sdata[CurScence, 1, x, y] = 1269 * 2)) then
+  //if SData[CurScene, 0, x, y] = 1358 * 2 then result := true;
+  if (MODVersion = 23) and ((Sdata[CurScene, 1, x, y] = 1358 * 2) or (Sdata[CurScene, 1, x, y] = 1269 * 2)) then
     Result := True;
 
 end;
 
-function CanWalkInScence(x1, y1, x, y: integer): boolean; overload;
+function CanWalkInScene(x1, y1, x, y: integer): boolean; overload;
 begin
-  Result := (abs(Sdata[CurScence, 4, x, y] - Sdata[CurScence, 4, x1, y1]) <= 10) and CanWalkInScence(x, y);
+  Result := (abs(Sdata[CurScene, 4, x, y] - Sdata[CurScene, 4, x1, y1]) <= 10) and CanWalkInScene(x, y);
 
 end;
 
@@ -2930,14 +2930,14 @@ begin
   end;
   Result := False;
   //如有则调用事件
-  if Sdata[CurScence, 3, x, y] >= 0 then
+  if Sdata[CurScene, 3, x, y] >= 0 then
   begin
-    CurEvent := Sdata[CurScence, 3, x, y];
-    if Ddata[CurScence, CurEvent, 2] >= 0 then
+    CurEvent := Sdata[CurScene, 3, x, y];
+    if Ddata[CurScene, CurEvent, 2] >= 0 then
     begin
       Cx := Sx;
       Cy := Sy;
-      CallEvent(Ddata[CurScence, Sdata[CurScence, 3, x, y], 2]);
+      CallEvent(Ddata[CurScene, Sdata[CurScene, 3, x, y], 2]);
       Result := True;
     end;
   end;
@@ -2949,13 +2949,13 @@ procedure CheckEvent3;
 var
   enum: integer;
 begin
-  enum := Sdata[CurScence, 3, Sx, Sy];
-  if (enum >= 0) and (Ddata[CurScence, enum, 4] > 0) then
+  enum := Sdata[CurScene, 3, Sx, Sy];
+  if (enum >= 0) and (Ddata[CurScene, enum, 4] > 0) then
   begin
     CurEvent := enum;
     Cx := Sx;
     Cy := Sy;
-    CallEvent(Ddata[CurScence, enum, 4]);
+    CallEvent(Ddata[CurScene, enum, 4]);
     CurEvent := -1;
   end;
 end;
@@ -3539,7 +3539,7 @@ var
   word: array [0 .. 5] of utf8string;
   i: integer;
 begin
-  NeedRefreshScence := 0;
+  NeedRefreshScene := 0;
   word[0] := '醫療';
   word[1] := '解毒';
   word[2] := '物品';
@@ -3579,7 +3579,7 @@ begin
   end;
   Redraw;
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-  NeedRefreshScence := 1;
+  NeedRefreshScene := 1;
   {SDL_EnableKeyRepeat(0, 0);
     //DrawMMap;
     showMenu(menu);
@@ -4358,14 +4358,14 @@ begin
             3: x := x + 1;
           end;
           //如面向位置有第2类事件则调用
-          if Sdata[CurScence, 3, x, y] >= 0 then
+          if Sdata[CurScene, 3, x, y] >= 0 then
           begin
-            CurEvent := Sdata[CurScence, 3, x, y];
-            if Ddata[CurScence, CurEvent, 3] >= 0 then
+            CurEvent := Sdata[CurScene, 3, x, y];
+            if Ddata[CurScene, CurEvent, 3] >= 0 then
             begin
               Cx := Sx;
               Cy := Sy;
-              CallEvent(Ddata[CurScence, CurEvent, 3]);
+              CallEvent(Ddata[CurScene, CurEvent, 3]);
             end;
           end;
           CurEvent := -1;
@@ -5224,13 +5224,13 @@ begin
     LoadR(menu + 1);
     if where = 1 then
     begin
-      InitialScence;
+      InitialScene;
       //Redraw;
-      //ShowScenceName(CurScence);
+      //ShowSceneName(CurScene);
     end;
     Redraw(1);
     if nowwhere = 1 then
-      ShowScenceName(CurScence);
+      ShowSceneName(CurScene);
     SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
   end;
   //edraw;
@@ -5695,12 +5695,12 @@ begin
     k[51] := 56;  k[62] := 57;  k[35] := 58;  k[26] := 59;  k[63] := 60;  k[10] := 61;  k[29] := 62;  k[41] := 63;
     k[19] := 64;  k[54] := 65;  k[64] := 66;  k[3] := 67;}
   SStep := 0;
-  CurScenceRolePic := BEGIN_WALKPIC + SFace * 7;
+  CurSceneRolePic := BEGIN_WALKPIC + SFace * 7;
   //redraw;
-  //tempPic := CurScenceRolePic;
+  //tempPic := CurSceneRolePic;
   //SDL_EnableKeyRepeat(0, 10);
 
-  NeedRefreshScence := 0;
+  NeedRefreshScene := 0;
   filename := AppPath + 'script/oldevent/oldevent_' + IntToStr(num) + '.lua';
   if (KDEF_SCRIPT = 0) or (not FileExists(filename)) then
   begin
@@ -6099,16 +6099,16 @@ begin
 
   //event.key.keysym.sym := 0;
   //event.button.button := 0;
-  //CurScenceRolePic := tempPic;;
-  //CurScenceRolePic := 2500 + SFace * 7 + 1;
+  //CurSceneRolePic := tempPic;;
+  //CurSceneRolePic := 2500 + SFace * 7 + 1;
   //事件执行完之后不刷新场景, 是因为有可能在事件本身包含另一事件, 避免频繁刷新
-  if NeedRefreshScence = 1 then
+  if NeedRefreshScene = 1 then
   begin
-    InitialScence(0);
+    InitialScene(0);
   end;
-  NeedRefreshScence := 1;
+  NeedRefreshScene := 1;
   //if where <> 2 then CurEvent := -1;
-  if MMAPAMI * SCENCEAMI = 0 then
+  if MMAPAMI * SCENEAMI = 0 then
   begin
     Redraw;
     SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);

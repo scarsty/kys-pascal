@@ -85,12 +85,12 @@ type
       Address: (Data: array [0 .. 94] of smallint);
   end;
 
-  TScence = record
+  TScene = record
     case TCallType of
       Element: (ListNum: smallint;
         Name: array [0 .. 9] of ansichar;
         ExitMusic, EntranceMusic: smallint;
-        JumpScence, EnCondition: smallint;
+        JumpScene, EnCondition: smallint;
         MainEntranceY1, MainEntranceX1, MainEntranceY2, MainEntranceX2: smallint;
         EntranceY, EntranceX: smallint;
         ExitY, ExitX: array [0 .. 2] of smallint;
@@ -239,7 +239,7 @@ var
 
   ITEM_BEGIN_PIC: integer = 3501; //物品起始图片
   BEGIN_EVENT: integer = 691; //初始事件
-  BEGIN_SCENCE: integer = 70; //初始场景
+  BEGIN_SCENE: integer = 70; //初始场景
   BEGIN_Sx: integer = 20; //初始坐标
   //程序中的x, y与修改器所见是相反的, 所有游戏数据均是先Y后X, 这样在读取主地图时可以在直接读文件后用先x后y的情况引用
   //实际上无论怎样定义都会造成在一部分情况必须是先y后x, 这与计算机中矩阵的存储顺序有关
@@ -283,7 +283,7 @@ var
   RItemList: array of TItemList;
   Rrole: array [0 .. 2031] of TRole;
   Ritem: array [0 .. 724] of TItem;
-  Rscence: array [0 .. 200] of TScence;
+  Rscene: array [0 .. 200] of TScene;
   Rmagic: array [0 .. 998] of TMagic;
   RShop: array [0 .. 10] of TShop;
   //R文件数据, 均远大于原有容量
@@ -291,7 +291,7 @@ var
   SData: array [0 .. 400, 0 .. 5, 0 .. 63, 0 .. 63] of smallint;
   DData: array [0 .. 400, 0 .. 199, 0 .. 10] of smallint;
   //S, D文件数据
-  //Scence1, SData[CurScence, 1, , Scence3, Scence4, Scence5, Scence6, Scence7, Scence8: array[0..63, 0..63] of smallint;
+  //Scene1, SData[CurScene, 1, , Scene3, Scene4, Scene5, Scene6, Scene7, Scene8: array[0..63, 0..63] of smallint;
   //当前场景数据
   //0-地面, 1-建筑, 2-物品, 3-事件, 4-建筑高度, 5-物品高度
 
@@ -336,7 +336,7 @@ var
   render: PSDL_Renderer;
   screenTex: PSDL_Texture;
 
-  ImgScence, ImgScenceBack, ImgBField, ImgBBuild: PSDL_Surface;
+  ImgScene, ImgSceneBack, ImgBField, ImgBBuild: PSDL_Surface;
   //重画场景和战场的图形映像. 实时重画场景效率较低, 故首先生成映像, 需要时载入
   //Img1在场景中用于副线程动态效果, Img2在战场用于仅保存建筑层以方便快速载入
   BlockImg, BlockImg2: array of smallint;
@@ -381,7 +381,7 @@ var
   ASound: array of HSAMPLE;
 
   StartMusic: integer;
-  ExitScenceMusicNum: integer; //离开场景的音乐
+  ExitSceneMusicNum: integer; //离开场景的音乐
   nowmusic: integer = -1; //正在播放的音乐
   //MusicName: utf8string;
 
@@ -390,9 +390,9 @@ var
   //扩充指令50所使用的变量
   KDEF_SCRIPT: integer = 0; //使用脚本处理事件
   lua_script: Plua_state; //lua脚本
-  CurScenceRolePic: integer;
+  CurSceneRolePic: integer;
   //主角场景内当前贴图编号, 引入该常量主要用途是25指令事件号为-1的情况
-  NeedRefreshScence: integer = 1; //是否需要刷新场景, 用于事件中和副线程
+  NeedRefreshScene: integer = 1; //是否需要刷新场景, 用于事件中和副线程
 
   //游戏体验设置
   CLOUD_AMOUNT: integer = 60; //云的数量
@@ -401,7 +401,7 @@ var
   WALK_SPEED, WALK_SPEED2, BATTLE_SPEED: integer;
   //行走时的主延时, 如果觉得行走速度慢可以修改这里.
   MMAPAMI: integer; //主地图动态效果
-  SCENCEAMI: integer;
+  SCENEAMI: integer;
   //场景内动态效果的处理方式: 0-关闭, 1-打开, 2-用另一线程处理, 当明显内场景速度拖慢时可以尝试2
   //updating screen should be in main thread, so this is too complicable.
   SEMIREAL: integer = 0; //半即時
@@ -414,7 +414,7 @@ var
   AskingQuit: boolean = False; //是否正在提问退出
   begin_time: integer; //游戏开始时间, 单位为分钟, 0~1439
   now_time: real;
-  LoadingScence: boolean = False; //是否正在载入场景
+  LoadingScene: boolean = False; //是否正在载入场景
 
   //游戏开场时的设置
   TitlePosition: TPosition;
@@ -425,7 +425,7 @@ var
   //主地图步数, 是否处于静止
   Cx, Cy, SFace, SStep: integer;
   //场景内坐标, 场景中心点, 方向, 步数
-  CurScence, CurEvent, CurItem, CurrentBattle, Where: integer;
+  CurScene, CurEvent, CurItem, CurrentBattle, Where: integer;
   //当前场景, 事件(在场景中的事件号), 使用物品, 战斗
   //where: 0-主地图, 1-场景, 2-战场, 3-开头画面
   SaveNum: integer;

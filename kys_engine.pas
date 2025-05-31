@@ -498,7 +498,7 @@ begin
   begin
     MPicAmount := LoadPNGTiles('resource/mmap', MPNGIndex, MPNGTile, 1);
     SPicAmount := LoadPNGTiles('resource/smap', SPNGIndex, SPNGTile, 1);
-    {for i := BeginScenceRolePic to BeginScenceRolePic + 27 do
+    {for i := BeginSceneRolePic to BeginSceneRolePic + 27 do
       LoadOnePNGTile('resource/smap', nil,i, SPNGIndex[i], @SPNGTile[0]);
       for i := 3410 to 4102 do
       LoadOnePNGTile('resource/smap', nil,i, SPNGIndex[i], @SPNGTile[0]);}
@@ -813,8 +813,8 @@ begin
       SDL_FreeSurface(FPNGTile[i, j]);
   SDL_FreeSurface(screen);
   SDL_FreeSurface(prescreen);
-  SDL_FreeSurface(ImgScence);
-  SDL_FreeSurface(ImgScenceBack);
+  SDL_FreeSurface(ImgScene);
+  SDL_FreeSurface(ImgSceneBack);
   SDL_FreeSurface(ImgBField);
   SDL_FreeSurface(ImgBBuild);
 end;
@@ -1870,7 +1870,7 @@ var
   end;
 
 begin
-  //if not ((LoadingTiles) or (LoadingScence)) then
+  //if not ((LoadingTiles) or (LoadingScene)) then
   SDL_FlushEvent(SDL_MOUSEWHEEL);
   SDL_FlushEvent(SDL_JOYAXISMOTION);
   SDL_FlushEvent(SDL_FINGERMOTION);
