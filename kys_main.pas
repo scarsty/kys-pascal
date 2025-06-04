@@ -495,7 +495,7 @@ begin
     EXIT_GAME := Kys_ini.ReadInteger('system', 'EXIT_GAME', 1);
     PNG_TILE := Kys_ini.ReadInteger('system', 'PNG_TILE', 0);
     TRY_FIND_GRP := Kys_ini.ReadInteger('system', 'TRY_FIND_GRP', 0);
-    EXPAND_GROUND := Kys_ini.ReadInteger('system', 'EXPAND_GROUND', 1);
+    EXPAND_GROUND := Kys_ini.ReadInteger('system', 'EXPAND_GROUND', 0);
 
     if CellPhone <> 0 then
     begin
@@ -2046,8 +2046,6 @@ begin
               My := My1;
             end;
           end;
-          //if (speed <= 1) then
-          //SDL_Delay(50);
         end;
         2:
         begin
@@ -2386,6 +2384,7 @@ begin
 
       InitialScene;
       walking := 0;
+      speed := 0;
       SStep := 0;
       DrawScene;
       ShowSceneName(CurScene);
@@ -2581,18 +2580,6 @@ begin
         begin
           Speed := Speed + 1;
           stillcount := 0;
-          {if walking = 2 then //如果用鼠标则重置方向
-            begin
-            SDL_GetMouseState2(x, y);
-            if (x < CENTER_x) and (y < CENTER_y) then
-            Sface := 2;
-            if (x > CENTER_x) and (y < CENTER_y) then
-            Sface := 0;
-            if (x < CENTER_x) and (y > CENTER_y) then
-            Sface := 3;
-            if (x > CENTER_x) and (y > CENTER_y) then
-            Sface := 1;
-            end;}
           if (Speed = 1) or (Speed >= 5) then
           begin
             Sx1 := Sx;
@@ -2612,14 +2599,6 @@ begin
               Sy := Sy1;
             end;
           end;
-          //一定步数之内一次动一格
-          //if (speed <= 1) then
-          //begin
-          //SDL_Delay(50);
-          //sdl_delay(20);
-          //end;
-          //if event.key.keysym.sym = 0 then
-          //walking := 0;
         end;
         2:
         begin

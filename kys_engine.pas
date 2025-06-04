@@ -49,7 +49,6 @@ function LoadPNGTiles(path: utf8string; var PNGIndexArray: TPNGIndexArray; var S
 procedure LoadOnePNGTile(path: utf8string; p: putf8char; filenum: integer; var PNGIndex: TPNGIndex; SurfacePointer: PPSDL_Surface; forceLoad: integer = 0);
 function LoadSurfaceFromFile(filename: utf8string): PSDL_Surface;
 function LoadSurfaceFromMem(p: putf8char; len: integer): PSDL_Surface;
-//function LoadSurfaceFromZIPFile(zipFile: unzFile; filename: utf8string): PSDL_Surface;
 procedure FreeAllSurface;
 
 //基本绘图子程
@@ -783,15 +782,6 @@ begin
 
 end;
 
-{function LoadSurfaceFromZIPFile(zipFile: unzFile; filename: utf8string): PSDL_Surface;
-  var
-  //archiver: unzFile;
-  //info: unz_file_info;
-  buffer: putf8char;
-  begin
-
-  end;}
-
 procedure FreeAllSurface;
 var
   i, j: integer;
@@ -831,26 +821,7 @@ begin
   if (x >= 0) and (x < surface.w) and (y >= 0) and (y < surface.h) then
   begin
     Result := PUint32(nativeuint(surface.pixels) + y * surface.pitch + x * 4)^;
-    {bpp := surface.format.BytesPerPixel;
-      // Here p is the address to the pixel we want to retrieve
-      p := Pointer(uint32(surface.pixels) + y * surface.pitch + x * bpp);
-      case bpp of
-      1:
-      Result := longword(p^);
-      2:
-      Result := puint16(p)^;
-      3:
-      if (SDL_BYTEORDER = SDL_BIG_ENDIAN) then
-      Result := PByteArray(p)[0] shl 16 or PByteArray(p)[1] shl 8 or PByteArray(p)[2]
-      else
-      Result := PByteArray(p)[0] or PByteArray(p)[1] shl 8 or PByteArray(p)[2] shl 16;
-      4:
-      Result := puint32(p)^;
-      else
-      Result := 0; // shouldn't happen, but avoids warnings
-      end;}
   end;
-
 end;
 
 //画像素
@@ -865,31 +836,6 @@ begin
   if (x >= 0) and (x < surface.w) and (y >= 0) and (y < surface.h) then
   begin
     PUint32(nativeuint(surface.pixels) + y * surface.pitch + x * 4)^ := pixel;
-    {bpp := surface.format.BytesPerPixel;
-      // Here p is the address to the pixel we want to set
-      p := Pointer(uint32(surface.pixels) + y * surface.pitch + x * bpp);
-
-      case bpp of
-      1:
-      longword(p^) := pixel;
-      2:
-      puint16(p)^ := pixel;
-      3:
-      if (SDL_BYTEORDER = SDL_BIG_ENDIAN) then
-      begin
-      PByteArray(p)[0] := (pixel shr 16) and $FF;
-      PByteArray(p)[1] := (pixel shr 8) and $FF;
-      PByteArray(p)[2] := pixel and $FF;
-      end
-      else
-      begin
-      PByteArray(p)[0] := pixel and $FF;
-      PByteArray(p)[1] := (pixel shr 8) and $FF;
-      PByteArray(p)[2] := (pixel shr 16) and $FF;
-      end;
-      4:
-      puint32(p)^ := pixel;
-      end;}
   end;
 end;
 
@@ -942,15 +888,7 @@ end;
 //取调色板的颜色, 视频系统为32位色, 但很多时候仍需要原调色板的颜色
 function ColColor(num: byte): uint32;
 begin
-  //{$IFDEF darwin}
-  //colcolor := SDL_mapRGB(screen.format, Acol[num * 3 + 0] * 4, Acol[num * 3 + 1] * 4, Acol[num * 3 + 2] * 4);
-  //{$ELSE}
-  //if (num >= 0) and (num <= 255) then
   Result := SDL_MapRGB(screen.format, Acol[num * 3] * 4, Acol[num * 3 + 1] * 4, Acol[num * 3 + 2] * 4);
-  //else
-  //Result := 0;
-  //{$ENDIF}
-
 end;
 
 //判断像素是否在屏幕内
@@ -1301,17 +1239,7 @@ var
   Text: PSDL_Surface;
   r, g, b: byte;
 begin
-  SDL_GetRGB(color, sur.format, @r, @g, @b);
-  tempcolor.r := r;
-  tempcolor.g := g;
-  tempcolor.b := b;
-
-  Text := TTF_RenderUTF8_blended(engfont, @word[1], tempcolor);
-  dest.x := x_pos;
-  dest.y := y_pos + 2;
-  SDL_BlitSurface(Text, nil, sur, @dest);
-  SDL_FreeSurface(Text);
-
+  DrawText(sur, word, x_pos, y_pos+2, color);
 end;
 
 //显示unicode中文阴影文字, 即将同样内容显示2次, 间隔1像素
@@ -1325,7 +1253,6 @@ procedure DrawShadowText(constref word: utf8string; x_pos, y_pos: integer; color
 begin
   DrawText(screen, word, x_pos + 1, y_pos, color2);
   DrawText(screen, word, x_pos, y_pos, color1);
-
 end;
 
 //显示英文阴影文字
@@ -1380,10 +1307,6 @@ var
   dest: TSDL_Rect;
   r, g, b, r1, g1, b1, a: byte;
 begin
-  {if (SDL_MustLock(screen)) then
-    begin
-    SDL_LockSurface(screen);
-    end;}
   tempscr := SDL_CreateRGBSurface(sur.flags, w + 1, h + 1, 32, RMask, GMask, BMask, AMask);
   SDL_GetRGB(colorin, tempscr.format, @r, @g, @b);
   SDL_GetRGB(colorframe, tempscr.format, @r1, @g1, @b1);
@@ -1415,11 +1338,6 @@ begin
     end;
   SDL_BlitSurface(tempscr, nil, sur, @dest);
   SDL_FreeSurface(tempscr);
-  {if (SDL_MustLock(screen)) then
-    begin
-    SDL_UnlockSurface(screen);
-    end;}
-
 end;
 
 //画不含边框的矩形, 用于对话和黑屏
@@ -1428,10 +1346,6 @@ var
   tempscr: PSDL_Surface;
   dest: TSDL_Rect;
 begin
-  {if (SDL_MustLock(screen)) then
-    begin
-    SDL_LockSurface(screen);
-    end;}
   tempscr := SDL_CreateRGBSurface(sur.flags, w, h, 32, RMask, GMask, BMask, AMask);
   SDL_FillRect(tempscr, nil, colorin or $FF000000);
   SDL_SetSurfaceAlphaMod(tempscr, alpha * 255 div 100);
@@ -1439,12 +1353,6 @@ begin
   dest.y := y;
   SDL_BlitSurface(tempscr, nil, sur, @dest);
   SDL_FreeSurface(tempscr);
-  //boxRGBA(sur, x, y, x+w-1, y+h-1, 0,0,0,alpha * 255 div 100);
-  {if (SDL_MustLock(screen)) then
-    begin
-    SDL_UnlockSurface(screen);
-    end;}
-
 end;
 
 //调色板变化, 贴图闪烁效果
@@ -1515,133 +1423,7 @@ var
   x1, x2, y1, y2: integer;
   lenInt: integer;
 begin
-  {with PNGIndex do
-    begin
-    if (CurPointer <> nil) and (Loaded = 1) and (Frame > 0) then
-    begin
-    if frame > 1 then
-    Inc(CurPointer, FrameNum mod Frame);
-    CurSurface := CurPointer^;
-    if CurSurface <> nil then
-    begin
-    if RectArea <> nil then
-    begin
-    area := PSDL_Rect(RectArea)^;
-    x1 := area.x;
-    y1 := area.y;
-    x2 := x1 + area.w;
-    y2 := y1 + area.h;
-    end
-    else
-    begin
-    x1 := 0;
-    y1 := 0;
-    x2 := scr.w;
-    y2 := scr.h;
-    end;
-    dest.x := px - x + 1;
-    dest.y := py - y + 1;
-    dest.w := CurSurface.w;
-    dest.h := CurSurface.h;
-    if (dest.x + CurSurface.w >= x1) and (dest.y + CurSurface.h >= y1) and (dest.x < x2) and
-    (dest.y < y2) then
-    begin
-    if shadow > 0 then
-    begin
-    mixColor := $FFFFFFFF;
-    mixAlpha := shadow * 25;
-    end
-    else if shadow < 0 then
-    begin
-    mixColor := 0;
-    mixAlpha := -shadow * 25;
-    end;
-    if (mixAlpha = 0) and (BlockImgR = nil) then
-    begin
-    if (alpha > 0) then
-    begin
-    //注意, 使用以下特殊算法, 是由图片格式决定
-    //资源标准为带有透明通道的Surface, 因此总的Alpha和ColorKey值无效
-    //将所画图片直接画入背景, 再将结果与背景混合
-    tempscr := SDL_DisplayFormat(CurSurface);
-    SDL_BlitSurface(scr, @dest, tempscr, nil);
-    SDL_BlitSurface(CurSurface, nil, tempscr, nil);
-    SDL_SetAlpha(tempscr, SDL_SRCALPHA, 255 - alpha * 255 div 100);
-    SDL_BlitSurface(tempscr, nil, scr, @dest);
-    SDL_FreeSurface(tempscr);
-    end
-    else
-    SDL_BlitSurface(CurSurface, nil, scr, @dest);
-    end
-    else
-    begin
-    tempscr := SDL_DisplayFormatAlpha(CurSurface);
-    //SDL_BlitSurface(tempscr, nil, scr, @dest);
-    if (mixAlpha > 0) then
-    begin
-    //mixalpha := 100;
-    tran := mixAlpha * 255 div 100;
-    bigtran := tran * $01010101;
-    Mask := tempscr.format.AMask;
-    tempscrfront := SDL_DisplayFormatAlpha(CurSurface);
-    SDL_FillRect(tempscrfront, nil, (mixColor and (not Mask)) or (bigtran and Mask));
-    SDL_BlitSurface(tempscrfront, nil, tempscr, nil);
-    if (BlockImgR = nil) then
-    begin
-    if alpha > 0 then
-    begin
-    tempscrback := SDL_DisplayFormat(CurSurface);
-    SDL_BlitSurface(scr, @dest, tempscrback, nil);
-    SDL_BlitSurface(tempscr, nil, tempscrback, nil);
-    SDL_SetAlpha(tempscrback, SDL_SRCALPHA, 255 - alpha * 255 div 100);
-    SDL_BlitSurface(tempscrback, nil, scr, @dest);
-    SDL_FreeSurface(tempscrback);
-    end
-    else
-    begin
-    SDL_BlitSurface(tempscr, nil, scr, @dest);
-    end;
-    end
-    else
-    begin
-    //SDL_BlitSurface(tempscrback, nil, scr, @dest);
-    //SDL_BlitSurface(tempscrback, nil, tempscr, nil);
-    end;
-    SDL_FreeSurface(tempscrfront);
-    end;
-    if (BlockImgR <> nil) then
-    begin
-    tran := 255 - alpha * 255 div 100;
-    //将透明通道的值写入所有位, 具体的位置由蒙板决定
-    bigtran := tran * $01010101;
-    Mask := tempscr.format.AMask;
-    for i1 := 0 to tempscr.w - 1 do
-    begin
-    for i2 := 0 to tempscr.h - 1 do
-    begin
-    pixdepth := psmallint(BlockImgR + ((dest.x + leftupx + i1) * Height + dest.y +
-    leftupy + i2) * size)^;
-    pixel := GetPixel(tempscr, i1, i2);
-    AlphaValue := pixel and Mask;
-    if AlphaValue > 0 then
-    begin
-    if (pixdepth > depth) then
-    begin
-    //替换透明通道的值
-    //注意: 这里如果效率较低, 则改用完全指针, 或者汇编编写. 设置偏移也相同
-    PutPixel(tempscr, i1, i2, (pixel and (not Mask)) or (bigtran and Mask));
-    end;
-    end;
-    end;
-    end;
-    SDL_BlitSurface(tempscr, nil, scr, @dest);
-    end;
-    SDL_FreeSurface(tempscr);
-    end;
-    end;
-    end;
-    end;
-    end;}
+
 end;
 
 procedure SetPNGTileBlock(PNGIndex: TPNGIndex; px, py, depth: integer; BlockImageW: putf8char; Width, Height, size: integer);
@@ -1708,60 +1490,6 @@ begin
     SDL_RenderCopy(render, screenTex, nil, nil);
     SDL_RenderPresent(render);
   end;
-  //SDL_BlitSurface(screen, @dest, prescreen, @dest);
-
-  {if GLHR = 1 then
-    begin
-    glGenTextures(1, @TextureID);
-    glBindTexture(GL_TEXTURE_2D, TextureID);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, screen.w, screen.h, 0, GL_BGRA, GL_UNSIGNED_BYTE, prescreen.pixels);
-
-    if SMOOTH = 1 then
-    begin
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    end
-    else
-    begin
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    end;
-
-    glEnable(GL_TEXTURE_2D);
-    glBegin(GL_QUADS);
-    glTexCoord2f(0.0, 0.0);
-    glVertex3f(-1.0, 1.0, 0.0);
-    glTexCoord2f(1.0, 0.0);
-    glVertex3f(1.0, 1.0, 0.0);
-    glTexCoord2f(1.0, 1.0);
-    glVertex3f(1.0, -1.0, 0.0);
-    glTexCoord2f(0.0, 1.0);
-    glVertex3f(-1.0, -1.0, 0.0);
-    glEnd;
-    glDisable(GL_TEXTURE_2D);
-    SDL_GL_SwapBuffers;
-    glDeleteTextures(1, @TextureID);
-    end
-    else
-    begin
-    //realx := x * resolutionx div scr1.w;
-    //realw := (x + w + 2) * resolutionx div scr1.w - realx;
-    //realy := y * resolutiony div scr1.h;
-    //realh := (y + h + 2) * resolutiony div scr1.h - realy;
-    //if realw + realx > resolutionx then realw := resolutionx - realx;
-    //if realh + realy > resolutiony then realh := resolutiony - realy;
-    if (resolutionx = screen.w) and (resolutiony = screen.h) then
-    begin
-    SDL_BlitSurface(prescreen, nil, RealScreen, nil);
-    end
-    else
-    begin
-    tempscr := sdl_gfx.zoomSurface(prescreen, resolutionx / screen.w, resolutiony / screen.h, SMOOTH);
-    SDL_BlitSurface(tempscr, nil, RealScreen, nil);
-    SDL_FreeSurface(tempscr);
-    end;
-    SDL_UpdateRect(RealScreen, 0, 0, resolutionx, resolutiony);
-    end;}
 end;
 
 procedure SDL_GetMouseState2(var x, y: integer);
@@ -1778,23 +1506,11 @@ procedure ResizeWindow(w, h: integer);
 begin
   RESOLUTIONX := w;
   RESOLUTIONY := h;
-  {RealScreen := SDL_SetVideoMode(w, h, 32, ScreenFlag);
-    event.type_ := 0;
-    SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);}
-
 end;
 
 procedure SwitchFullscreen;
 begin
-  {FULLSCREEN := 1 - FULLSCREEN;
-    if FULLSCREEN = 0 then
-    begin
-    RealScreen := SDL_SetVideoMode(RESOLUTIONX, RESOLUTIONY, 32, ScreenFlag);
-    end
-    else
-    begin
-    RealScreen := SDL_SetVideoMode(CENTER_X * 2, CENTER_Y * 2, 32, ScreenFlag or SDL_FULLSCREEN);
-    end;}
+
 end;
 
 procedure QuitConfirm;
