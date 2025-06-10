@@ -145,68 +145,6 @@ type
       Address: (Data: array [0 .. $5C] of smallint);
   end;
 
-  TRoleRedFace = record
-    case TCallType of
-      Element: (ListNum, HeadNum, IncLife, UnUse: smallint;
-        Name, Nick: array [0 .. 9] of ansichar;
-        Sexual, Level: smallint;
-        Exp: word;
-        CurrentHP, MaxHP, Hurt, Poison, PhyPower: smallint;
-        ExpForItem: word;
-        Equip: array [0 .. 1] of smallint;
-        AmiFrameNum, AmiDelay, SoundDealy: array [0 .. 4] of smallint;
-        MPType, CurrentMP, MaxMP: smallint;
-        Attack, Speed, Defence, Medcine, UsePoi, MedPoi, DefPoi, Fist, Sword, Knife, Unusual, HidWeapon: smallint;
-        Knowledge, Ethics, AttPoi, AttTwice, Repute, Aptitude, PracticeBook: smallint;
-        ExpForBook: word;
-        //Magic, MagLevel: array[0..9] of smallint;
-        Magic, MagLevel: array [0 .. 39] of smallint;
-        TakingItem, TakingItemAmount: array [0 .. 3] of smallint;
-        UnKnow: array [0 .. 9] of smallint);
-      Address: (Data: array [0 .. 160] of smallint);
-  end;
-
-  TItemRedFace = record
-    case TCallType of
-      Element: (//ListNum: smallint;
-        Name: array [0 .. 19] of ansichar;
-        Introduction: array [0 .. 29] of ansichar;
-        Magic, AmiNum, User, EquipType, ShowIntro, ItemType, UnKnow5, UnKnow6, UnKnow7: smallint;
-        AddCurrentHP, AddMaxHP, AddPoi, AddPhyPower, ChangeMPType, AddCurrentMP, AddMaxMP: smallint;
-        AddAttack, AddSpeed, AddDefence, AddMedcine, AddUsePoi, AddMedPoi, AddDefPoi: smallint;
-        AddFist, AddSword, AddKnife, AddUnusual, AddHidWeapon, AddKnowledge, AddEthics, AddAttTwice, AddAttPoi: smallint;
-        OnlyPracRole, NeedMPType, NeedMP, NeedAttack, NeedSpeed, NeedUsePoi, NeedMedcine, NeedMedPoi: smallint;
-        NeedFist, NeedSword, NeedKnife, NeedUnusual, NeedHidWeapon, NeedAptitude: smallint;
-        NeedExp, NeedExpForItem, NeedMaterial: smallint;
-        GetItem, NeedMatAmount: array [0 .. 4] of smallint;
-        Unkown: array [0 .. 10] of smallint);
-      Address: (Data: array [11 .. 105] of smallint);
-  end;
-
-  TMagicRedFace = record
-    case TCallType of
-      Element: (//ListNum: smallint;
-        Name: array [0 .. 9] of ansichar;
-        UnKnow: array [0 .. 4] of smallint;
-        SoundNum, MagicType, AmiNum, HurtType, AttAreaType, NeedMP, Poison: smallint;
-        Attack, MoveDistance, AttDistance, AddMP, HurtMP: array [0 .. 9] of smallint;
-        UnKnow1: array [0 .. 20] of smallint);
-      Address: (Data: array [0 .. 67] of smallint);
-  end;
-
-  TWarDataRedFace = record
-    case TCallType of
-      Element: (Warnum: smallint;
-        Name: array [0 .. 9] of ansichar;
-        BFieldNum, ExpGot, MusicNum: smallint;
-        //TeamMate, TeamY, TeamX: array [0..11] of smallint;
-        //AutoTeamMate, AutoTeamY, AutoTeamX: array [0..29] of smallint;
-        AutoTeamMate, AutoTeamY, AutoTeamX: array [0 .. 11] of smallint;
-        TeamMate, TeamY, TeamX: array [0 .. 29] of smallint;
-        Enemy, EnemyY, EnemyX: array [0 .. 99] of smallint);
-      Address: (Data: array [0 .. $5D] of smallint);
-  end;
-
 var
 
   MODVersion: integer = 0;
