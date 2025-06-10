@@ -794,7 +794,7 @@ begin
     cstr := env^.GetStringUTFChars(env, jstr, 0);
     Name := strpas(cstr);
     env^.ReleaseStringUTFChars(env, jstr, cstr);}
-  name := tempname;
+  Name := tempname;
   named := True;
   {$ELSE}
   //for i := 0 to 4 do

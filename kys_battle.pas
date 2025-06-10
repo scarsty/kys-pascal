@@ -1795,7 +1795,7 @@ begin
   if mode = 1 then
     str := CP950ToUtf8(@Ritem[mnum].Name);
   l := drawlength(str);
-  DrawTextWithRect(screen, str, CENTER_X - l * 5, CENTER_Y - 150, l * 10 + 6, ColColor($14), ColColor($16));
+  DrawTextWithRect(screen, str, CENTER_X - l * 5, CENTER_Y - 150, l * 10 + 7, ColColor($14), ColColor($16));
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
   SDL_Delay(500);
 

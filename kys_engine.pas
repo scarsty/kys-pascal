@@ -1145,13 +1145,13 @@ var
   instr, outstr: ansistring;
 begin
   {$IFDEF fpc}
-  instr := 'cp' + inttostr(input);
-  outstr := 'cp' + inttostr(output);
+  instr := 'cp' + IntToStr(input);
+  outstr := 'cp' + IntToStr(output);
   if input = 65001 then
     instr := 'utf8';
   if output = 65001 then
     outstr := 'utf8';
-  result := ConvertEncoding(str, instr, outstr);
+  Result := ConvertEncoding(str, instr, outstr);
   {$ELSE}
   len := MultiByteToWideChar(input, 0, @str[1], -1, nil, 0);
   setlength(strw, len - 1);
@@ -1202,7 +1202,27 @@ begin
       //SDL_FreeSurface(Text);
       //i := i + 1;
     end;
-    if (byte(word[i]) > 128) then
+    if (byte(word[i]) >= $c0) and (byte(word[i]) < $e0) then
+    begin
+      word0[1] := word[i];
+      word0[2] := word[i + 1];
+      word0[3] := utf8char(0);
+      word0[4] := utf8char(0);
+      k := byte(word0[1]) + 256 * byte(word0[2]) + 65536 * byte(word0[3]);
+      if not fonts.ContainsKey(k) then
+      begin
+        message('%s(%d)', [midstr(word, i, 2), fonts.Count], False);
+        fonts.add(k, TTF_RenderUTF8_blended(font, @word0[1], tempcolor));
+      end;
+      got := fonts.TryGetValue(k, Text);
+      dest.x := x_pos;
+      dest.y := y_pos;
+      SDL_SetSurfaceColorMod(Text, r, g, b);
+      SDL_BlitSurface(Text, nil, sur, @dest);
+      //SDL_FreeSurface(Text);
+      i := i + 1;
+    end;
+    if (byte(word[i]) >= $e0) then
     begin
       word0[1] := word[i];
       word0[2] := word[i + 1];
@@ -1239,7 +1259,7 @@ var
   Text: PSDL_Surface;
   r, g, b: byte;
 begin
-  DrawText(sur, word, x_pos, y_pos+2, color);
+  DrawText(sur, word, x_pos, y_pos + 2, color);
 end;
 
 //显示unicode中文阴影文字, 即将同样内容显示2次, 间隔1像素
@@ -1793,7 +1813,12 @@ begin
   Result := 0;
   while i <= length(str) do
   begin
-    if byte(str[i]) >= 128 then
+    if (byte(str[i]) >= 128) and (byte(str[i]) < $c0) then
+    begin
+      Result := Result + 1;
+      i := i + 2;
+    end
+    else if (byte(str[i]) >= $e0) then
     begin
       Result := Result + 2;
       i := i + 3;
@@ -1970,7 +1995,7 @@ var
   str: utf8string;
 begin
   {$IFDEF console}
-  write(format(formatstring, content));
+  Write(format(formatstring, content));
   if cr then
     writeln();
   {$ENDIF}
@@ -1990,7 +2015,7 @@ var
   str: utf8string;
 begin
   {$IFDEF console}
-  write(format(formatstring, []));
+  Write(format(formatstring, []));
   if cr then
     writeln();
   {$ENDIF}
