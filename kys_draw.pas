@@ -753,6 +753,7 @@ var
   tempb: TBuildInfo;
   tempscr, tempscr1: PSDL_Surface;
   dest: TSDL_Rect;
+  str: utf8string;
 begin
   {if BIG_PNG_TILE = 1 then
     begin
@@ -861,6 +862,11 @@ begin
   end;
   DrawClouds;
   DrawVirtualKey;
+  //if NIGHT_EFFECT = 1 then
+  //begin
+  //  str := format('%.2d:%.2d', [round(now_time / 60), round(now_time) mod 24]);
+  //  DrawShadowText(screen, str, 20, CENTER_Y*2 - 40, ColColor($FF), ColColor($FF));
+  //end;
 end;
 
 //画场景到屏幕

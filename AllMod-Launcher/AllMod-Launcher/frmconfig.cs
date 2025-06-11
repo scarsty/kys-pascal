@@ -121,51 +121,44 @@ namespace pig3config
             }
             catch (Exception ee)
             {
-                return;
+               
             }
             if (k == "SMOOTH")
             {
                 if (v == 0) SMOOTH0.Checked = true;
                 else if (v == 1) SMOOTH1.Checked = true;
                 else if (v == 2) SMOOTH2.Checked = true;
-                return;
             }
             if (k == "RENDERER")
             {
                 if (v == 0) RENDERER0.Checked = true;
                 else if (v == 1) RENDERER1.Checked = true;
                 else if (v == 2) RENDERER2.Checked = true;
-                return;
             }
             if (k == "WALK_SPEED")
             {
                 WALK_SPEED0.Value = v;
                 WALK_SPEED1.Value = v;
-                return;
             }
             if (k == "walk_speed2")
             {
                 walk_speed20.Value = v;
                 walk_speed21.Value = v;
-                return;
             }
             if (k == "battle_speed")
             {
                 battle_speed0.Value = v;
                 battle_speed1.Value = v;
-                return;
             }
             if (k == "VOLUME")
             {
                 VOLUME0.Value = v;
                 VOLUME1.Value = v;
-                return;
             }
             if (k == "VOLUMEWAV")
             {
                 VOLUMEWAV0.Value = v;
                 VOLUMEWAV1.Value = v;
-                return;
             }
             foreach (Control cc in this.groupBox1.Controls)
             {
@@ -271,8 +264,6 @@ namespace pig3config
         private void button1_Click(object sender, EventArgs e)
         {
             configIniValueAll(1);
-            iniPath = @".\game0\config\kysmod.ini";
-            configIniValueAll(1);
             MessageBox.Show("保存成功！");
         }
 
@@ -308,6 +299,7 @@ namespace pig3config
             configIniValue(i, "Music", "VOLUMEWAV");
             configIniValue(i, "Music", "SOUND3D");
             configIniValue(i, "constant", "MAX_ADD_PRO");
+            configIniValue(i, "system", "NIGHT_EFFECT");
         }
 
         private void pictureBox1_Click(object sender, EventArgs e)
@@ -339,6 +331,7 @@ namespace pig3config
 
         private void button3_Click(object sender, EventArgs e)
         {
+            configIniValueAll(1);
             setStringValue(gameini, "games", "current", comboGames.SelectedIndex.ToString());
             Directory.SetCurrentDirectory(current_path);
             System.Diagnostics.Process.Start("..\\kys-pascal\\kys.exe");

@@ -1388,7 +1388,7 @@ var
   p, p0, p1, p2: real;
 begin
   now := SDL_GetTicks;
-  if (NIGHT_EFFECT = 1) and (where = 0) then
+  if (NIGHT_EFFECT = 1) then
   begin
     now_time := now_time + 0.3;
     if now_time > 1440 then

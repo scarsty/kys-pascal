@@ -29,19 +29,21 @@
         private void InitializeComponent()
         {
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.MAX_ADD_PRO = new System.Windows.Forms.CheckBox();
             this.EXPAND_GROUND = new System.Windows.Forms.CheckBox();
-            this.EXIT_GAME = new System.Windows.Forms.CheckBox();
+            this.simple = new System.Windows.Forms.CheckBox();
+            this.SOUND3D = new System.Windows.Forms.CheckBox();
             this.groupBox5 = new System.Windows.Forms.GroupBox();
             this.SMOOTH2 = new System.Windows.Forms.RadioButton();
             this.SMOOTH1 = new System.Windows.Forms.RadioButton();
             this.SMOOTH0 = new System.Windows.Forms.RadioButton();
+            this.semireal = new System.Windows.Forms.CheckBox();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
             this.RENDERER2 = new System.Windows.Forms.RadioButton();
             this.RENDERER1 = new System.Windows.Forms.RadioButton();
             this.RENDERER0 = new System.Windows.Forms.RadioButton();
             this.label29 = new System.Windows.Forms.Label();
             this.label12 = new System.Windows.Forms.Label();
-            this.semireal = new System.Windows.Forms.CheckBox();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.battle_speed1 = new System.Windows.Forms.NumericUpDown();
             this.walk_speed21 = new System.Windows.Forms.NumericUpDown();
@@ -55,8 +57,6 @@
             this.groupBox3 = new System.Windows.Forms.GroupBox();
             this.VOLUMEWAV1 = new System.Windows.Forms.NumericUpDown();
             this.VOLUME1 = new System.Windows.Forms.NumericUpDown();
-            this.simple = new System.Windows.Forms.CheckBox();
-            this.SOUND3D = new System.Windows.Forms.CheckBox();
             this.VOLUMEWAV0 = new System.Windows.Forms.TrackBar();
             this.label7 = new System.Windows.Forms.Label();
             this.VOLUME0 = new System.Windows.Forms.TrackBar();
@@ -64,8 +64,8 @@
             this.button1 = new System.Windows.Forms.Button();
             this.button2 = new System.Windows.Forms.Button();
             this.button3 = new System.Windows.Forms.Button();
-            this.MAX_ADD_PRO = new System.Windows.Forms.CheckBox();
             this.comboGames = new System.Windows.Forms.ComboBox();
+            this.NIGHT_EFFECT = new System.Windows.Forms.CheckBox();
             this.groupBox1.SuspendLayout();
             this.groupBox5.SuspendLayout();
             this.groupBox4.SuspendLayout();
@@ -85,10 +85,10 @@
             // 
             // groupBox1
             // 
+            this.groupBox1.Controls.Add(this.NIGHT_EFFECT);
             this.groupBox1.Controls.Add(this.MAX_ADD_PRO);
             this.groupBox1.Controls.Add(this.EXPAND_GROUND);
             this.groupBox1.Controls.Add(this.simple);
-            this.groupBox1.Controls.Add(this.EXIT_GAME);
             this.groupBox1.Controls.Add(this.SOUND3D);
             this.groupBox1.Controls.Add(this.groupBox5);
             this.groupBox1.Controls.Add(this.semireal);
@@ -104,6 +104,17 @@
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "系统设置";
             // 
+            // MAX_ADD_PRO
+            // 
+            this.MAX_ADD_PRO.AutoSize = true;
+            this.MAX_ADD_PRO.Location = new System.Drawing.Point(303, 237);
+            this.MAX_ADD_PRO.Margin = new System.Windows.Forms.Padding(6, 5, 6, 5);
+            this.MAX_ADD_PRO.Name = "MAX_ADD_PRO";
+            this.MAX_ADD_PRO.Size = new System.Drawing.Size(158, 25);
+            this.MAX_ADD_PRO.TabIndex = 9;
+            this.MAX_ADD_PRO.Text = "升级属性固定";
+            this.MAX_ADD_PRO.UseVisualStyleBackColor = true;
+            // 
             // EXPAND_GROUND
             // 
             this.EXPAND_GROUND.AutoSize = true;
@@ -115,16 +126,27 @@
             this.EXPAND_GROUND.Text = "扩展地面";
             this.EXPAND_GROUND.UseVisualStyleBackColor = true;
             // 
-            // EXIT_GAME
+            // simple
             // 
-            this.EXIT_GAME.AutoSize = true;
-            this.EXIT_GAME.Location = new System.Drawing.Point(303, 189);
-            this.EXIT_GAME.Margin = new System.Windows.Forms.Padding(6, 5, 6, 5);
-            this.EXIT_GAME.Name = "EXIT_GAME";
-            this.EXIT_GAME.Size = new System.Drawing.Size(221, 25);
-            this.EXIT_GAME.TabIndex = 2;
-            this.EXIT_GAME.Text = "退出时在窗口内提示";
-            this.EXIT_GAME.UseVisualStyleBackColor = true;
+            this.simple.AutoSize = true;
+            this.simple.Location = new System.Drawing.Point(303, 189);
+            this.simple.Margin = new System.Windows.Forms.Padding(6, 5, 6, 5);
+            this.simple.Name = "simple";
+            this.simple.Size = new System.Drawing.Size(74, 25);
+            this.simple.TabIndex = 7;
+            this.simple.Text = "简体";
+            this.simple.UseVisualStyleBackColor = true;
+            // 
+            // SOUND3D
+            // 
+            this.SOUND3D.AutoSize = true;
+            this.SOUND3D.Location = new System.Drawing.Point(80, 286);
+            this.SOUND3D.Margin = new System.Windows.Forms.Padding(6, 5, 6, 5);
+            this.SOUND3D.Name = "SOUND3D";
+            this.SOUND3D.Size = new System.Drawing.Size(96, 25);
+            this.SOUND3D.TabIndex = 7;
+            this.SOUND3D.Text = "3D音效";
+            this.SOUND3D.UseVisualStyleBackColor = true;
             // 
             // groupBox5
             // 
@@ -173,6 +195,17 @@
             this.SMOOTH0.TabStop = true;
             this.SMOOTH0.Text = "关闭";
             this.SMOOTH0.UseVisualStyleBackColor = true;
+            // 
+            // semireal
+            // 
+            this.semireal.AutoSize = true;
+            this.semireal.Location = new System.Drawing.Point(80, 237);
+            this.semireal.Margin = new System.Windows.Forms.Padding(6, 5, 6, 5);
+            this.semireal.Name = "semireal";
+            this.semireal.Size = new System.Drawing.Size(95, 25);
+            this.semireal.TabIndex = 2;
+            this.semireal.Text = "半即时";
+            this.semireal.UseVisualStyleBackColor = true;
             // 
             // groupBox4
             // 
@@ -241,17 +274,6 @@
             this.label12.Size = new System.Drawing.Size(94, 21);
             this.label12.TabIndex = 0;
             this.label12.Text = "渲染方式";
-            // 
-            // semireal
-            // 
-            this.semireal.AutoSize = true;
-            this.semireal.Location = new System.Drawing.Point(80, 286);
-            this.semireal.Margin = new System.Windows.Forms.Padding(6, 5, 6, 5);
-            this.semireal.Name = "semireal";
-            this.semireal.Size = new System.Drawing.Size(95, 25);
-            this.semireal.TabIndex = 2;
-            this.semireal.Text = "半即时";
-            this.semireal.UseVisualStyleBackColor = true;
             // 
             // groupBox2
             // 
@@ -390,28 +412,6 @@
             this.VOLUME1.Size = new System.Drawing.Size(73, 31);
             this.VOLUME1.TabIndex = 6;
             // 
-            // simple
-            // 
-            this.simple.AutoSize = true;
-            this.simple.Location = new System.Drawing.Point(303, 237);
-            this.simple.Margin = new System.Windows.Forms.Padding(6, 5, 6, 5);
-            this.simple.Name = "simple";
-            this.simple.Size = new System.Drawing.Size(74, 25);
-            this.simple.TabIndex = 7;
-            this.simple.Text = "简体";
-            this.simple.UseVisualStyleBackColor = true;
-            // 
-            // SOUND3D
-            // 
-            this.SOUND3D.AutoSize = true;
-            this.SOUND3D.Location = new System.Drawing.Point(80, 237);
-            this.SOUND3D.Margin = new System.Windows.Forms.Padding(6, 5, 6, 5);
-            this.SOUND3D.Name = "SOUND3D";
-            this.SOUND3D.Size = new System.Drawing.Size(96, 25);
-            this.SOUND3D.TabIndex = 7;
-            this.SOUND3D.Text = "3D音效";
-            this.SOUND3D.UseVisualStyleBackColor = true;
-            // 
             // VOLUMEWAV0
             // 
             this.VOLUMEWAV0.Location = new System.Drawing.Point(158, 110);
@@ -485,17 +485,6 @@
             this.button3.UseVisualStyleBackColor = true;
             this.button3.Click += new System.EventHandler(this.button3_Click);
             // 
-            // MAX_ADD_PRO
-            // 
-            this.MAX_ADD_PRO.AutoSize = true;
-            this.MAX_ADD_PRO.Location = new System.Drawing.Point(303, 286);
-            this.MAX_ADD_PRO.Margin = new System.Windows.Forms.Padding(6, 5, 6, 5);
-            this.MAX_ADD_PRO.Name = "MAX_ADD_PRO";
-            this.MAX_ADD_PRO.Size = new System.Drawing.Size(158, 25);
-            this.MAX_ADD_PRO.TabIndex = 9;
-            this.MAX_ADD_PRO.Text = "升级属性固定";
-            this.MAX_ADD_PRO.UseVisualStyleBackColor = true;
-            // 
             // comboGames
             // 
             this.comboGames.FormattingEnabled = true;
@@ -504,6 +493,17 @@
             this.comboGames.Size = new System.Drawing.Size(461, 29);
             this.comboGames.TabIndex = 7;
             this.comboGames.SelectedIndexChanged += new System.EventHandler(this.comboGames_SelectedIndexChanged);
+            // 
+            // NIGHT_EFFECT
+            // 
+            this.NIGHT_EFFECT.AutoSize = true;
+            this.NIGHT_EFFECT.Location = new System.Drawing.Point(303, 286);
+            this.NIGHT_EFFECT.Margin = new System.Windows.Forms.Padding(6, 5, 6, 5);
+            this.NIGHT_EFFECT.Name = "NIGHT_EFFECT";
+            this.NIGHT_EFFECT.Size = new System.Drawing.Size(116, 25);
+            this.NIGHT_EFFECT.TabIndex = 10;
+            this.NIGHT_EFFECT.Text = "日夜交替";
+            this.NIGHT_EFFECT.UseVisualStyleBackColor = true;
             // 
             // frmconfig
             // 
@@ -570,7 +570,6 @@
         private System.Windows.Forms.RadioButton RENDERER0;
         private System.Windows.Forms.RadioButton RENDERER2;
         private System.Windows.Forms.CheckBox semireal;
-        private System.Windows.Forms.CheckBox EXIT_GAME;
         private System.Windows.Forms.CheckBox EXPAND_GROUND;
         private System.Windows.Forms.GroupBox groupBox5;
         private System.Windows.Forms.RadioButton SMOOTH2;
@@ -588,6 +587,7 @@
         private System.Windows.Forms.Button button3;
         private System.Windows.Forms.CheckBox MAX_ADD_PRO;
         private System.Windows.Forms.ComboBox comboGames;
+        private System.Windows.Forms.CheckBox NIGHT_EFFECT;
     }
 }
 

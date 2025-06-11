@@ -456,14 +456,14 @@ begin
     VOLUMEWAV := Kys_ini.ReadInteger('music', 'VOLUMEWAV', 30);
     SOUND3D := Kys_ini.ReadInteger('music', 'SOUND3D', 1);
     MMAPAMI := Kys_ini.ReadInteger('system', 'MMAPAMI', 1);
-    SCENEAMI := Kys_ini.ReadInteger('system', 'SCENEAMI', 2);
+    //SCENEAMI := Kys_ini.ReadInteger('system', 'SCENEAMI', 2);
     SEMIREAL := Kys_ini.ReadInteger('system', 'SEMIREAL', 0);
     MODVersion := Kys_ini.ReadInteger('system', 'MODVersion', 0);
     CHINESE_FONT_SIZE := Kys_ini.ReadInteger('system', 'CHINESE_FONT_SIZE', 20);
     ENGLISH_FONT_SIZE := Kys_ini.ReadInteger('system', 'ENGLISH_FONT_SIZE', 19);
     KDEF_SCRIPT := Kys_ini.ReadInteger('system', 'KDEF_SCRIPT', 0);
     NIGHT_EFFECT := Kys_ini.ReadInteger('system', 'NIGHT_EFFECT', 0);
-    EXIT_GAME := Kys_ini.ReadInteger('system', 'EXIT_GAME', 1);
+    //EXIT_GAME := Kys_ini.ReadInteger('system', 'EXIT_GAME', 1);
     PNG_TILE := Kys_ini.ReadInteger('system', 'PNG_TILE', 0);
     TRY_FIND_GRP := Kys_ini.ReadInteger('system', 'TRY_FIND_GRP', 0);
     EXPAND_GROUND := Kys_ini.ReadInteger('system', 'EXPAND_GROUND', 0);
