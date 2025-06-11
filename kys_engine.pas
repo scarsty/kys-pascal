@@ -72,7 +72,7 @@ function GetPositionOnScreen(x, y, CenterX, CenterY: integer): TPosition;
 function cp950toutf8(str: pansichar; len: integer = -1): utf8string; overload;
 function utf8tocp950(constref str: utf8string): ansistring; overload;
 function transcode(constref str: utf8string; input, output: integer): utf8string;
-procedure DrawText(sur: PSDL_Surface; constref word: utf8string; x_pos, y_pos: integer; color: uint32);
+procedure DrawText(sur: PSDL_Surface; word: utf8string; x_pos, y_pos: integer; color: uint32);
 procedure DrawEngText(sur: PSDL_Surface; constref word: utf8string; x_pos, y_pos: integer; color: uint32);
 procedure DrawShadowText(sur: PSDL_Surface; constref word: utf8string; x_pos, y_pos: integer; color1, color2: uint32); overload;
 procedure DrawShadowText(constref word: utf8string; x_pos, y_pos: integer; color1, color2: uint32); overload;
@@ -1163,7 +1163,7 @@ begin
 end;
 
 //显示utf-8文字
-procedure DrawText(sur: PSDL_Surface; constref word: utf8string; x_pos, y_pos: integer; color: uint32);
+procedure DrawText(sur: PSDL_Surface; word: utf8string; x_pos, y_pos: integer; color: uint32);
 var
   dest, src: TSDL_Rect;
   tempcolor: TSDL_Color;
@@ -1173,6 +1173,10 @@ var
   r, g, b: byte;
   got: bool;
 begin
+  if SIMPLE = 1 then
+  begin
+    word := Traditional2Simplified(putf8char(word));
+  end;
   SDL_GetRGB(color, sur.format, @r, @g, @b);
   tempcolor.r := 255;
   tempcolor.g := 255;
@@ -1949,15 +1953,22 @@ begin
   //writeln(L,str,',',result,GetUserDefaultLCID);
 end;
 
-function Traditional2Simplified(str: utf8string): utf8string;
+//繁体汉字转化成简体汉字
+function Traditional2Simplified(str: utf8string): utf8string; //返回繁体字符串
 var
-  l: integer;
+  L: integer;
 begin
-  l := length(str);
-  setlength(Result, l + 3);
-  Result[l + 1] := char(0);
-  if l > 0 then
-    LCMapStringA($0800, $2000000, @str[1], l, @Result[1], l);
+  {$IFDEF windows}
+  str := UTF8ToCP936(str);
+  L := Length(str);
+  SetLength(Result, L + 1);
+  Result[L + 1] := char(0);
+  if L > 0 then
+    LCMapString($0800, $02000000, putf8char(str), L, @Result[1], L);
+  result := CP936TOUTF8(result);
+  {$ELSE}
+  Result := mTraditional;
+  {$ENDIF}
 end;
 
 {$IFDEF mswindows}

@@ -46,3 +46,9 @@ sfe0.72.22/
 .vscode/
 *.ctps
 *.res
+AllMod-Launcher/.vs
+AllMod-Launcher/AllMod-Launcher/.vs
+AllMod-Launcher/AllMod-Launcher/bin
+AllMod-Launcher/AllMod-Launcher/obj
+AllMod-Launcher/AllMod-Launcher/Resources
+AllMod-Launcher/AllMod-Launcher/Properties

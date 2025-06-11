@@ -197,29 +197,8 @@ begin
   SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, '1');
   SDL_SetHint(SDL_HINT_IME_SHOW_UI, '1');
 
-  //SDL_WM_SetIcon(IMG_Load(putf8char(AppPath + 'resource/icon.png')), 0);
-
   ScreenFlag := SDL_WINDOW_RESIZABLE;
-  {SDL_HWSURFACE or SDL_HWACCEL or SDL_ANYFORMAT or SDL_ASYNCBLIT or SDL_FULLSCREEN};
-  {if GLHR = 1 then
-    begin
-    ScreenFlag := SDL_OPENGL or SDL_RESIZABLE;
-    SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
-    SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
-    SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
-    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 8);
-    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-    end
-    else
-    begin
-    HARDWARE_BLIT := 0;
-    end;
-
-    if HARDWARE_BLIT = 1 then
-    ScreenFlag := ScreenFlag or SDL_HWSURFACE or SDL_HWACCEL;}
-
   window := SDL_CreateWindow(putf8char(TitleString), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, RESOLUTIONX, RESOLUTIONY, ScreenFlag);
-
   SDL_GetWindowSize(window, @RESOLUTIONX, @RESOLUTIONY);
 
   if (CellPhone = 1) then
@@ -250,13 +229,6 @@ begin
   SDL_SetColorKey(ImgBBuild, 1, 1);
   setlength(BlockImg, ImageWidth * ImageHeight);
   setlength(BlockImg2, ImageWidth * ImageHeight);
-
-  {if GLHR = 1 then
-    begin
-    glBindTexture(GL_TEXTURE_2D, TextureID);
-    glGenTextures(1, @TextureID);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, screen.w, screen.h, 0, GL_BGRA, GL_UNSIGNED_BYTE, prescreen.pixels);
-    end;}
 
   if (window = nil) then
   begin
@@ -474,9 +446,8 @@ begin
     BATTLE_SPEED := Kys_ini.ReadInteger('system', 'BATTLE_SPEED', 10);
     WALK_SPEED := Kys_ini.ReadInteger('system', 'WALK_SPEED', 10);
     WALK_SPEED2 := Kys_ini.ReadInteger('system', 'WALK_SPEED2', WALK_SPEED);
-    HARDWARE_BLIT := Kys_ini.ReadInteger('system', 'HARDWARE_BLIT', 1);
     SMOOTH := Kys_ini.ReadInteger('system', 'SMOOTH', 1);
-    GLHR := Kys_ini.ReadInteger('system', 'GLHR', 1);
+    SIMPLE := Kys_ini.ReadInteger('system', 'SIMPLE', 1);
     //CENTER_X := Kys_ini.ReadInteger('system', 'CENTER_X', 320);
     //CENTER_Y := Kys_ini.ReadInteger('system', 'CENTER_Y', 220);
     //RESOLUTIONX := Kys_ini.ReadInteger('system', 'RESOLUTIONX', CENTER_X * 2);

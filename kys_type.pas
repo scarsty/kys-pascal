@@ -261,8 +261,7 @@ var
   FULLSCREEN: integer; //是否全屏
   RESOLUTIONX: integer = 1280;
   RESOLUTIONY: integer = 720;
-  HARDWARE_BLIT: integer; //是否使用硬件绘图
-  GLHR: integer = 1; //是否使用OPENGL拉伸
+  SIMPLE: integer = 1; //是否简体
   SMOOTH: integer = 1;
   //平滑设置 0-完全不平滑, 1-仅标准分辨率不平滑, 2-任何时候都使用平滑
   GL_TEXTURE: integer = 0; //全部使用gl纹理, 仅在使用png贴图时有效
