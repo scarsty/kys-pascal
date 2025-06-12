@@ -100,7 +100,7 @@ namespace pig3config
 
         void Form1_FormClosed(object sender, FormClosedEventArgs e)
         {
-            setStringValue(gameini, "games", "current", comboGames.SelectedIndex.ToString());
+            //setStringValue(gameini, "games", "current", comboGames.SelectedIndex.ToString());
         }
 
         void configIniValue(int flag, String s, String k)

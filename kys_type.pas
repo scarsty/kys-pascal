@@ -154,7 +154,6 @@ var
   //31-再战江湖,
   //41-PTT
   //51-魏征
-  //62-红颜录解密
   //71-天书劫
   //81-真龙觉醒
   //91-问情
@@ -284,8 +283,11 @@ var
 
   //以下是各类贴图内容与索引
   //云的贴图内容及索引
-  MPic, SPic, WPic, EPic, FPic, HPic, CPic, KDef, TDef: TByteArray;
-  MIdx, SIdx, WIdx, EIdx, Fidx, HIdx, CIdx, KIdx, TIdx: TIntArray;
+  MPic, SPic, WPic, EPic, HPic, CPic, KDef, TDef: TByteArray;
+  MIdx, SIdx, WIdx, EIdx, HIdx, CIdx, KIdx, TIdx: TIntArray;
+
+  FPic: array [0..999] of TByteArray;
+  FIdx: array [0..999] of TIntArray;
 
   MPNGTile: TSurfaceArray;
   SPNGTile: TSurfaceArray;
@@ -293,7 +295,7 @@ var
   EPNGTile: TSurfaceArray;
   CPNGTile: TSurfaceArray;
   TitlePNGTile: TSurfaceArray;
-  FPNGTile: array of TSurfaceArray;
+  FPNGTile: array [0..999] of TSurfaceArray;
 
   MPNGIndex: TPNGIndexArray;
   SPNGIndex: TPNGIndexArray;
@@ -301,7 +303,7 @@ var
   EPNGIndex: TPNGIndexArray;
   CPNGIndex: TPNGIndexArray;
   TitlePNGIndex: TPNGIndexArray;
-  FPNGIndex: array of TPNGIndexArray;
+  FPNGIndex: array [0..999] of TPNGIndexArray;
 
   MSurface: PSDL_Surface;
   SSurface: PSDL_Surface;

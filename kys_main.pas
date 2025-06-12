@@ -281,15 +281,6 @@ begin
   OpenPicPosition.y := CENTER_Y - 220;
   TitlePosition.x := OpenPicPosition.x + 275;
   TitlePosition.y := OpenPicPosition.y + 125;
-  //0-原版,
-  //11-小猪闯江湖, 12-苍龙逐日, 13-金庸水浒传(未包含)
-  //21-天书奇侠, 22-菠萝三国(含资料片), 23-笑梦游记, 24-前传(未包含)
-  //31-再战江湖,
-  //41-PTT
-  //51-魏征
-  //62-红颜录解密
-  //71-天书劫
-  //81-自然与祥和
 
   case MODVersion of
     0:
@@ -353,14 +344,6 @@ begin
       TitleString := 'All Heros in Kam Yung''s Stories - An Prime Minister of Tang';
       //CHINESE_FONT_SIZE:= 16;
       //ENGLISH_FONT_SIZE:= 15;
-    end;
-    62:
-    begin
-      TitleString := 'All Heros in Kam Yung''s Stories - All for You';
-      MAX_ITEM_AMOUNT := 968;
-      CENTER_Y := 240;
-      setlength(Music, 195);
-      BEGIN_WALKPIC := 5697;
     end;
     71:
     begin
@@ -1579,9 +1562,6 @@ begin
   FileRead(grp, shipy1, 2);
   FileRead(grp, shipface, 2);
   FileRead(grp, teamlist[0], 2 * 6);
-  if MODVersion = 62 then
-    FileSeek(grp, 24, 1);
-
   setlength(RItemlist, MAX_ITEM_AMOUNT);
   for i := 0 to MAX_ITEM_AMOUNT - 1 do
   begin
@@ -1676,8 +1656,6 @@ begin
   FileWrite(grp, shipy1, 2);
   FileWrite(grp, shipface, 2);
   FileWrite(grp, teamlist[0], 2 * 6);
-  if MODVersion = 62 then
-    FileSeek(grp, 24, 1);
   FileWrite(grp, RItemlist[0], sizeof(Titemlist) * MAX_ITEM_AMOUNT);
 
   FileWrite(grp, Rrole[0], ItemOffset - RoleOffset);

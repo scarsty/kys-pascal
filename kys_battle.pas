@@ -168,14 +168,21 @@ begin
     end;
   end;
 
+  if PNG_TILE = 0 then
+  begin
+    for i := 0 to BRoleAmount - 1 do
+    begin
+      path := formatfloat('fight/fight000', Rrole[Brole[i].rnum].HeadNum);
+      FPicAmount := LoadIdxGrp(path + '.idx', path + '.grp', FIdx[Rrole[Brole[i].rnum].HeadNum], FPic[Rrole[Brole[i].rnum].HeadNum]);
+    end;
+  end;
+
   if PNG_TILE > 0 then
   begin
-    setlength(FPNGIndex, BRoleAmount);
-    setlength(FPNGTile, BRoleAmount);
     for i := 0 to BRoleAmount - 1 do
     begin
       path := formatfloat('resource/fight/fight000', Rrole[Brole[i].rnum].HeadNum);
-      LoadPNGTiles(path, FPNGIndex[i], FPNGTile[i], 1);
+      LoadPNGTiles(path, FPNGIndex[Rrole[Brole[i].rnum].HeadNum], FPNGTile[Rrole[Brole[i].rnum].HeadNum], 1);
       for j := 0 to 3 do
       begin
         num := BEGIN_BATTLE_ROLE_PIC + Rrole[Brole[i].rnum].HeadNum * 4 + j;
@@ -220,8 +227,6 @@ begin
         FPNGIndex[i][j].CurPointer := nil;
       end;
     end;
-    setlength(FPNGIndex, 0);
-    setlength(FPNGTile, 0);
   end;
 
   if Rscene[CurScene].EntranceMusic >= 0 then
@@ -2788,7 +2793,8 @@ begin
       endpic := 0;
     end;
     filename := formatfloat('fight/fight000', Rrole[rnum].HeadNum);
-    FPicAmount := LoadIdxGrp(filename + '.idx', filename + '.grp', FIdx, FPic);
+    FPicAmount := LoadIdxGrp(filename + '.idx', filename + '.grp', FIdx[Rrole[rnum].HeadNum], FPic[Rrole[rnum].HeadNum]);
+
     //if PNG_TILE = 1 then
     //LoadPNGTiles('resource/' + filename + '/', FPNGIndex, FPNGTile, 1);
 

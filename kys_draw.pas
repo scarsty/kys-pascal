@@ -451,7 +451,7 @@ begin
     0:
     begin
       if num < FPicAmount then
-        DrawRLE8Pic(@ACol[0], num, px, py, @FIdx[0], @FPic[0], nil, nil, 0, 0, 0, shadow, alpha, @BlockImg2[0], @BlockScreen, ImageWidth, ImageHeight, sizeof(BlockImg2[0]), depth, mixColor, mixAlpha);
+        DrawRLE8Pic(@ACol[0], num, px, py, @FIdx[index][0], @FPic[index][0], nil, nil, 0, 0, 0, shadow, alpha, @BlockImg2[0], @BlockScreen, ImageWidth, ImageHeight, sizeof(BlockImg2[0]), depth, mixColor, mixAlpha);
     end;
   end;
 end;
@@ -1207,30 +1207,15 @@ procedure DrawBField(needProgress: integer = 1);
 var
   i, i1, i2: integer;
 begin
-  {if (SDL_MustLock(screen)) then
-    begin
-    if (SDL_LockSurface(screen) < 0) then
-    begin
-    MessageBox(0, putf8char(Format('Can''t lock screen : %s', [SDL_GetError])), 'Error', MB_OK or MB_ICONHAND);
-    exit;
-    end;
-    end;}
   DrawBfieldWithoutRole(Bx, By);
-
   for i1 := 0 to 63 do
     for i2 := 0 to 63 do
     begin
       if (Bfield[2, i1, i2] >= 0) and (Brole[Bfield[2, i1, i2]].Dead = 0) then
         DrawRoleOnBfield(i1, i2);
     end;
-
   if needProgress = 1 then
     DrawProgress;
-  //BfieldDrawn := 1;
-  {if (SDL_MustLock(screen)) then
-    begin
-    SDL_UnlockSurface(screen);
-    end;}
   DrawVirtualKey;
 end;
 
@@ -1246,33 +1231,26 @@ end;
 //画战场上人物, 需更新人物身前的遮挡
 procedure DrawRoleOnBfield(x, y: integer; mixColor: uint32 = 0; mixAlpha: integer = 0; Alpha: integer = 75);
 var
-  i1, i2, xpoint, ypoint, depth: integer;
+  i, i1, i2, xpoint, ypoint, depth: integer;
   pos, pos1: Tposition;
+  rnum, hnum, num: integer;
 begin
   pos := GetPositionOnScreen(x, y, Bx, By);
-  //for i1 := x - 1 to x + 10 do
-  //for i2 := y - 1 to y + 10 do
-  //begin
-  //if (i1 = x) and (i2 = y) then
-  //if BRole[Bfield[2, x, y]].ShowNumber < 0 then
-  //DrawBPic2(Rrole[Brole[Bfield[2, x, y]].rnum].HeadNum * 4 + Brole[Bfield[2, x, y]].Face + BEGIN_BATTLE_ROLE_PIC, pos.x, pos.y, 0, 75, x + y, $00FF0000, 50)
-  //else
   depth := CalBlock(x, y);
-  if MODVersion = 62 then
-  begin
-    DrawBPic(Rrole[Brole[Bfield[2, x, y]].rnum].ListNum * 4 + Brole[Bfield[2, x, y]].Face + BEGIN_BATTLE_ROLE_PIC, pos.x, pos.y, 0, Alpha, depth, mixColor, mixAlpha);
-    exit;
-  end;
+  //大部分mod的帧数不正确，故不宜采用下面的优化方法
   DrawBPic(Rrole[Brole[Bfield[2, x, y]].rnum].HeadNum * 4 + Brole[Bfield[2, x, y]].Face + BEGIN_BATTLE_ROLE_PIC, pos.x, pos.y, 0, Alpha, depth, mixColor, mixAlpha);
-
-  //if (Bfield[1, i1, i2] > 0) then
-  {begin
-    pos1 := GetPositionOnScreen(i1, i2, Bx, By);
-    DrawBPicInRect(Bfield[1, i1, i2] div 2, pos1.x, pos1.y, 0, pos.x - 20, pos.y - 60, 40, 60);
-    if (Bfield[2, i1, i2] >= 0) and (Brole[Bfield[2, i1, i2]].Dead = 0) then
-    DrawBPicInRect(Rrole[Brole[Bfield[2, x, y]].rnum].HeadNum * 4 + Brole[Bfield[2, i1, i2]].Face + BEGIN_BATTLE_ROLE_PIC, pos1.x, pos1.y, 0, pos.x - 20, pos.y - 60, 40, 60);
-    end;}
-
+  {rnum := Brole[Bfield[2, x, y]].rnum;
+  hnum := Rrole[rnum].HeadNum;
+  num := 0;
+  for i := 0 to 4 do
+  begin
+    if Rrole[rnum].AmiFrameNum[i] > 0 then
+    begin
+      num := Brole[Bfield[2, x, y]].Face * Rrole[rnum].AmiFrameNum[i];
+      break;
+    end;
+  end;
+  DrawFPic(num, pos.x, pos.y, hnum, 0, Alpha, depth, mixColor, mixAlpha);}
 end;
 
 //初始化战场映像
@@ -1512,7 +1490,7 @@ begin
         end;
         //行动人物的动作停留在最后一帧
         if (bnum = k) and (Brole[bnum].pic > 0) then
-          DrawFPic(Brole[bnum].pic, pos.x, pos.y, Brole[bnum].Bhead, 0, 75, CalBlock(i1, i2), mixColor, flash * (10 + random(40)))
+          DrawFPic(Brole[bnum].pic, pos.x, pos.y, Rrole[Brole[bnum].rnum].HeadNum, 0, 75, CalBlock(i1, i2), mixColor, flash * (10 + random(40)))
         else
           DrawRoleOnBfield(i1, i2, mixColor, flash * (10 + random(40)));
       end;
@@ -1545,7 +1523,7 @@ begin
       if (Bfield[2, i1, i2] = bnum) then
       begin
         pos := GetPositionOnScreen(i1, i2, Bx, By);
-        DrawFPic(apicnum, pos.x, pos.y, Brole[bnum].Bhead, 0, 75, CalBlock(i1, i2), 0, 0);
+        DrawFPic(apicnum, pos.x, pos.y, Rrole[Brole[bnum].rnum].HeadNum, 0, 75, CalBlock(i1, i2), 0, 0);
       end;
     end;
   DrawProgress;

@@ -132,12 +132,6 @@ var
   Name: utf8string;
   color: uint32;
 begin
-  {if MODVersion = 62 then
-    begin
-    NewTalk(headnum, talknum, -1, 1, 1, $ffffffff, 0);
-    exit;
-    end;}
-
   case dismode of
     0:
     begin
@@ -2184,19 +2178,6 @@ begin
       end
       else if e2 = 201 then //新对话
         NewTalk(e3, e4, e5, e6 mod 100, (e6 mod 100) div 10, e6 div 100, 0)
-      else if (e2 = 999) and (MODVersion = 62) then
-      begin
-        CurScene := e3;
-        Sx := e5;
-        Sy := e4;
-        Cx := Sx;
-        Cy := Sy;
-        instruct_14;
-        InitialScene;
-        DrawScene;
-        ShowSceneName(CurScene);
-        CheckEvent3;
-      end
       else if (e2 = 176) and (MODVersion = 22) then //菠萝三国输入数字
       begin
         x50[10032] := EnterNumber(0, 32767, CENTER_X, CENTER_Y - 100);

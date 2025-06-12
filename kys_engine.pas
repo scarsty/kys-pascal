@@ -556,6 +556,11 @@ function LoadIdxGrp(stridx, strgrp: utf8string; var idxarray: TIntArray; var grp
 var
   idx, grp, len, tnum: integer;
 begin
+  if length(idxarray) > 0 then
+  begin
+    Result := length(idxarray);
+    exit;
+  end;
   grp := FileOpen(AppPath + strgrp, fmopenread);
   len := FileSeek(grp, 0, 2);
   setlength(grparray, len + 4);
@@ -1965,7 +1970,7 @@ begin
   Result[L + 1] := char(0);
   if L > 0 then
     LCMapString($0800, $02000000, putf8char(str), L, @Result[1], L);
-  result := CP936TOUTF8(result);
+  Result := CP936TOUTF8(Result);
   {$ELSE}
   Result := mTraditional;
   {$ENDIF}
