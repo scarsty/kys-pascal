@@ -263,7 +263,7 @@ var
   SIMPLE: integer = 1; //是否简体
   SMOOTH: integer = 1;
   //平滑设置 0-完全不平滑, 1-仅标准分辨率不平滑, 2-任何时候都使用平滑
-  GL_TEXTURE: integer = 0; //全部使用gl纹理, 仅在使用png贴图时有效
+  WMP_4_PIC: integer = 0; //战场人物的静止贴图使用WMP中的图片，否则直接从fight中计算
 
   ScreenFlag: uint32;
   screen, prescreen, freshscreen: PSDL_Surface;

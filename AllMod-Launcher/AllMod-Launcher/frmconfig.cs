@@ -299,7 +299,7 @@ namespace pig3config
             configIniValue(i, "Music", "VOLUMEWAV");
             configIniValue(i, "Music", "SOUND3D");
             configIniValue(i, "constant", "MAX_ADD_PRO");
-            configIniValue(i, "system", "NIGHT_EFFECT");
+            configIniValue(i, "system", "WMP_4_PIC");
         }
 
         private void pictureBox1_Click(object sender, EventArgs e)

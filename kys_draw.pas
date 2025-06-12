@@ -1238,19 +1238,23 @@ begin
   pos := GetPositionOnScreen(x, y, Bx, By);
   depth := CalBlock(x, y);
   //大部分mod的帧数不正确，故不宜采用下面的优化方法
-  DrawBPic(Rrole[Brole[Bfield[2, x, y]].rnum].HeadNum * 4 + Brole[Bfield[2, x, y]].Face + BEGIN_BATTLE_ROLE_PIC, pos.x, pos.y, 0, Alpha, depth, mixColor, mixAlpha);
-  {rnum := Brole[Bfield[2, x, y]].rnum;
-  hnum := Rrole[rnum].HeadNum;
-  num := 0;
-  for i := 0 to 4 do
+  if WMP_4_PIC <> 0 then
+    DrawBPic(Rrole[Brole[Bfield[2, x, y]].rnum].HeadNum * 4 + Brole[Bfield[2, x, y]].Face + BEGIN_BATTLE_ROLE_PIC, pos.x, pos.y, 0, Alpha, depth, mixColor, mixAlpha)
+  else
   begin
-    if Rrole[rnum].AmiFrameNum[i] > 0 then
+    rnum := Brole[Bfield[2, x, y]].rnum;
+    hnum := Rrole[rnum].HeadNum;
+    num := 0;
+    for i := 0 to 4 do
     begin
-      num := Brole[Bfield[2, x, y]].Face * Rrole[rnum].AmiFrameNum[i];
-      break;
+      if Rrole[rnum].AmiFrameNum[i] > 0 then
+      begin
+        num := Brole[Bfield[2, x, y]].Face * Rrole[rnum].AmiFrameNum[i];
+        break;
+      end;
     end;
+    DrawFPic(num, pos.x, pos.y, hnum, 0, Alpha, depth, mixColor, mixAlpha);
   end;
-  DrawFPic(num, pos.x, pos.y, hnum, 0, Alpha, depth, mixColor, mixAlpha);}
 end;
 
 //初始化战场映像

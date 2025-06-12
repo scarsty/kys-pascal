@@ -450,7 +450,7 @@ begin
     PNG_TILE := Kys_ini.ReadInteger('system', 'PNG_TILE', 0);
     TRY_FIND_GRP := Kys_ini.ReadInteger('system', 'TRY_FIND_GRP', 0);
     EXPAND_GROUND := Kys_ini.ReadInteger('system', 'EXPAND_GROUND', 0);
-
+    WMP_4_PIC := Kys_ini.ReadInteger('system', 'WMP_4_PIC', 0);
     if CellPhone <> 0 then
     begin
       ShowVirtualKey := Kys_ini.ReadInteger('system', 'Virtual_Key', 1);
