@@ -1370,6 +1370,9 @@ procedure DrawBFieldWithCursor(step: integer);
 var
   i, i1, i2, bnum, depth, x, y: integer;
   pos: TPosition;
+  rnum, hnum, num: integer;
+  mixcolor: uint32;
+  mixalpha: integer;
 begin
   CalLTPosOnImageByCenter(Bx, By, x, y);
   LoadBfieldPart(x, y, 1);
@@ -1399,11 +1402,32 @@ begin
       bnum := Bfield[2, i1, i2];
       if (bnum >= 0) and (Brole[bnum].Dead = 0) then
       begin
+        mixcolor := 0;
+        mixalpha := 0;
         if (Brole[bnum].Team <> Brole[Bfield[2, Bx, By]].Team) and (Bfield[4, i1, i2] > 0) then
-          DrawBPic(Rrole[Brole[bnum].rnum].HeadNum * 4 + Brole[bnum].Face + BEGIN_BATTLE_ROLE_PIC, pos.x, pos.y, 0, 75, CalBlock(i1, i2), $FFFFFFFF, 20)
+        begin
+          mixcolor := $ffffffff;
+          mixalpha := 20;
+        end;
+        if (WMP_4_PIC <> 0) then
+        begin
+          DrawBPic(Rrole[Brole[bnum].rnum].HeadNum * 4 + Brole[bnum].Face + BEGIN_BATTLE_ROLE_PIC, pos.x, pos.y, 0, 75, CalBlock(i1, i2), mixcolor, mixalpha);
+        end
         else
-          DrawBPic(Rrole[Brole[bnum].rnum].HeadNum * 4 + Brole[bnum].Face + BEGIN_BATTLE_ROLE_PIC, pos.x, pos.y, 0, 75, CalBlock(i1, i2), 0, 0);
-
+        begin
+          rnum := Brole[bnum].rnum;
+          hnum := Rrole[rnum].HeadNum;
+          num := 0;
+          for i := 0 to 4 do
+          begin
+            if Rrole[rnum].AmiFrameNum[i] > 0 then
+            begin
+              num := Brole[bnum].Face * Rrole[rnum].AmiFrameNum[i];
+              break;
+            end;
+          end;
+          DrawFPic(num, pos.x, pos.y, hnum, 0, 75, CalBlock(i1, i2), mixColor, mixAlpha);
+        end;
       end;
     end;
   DrawProgress;
