@@ -444,7 +444,7 @@ begin
     MODVersion := Kys_ini.ReadInteger('system', 'MODVersion', 0);
     CHINESE_FONT_SIZE := Kys_ini.ReadInteger('system', 'CHINESE_FONT_SIZE', 20);
     ENGLISH_FONT_SIZE := Kys_ini.ReadInteger('system', 'ENGLISH_FONT_SIZE', 19);
-    KDEF_SCRIPT := Kys_ini.ReadInteger('system', 'KDEF_SCRIPT', 0);
+    KDEF_SCRIPT := Kys_ini.ReadInteger('system', 'KDEF_SCRIPT', 1);
     NIGHT_EFFECT := Kys_ini.ReadInteger('system', 'NIGHT_EFFECT', 0);
     //EXIT_GAME := Kys_ini.ReadInteger('system', 'EXIT_GAME', 1);
     PNG_TILE := Kys_ini.ReadInteger('system', 'PNG_TILE', 0);
@@ -5250,7 +5250,7 @@ end;
 //退出选单
 procedure MenuQuit;
 var
-  menu: integer;
+  menu, i: integer;
   str1, str2: utf8string;
   str: utf8string;
   menuString: array [0 .. 2] of utf8string;
@@ -5273,10 +5273,10 @@ begin
   begin
     str := '  Script fail!';
     str1 := '';
-    str1 := inputbox('Script file number:', str1, '1');
+    //str1 := inputbox('Script file number:', str1, '1');
     str2 := '';
-    str2 := inputbox('Function name:', str2, 'f1');
-    if ExecScript(putf8char(AppPath + 'script/' + str1 + '.lua'), putf8char(str2)) <> 0 then
+    i := EnterNumber(0, 99, 300, 100, 1);
+    if ExecScript(putf8char(AppPath + 'script/1.lua'), putf8char('f' + IntToStr(i))) <> 0 then
     begin
       DrawTextWithRect(screen, str, 100, 200, 150, $FFFFFFFF, $FFFFFFFF);
       WaitAnyKey;
@@ -5629,8 +5629,8 @@ begin
   //SDL_EnableKeyRepeat(0, 10);
 
   NeedRefreshScene := 0;
-  filename := AppPath + 'script/oldevent/oldevent_' + IntToStr(num) + '.lua';
-  if (KDEF_SCRIPT = 0) or (not FileExists(filename)) then
+  filename := AppPath + 'script/event/ka' + IntToStr(num) + '.lua';
+  if (not FileExists(filename)) then
   begin
     len := 0;
     if num = 0 then

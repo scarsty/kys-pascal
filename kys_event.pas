@@ -24,6 +24,7 @@ uses
 //在英文中, instruct通常不作为名词, swimmingfish在他的一份反汇编文件中大量使用
 //这个词表示"指令", 所以这里仍保留这种用法
 procedure instruct_0;
+procedure talk_1(talkstr: utf8string; headnum, dismode: integer);
 procedure instruct_1(talknum, headnum, dismode: integer);
 procedure instruct_2(inum, amount: integer);
 procedure ReArrangeItem(sort: integer = 0);
@@ -125,10 +126,9 @@ begin
   //EndAmi;
 end;
 
-procedure instruct_1(talknum, headnum, dismode: integer);
+procedure talk_1(talkstr: utf8string; headnum, dismode: integer);
 var
   idx, grp, offset, len, i, p, l, headx, heady, diagx, diagy, key: integer;
-  talkarray: array of byte;
   Name: utf8string;
   color: uint32;
 begin
@@ -177,44 +177,26 @@ begin
     end;
   end;
 
-  len := 0;
-  if talknum = 0 then
-  begin
-    offset := 0;
-    len := TIdx[0];
-  end
-  else
-  begin
-    offset := TIdx[talknum - 1];
-    len := TIdx[talknum] - offset;
-  end;
-  setlength(talkarray, len + 1);
-  move(TDef[offset], talkarray[0], len);
-
-  //color :=;
   DrawRectangleWithoutFrame(screen, 0, diagy - 10, CENTER_X * 2, 120, 0, 60);
 
   if headx > 0 then
     DrawHeadPic(headnum, headx, heady);
-  //if headnum <= MAX_HEAD_NUM then
-  //begin
-  //name := cp950toutf8(@rrole[headnum].Name);
-  //drawshadowtext(@name[1], headx + 20 - length(name) * 10, heady + 5, colcolor($ff), colcolor($0));
-  //end;
-  for i := 0 to len - 1 do
+
+  talkstr := talkstr + #0;
+  len := length(talkstr);
+  for i := 1 to len do
   begin
-    talkarray[i] := talkarray[i] xor $FF;
-    if (talkarray[i] = $2A) then
-      talkarray[i] := 0;
+    if (talkstr[i] = #$2A) then
+      talkstr[i] := #0;
   end;
-  talkarray[len - 1] := $20;
-  p := 0;
+  //talkstr[len-1] := #$20;
+  p := 1;
   l := 0;
-  for i := 0 to len do
+  for i := 1 to len do
   begin
-    if (talkarray[i] = 0) {or ((i mod 48 = 0) and (i > 0))} then
+    if (talkstr[i] = #0) {or ((i mod 48 = 0) and (i > 0))} then
     begin
-      DrawBig5ShadowText(screen, @talkarray[p], diagx + 20, diagy + l * 22, ColColor($FF), ColColor($0));
+      DrawShadowText(screen, putf8char(@talkstr[p]), diagx + 20, diagy + l * 22, ColColor($FF), ColColor($0));
       p := i + 1;
       l := l + 1;
       if (l >= 4) and (i < len) then
@@ -236,6 +218,37 @@ begin
     key := WaitAnyKey;
   until (key <> SDLK_LEFT) and (key <> SDLK_RIGHT) and (key <> SDLK_UP) and (key <> SDLK_DOWN);
   Redraw;
+
+end;
+
+procedure instruct_1(talknum, headnum, dismode: integer);
+var
+  idx, grp, offset, len, i, p, l, headx, heady, diagx, diagy, key: integer;
+  talkarray: array of byte;
+  talkstr, Name: utf8string;
+  color: uint32;
+begin
+  len := 0;
+  if talknum = 0 then
+  begin
+    offset := 0;
+    len := TIdx[0];
+  end
+  else
+  begin
+    offset := TIdx[talknum - 1];
+    len := TIdx[talknum] - offset;
+  end;
+  setlength(talkarray, len + 1);
+  move(TDef[offset], talkarray[0], len);
+
+  for i := 0 to len - 1 do
+  begin
+    talkarray[i] := talkarray[i] xor $FF;
+  end;
+
+  talkstr := CP950toutf8(@talkarray[0]);
+  talk_1(talkstr, headnum, dismode);
 
 end;
 

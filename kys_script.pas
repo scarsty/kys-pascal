@@ -190,6 +190,7 @@ begin
   lua_register(Lua_script, 'modifyevent', ModifyEvent);
   lua_register(Lua_script, 'useitem', UseItem);
   lua_register(Lua_script, 'haveitem', HaveItem);
+  lua_register(Lua_script, 'haveitembool', HaveItem);
   lua_register(Lua_script, 'anothergetitem', AnotherGetItem);
   lua_register(Lua_script, 'compareprointeam', CompareProInTeam);
   lua_register(Lua_script, 'allleave', AllLeave);
@@ -255,6 +256,7 @@ begin
   lua_register(Lua_script, 'forcebattleresult', ForceBattleResult);
 
   lua_register(Lua_script, 'changemmapmusic', ChangeMMapMusic);
+  lua_register(Lua_script, 'changemainmapmusic', ChangeMMapMusic);
   lua_register(Lua_script, 'asksoftstar', AskSoftStar);
   lua_register(Lua_script, 'showethics', ShowEthics);
   lua_register(Lua_script, 'showrepute', ShowRepute);
@@ -278,53 +280,91 @@ begin
   lua_register(Lua_script, 'instruct_15', Dead);
   lua_register(Lua_script, 'instruct_16', InTeam);
   lua_register(Lua_script, 'instruct_17', OldPutSceneMapPro);
+  lua_register(Lua_script, 'setsubmaplayerdata', OldPutSceneMapPro);
   lua_register(Lua_script, 'instruct_18', HaveItemBool);
   lua_register(Lua_script, 'instruct_19', OldSetScenePosition);
+  lua_register(Lua_script, 'oldsetsceneposition', OldSetScenePosition);
   lua_register(Lua_script, 'instruct_20', TeamIsFull);
   lua_register(Lua_script, 'instruct_21', LeaveTeam);
   lua_register(Lua_script, 'instruct_22', ZeroAllMP);
+  lua_register(Lua_script, 'zeroallmp', ZeroAllMP);
   lua_register(Lua_script, 'instruct_23', SetOneUsePoi);
+  lua_register(Lua_script, 'setroleusepoison', SetOneUsePoi);
   lua_register(Lua_script, 'instruct_24', Blank);
+  lua_register(Lua_script, 'submapviewfromto', SceneFromTo);
   lua_register(Lua_script, 'instruct_25', SceneFromTo);
   lua_register(Lua_script, 'instruct_26', Add3EventNum);
+  lua_register(Lua_script, 'add3eventnum', Add3EventNum);
   lua_register(Lua_script, 'instruct_27', PlayAnimation);
   lua_register(Lua_script, 'instruct_28', JudgeEthics);
+  lua_register(Lua_script, 'checkrolemorality', JudgeEthics);
   lua_register(Lua_script, 'instruct_29', JudgeAttack);
+  lua_register(Lua_script, 'checkroleattack', JudgeAttack);
   lua_register(Lua_script, 'instruct_30', WalkFromTo);
   lua_register(Lua_script, 'instruct_31', JudgeMoney);
+  lua_register(Lua_script, 'checkenoughmoney', JudgeMoney);
   lua_register(Lua_script, 'instruct_32', AddItem);
+  lua_register(Lua_script, 'additemwithouthint', AddItem);
   lua_register(Lua_script, 'instruct_33', OldLearnMagic);
+  lua_register(Lua_script, 'oldlearnmagic', OldLearnMagic);
   lua_register(Lua_script, 'instruct_34', AddAptitude);
+  lua_register(Lua_script, 'addiq', AddAptitude);
   lua_register(Lua_script, 'instruct_35', SetOneMagic);
+  lua_register(Lua_script, 'setrolemagic', SetOneMagic);
   lua_register(Lua_script, 'instruct_36', JudgeSexual);
+  lua_register(Lua_script, 'checkrolesexual', JudgeSexual);
   lua_register(Lua_script, 'instruct_37', AddEthics);
+  lua_register(Lua_script, 'addmorality', AddEthics);
   lua_register(Lua_script, 'instruct_38', ChangeScenePic);
+  lua_register(Lua_script, 'changesubmappic', ChangeScenePic);
   lua_register(Lua_script, 'instruct_39', OpenScene);
+  lua_register(Lua_script, 'opensubmap', OpenScene);
   lua_register(Lua_script, 'instruct_40', SetSceneFace);
+  lua_register(Lua_script, 'settowards', SetSceneFace);
   lua_register(Lua_script, 'instruct_41', AnotherGetItem);
+  lua_register(Lua_script, 'roleadditem', AnotherGetItem);
   lua_register(Lua_script, 'instruct_42', JudgeFemaleInTeam);
+  lua_register(Lua_script, 'checkfemaleinteam', JudgeFemaleInTeam);
   lua_register(Lua_script, 'instruct_43', HaveItemBool);
   lua_register(Lua_script, 'instruct_44', Play2Amination);
   lua_register(Lua_script, 'instruct_45', AddSpeed);
+  lua_register(Lua_script, 'addspeed', AddSpeed);
   lua_register(Lua_script, 'instruct_46', AddMP);
+  lua_register(Lua_script, 'addmaxmp', AddMP);
   lua_register(Lua_script, 'instruct_47', AddAttack);
+  lua_register(Lua_script, 'addattack', AddAttack);
   lua_register(Lua_script, 'instruct_48', AddHP);
+  lua_register(Lua_script, 'addmaxhp', AddHP);
   lua_register(Lua_script, 'instruct_49', SetMPPro);
+  lua_register(Lua_script, 'setmptype', SetMPPro);
   lua_register(Lua_script, 'instruct_50', Judge5Item);
+  lua_register(Lua_script, 'instruct_50e', Judge5Item);
   lua_register(Lua_script, 'instruct_51', AskSoftStar);
+  lua_register(Lua_script, 'showmorality', ShowEthics);
   lua_register(Lua_script, 'instruct_52', ShowEthics);
   lua_register(Lua_script, 'instruct_53', ShowRepute);
+  lua_register(Lua_script, 'showfame', ShowRepute);
   lua_register(Lua_script, 'instruct_54', OpenAllScene);
+  lua_register(Lua_script, 'openallsubmap', OpenAllScene);
   lua_register(Lua_script, 'instruct_55', JudgeEventNum);
+  lua_register(Lua_script, 'checkeventid', JudgeEventNum);
   lua_register(Lua_script, 'instruct_56', AddRepute);
+  lua_register(Lua_script, 'addfame', AddRepute);
   lua_register(Lua_script, 'instruct_57', BreakStoneGate);
+  lua_register(Lua_script, 'breakstonegate', BreakStoneGate);
   lua_register(Lua_script, 'instruct_58', FightForTop);
+  lua_register(Lua_script, 'allleave', FightForTop);
   lua_register(Lua_script, 'instruct_59', AllLeave);
   lua_register(Lua_script, 'instruct_60', JudgeScenePic);
+  lua_register(Lua_script, 'checksubmappic', JudgeScenePic);
   lua_register(Lua_script, 'instruct_61', Judge14BooksPlaced);
+  lua_register(Lua_script, 'check14booksplaced', Judge14BooksPlaced);
   lua_register(Lua_script, 'instruct_62', BackHome);
+  lua_register(Lua_script, 'backhome', BackHome);
   lua_register(Lua_script, 'instruct_63', SetSexual);
+  lua_register(Lua_script, 'setsexual', SetSexual);
   lua_register(Lua_script, 'instruct_64', WeiShop);
+  lua_register(Lua_script, 'shop', WeiShop);
   lua_register(Lua_script, 'instruct_65', Blank);
   lua_register(Lua_script, 'instruct_66', PlayMusic);
   lua_register(Lua_script, 'instruct_67', PlayWave);
@@ -498,102 +538,11 @@ var
   len, headx, heady, diagx, diagy, Width, line, w1, l1, i: integer;
   str: utf8string;
 begin
-  rnum := floor(lua_tonumber(L, -3));
-  dismode := floor(lua_tonumber(L, -2));
-  content := lua_tostring(L, -1);
-
-  Width := 48;
-  line := 4;
-
-  case dismode of
-    0:
-    begin
-      headx := 40;
-      heady := 85;
-      diagx := 100;
-      diagy := 30;
-    end;
-    1:
-    begin
-      headx := 546;
-      heady := CENTER_Y * 2 - 75;
-      diagx := 10;
-      diagy := CENTER_Y * 2 - 130;
-    end;
-    2:
-    begin
-      headx := -1;
-      heady := -1;
-      diagx := 100;
-      diagy := 30;
-    end;
-    5:
-    begin
-      headx := 40;
-      heady := CENTER_Y * 2 - 75;
-      diagx := 100;
-      diagy := CENTER_Y * 2 - 130;
-    end;
-    4:
-    begin
-      headx := 546;
-      heady := 85;
-      diagx := 10;
-      diagy := 30;
-    end;
-    3:
-    begin
-      headx := -1;
-      heady := -1;
-      diagx := 100;
-      diagy := CENTER_Y * 2 - 130;
-    end;
-  end;
-  DrawRectangleWithoutFrame(screen, 0, diagy - 10, 640, 120, 0, 40);
-  if headx > 0 then
-    DrawHeadPic(rnum, headx, heady);
-  len := length(content);
-
-  w1 := 0;
-  l1 := 0;
-  for i := 1 to len do
-  begin
-    if content[i] <> '*' then
-    begin
-      str := content[i];
-      DrawShadowText(screen, str, diagx + w1 * 10, diagy + l1 * 22, ColColor($FF), ColColor($0));
-      if integer(str[1]) < 128 then
-        w1 := w1 + 1
-      else
-        w1 := w1 + 2;
-      if w1 >= Width then
-      begin
-        w1 := 0;
-        l1 := l1 + 1;
-      end;
-    end
-    else
-    begin
-      w1 := 0;
-      l1 := l1 + 1;
-    end;
-    if (l1 >= 4) and (i < len) then
-    begin
-      SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-      WaitAnyKey;
-      Redraw;
-      DrawRectangleWithoutFrame(screen, 0, diagy - 10, 640, 120, 0, 40);
-      if headx > 0 then
-        DrawHeadPic(rnum, headx, heady);
-      w1 := 0;
-      l1 := 0;
-    end;
-  end;
-  SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-  WaitAnyKey;
-  Redraw;
+  rnum := floor(lua_tonumber(L, 3));
+  dismode := floor(lua_tonumber(L, 2));
+  content := lua_tostring(L, 1);
+  talk_1(content, dismode, rnum);
   Result := 0;
-
 end;
 
 function GetItem(L: Plua_state): integer; cdecl;
