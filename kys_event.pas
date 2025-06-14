@@ -1129,7 +1129,9 @@ procedure instruct_44(enum1, beginpic1, endpic1, enum2, beginpic2, endpic2: inte
 var
   i: integer;
 begin
+  if enum1 = -1 then enum1 := curevent;
   SData[CurScene, 3, DData[CurScene, enum1, 10], DData[CurScene, enum1, 9]] := enum1;
+  if enum2 = -1 then enum2 := curevent;
   SData[CurScene, 3, DData[CurScene, enum2, 10], DData[CurScene, enum2, 9]] := enum2;
   i := 0;
   while SDL_PollEvent(@event) >= 0 do
@@ -1986,6 +1988,8 @@ begin
     begin
       e3 := e_GetValue(0, e1, e3);
       Result := 655360 * (e3 + 1) + x50[e2];
+      p5032pos := e3;
+      p5032value := x50[e2];
       //showmessage(inttostr(result));
     end;
     33: //Draw a string.

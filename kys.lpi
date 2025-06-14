@@ -123,14 +123,14 @@
     <RunParams>
       <local>
         <LaunchingApplication PathPlusParams="C:/Windows/system32/cmd.exe /C ${TargetCmdLine}"/>
-        <WorkingDirectory Value="D:/kys-all/kys-pascal/all-mod/kys-pineapple"/>
+        <WorkingDirectory Value="D:/kys-all/kys-pascal/all-mod/kys-awaken"/>
       </local>
       <FormatVersion Value="2"/>
       <Modes Count="1">
         <Mode0 Name="default">
           <local>
             <LaunchingApplication PathPlusParams="C:/Windows/system32/cmd.exe /C ${TargetCmdLine}"/>
-            <WorkingDirectory Value="D:/kys-all/kys-pascal/all-mod/kys-pineapple"/>
+            <WorkingDirectory Value="D:/kys-all/kys-pascal/all-mod/kys-awaken"/>
           </local>
         </Mode0>
       </Modes>
