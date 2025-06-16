@@ -130,6 +130,7 @@ procedure talk_1(talkstr: utf8string; headnum, dismode: integer);
 var
   idx, grp, offset, len, i, p, l, headx, heady, diagx, diagy, key: integer;
   Name: utf8string;
+  Lines: array of utf8string;
   color: uint32;
 begin
   case dismode of
@@ -184,33 +185,61 @@ begin
 
   talkstr := talkstr + #0;
   len := length(talkstr);
-  for i := 1 to len do
+  p := 1;
+  i := 1;
+  l := 0;
+  while i <= len do
   begin
     if (talkstr[i] = #$2A) then
-      talkstr[i] := #0;
+    begin
+      setlength(Lines, length(Lines) + 1);
+      Lines[length(Lines) - 1] := copy(talkstr, p, i - p);
+      p := i;
+      l := 0;
+      i := i + 1;
+    end
+    else
+    if byte(talkstr[i]) >= $e0 then
+    begin
+      l := l + 2;
+    end
+    else
+    begin
+      l := l + 1;
+    end;
+    i := i + utf8follow(talkstr[i]);
+    if (l >= 48) then
+    begin
+      setlength(Lines, length(Lines) + 1);
+      Lines[length(Lines) - 1] := copy(talkstr, p, i - p);
+      p := i;
+      l := 0;
+    end;
+  end;
+  if (l>=0) then
+  begin
+    setlength(Lines, length(Lines) + 1);
+      Lines[length(Lines) - 1] := copy(talkstr, p, len - p);
   end;
   //talkstr[len-1] := #$20;
   p := 1;
   l := 0;
-  for i := 1 to len do
+  for i := 0 to length(Lines) - 1 do
   begin
-    if (talkstr[i] = #0) {or ((i mod 48 = 0) and (i > 0))} then
+    DrawShadowText(screen, Lines[i], diagx + 20, diagy + l * 22, ColColor($FF), ColColor($0));
+    p := i + 1;
+    l := l + 1;
+    if (l >= 4) and (i < length(Lines) - 1) then
     begin
-      DrawShadowText(screen, putf8char(@talkstr[p]), diagx + 20, diagy + l * 22, ColColor($FF), ColColor($0));
-      p := i + 1;
-      l := l + 1;
-      if (l >= 4) and (i < len) then
-      begin
-        SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-        repeat
-          key := WaitAnyKey;
-        until (key <> SDLK_LEFT) and (key <> SDLK_RIGHT) and (key <> SDLK_UP) and (key <> SDLK_DOWN);
-        Redraw;
-        DrawRectangleWithoutFrame(screen, 0, diagy - 10, CENTER_X * 2, 120, 0, 60);
-        if headx > 0 then
-          DrawHeadPic(headnum, headx, heady);
-        l := 0;
-      end;
+      SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+      repeat
+        key := WaitAnyKey;
+      until (key <> SDLK_LEFT) and (key <> SDLK_RIGHT) and (key <> SDLK_UP) and (key <> SDLK_DOWN);
+      Redraw;
+      DrawRectangleWithoutFrame(screen, 0, diagy - 10, CENTER_X * 2, 120, 0, 60);
+      if headx > 0 then
+        DrawHeadPic(headnum, headx, heady);
+      l := 0;
     end;
   end;
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);

@@ -300,6 +300,7 @@ namespace pig3config
             configIniValue(i, "Music", "SOUND3D");
             configIniValue(i, "constant", "MAX_ADD_PRO");
             configIniValue(i, "system", "WMP_4_PIC");
+            configIniValue(i, "system", "KDEF_SCRIPT");
         }
 
         private void pictureBox1_Click(object sender, EventArgs e)

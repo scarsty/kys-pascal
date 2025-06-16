@@ -54,7 +54,6 @@ procedure FreeAllSurface;
 //基本绘图子程
 function GetPixel(surface: PSDL_Surface; x: integer; y: integer): uint32; inline;
 procedure PutPixel(surface: PSDL_Surface; x: integer; y: integer; pixel: uint32); inline;
-procedure display_bmp(file_name: putf8char; x, y: integer);
 procedure display_img(file_name: putf8char; x, y: integer);
 function ColColor(num: byte): uint32; inline;
 procedure DrawRectangle(sur: PSDL_Surface; x, y, w, h: integer; colorin, colorframe: uint32; alpha: integer);
@@ -123,8 +122,10 @@ function Traditional2Simplified(str: utf8string): utf8string;
 procedure tic;
 procedure toc;
 
-procedure Message(formatstring: utf8string; content: array of const; cr: boolean = True); overload;
+procedure ConsoleLog(formatstring: utf8string; content: array of const; cr: boolean = True); overload;
 procedure Message(formatstring: string = ''; cr: boolean = True); overload;
+
+function utf8follow(c1: utf8char): integer;
 
 implementation
 
@@ -844,38 +845,19 @@ begin
   end;
 end;
 
-//显示bmp文件
-procedure display_bmp(file_name: putf8char; x, y: integer);
-var
-  Image: PSDL_Surface;
-  dest: TSDL_Rect;
-begin
-  if FileExists(file_name) {*Converted from FileExists*} then
-  begin
-    Image := SDL_LoadBMP(file_name);
-    if (Image = nil) then
-    begin
-      //MessageBox(0, putf8char(Format('Couldn''t load %s : %s', [file_name, SDL_GetError])), 'Error', MB_OK or MB_ICONHAND);
-      exit;
-    end;
-    dest.x := x;
-    dest.y := y;
-    //if (SDL_BlitSurface(image, nil, screen, @dest) < 0) then
-    //MessageBox(0, putf8char(Format('BlitSurface error : %s', [SDL_GetError])), 'Error', MB_OK or MB_ICONHAND);
-    //SDL_UpdateRect2(screen, 0, 0, image.w, image.h);
-    SDL_FreeSurface(Image);
-  end;
-end;
-
 //显示tif, png, jpg等格式图片
 procedure display_img(file_name: putf8char; x, y: integer);
 var
-  Image: PSDL_Surface;
   dest: TSDL_Rect;
 begin
   if FileExists(file_name) {*Converted from FileExists*} then
   begin
-    Image := IMG_Load(file_name);
+    if ImageName <> file_name then
+    begin
+      SDL_FreeSurface(Image);
+      Image := IMG_Load(file_name);
+      ImageName := file_name;
+    end;
     if (Image = nil) then
     begin
       //MessageBox(0, putf8char(Format('Couldn''t load %s : %s', [file_name, SDL_GetError])), 'Error', MB_OK or MB_ICONHAND);
@@ -886,7 +868,6 @@ begin
     SDL_BlitSurface(Image, nil, screen, @dest);
     //MessageBox(0, putf8char(Format('BlitSurface error : %s', [SDL_GetError])), 'Error', MB_OK or MB_ICONHAND);
     //SDL_UpdateRect2(screen, 0, 0, image.w, image.h);
-    SDL_FreeSurface(Image);
   end;
 end;
 
@@ -1200,7 +1181,7 @@ begin
       k := byte(word0[1]);
       if not fonts.ContainsKey(k) then
       begin
-        message('%s(%d)', [midstr(word, i, 1), fonts.Count], False);
+        ConsoleLog('%s(%d)', [midstr(word, i, 1), fonts.Count], False);
         fonts.add(k, TTF_RenderUTF8_blended(engfont, @word0[1], tempcolor));
       end;
       Text := fonts.Items[k];
@@ -1220,7 +1201,7 @@ begin
       k := byte(word0[1]) + 256 * byte(word0[2]) + 65536 * byte(word0[3]);
       if not fonts.ContainsKey(k) then
       begin
-        message('%s(%d)', [midstr(word, i, 2), fonts.Count], False);
+        ConsoleLog('%s(%d)', [midstr(word, i, 2), fonts.Count], False);
         fonts.add(k, TTF_RenderUTF8_blended(font, @word0[1], tempcolor));
       end;
       got := fonts.TryGetValue(k, Text);
@@ -1240,7 +1221,7 @@ begin
       k := byte(word0[1]) + 256 * byte(word0[2]) + 65536 * byte(word0[3]);
       if not fonts.ContainsKey(k) then
       begin
-        message('%s(%d)', [midstr(word, i, 3), fonts.Count], False);
+        ConsoleLog('%s(%d)', [midstr(word, i, 3), fonts.Count], False);
         fonts.add(k, TTF_RenderUTF8_blended(font, @word0[1], tempcolor));
       end;
       got := fonts.TryGetValue(k, Text);
@@ -1988,7 +1969,7 @@ end;
 procedure toc;
 begin
   QueryPerformanceCounter(cccc2);
-  message(' %3.2f us', [(cccc2 - cccc1) / tttt * 1E6]);
+  ConsoleLog(' %3.2f us', [(cccc2 - cccc1) / tttt * 1E6]);
 end;
 
 {$ELSE}
@@ -2005,7 +1986,7 @@ end;
 
 {$ENDIF}
 
-procedure Message(formatstring: utf8string; content: array of const; cr: boolean = True); overload;
+procedure ConsoleLog(formatstring: utf8string; content: array of const; cr: boolean = True); overload;
 var
   i: integer;
   str: utf8string;
@@ -2043,6 +2024,27 @@ begin
     filewrite(i, str[1], length(str));
     fileclose(i);}
   {$ENDIF}
+end;
+
+function utf8follow(c1: utf8char): integer;
+var
+  c: byte;
+begin
+  c := byte(c1);
+  if (c and $80) = 0 then
+    Result := 1
+  else if (c and $E0) = $C0 then
+    Result := 2
+  else if (c and $F0) = $E0 then
+    Result := 3
+  else if (c and $F8) = $F0 then
+    Result := 4
+  else if (c and $FC) = $F8 then
+    Result := 5
+  else if (c and $FE) = $FC then
+    Result := 6
+  else
+    Result := 1;    //skip one char
 end;
 
 end.

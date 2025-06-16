@@ -5630,7 +5630,7 @@ begin
 
   NeedRefreshScene := 0;
   filename := AppPath + 'script/event/ka' + IntToStr(num) + '.lua';
-  if (not FileExists(filename)) then
+  if ((KDEF_SCRIPT = 0) or(not FileExists(filename))) then
   begin
     len := 0;
     if num = 0 then
@@ -5655,7 +5655,7 @@ begin
       end;}
     i := 0;
     len := length(e);
-    message('Event %d', [num]);
+    ConsoleLog('Event %d', [num]);
     //普通事件写成子程, 需跳转事件写成函数
     while SDL_PollEvent(@event) >= 0 do
     begin
@@ -6022,7 +6022,7 @@ begin
     //lua_dofile(Lua_script, AppPath + 'script/oldevent/oldevent_' + inttostr(num));
     if IsConsole then
       writeln('Run event with ', num, '.lua script. ');
-    ExecScript(@filename[1], nil);
+    ExecScript(filename, '');
   end;
 
   //event.key.keysym.sym := 0;

@@ -325,7 +325,7 @@ var
   //MusicName: utf8string;
 
   //事件和脚本部分
-  x50: array [-$8000 .. $7FFF] of smallint;
+  x50: array [0 .. $7FFF] of smallint;
   //扩充指令50所使用的变量
   KDEF_SCRIPT: integer = 0; //使用脚本处理事件
   lua_script: Plua_state; //lua脚本
@@ -423,6 +423,9 @@ var
   VirtualKeyX: integer = 150;
   VirtualKeyY: integer = 250;
   VIrtualKeySize: integer = 60;
+
+  Image: PSDL_Surface;   //标题
+  ImageName: utf8string;
 
 const
   //色值蒙版, 注意透明蒙版在创建RGB表面时需设为0

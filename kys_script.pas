@@ -24,7 +24,8 @@ uses
 //初始化脚本配置,运行脚本
 procedure InitialScript;
 procedure DestroyScript;
-function ExecScript(filename, functionname: putf8char): integer;
+function ExecScript(filename, functionname: utf8string): integer;
+function ExecScriptString(script, functionname: utf8string): integer;
 function lua_tointeger(L: Plua_state; pos: integer): Lua_integer;
 
 //具体指令,封装基本指令
@@ -36,6 +37,7 @@ function CheckButton(L: Plua_state): integer; cdecl;
 function GetButton(L: Plua_state): integer; cdecl;
 function GetTime(L: Plua_state): integer; cdecl;
 function ExecEvent(L: Plua_state): integer; cdecl;
+function CallEvent_s(L: Plua_state): integer; cdecl;
 
 function Clear(L: Plua_state): integer; cdecl;
 function OldTalk(L: Plua_state): integer; cdecl;
@@ -155,6 +157,21 @@ function BackHome(L: Plua_state): integer; cdecl;
 function EatOneItemScript(L: Plua_state): integer; cdecl;
 function SelectOneTeamMemberScript(L: Plua_state): integer; cdecl;
 
+function setteam(L: Plua_state): integer; cdecl;
+function getteam(L: Plua_state): integer; cdecl;
+
+function readmem(L: Plua_state): integer; cdecl;
+function writemem(L: Plua_state): integer; cdecl;
+
+function getrolename(L: Plua_state): integer; cdecl;
+function getitemname(L: Plua_state): integer; cdecl;
+function getmagicname(L: Plua_state): integer; cdecl;
+function getsubmapame(L: Plua_state): integer; cdecl;
+
+function drawlength_s(L: Plua_state): integer; cdecl;
+function getkey(L: Plua_state): integer; cdecl;
+function gettalk(L: Plua_state): integer; cdecl;
+
 implementation
 
 uses
@@ -179,19 +196,22 @@ begin
   lua_register(Lua_script, 'getbutton', GetButton);
   lua_register(Lua_script, 'gettime', GetTime);
   lua_register(Lua_script, 'execevent', ExecEvent);
+  lua_register(Lua_script, 'callevent', CallEvent_s);
 
   lua_register(Lua_script, 'clear', Clear);
   lua_register(Lua_script, 'talk', Talk);
   lua_register(Lua_script, 'getitem', GetItem);
-  lua_register(Lua_script, 'additem', AddItem);
+  lua_register(Lua_script, 'additem', GetItem);
   lua_register(Lua_script, 'showstring', ShowString);
+  lua_register(Lua_script, 'drawstring', ShowString);
   lua_register(Lua_script, 'showstringwithbox', ShowStringWithBox);
+  lua_register(Lua_script, 'showmessage', ShowStringWithBox);
   lua_register(Lua_script, 'menu', Menu);
   lua_register(Lua_script, 'askyesorno', AskYesOrNo);
   lua_register(Lua_script, 'modifyevent', ModifyEvent);
   lua_register(Lua_script, 'useitem', UseItem);
   lua_register(Lua_script, 'haveitem', HaveItem);
-  lua_register(Lua_script, 'haveitembool', HaveItem);
+  lua_register(Lua_script, 'haveitembool', HaveItemBool);
   lua_register(Lua_script, 'anothergetitem', AnotherGetItem);
   lua_register(Lua_script, 'compareprointeam', CompareProInTeam);
   lua_register(Lua_script, 'allleave', AllLeave);
@@ -216,22 +236,23 @@ begin
   lua_register(Lua_script, 'getsceneface', GetSceneFace);
   lua_register(Lua_script, 'setsceneface', SetSceneFace);
   lua_register(Lua_script, 'delay', Delay);
+  lua_register(Lua_script, 'lib.delay', Delay);
   lua_register(Lua_script, 'drawrect', DrawRect);
   lua_register(Lua_script, 'memberamount', MemberAmount);
   lua_register(Lua_script, 'getmember', GetMember);
-  lua_register(Lua_script, 'putmember', PutMember);
-  lua_register(Lua_script, 'getrolepro', GetRolePro);
-  lua_register(Lua_script, 'putrolepro', PutRolePro);
-  lua_register(Lua_script, 'getitempro', GetItemPro);
-  lua_register(Lua_script, 'putitempro', PutItemPro);
-  lua_register(Lua_script, 'getmagicpro', GetMagicPro);
-  lua_register(Lua_script, 'putmagicpro', PutMagicPro);
-  lua_register(Lua_script, 'getscenepro', GetScenePro);
-  lua_register(Lua_script, 'putscenepro', PutScenePro);
-  lua_register(Lua_script, 'getscenemappro', GetSceneMapPro);
-  lua_register(Lua_script, 'putscenemappro', PutSceneMapPro);
-  lua_register(Lua_script, 'getsceneeventpro', GetSceneEventPro);
-  lua_register(Lua_script, 'putsceneeventpro', PutSceneEventPro);
+  lua_register(Lua_script, 'setmember', PutMember);
+  lua_register(Lua_script, 'getrole', GetRolePro);
+  lua_register(Lua_script, 'setrole', PutRolePro);
+  lua_register(Lua_script, 'getitem', GetItemPro);
+  lua_register(Lua_script, 'setitem', PutItemPro);
+  lua_register(Lua_script, 'getmagic', GetMagicPro);
+  lua_register(Lua_script, 'setmagic', PutMagicPro);
+  lua_register(Lua_script, 'getsubmapinfo', GetScenePro);
+  lua_register(Lua_script, 'setsubmapinfo', PutScenePro);
+  lua_register(Lua_script, 'gets', GetSceneMapPro);
+  lua_register(Lua_script, 'sets', PutSceneMapPro);
+  lua_register(Lua_script, 'getd', GetSceneEventPro);
+  lua_register(Lua_script, 'setd', PutSceneEventPro);
   lua_register(Lua_script, 'judgesceneevent', JudgeSceneEvent);
   lua_register(Lua_script, 'playmusic', PlayMusic);
   lua_register(Lua_script, 'playwave', PlayWave);
@@ -373,6 +394,23 @@ begin
   lua_register(Lua_script, 'eatoneitem', EatOneItemScript);
   lua_register(Lua_script, 'selectoneteammember', SelectOneTeamMemberScript);
 
+  lua_register(Lua_script, 'setteam', setteam);
+  lua_register(Lua_script, 'getteam', getteam);
+
+  lua_register(Lua_script, 'read_mem', readmem);
+  lua_register(Lua_script, 'write_mem', writemem);
+
+  lua_register(Lua_script, 'getrolename', getrolename);
+  lua_register(Lua_script, 'getitemname', getitemname);
+  lua_register(Lua_script, 'getmagicname', getmagicname);
+  lua_register(Lua_script, 'getsubmapname', getsubmapame);
+
+  lua_register(Lua_script, 'drawlength', drawlength_s);
+  lua_register(Lua_script, 'getkey', getkey);
+  lua_register(Lua_script, 'gettalk', gettalk);
+
+
+  ExecScriptString('x={}; for i=0,30000 do x[i]=0; end;', '');
 end;
 
 procedure DestroyScript;
@@ -382,16 +420,13 @@ begin
   //UnloadLua;
 end;
 
-function ExecScript(filename, functionname: putf8char): integer;
+function ExecScript(filename, functionname: utf8string): integer;
 var
   Script: utf8string;
-  filename1: utf8string;
-  //Data: utf8string;
-  Data: TStringList;
-  h: integer;
-  len: integer;
+  h, len: integer;
 begin
-  if FileExists(filename) {*Converted from FileExists*} then
+  script := '';
+  if FileExists(filename) then
   begin
     h := FileOpen(filename, fmopenread);
     len := FileSeek(h, 0, 2);
@@ -399,27 +434,45 @@ begin
     FileSeek(h, 0, 0);
     FileRead(h, Script[1], len);
     FileClose(h);
-    {$IFDEF UNIX}
-    Script := LowerCase(Script);
-    {$ELSE}
-    {$IFDEF FPC}
-    Script := LowerCase(Script);
-    {$ELSE}
-    Script := LowerCase(Script);
-    {$ENDIF}
-    {$ENDIF}
-    //writeln(script);
-    lual_loadbuffer(Lua_script, @script[1], length(script), 'code');
-    lua_pcall(Lua_script, 0, 0, 0);
-    //lua_dofile(Lua_script,pchar(filename[1]));
-    if functionname <> nil then
-    begin
-      lua_getglobal(Lua_script, functionname);
-      Result := lua_pcall(Lua_script, 0, 1, 0);
-    end;
-    //writeln(result);
+    ExecScriptString(script, functionname);
   end;
+  Result := 0;
+end;
 
+function ExecScriptString(script, functionname: utf8string): integer;
+var
+  len: integer;
+begin
+  try
+    if (Script[1] = char($EF)) and (Script[2] = char($BB)) and (Script[3] = char($BF)) then
+    begin
+      message('Found BOM, replace it to space');
+      Script[1] := ' ';
+      Script[2] := ' ';
+      Script[3] := ' ';
+    end;
+    Script := LowerCase(Script);
+    //ConsoleLog(script);
+    Result := lual_loadbuffer(Lua_script, @script[1], length(script), 'code');
+    if Result = 0 then
+    begin
+      Result := lua_pcall(Lua_script, 0, 0, 0);
+      //lua_dofile(Lua_script,putf8char(filename[1]));
+      if functionname <> '' then
+      begin
+        lua_getglobal(Lua_script, putf8char(functionname));
+        Result := lua_pcall(Lua_script, 0, 1, 0);
+      end;
+    end;
+    //lua_gc(Lua_script, LUA_GCCOLLECT, 0);
+    if Result <> 0 then
+    begin
+      message(lua_tostring(Lua_script, -1));
+      lua_pop(Lua_script, 1);
+    end;
+  except
+    Result := -1;
+  end;
 end;
 
 //处理50 32指令改写参数的问题
@@ -430,7 +483,7 @@ begin
   n := lua_gettop(L);
   Result := lua52.lua_tointeger(L, pos);
   //writeln(n, pos, p5032pos, p5032value);
-  if n + pos + 1 = p5032pos then
+  if ((pos < 0) and (n + pos + 1 = p5032pos)) or ((pos > 0) and (pos = p5032pos)) then
   begin
     Result := p5032value;
     p5032pos := -100;
@@ -517,6 +570,13 @@ begin
 
 end;
 
+function CallEvent_s(L: Plua_state): integer; cdecl;
+begin
+  CallEvent(lua_tointeger(L, -1));
+  Result := 0;
+end;
+
+
 //获取当前时间
 function GetTime(L: Plua_state): integer; cdecl;
 var
@@ -590,9 +650,9 @@ var
   x, y: integer;
   str: utf8string;
 begin
-  x := lua_tointeger(L, -3);
-  y := lua_tointeger(L, -2);
-  str := ' ' + lua_tostring(L, -1);
+  x := lua_tointeger(L, 2);
+  y := lua_tointeger(L, 3);
+  str := ' ' + lua_tostring(L, 1);
   DrawShadowText(screen, str, x, y, ColColor(5), ColColor(7));
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
   Result := 0;
@@ -604,62 +664,56 @@ var
   x, y, i, w, h, wt: integer;
   str: utf8string;
 begin
-  x := lua_tointeger(L, -3);
-  y := lua_tointeger(L, -2);
-
-  str := lua_tostring(L, -1);
+  x := lua_tointeger(L, 2);
+  y := lua_tointeger(L, 3);
+  str := lua_tostring(L, 1);
   h := 1;
-  w := 0;
-  wt := 0;
-  for i := 1 to length(str) do
-  begin
-    wt := wt + 1;
-    if integer(str[i]) > 128 then
-      wt := wt + 1;
-    {if str[i] = '*' then
-      begin
-      h := h + 1;
-      wt := 0;
-      end;}
-    if wt > w then
-      w := wt;
-  end;
-
+  w := drawlength(str);
   DrawRectangle(screen, x, y - 2, w * 10 + 5, h * 22 + 5, 0, ColColor(255), 30);
   DrawShadowText(screen, str, x + 3, y, ColColor(5), ColColor(7));
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-  Result := 0;
-
+  i := waitanykey();
+  lua_pushinteger(L, i);
+  Result := 1;
 end;
 
 function Menu(L: Plua_state): integer; cdecl;
 var
-  x, y, w, n, i, len: integer;
+  x, y, w, n, i, len, maxwidth, Width: integer;
   p: utf8string;
   menuString: array of utf8string;
 begin
-
-  n := lua_tointeger(L, -5);
-  setlength(menuString, n);
+  n := lua_tointeger(L, -1);
   //setlength(menuengstring, 0);
-  len := luaL_len(L, -1);
-  //showmessage(inttostr(len));
+  len := luaL_len(L, -2);
   n := min(n, len);
+  setlength(menuString, n);
+  maxwidth := 0;
   for i := 0 to n - 1 do
   begin
-    lua_pushnumber(L, i + 1);
-    lua_gettable(L, -2);
+    lua_pushinteger(L, i + 1);
+    lua_gettable(L, -3);
     p := lua_tostring(L, -1);
-    menuString[i] := p;
+    if p <> '' then
+    begin
+      menuString[i] := p;
+    end
+    else
+      menuString[i] := '';
+    Width := DrawLength(menuString[i]);
+    if Width > maxwidth then
+      maxwidth := Width;
     lua_pop(L, 1);
   end;
-
-  w := lua_tointeger(L, -2);
   y := lua_tointeger(L, -3);
   x := lua_tointeger(L, -4);
-  lua_pushnumber(L, CommonScrollMenu(x, y, w, n - 1, 10, menuString));
+  w := -1;
+  if w <= 0 then
+  begin
+    w := maxwidth * 10 + 8;
+  end;
+  lua_pushinteger(L, CommonScrollMenu(x, y, w, n - 1, 15, menuString) + 1);
   Result := 1;
-
 end;
 
 function AskYesOrNo(L: Plua_state): integer; cdecl;
@@ -972,6 +1026,8 @@ begin
     DrawRectangle(screen, x[0], x[1], x[2], x[3], x[4], x[5], x[6]);
   if n = 6 then
     DrawRectangleWithoutFrame(screen, x[0], x[1], x[2], x[3], x[4], x[5]);
+  if n = 4 then
+    DrawRectangle(screen, x[0], x[1], x[2], x[3], 0, ColColor(255), 50);
   Result := 0;
 
 end;
@@ -1026,7 +1082,7 @@ end;
 //写人物信息
 function PutRolePro(L: Plua_state): integer; cdecl;
 begin
-  Rrole[lua_tointeger(L, -2)].Data[lua_tointeger(L, -1)] := lua_tointeger(L, -3);
+  Rrole[lua_tointeger(L, -3)].Data[lua_tointeger(L, -2)] := lua_tointeger(L, -1);
   Result := 0;
 
 end;
@@ -1042,7 +1098,7 @@ end;
 //写物品信息
 function PutItemPro(L: Plua_state): integer; cdecl;
 begin
-  Ritem[lua_tointeger(L, -2)].Data[lua_tointeger(L, -1)] := lua_tointeger(L, -3);
+  Ritem[lua_tointeger(L, -3)].Data[lua_tointeger(L, -2)] := lua_tointeger(L, -1);
   Result := 0;
 
 end;
@@ -1058,7 +1114,7 @@ end;
 //写武功信息
 function PutMagicPro(L: Plua_state): integer; cdecl;
 begin
-  Rmagic[lua_tointeger(L, -2)].Data[lua_tointeger(L, -1)] :=lua_tointeger(L, -3);
+  Rmagic[lua_tointeger(L, -3)].Data[lua_tointeger(L, -2)] := lua_tointeger(L, -1);
   Result := 0;
 
 end;
@@ -1074,7 +1130,7 @@ end;
 //写场景信息
 function PutScenePro(L: Plua_state): integer; cdecl;
 begin
-  Rscene[lua_tointeger(L, -2)].Data[lua_tointeger(L, -1)] := lua_tointeger(L, -3);
+  Rscene[lua_tointeger(L, -3)].Data[lua_tointeger(L, -2)] := lua_tointeger(L, -1);
   Result := 0;
 
 end;
@@ -1090,7 +1146,7 @@ end;
 //写场景图信息
 function PutSceneMapPro(L: Plua_state): integer; cdecl;
 begin
-  sdata[lua_tointeger(L, -4), lua_tointeger(L, -3), lua_tointeger(L, -2), lua_tointeger(L, -1)] := lua_tointeger(L, -5);
+  sdata[lua_tointeger(L, -5), lua_tointeger(L, -4), lua_tointeger(L, -3), lua_tointeger(L, 2)] := lua_tointeger(L, -1);
   Result := 0;
 
 end;
@@ -1118,7 +1174,7 @@ end;
 //写场景事件信息
 function PutSceneEventPro(L: Plua_state): integer; cdecl;
 begin
-  ddata[lua_tointeger(L, -3), lua_tointeger(L, -2), lua_tointeger(L, -1)] := lua_tointeger(L, -4);
+  ddata[lua_tointeger(L, -4), lua_tointeger(L, -3), lua_tointeger(L, -2)] := lua_tointeger(L, -1);
   Result := 0;
 
 end;
@@ -1659,6 +1715,113 @@ end;
 function SelectOneTeamMemberScript(L: Plua_state): integer; cdecl;
 begin
   lua_pushnumber(L, SelectOneTeamMember(lua_tointeger(L, -5), lua_tointeger(L, -4), lua_tostring(L, -3), lua_tointeger(L, -2), lua_tointeger(L, -1)));
+  Result := 1;
+end;
+
+function setteam(L: Plua_state): integer; cdecl;
+begin
+  TeamList[lua_tointeger(L, -2)] := lua_tointeger(L, -1);
+  Result := 0;
+end;
+
+
+function getteam(L: Plua_state): integer; cdecl;
+begin
+  lua_pushnumber(L, TeamList[lua_tointeger(L, -1)]);
+  Result := 1;
+end;
+
+
+function readmem(L: Plua_state): integer; cdecl;
+var
+  x: integer;
+begin
+  x := lua_tointeger(L, -1);
+  instruct_50e(26, 0, 0, x mod 65536, x div 65536, 9999, 0);
+  lua_pushnumber(L, x50[9999]);
+  Result := 1;
+end;
+
+function writemem(L: Plua_state): integer; cdecl;
+var
+  x: integer;
+begin
+  x := lua_tointeger(L, -2);
+  x50[9999] := lua_tointeger(L, -1);
+  instruct_50e(25, 1, 0, x mod 65536, x div 65536, 9999, 0);
+  Result := 0;
+end;
+
+function getrolename(L: Plua_state): integer; cdecl;
+begin
+  lua_pushstring(L, cp950toutf8(@Rrole[lua_tointeger(L, -1)].Name[0]));
+  Result := 1;
+end;
+
+function getitemname(L: Plua_state): integer; cdecl;
+begin
+  lua_pushstring(L, cp950toutf8(@Ritem[lua_tointeger(L, -1)].Name[0]));
+  Result := 1;
+end;
+
+function getmagicname(L: Plua_state): integer; cdecl;
+begin
+  lua_pushstring(L, cp950toutf8(@Rmagic[lua_tointeger(L, -1)].Name[0]));
+  Result := 1;
+end;
+
+function getsubmapame(L: Plua_state): integer; cdecl;
+begin
+  lua_pushstring(L, cp950toutf8(@Rscene[lua_tointeger(L, -1)].Name[0]));
+  Result := 1;
+end;
+
+function drawlength_s(L: Plua_state): integer; cdecl;
+var
+  str: utf8string;
+begin
+  str := lua_tostring(L, -1);
+  lua_pushinteger(L, drawlength(str));
+  Result := 1;
+end;
+
+function getkey(L: Plua_state): integer; cdecl;
+var
+  key: integer;
+begin
+  key := waitanykey();
+  lua_pushinteger(L, key);
+  Result := 1;
+end;
+
+function gettalk(L: Plua_state): integer; cdecl;
+var
+  idx, grp, offset, len, i, p, talknum: integer;
+  talkarray: array of byte;
+  talkstr: utf8string;
+begin
+  talknum := lua_tointeger(L, -1);
+  len := 0;
+  if talknum = 0 then
+  begin
+    offset := 0;
+    len := TIdx[0];
+  end
+  else
+  begin
+    offset := TIdx[talknum - 1];
+    len := TIdx[talknum] - offset;
+  end;
+  setlength(talkarray, len + 1);
+  move(TDef[offset], talkarray[0], len);
+
+  for i := 0 to len - 1 do
+  begin
+    talkarray[i] := talkarray[i] xor $FF;
+  end;
+
+  talkstr := CP950toutf8(@talkarray[0]);
+  lua_pushstring(L, talkstr);
   Result := 1;
 end;
 
