@@ -29,6 +29,7 @@ procedure InitialSPic(num, px, py, x, y, w, h, needBlock, depth, temp: integer);
 procedure DrawHeadPic(num, px, py: integer); overload;
 procedure DrawHeadPic(num, px, py: integer; scr: PSDL_Surface); overload;
 procedure DrawHeadPic(num, px, py, shadow, alpha, depth: integer; mixColor: uint32; mixAlpha: integer); overload;
+procedure DrawIPic(num, px, py, shadow, alpha: integer; mixColor: uint32; mixAlpha: integer; Framenum: integer = -1); overload;
 procedure DrawBPic(num, px, py, shadow: integer); overload;
 procedure DrawBPic(num, px, py, shadow, alpha, depth: integer; mixColor: uint32; mixAlpha: integer); overload;
 procedure DrawBPicInRect(num, px, py, shadow, x, y, w, h: integer);
@@ -326,11 +327,33 @@ begin
 
 end;
 
+procedure DrawIPic(num, px, py, shadow, alpha: integer; mixColor: uint32; mixAlpha: integer; Framenum: integer = -1); overload;
+var
+  str: utf8string;
+  dest: TSDL_Rect;
+  image: PSDL_Surface;
+begin
+  str := AppPath + 'item/' + IntToStr(num) + '.png';
+  if FileExists(str) then
+  begin
+    image := ItemSurface[num];
+    if image = nil then
+    begin
+      image := IMG_Load(putf8char(str));
+      ItemSurface[num] := image;
+    end;
+    dest.x := px;
+    dest.y := py;
+    SDL_BlitSurface(image, nil, screen, @dest);
+  end
+  else
+    DrawMPic(ITEM_BEGIN_PIC + num, px, py, shadow, alpha, mixColor, mixAlpha);
+end;
+
 //显示战场图片
 procedure DrawBPic(num, px, py, shadow: integer); overload;
 begin
   DrawBPic(num, px, py, shadow, 0, 0, 0, 0);
-
 end;
 
 //用于画带透明度和遮挡的战场图

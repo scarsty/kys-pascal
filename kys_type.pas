@@ -308,6 +308,7 @@ var
   MSurface: PSDL_Surface;
   SSurface: PSDL_Surface;
   HeadSurface, BHead: array of PSDL_Surface; //用于画头像
+  ItemSurface: array of PSDL_Surface;
 
   fonts: TDictionary<integer, PSDL_Surface>;
 
