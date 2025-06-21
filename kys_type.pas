@@ -17,7 +17,7 @@ type
   end;
 
   TItemList = record
-    Number, Amount: smallint;
+    Number, Amount: integer;
   end;
 
   TBuildInfo = record
@@ -52,74 +52,74 @@ type
 
   TRole = record
     case TCallType of
-      Element: (ListNum, HeadNum, IncLife, UnUse: smallint;
-        Name, Nick: array [0 .. 9] of ansichar;
-        Sexual, Level: smallint;
-        Exp: word;
-        CurrentHP, MaxHP, Hurt, Poison, PhyPower: smallint;
-        ExpForItem: word;
-        Equip: array [0 .. 1] of smallint;
-        AmiFrameNum, AmiDelay, SoundDealy: array [0 .. 4] of smallint;
-        MPType, CurrentMP, MaxMP: smallint;
-        Attack, Speed, Defence, Medcine, UsePoi, MedPoi, DefPoi, Fist, Sword, Knife, Unusual, HidWeapon: smallint;
-        Knowledge, Ethics, AttPoi, AttTwice, Repute, Aptitude, PracticeBook: smallint;
-        ExpForBook: word;
-        Magic, MagLevel: array [0 .. 9] of smallint;
-        TakingItem, TakingItemAmount: array [0 .. 3] of smallint);
-      Address: (Data: array [0 .. 90] of smallint);
+      Element: (ListNum, HeadNum, IncLife, UnUse: integer;
+        Name, Nick: array [0 .. 19] of ansichar;
+        Sexual, Level: integer;
+        Exp: integer;
+        CurrentHP, MaxHP, Hurt, Poison, PhyPower: integer;
+        ExpForItem: integer;
+        Equip: array [0 .. 1] of integer;
+        AmiFrameNum, AmiDelay, SoundDealy: array [0 .. 4] of integer;
+        MPType, CurrentMP, MaxMP: integer;
+        Attack, Speed, Defence, Medcine, UsePoi, MedPoi, DefPoi, Fist, Sword, Knife, Unusual, HidWeapon: integer;
+        Knowledge, Ethics, AttPoi, AttTwice, Repute, Aptitude, PracticeBook: integer;
+        ExpForBook: integer;
+        Magic, MagLevel: array [0 .. 9] of integer;
+        TakingItem, TakingItemAmount: array [0 .. 3] of integer);
+      Address: (Data: array [0 .. 90] of integer);
   end;
 
   TItem = record
     case TCallType of
-      Element: (ListNum: smallint;
-        Name, Name1: array [0 .. 19] of ansichar;
-        Introduction: array [0 .. 29] of ansichar;
-        Magic, AmiNum, User, EquipType, ShowIntro, ItemType, UnKnow5, UnKnow6, UnKnow7: smallint;
-        AddCurrentHP, AddMaxHP, AddPoi, AddPhyPower, ChangeMPType, AddCurrentMP, AddMaxMP: smallint;
-        AddAttack, AddSpeed, AddDefence, AddMedcine, AddUsePoi, AddMedPoi, AddDefPoi: smallint;
-        AddFist, AddSword, AddKnife, AddUnusual, AddHidWeapon, AddKnowledge, AddEthics, AddAttTwice, AddAttPoi: smallint;
-        OnlyPracRole, NeedMPType, NeedMP, NeedAttack, NeedSpeed, NeedUsePoi, NeedMedcine, NeedMedPoi: smallint;
-        NeedFist, NeedSword, NeedKnife, NeedUnusual, NeedHidWeapon, NeedAptitude: smallint;
-        NeedExp, NeedExpForItem, NeedMaterial: smallint;
-        GetItem, NeedMatAmount: array [0 .. 4] of smallint);
-      Address: (Data: array [0 .. 94] of smallint);
+      Element: (ListNum: integer;
+        Name, Name1: array [0 .. 39] of ansichar;
+        Introduction: array [0 .. 59] of ansichar;
+        Magic, AmiNum, User, EquipType, ShowIntro, ItemType, UnKnow5, UnKnow6, UnKnow7: integer;
+        AddCurrentHP, AddMaxHP, AddPoi, AddPhyPower, ChangeMPType, AddCurrentMP, AddMaxMP: integer;
+        AddAttack, AddSpeed, AddDefence, AddMedcine, AddUsePoi, AddMedPoi, AddDefPoi: integer;
+        AddFist, AddSword, AddKnife, AddUnusual, AddHidWeapon, AddKnowledge, AddEthics, AddAttTwice, AddAttPoi: integer;
+        OnlyPracRole, NeedMPType, NeedMP, NeedAttack, NeedSpeed, NeedUsePoi, NeedMedcine, NeedMedPoi: integer;
+        NeedFist, NeedSword, NeedKnife, NeedUnusual, NeedHidWeapon, NeedAptitude: integer;
+        NeedExp, NeedExpForItem, NeedMaterial: integer;
+        GetItem, NeedMatAmount: array [0 .. 4] of integer);
+      Address: (Data: array [0 .. 94] of integer);
   end;
 
   TScene = record
     case TCallType of
-      Element: (ListNum: smallint;
-        Name: array [0 .. 9] of ansichar;
-        ExitMusic, EntranceMusic: smallint;
-        JumpScene, EnCondition: smallint;
-        MainEntranceY1, MainEntranceX1, MainEntranceY2, MainEntranceX2: smallint;
-        EntranceY, EntranceX: smallint;
-        ExitY, ExitX: array [0 .. 2] of smallint;
-        JumpY1, JumpX1, JumpY2, JumpX2: smallint);
-      Address: (Data: array [0 .. 25] of smallint);
+      Element: (ListNum: integer;
+        Name: array [0 .. 19] of ansichar;
+        ExitMusic, EntranceMusic: integer;
+        JumpScene, EnCondition: integer;
+        MainEntranceY1, MainEntranceX1, MainEntranceY2, MainEntranceX2: integer;
+        EntranceY, EntranceX: integer;
+        ExitY, ExitX: array [0 .. 2] of integer;
+        JumpY1, JumpX1, JumpY2, JumpX2: integer);
+      Address: (Data: array [0 .. 25] of integer);
   end;
 
   TMagic = record
     case TCallType of
-      Element: (ListNum: smallint;
-        Name: array [0 .. 9] of ansichar;
-        UnKnow: array [0 .. 4] of smallint;
-        SoundNum, MagicType, AmiNum, HurtType, AttAreaType, NeedMP, Poison: smallint;
-        Attack, MoveDistance, AttDistance, AddMP, HurtMP: array [0 .. 9] of smallint);
-      Address: (Data: array [0 .. 67] of smallint);
+      Element: (ListNum: integer;
+        Name: array [0 .. 19] of ansichar;
+        UnKnow: array [0 .. 4] of integer;
+        SoundNum, MagicType, AmiNum, HurtType, AttAreaType, NeedMP, Poison: integer;
+        Attack, MoveDistance, AttDistance, AddMP, HurtMP: array [0 .. 9] of integer);
+      Address: (Data: array [0 .. 67] of integer);
   end;
 
   TShop = record
     case TCallType of
-      Element: (Item, Amount, Price: array [0 .. 4] of smallint);
-      Address: (Data: array [0 .. 14] of smallint);
+      Element: (Item, Amount, Price: array [0 .. 4] of integer);
+      Address: (Data: array [0 .. 14] of integer);
   end;
 
   TBattleRole = record
     case TCallType of
-      Element: (rnum, Team, Y, X, Face, Dead, Step, Acted: smallint;
-        Pic, ShowNumber, UnUse1, UnUse2, UnUse3, ExpGot, Auto: smallint;
-        RealSpeed, RealProgress, BHead, AutoMode: smallint);
-      Address: (Data: array [0 .. 18] of smallint);
+      Element: (rnum, Team, Y, X, Face, Dead, Step, Acted: integer;
+        Pic, ShowNumber, UnUse1, UnUse2, UnUse3, ExpGot, Auto: integer;
+        RealSpeed, RealProgress, BHead, AutoMode: integer);
+      Address: (Data: array [0 .. 18] of integer);
   end;
 
   TCol = record
@@ -215,8 +215,8 @@ var
 
   Earth, Surface, Building, BuildX, BuildY, Entrance: array [0 .. 479, 0 .. 479] of smallint;
   //主地图数据
-  InShip, Useless1, Mx, My, Sx, Sy, MFace, ShipX, ShipY, ShipX1, ShipY1, ShipFace: smallint;
-  TeamList: array [0 .. 5] of smallint;
+  InShip, Useless1, Mx, My, Sx, Sy, MFace, ShipX, ShipY, ShipX1, ShipY1, ShipFace: integer;
+  TeamList: array [0 .. 5] of integer;
   RItemList: array of TItemList;
   Rrole: array [0 .. 2031] of TRole;
   Ritem: array [0 .. 724] of TItem;

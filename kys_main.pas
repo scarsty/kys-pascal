@@ -1533,55 +1533,185 @@ var
   filename: utf8string;
   idx, grp, i1, i2, len, SceneAmount: integer;
   BasicOffset, RoleOffset, ItemOffset, SceneOffset, MagicOffset, WeiShopOffset, i: integer;
+  temp: array [0 .. 1000000] of smallint;
+  temp1: array [0 .. 1000000] of integer;
+  isold: boolean = False;
+  intsize: integer = 4;
+
+  procedure u16toutf8_load(pu: putf8char; len: integer = -1);
+  var
+    widestr: widestring;
+    utf8str: utf8string;
+    pw: pwidechar;
+    pu1: putf8char;
+    i: integer;
+  begin
+    pw := pwidechar(pu);
+    while smallint(pw^) <> 0 do
+    begin
+      widestr := widestr + pw^;
+      pw^ := #0;
+      (pw +1)^ := #0;
+      pw := pw + 2;
+    end;
+    if len > 0 then setlength(widestr, len);
+    move(widestr[1], pu^, length(widestr) * 2);
+  end;
+
+  function fileread16to32(Handle: THandle; out i: integer; Count: longint): longint;
+  var
+    temp: smallint;
+    temp1: integer;
+  begin
+    fileread(handle, temp, Count);
+    i := temp;
+  end;
+
 begin
   SaveNum := num;
   filename := 'r' + IntToStr(num);
 
   if num = 0 then
     filename := 'ranger';
-  idx := FileOpen(AppPath + 'save/ranger.idx', fmOpenRead);
+  if fileexists(AppPath + 'save/ranger.idx32') then
+  begin
+    idx := FileOpen(AppPath + 'save/ranger.idx32', fmOpenRead);
+    FileRead(idx, RoleOffset, 4);
+    FileRead(idx, ItemOffset, 4);
+    FileRead(idx, SceneOffset, 4);
+    FileRead(idx, MagicOffset, 4);
+    FileRead(idx, WeiShopOffset, 4);
+    FileRead(idx, len, 4);
+    FileClose(idx);
+  end
+  else
+  begin
+    idx := FileOpen(AppPath + 'save/ranger.idx', fmOpenRead);
+    FileRead(idx, RoleOffset, 4);
+    FileRead(idx, ItemOffset, 4);
+    FileRead(idx, SceneOffset, 4);
+    FileRead(idx, MagicOffset, 4);
+    FileRead(idx, WeiShopOffset, 4);
+    FileRead(idx, len, 4);
+    FileClose(idx);
+    RoleOffset := RoleOffset * 2;
+    ItemOffset := ItemOffset * 2;
+    SceneOffset := SceneOffset * 2;
+    MagicOffset := MagicOffset * 2;
+    WeiShopOffset := WeiShopOffset * 2;
+    len := len * 2;
+    idx := filecreate(AppPath + 'save/ranger.idx32', fmOpenWrite);
+    FileWrite(idx, RoleOffset, 4);
+    FileWrite(idx, ItemOffset, 4);
+    FileWrite(idx, SceneOffset, 4);
+    FileWrite(idx, MagicOffset, 4);
+    FileWrite(idx, WeiShopOffset, 4);
+    FileWrite(idx, len, 4);
+    FileClose(idx);
+  end;
   grp := FileOpen(AppPath + 'save/' + filename + '.grp', fmOpenRead);
-
-  FileRead(idx, RoleOffset, 4);
-  FileRead(idx, ItemOffset, 4);
-  FileRead(idx, SceneOffset, 4);
-  FileRead(idx, MagicOffset, 4);
-  FileRead(idx, WeiShopOffset, 4);
-  FileRead(idx, len, 4);
   FileSeek(grp, 0, 0);
-
-  FileRead(grp, Inship, 2);
-  FileRead(grp, UseLess1, 2);
-  FileRead(grp, My, 2);
-  FileRead(grp, Mx, 2);
-  FileRead(grp, Sy, 2);
-  FileRead(grp, Sx, 2);
-  FileRead(grp, Mface, 2);
-  FileRead(grp, shipx, 2);
-  FileRead(grp, shipy, 2);
-  FileRead(grp, shipx1, 2);
-  FileRead(grp, shipy1, 2);
-  FileRead(grp, shipface, 2);
-  FileRead(grp, teamlist[0], 2 * 6);
+  FileRead(grp, Inship, intsize);
+  FileRead(grp, UseLess1, intsize);
+  FileRead(grp, My, intsize);
+  FileRead(grp, Mx, intsize);
+  FileRead(grp, Sy, intsize);
+  FileRead(grp, Sx, intsize);
+  FileRead(grp, Mface, intsize);
+  FileRead(grp, shipx, intsize);
+  FileRead(grp, shipy, intsize);
+  FileRead(grp, shipx1, intsize);
+  FileRead(grp, shipy1, intsize);
+  FileRead(grp, shipface, intsize);
+  if My > 65536 then
+  begin
+    isold := True;
+    intsize := 2;
+    fileseek(grp, 0, 0);
+    fileread16to32(grp, Inship, intsize);
+    fileread16to32(grp, UseLess1, intsize);
+    fileread16to32(grp, My, intsize);
+    fileread16to32(grp, Mx, intsize);
+    fileread16to32(grp, Sy, intsize);
+    fileread16to32(grp, Sx, intsize);
+    fileread16to32(grp, Mface, intsize);
+    fileread16to32(grp, shipx, intsize);
+    fileread16to32(grp, shipy, intsize);
+    fileread16to32(grp, shipx1, intsize);
+    fileread16to32(grp, shipy1, intsize);
+    fileread16to32(grp, shipface, intsize);
+  end;
   setlength(RItemlist, MAX_ITEM_AMOUNT);
   for i := 0 to MAX_ITEM_AMOUNT - 1 do
   begin
     RItemlist[i].Number := -1;
     RItemlist[i].Amount := 0;
   end;
-  FileRead(grp, RItemlist[0], sizeof(Titemlist) * MAX_ITEM_AMOUNT);
+  if isold then
+  begin
+    for i := 0 to 5 do
+    begin
+      FileRead(grp, temp[0], intsize);
+      teamlist[i] := temp[0];
+    end;
+    for i := 0 to MAX_ITEM_AMOUNT - 1 do
+    begin
+      FileRead(grp, temp[0], 4);
+      Ritemlist[i].Number := temp[0];
+      Ritemlist[i].Amount := temp[1];
+    end;
+  end
+  else
+  begin
+    FileRead(grp, teamlist[0], intsize * 6);
+    FileRead(grp, RItemlist[0], sizeof(Titemlist) * MAX_ITEM_AMOUNT);
+  end;
+  if isold then
+  begin
 
-  FileRead(grp, Rrole[0], ItemOffset - RoleOffset);
-  FileRead(grp, Ritem[0], SceneOffset - ItemOffset);
-  FileRead(grp, Rscene[0], MagicOffset - SceneOffset);
-  FileRead(grp, Rmagic[0], WeiShopOffset - MagicOffset);
-  FileRead(grp, Rshop[0], len - WeiShopOffset);
-  FileClose(idx);
+    FileRead(grp, temp[0], (len - RoleOffset) div 2);
+    for i := 0 to (len - RoleOffset) div 4 - 1 do
+    begin
+      temp1[i] := temp[i];
+    end;
+    move(temp1[0], Rrole[0], ItemOffset - RoleOffset);
+    move(temp1[(ItemOffset - RoleOffset) div 4], Ritem[0], SceneOffset - ItemOffset);
+    move(temp1[(SceneOffset - RoleOffset) div 4], Rscene[0], MagicOffset - SceneOffset);
+    move(temp1[(MagicOffset - RoleOffset) div 4], Rmagic[0], WeiShopOffset - MagicOffset);
+    move(temp1[(WeiShopOffset - RoleOffset) div 4], Rshop[0], len - WeiShopOffset);
+    for i := 0 to high(RRole) do
+    begin
+      u16toutf8_load(@rrole[i].Name);
+    end;
+    for i := 0 to high(RItem) do
+    begin
+      u16toutf8_load(@RItem[i].Name);
+      u16toutf8_load(@RItem[i].Introduction);
+    end;
+    for i := 0 to high(Rscene) do
+    begin
+      u16toutf8_load(@Rscene[i].Name, 5);
+    end;
+    for i := 0 to high(Rmagic) do
+    begin
+      u16toutf8_load(@Rmagic[i].Name);
+    end;
+
+  end
+  else
+  begin
+    FileRead(grp, Rrole[0], ItemOffset - RoleOffset);
+    FileRead(grp, Ritem[0], SceneOffset - ItemOffset);
+    FileRead(grp, Rscene[0], MagicOffset - SceneOffset);
+    FileRead(grp, Rmagic[0], WeiShopOffset - MagicOffset);
+    FileRead(grp, Rshop[0], len - WeiShopOffset);
+  end;
+
   FileClose(grp);
 
   //初始化入口
 
-  SceneAmount := (MagicOffset - SceneOffset) div 52;
+  SceneAmount := (MagicOffset - SceneOffset) div sizeof(TScene);
   for i := 0 to SceneAmount - 1 do
   begin
     if (Rscene[i].MainEntranceX1 >= 0) and (Rscene[i].MainEntranceX1 < 480) and (Rscene[i].MainEntranceY1 >= 0) and (Rscene[i].MainEntranceY1 < 480) then
@@ -1628,7 +1758,7 @@ begin
 
   if num = 0 then
     filename := 'ranger';
-  idx := FileOpen(AppPath + 'save/ranger.idx', fmOpenRead);
+  idx := FileOpen(AppPath + 'save/ranger.idx32', fmOpenRead);
   grp := filecreate(AppPath + 'save/' + filename + '.grp', fmopenreadwrite);
   BasicOffset := 0;
   FileRead(idx, RoleOffset, 4);
@@ -1637,26 +1767,27 @@ begin
   FileRead(idx, MagicOffset, 4);
   FileRead(idx, WeiShopOffset, 4);
   FileRead(idx, length, 4);
+
   FileSeek(grp, 0, 0);
-  FileWrite(grp, Inship, 2);
+  FileWrite(grp, Inship, 4);
 
   if where = 1 then
     UseLess1 := CurScene + 1
   else
     UseLess1 := 0;
 
-  FileWrite(grp, UseLess1, 2);
-  FileWrite(grp, My, 2);
-  FileWrite(grp, Mx, 2);
-  FileWrite(grp, Sy, 2);
-  FileWrite(grp, Sx, 2);
-  FileWrite(grp, Mface, 2);
-  FileWrite(grp, shipx, 2);
-  FileWrite(grp, shipy, 2);
-  FileWrite(grp, shipx1, 2);
-  FileWrite(grp, shipy1, 2);
-  FileWrite(grp, shipface, 2);
-  FileWrite(grp, teamlist[0], 2 * 6);
+  FileWrite(grp, UseLess1, 4);
+  FileWrite(grp, My, 4);
+  FileWrite(grp, Mx, 4);
+  FileWrite(grp, Sy, 4);
+  FileWrite(grp, Sx, 4);
+  FileWrite(grp, Mface, 4);
+  FileWrite(grp, shipx, 4);
+  FileWrite(grp, shipy, 4);
+  FileWrite(grp, shipx1, 4);
+  FileWrite(grp, shipy1, 4);
+  FileWrite(grp, shipface, 4);
+  FileWrite(grp, teamlist[0], 4 * 6);
   FileWrite(grp, RItemlist[0], sizeof(Titemlist) * MAX_ITEM_AMOUNT);
 
   FileWrite(grp, Rrole[0], ItemOffset - RoleOffset);
@@ -1667,7 +1798,7 @@ begin
   FileClose(idx);
   FileClose(grp);
 
-  SceneAmount := (MagicOffset - SceneOffset) div 52;
+  SceneAmount := (MagicOffset - SceneOffset) div sizeof(TScene);
 
   filename := 's' + IntToStr(num);
   if num = 0 then
@@ -3705,16 +3836,16 @@ end;
 //物品选单
 function MenuItem: boolean;
 var
-  point, atlu, x, y, col, row, xp, yp, iamount, menu, max, i, xm, ym: integer;
+  point, atlu, x, y, col, row, xp, yp, iamount, menu, max, i, xm, ym, w: integer;
   //point似乎未使用, atlu为处于左上角的物品在列表中的序号, x, y为光标位置
   //col, row为总列数和行数
   menuString: array of utf8string;
 begin
-  col := 9;
+  col := 14;
   row := 5;
   x := 0;
   y := 0;
-
+  w := col * 42 + 8;
   //setlength(Menuengstring, 0);
   case where of
     0, 1:
@@ -3746,7 +3877,6 @@ begin
   while menu >= 0 do
   begin
     menu := CommonMenu(xm, ym, 87, max, menu, menuString);
-
     case where of
       0, 1:
       begin
@@ -3932,7 +4062,7 @@ begin
           end;
           SDL_MOUSEMOTION:
           begin
-            if (round(event.button.x / (RESOLUTIONX / screen.w)) >= 110) and (round(event.button.x / (RESOLUTIONX / screen.w)) < 496) and (round(event.button.y / (RESOLUTIONY / screen.h)) > 90) and (round(event.button.y / (RESOLUTIONY / screen.h)) < 308) then
+            if (round(event.button.x / (RESOLUTIONX / screen.w)) >= 110) and (round(event.button.x / (RESOLUTIONX / screen.w)) < 110 + w) and (round(event.button.y / (RESOLUTIONY / screen.h)) > 90) and (round(event.button.y / (RESOLUTIONY / screen.h)) < 308) then
             begin
               xp := x;
               yp := y;
@@ -4008,7 +4138,7 @@ end;
 //显示物品选单
 procedure ShowMenuItem(row, col, x, y, atlu: integer);
 var
-  item, i, i1, i2, len, len2, len3, listnum: integer;
+  item, i, i1, i2, len, len2, len3, listnum, w: integer;
   str: utf8string;
   words: array [0 .. 10] of utf8string;
   words2: array [0 .. 22] of utf8string;
@@ -4088,12 +4218,12 @@ begin
     words3[11] := '射擊';
     words3[12] := '智力';
   end;
-
+  w := col * 42 + 8;
   LoadFreshScreen(0, 0, screen.w, screen.h);
-  DrawRectangle(screen, 110, 30, 386, 25, 0, ColColor(255), 50);
-  DrawRectangle(screen, 110, 60, 386, 25, 0, ColColor(255), 50);
-  DrawRectangle(screen, 110, 90, 386, 218, 0, ColColor(255), 50);
-  DrawRectangle(screen, 110, 313, 386, 25, 0, ColColor(255), 50);
+  DrawRectangle(screen, 110, 30, w, 25, 0, ColColor(255), 50);
+  DrawRectangle(screen, 110, 60, w, 25, 0, ColColor(255), 50);
+  DrawRectangle(screen, 110, 90, w, 218, 0, ColColor(255), 50);
+  DrawRectangle(screen, 110, 313, w, 25, 0, ColColor(255), 50);
   //i:=0;
   for i1 := 0 to row - 1 do
     for i2 := 0 to col - 1 do
@@ -4116,11 +4246,11 @@ begin
   if (RItemlist[listnum].Amount > 0) and (listnum < MAX_ITEM_AMOUNT) and (listnum >= 0) then
   begin
     str := format('%5d', [RItemlist[listnum].Amount]);
-    DrawEngShadowText(screen, str, 430, 32, ColColor($64), ColColor($66));
+    DrawEngShadowText(screen, str, 110 + w - 80, 32, ColColor($64), ColColor($66));
     len := length(putf8char(@Ritem[item].Name));
-    DrawBig5ShadowText(screen, @Ritem[item].Name, 305 - len * 5, 32, ColColor($21), ColColor($23));
+    DrawBig5ShadowText(screen, @Ritem[item].Name, 110 + w div 2 - len * 5, 32, ColColor($21), ColColor($23));
     len := length(putf8char(@Ritem[item].Introduction));
-    DrawBig5ShadowText(screen, @Ritem[item].Introduction, 305 - len * 5, 62, ColColor($5), ColColor($7));
+    DrawBig5ShadowText(screen, @Ritem[item].Introduction, 110 + w div 2 - len * 5, 62, ColColor($5), ColColor($7));
     DrawShadowText(screen, words[Ritem[item].ItemType], 117, 315, ColColor($21), ColColor($23));
     //如有人使用则显示
     if Ritem[item].User >= 0 then
@@ -4174,7 +4304,7 @@ begin
     end;
 
     if len2 + len3 > 0 then
-      DrawRectangle(screen, 110, 344, 386, 20 * ((len2 + 3) div 4 + (len3 + 3) div 4) + 5, 0, ColColor(255), 50);
+      DrawRectangle(screen, 110, 344, w, 20 * ((len2 + 5) div 6 + (len3 + 5) div 6) + 5, 0, ColColor(255), 50);
 
     i1 := 0;
     for i := 0 to 22 do
@@ -4198,8 +4328,8 @@ begin
           color1 := ColColor($64);
           color2 := ColColor($66);
         end;
-        DrawShadowText(screen, words2[i], 117 + i1 mod 4 * 95, i1 div 4 * 20 + 346, ColColor($5), ColColor($7));
-        DrawShadowText(screen, str, 137 + i1 mod 4 * 95, i1 div 4 * 20 + 346, color1, color2);
+        DrawShadowText(screen, words2[i], 117 + i1 mod 6 * 95, i1 div 6 * 20 + 346, ColColor($5), ColColor($7));
+        DrawShadowText(screen, str, 137 + i1 mod 6 * 95, i1 div 6 * 20 + 346, color1, color2);
         i1 := i1 + 1;
       end;
     end;
@@ -4226,8 +4356,8 @@ begin
           color1 := ColColor($64);
           color2 := ColColor($66);
         end;
-        DrawShadowText(screen, words3[i], 117 + i1 mod 4 * 95, ((len2 + 3) div 4 + i1 div 4) * 20 + 346, ColColor($50), ColColor($4E));
-        DrawShadowText(screen, str, 137 + i1 mod 4 * 95, ((len2 + 3) div 4 + i1 div 4) * 20 + 346, color1, color2);
+        DrawShadowText(screen, words3[i], 117 + i1 mod 6 * 95, ((len2 + 5) div 6 + i1 div 6) * 20 + 346, ColColor($50), ColColor($4E));
+        DrawShadowText(screen, str, 137 + i1 mod 6 * 95, ((len2 + 5) div 6 + i1 div 6) * 20 + 346, color1, color2);
         i1 := i1 + 1;
       end;
     end;
@@ -5631,7 +5761,7 @@ begin
 
   NeedRefreshScene := 0;
   filename := AppPath + 'script/event/ka' + IntToStr(num) + '.lua';
-  if ((KDEF_SCRIPT = 0) or(not FileExists(filename))) then
+  if ((KDEF_SCRIPT = 0) or (not FileExists(filename))) then
   begin
     len := 0;
     if num = 0 then

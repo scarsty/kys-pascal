@@ -939,7 +939,7 @@ begin
       begin
         RItemList[i].Amount := RItemList[i].Amount + amount;
         if (RItemList[i].Amount < 0) and (amount >= 0) then
-          RItemList[i].Amount := 32767;
+          RItemList[i].Amount := 2147483647;
         if (RItemList[i].Amount < 0) and (amount < 0) then
           RItemList[i].Amount := 0;
         break;
