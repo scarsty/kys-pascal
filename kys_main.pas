@@ -1682,10 +1682,12 @@ begin
     for i := 0 to high(RRole) do
     begin
       u16toutf8_load(@rrole[i].Name);
+      u16toutf8_load(@rrole[i].Nick);
     end;
     for i := 0 to high(RItem) do
     begin
       u16toutf8_load(@RItem[i].Name);
+      u16toutf8_load(@RItem[i].Name1);
       u16toutf8_load(@RItem[i].Introduction);
     end;
     for i := 0 to high(Rscene) do
@@ -1709,8 +1711,13 @@ begin
 
   FileClose(grp);
 
-  //初始化入口
+  if (num=0)and(isold)then
+  begin
+    renamefile(AppPath + 'save/ranger.grp', AppPath + 'save/ranger.grp.old');
+    saver(0);
+  end;
 
+  //初始化入口
   SceneAmount := (MagicOffset - SceneOffset) div sizeof(TScene);
   for i := 0 to SceneAmount - 1 do
   begin
