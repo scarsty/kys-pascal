@@ -2085,8 +2085,8 @@ begin
         Brole[bnum].ExpGot := Brole[bnum].ExpGot + hurt div 2;
         if Rrole[Brole[i].rnum].CurrentHP <= 0 then
           Brole[bnum].ExpGot := Brole[bnum].ExpGot + hurt div 2;
-        //if Brole[bnum].ExpGot < 0 then
-        //  Brole[bnum].ExpGot := 32767;
+        if Brole[bnum].ExpGot < 0 then
+          Brole[bnum].ExpGot := 32767;
       end;
       //内力伤害
       if (Rmagic[mnum].HurtType = 1) then
@@ -2458,7 +2458,7 @@ var
   i, rnum, basicvalue, amount, p, pmax: integer;
   str: utf8string;
 begin
-  pmax := 2147483647;
+  pmax := 65535;
   amount := CalRNum(0);
   for i := 0 to BRoleAmount - 1 do
   begin
@@ -2496,7 +2496,9 @@ begin
       Redraw;
       WaitAnyKey;
     end;
+
   end;
+
 end;
 
 //检查是否能够升级
