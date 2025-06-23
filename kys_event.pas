@@ -196,7 +196,7 @@ begin
       Lines[length(Lines) - 1] := copy(talkstr, p, i - p);
       p := i + 1;
       l := 0;
-      i := i + 1;
+      //i := i + 1;
     end
     else
     if byte(talkstr[i]) >= $e0 then
