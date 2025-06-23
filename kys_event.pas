@@ -194,7 +194,7 @@ begin
     begin
       setlength(Lines, length(Lines) + 1);
       Lines[length(Lines) - 1] := copy(talkstr, p, i - p);
-      p := i;
+      p := i + 1;
       l := 0;
       i := i + 1;
     end

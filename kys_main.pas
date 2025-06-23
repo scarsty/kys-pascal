@@ -673,6 +673,7 @@ begin
   FileSeek(i, 0, 0);
   setlength(str, len + 1);
   FileRead(i, str[1], len);
+  str[len + 1] := #13;
   FileClose(i);
   p := 1;
   x := 30;
@@ -5630,7 +5631,7 @@ begin
 
   NeedRefreshScene := 0;
   filename := AppPath + 'script/event/ka' + IntToStr(num) + '.lua';
-  if ((KDEF_SCRIPT = 0) or(not FileExists(filename))) then
+  if ((KDEF_SCRIPT = 0) or (not FileExists(filename))) then
   begin
     len := 0;
     if num = 0 then
