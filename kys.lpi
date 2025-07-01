@@ -90,7 +90,7 @@
           </Parsing>
           <CodeGeneration>
             <SmartLinkUnit Value="True"/>
-            <TargetCPU Value="arm"/>
+            <TargetCPU Value="aarch64"/>
             <TargetOS Value="android"/>
             <Optimizations>
               <OptimizationLevel Value="2"/>

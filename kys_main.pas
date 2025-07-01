@@ -34,10 +34,12 @@ uses
   LCLType,
   LCLIntf,
   {$ELSE}
-  Windows,
   {$ENDIF}
   {$IFDEF ANDROID}
   jni,
+  {$ENDIF}
+  {$IFDEF WINDOWS}
+  Windows,
   {$ENDIF}
   kys_type,
   SysUtils,
@@ -145,6 +147,9 @@ var
   tempcolor: TSDL_Color;
   str: utf8string;
 begin
+  {$IFDEF windows}
+  SetConsoleOutputCP(65001);
+  {$ENDIF}
   word[0] := 32;
   {$IFDEF UNIX}
   AppPath := ExtractFilePath(ParamStr(0));
@@ -717,14 +722,6 @@ var
   input_name, homename: utf8string;
   p0, p1: putf8char;
   named: boolean;
-  {$IFDEF android}
-  env: PJNIEnv;
-  jstr: jstring;
-  cstr: putf8char;
-  activity: jobject;
-  clazz: jclass;
-  method_id: jmethodID;
-  {$ENDIF}
   r: TSDL_Rect;
 begin
   LoadR(0);
@@ -737,22 +734,6 @@ begin
   Redraw;
   tempname := '我是主角';
   homename := '主角的家';
-  {$IFDEF android}
-  {ShowStatus(0);
-    UpdateAllScreen;
-    str0 := '點擊一下開始選屬性！';
-    DrawTextWithRect(@str0[1], 175, CENTER_Y + 171, 10, ColColor($64), ColColor($66));
-    env := SDL_AndroidGetJNIEnv();
-    activity := SDL_AndroidGetActivity();
-    clazz := env^.GetObjectClass(env, activity);
-    method_id := env^.GetMethodID(env, clazz, 'mythSetName', '()Ljava/lang/String;');
-    jstr := jstring(env^.CallObjectMethod(env, activity, method_id));
-    cstr := env^.GetStringUTFChars(env, jstr, 0);
-    Name := strpas(cstr);
-    env^.ReleaseStringUTFChars(env, jstr, cstr);}
-  Name := tempname;
-  named := True;
-  {$ELSE}
   //for i := 0 to 4 do
   //  Rrole[0].Data[4 + i] := 0;
   str := str1;
@@ -760,7 +741,6 @@ begin
   named := True;
   input_name := CP950toutf8(Rrole[0].Name);
   named := EnterString(input_name, CENTER_X - 43, CENTER_Y + 10, 86, 100);
-  {$ENDIF}
   if named then
   begin
     if input_name = '' then

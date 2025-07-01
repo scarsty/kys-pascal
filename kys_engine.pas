@@ -25,8 +25,7 @@ uses
   //unzip,
   kys_main,
   kys_type,
-  StrUtils,
-  mythoutput;
+  StrUtils;
 
 function EventFilter(p: pointer; e: PSDL_Event): longint; cdecl;
 //音频子程
@@ -1929,6 +1928,7 @@ function Simplified2Traditional(str: utf8string): utf8string;
 var
   l: integer;
 begin
+{$ifdef windows}
   str := transcode(str, 65001, 936);
   l := length(str);
   setlength(Result, l + 3);
@@ -1936,6 +1936,9 @@ begin
   if l > 0 then
     LCMapStringA($0800, $4000000, @str[1], l, @Result[1], l);
   Result := transcode(Result, 936, 65001);
+{$else}
+  result := str;
+{$endif}
   //writeln(L,str,',',result,GetUserDefaultLCID);
 end;
 
@@ -1953,7 +1956,7 @@ begin
     LCMapString($0800, $02000000, putf8char(str), L, @Result[1], L);
   Result := CP936TOUTF8(Result);
   {$ELSE}
-  Result := mTraditional;
+  Result := str;
   {$ENDIF}
 end;
 
@@ -1981,7 +1984,7 @@ end;
 
 procedure toc;
 begin
-  message(' %d ms', [SDL_GetTicks - tttt]);
+  ConsoleLog(' %d ms', [SDL_GetTicks - tttt]);
 end;
 
 {$ENDIF}
@@ -1991,19 +1994,8 @@ var
   i: integer;
   str: utf8string;
 begin
-  {$IFDEF console}
-  Write(format(formatstring, content));
-  if cr then
-    writeln();
-  {$ENDIF}
-  {$IFDEF android}
   str := format(formatstring, content);
-  mythoutput.mythoutput(putf8char(str));
-  {i := fileopen(SDL_AndroidGetExternalStoragePath()+'/pig3_place_game_here',fmopenwrite);
-    fileseek(i, 0, 2);
-    filewrite(i, str[1], length(str));
-    fileclose(i);}
-  {$ENDIF}
+  SDL_log('%s', [@str[1]]);
 end;
 
 procedure Message(formatstring: string = ''; cr: boolean = True); overload;
@@ -2011,19 +2003,7 @@ var
   i: integer;
   str: utf8string;
 begin
-  {$IFDEF console}
-  Write(format(formatstring, []));
-  if cr then
-    writeln();
-  {$ENDIF}
-  {$IFDEF android}
-  str := format(formatstring, []);
-  mythoutput.mythoutput(putf8char(str));
-  {i := fileopen(SDL_AndroidGetExternalStoragePath()+'/pig3_place_game_here',fmopenwrite);
-    fileseek(i, 0, 2);
-    filewrite(i, str[1], length(str));
-    fileclose(i);}
-  {$ENDIF}
+  SDL_log('%s', [@formatstring[1]]);
 end;
 
 function utf8follow(c1: utf8char): integer;
