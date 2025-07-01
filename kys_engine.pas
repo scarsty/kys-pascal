@@ -122,7 +122,7 @@ procedure tic;
 procedure toc;
 
 procedure ConsoleLog(formatstring: utf8string; content: array of const; cr: boolean = True); overload;
-procedure Message(formatstring: string = ''; cr: boolean = True); overload;
+procedure ConsoleLog(formatstring: string = ''; cr: boolean = True); overload;
 
 function utf8follow(c1: utf8char): integer;
 
@@ -1721,7 +1721,7 @@ begin
           //event.button.y := RESOLUTIONY div 2;
           event.button.button := SDL_BUTTON_RIGHT;
           event.key.keysym.sym := SDLK_ESCAPE;
-          message('Change to escape');
+          ConsoleLog('Change to escape');
         end
         else if inReturn(x, y) then
         begin
@@ -1729,7 +1729,7 @@ begin
           //event.button.y := RESOLUTIONY div 2;
           event.type_ := SDL_KEYUP;
           event.key.keysym.sym := SDLK_RETURN;
-          message('Change to return');
+          ConsoleLog('Change to return');
         end
         else if (showVirtualKey <> 0) and (inVirtualKey(x, y, VirtualKeyValue) <> 0) then
         begin
@@ -1998,7 +1998,7 @@ begin
   SDL_log('%s', [@str[1]]);
 end;
 
-procedure Message(formatstring: string = ''; cr: boolean = True); overload;
+procedure ConsoleLog(formatstring: string = ''; cr: boolean = True); overload;
 var
   i: integer;
   str: utf8string;

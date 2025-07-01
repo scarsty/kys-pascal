@@ -446,7 +446,7 @@ begin
   try
     if (Script[1] = char($EF)) and (Script[2] = char($BB)) and (Script[3] = char($BF)) then
     begin
-      message('Found BOM, replace it to space');
+      ConsoleLog('Found BOM, replace it to space');
       Script[1] := ' ';
       Script[2] := ' ';
       Script[3] := ' ';
@@ -467,7 +467,7 @@ begin
     //lua_gc(Lua_script, LUA_GCCOLLECT, 0);
     if Result <> 0 then
     begin
-      message(lua_tostring(Lua_script, -1));
+      ConsoleLog(lua_tostring(Lua_script, -1));
       lua_pop(Lua_script, 1);
     end;
   except
