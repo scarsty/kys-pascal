@@ -166,7 +166,7 @@ begin
   CellPhone := 1;
   {$ENDIF}
 
-  //CellPhone := 1;
+  CellPhone := 1;
 
   ReadFiles;
 

@@ -1589,9 +1589,9 @@ var
       Result := SDLK_UP;
     if InRegion(x, y, VirtualKeyX - VirtualKeySize, VirtualKeyY + VirtualKeySize, VirtualKeySize, VirtualKeySize) then
       Result := SDLK_LEFT;
-    if InRegion(x, y, VirtualKeyX, VirtualKeyY + VirtualKeySize, VirtualKeySize, VirtualKeySize) then
+    if InRegion(x, y, VirtualKeyX, VirtualKeyY + VirtualKeySize * 2, VirtualKeySize, VirtualKeySize) then
       Result := SDLK_DOWN;
-    if InRegion(x, y, VirtualKeyX + VirtualKeySize, VirtualKeyY + VirtualKeySize * 2, VirtualKeySize, VirtualKeySize) then
+    if InRegion(x, y, VirtualKeyX + VirtualKeySize, VirtualKeyY + VirtualKeySize, VirtualKeySize, VirtualKeySize) then
       Result := SDLK_RIGHT;
     key := Result;
   end;
