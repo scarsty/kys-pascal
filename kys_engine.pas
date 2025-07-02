@@ -1187,6 +1187,7 @@ begin
       dest.x := x_pos;
       dest.y := y_pos + 2;
       SDL_SetSurfaceColorMod(Text, r, g, b);
+      SDL_SetSurfaceAlphaMod(Text, 255);
       SDL_BlitSurface(Text, nil, sur, @dest);
       //SDL_FreeSurface(Text);
       //i := i + 1;
@@ -1567,12 +1568,13 @@ var
 
   function inEscape(x, y: integer): boolean; inline;
   begin
-    Result := (x < 100) and (y > CENTER_Y * 2 - 100);
+    Result := (x < 100) and (y < 100);
   end;
 
   function inSwitchShowVirtualKey(x, y: integer): boolean; inline;
   begin
-    Result := (x > CENTER_X * 2 - 100) and (y < 100);
+    //Result := (x > CENTER_X * 2 - 100) and (y < 100);
+    result := false;
   end;
 
   function InRegion(x1, y1, x, y, w, h: integer): boolean;
@@ -1589,7 +1591,7 @@ var
       Result := SDLK_LEFT;
     if InRegion(x, y, VirtualKeyX, VirtualKeyY + VirtualKeySize, VirtualKeySize, VirtualKeySize) then
       Result := SDLK_DOWN;
-    if InRegion(x, y, VirtualKeyX + VirtualKeySize, VirtualKeyY + VirtualKeySize, VirtualKeySize, VirtualKeySize) then
+    if InRegion(x, y, VirtualKeyX + VirtualKeySize, VirtualKeyY + VirtualKeySize * 2, VirtualKeySize, VirtualKeySize) then
       Result := SDLK_RIGHT;
     key := Result;
   end;
@@ -1695,6 +1697,7 @@ begin
         SDL_GetMouseState2(x, y);
         if inEscape(x, y) or inReturn(x, y) then
           event.type_ := 0;
+        inVirtualKey(x, y, VirtualKeyValue);
       end;
     end;
     SDL_MOUSEBUTTONDOWN:

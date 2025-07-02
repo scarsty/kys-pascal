@@ -165,6 +165,9 @@ begin
   FileClose(filecreate(str));
   CellPhone := 1;
   {$ENDIF}
+
+  //CellPhone := 1;
+
   ReadFiles;
 
   SetMODVersion;
@@ -459,7 +462,7 @@ begin
     if CellPhone <> 0 then
     begin
       ShowVirtualKey := Kys_ini.ReadInteger('system', 'Virtual_Key', 1);
-      VirtualKeyX := Kys_ini.ReadInteger('system', 'Virtual_Key_X', 150);
+      VirtualKeyX := Kys_ini.ReadInteger('system', 'Virtual_Key_X', 100);
       VirtualKeyY := Kys_ini.ReadInteger('system', 'Virtual_Key_Y', 250);
       if FileExists(AppPath + 'resource/u.png') then
       begin

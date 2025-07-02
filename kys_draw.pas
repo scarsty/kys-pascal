@@ -1684,9 +1684,11 @@ begin
     SDL_BlitSurface(VirtualKeyL, nil, screen, @rect);
 
     rect.x := VirtualKeyX;
+    rect.y := VirtualKeyY + VirtualKeySize * 2;
     SDL_BlitSurface(VirtualKeyD, nil, screen, @rect);
 
     rect.x := VirtualKeyX + VirtualKeySize;
+    rect.y := VirtualKeyY + VirtualKeySize;
     SDL_BlitSurface(VirtualKeyR, nil, screen, @rect);
   end;
 end;
