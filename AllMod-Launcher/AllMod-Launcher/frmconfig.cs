@@ -119,7 +119,9 @@ namespace pig3config
             int v = 0;
             try
             {
-                v = Convert.ToInt32(temp.ToString());
+                string s1 = Encoding.UTF8.GetString(temp);
+                s1=s1.Substring(0, s1.IndexOf('\0')); // remove null terminator
+                v = Convert.ToInt32(s1);
             }
             catch (Exception ee)
             {
