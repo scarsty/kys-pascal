@@ -18,16 +18,18 @@ namespace pig3config
         [DllImport("kernel32")]
         private static extern int GetPrivateProfileString(
             string section, string key,
-            string def, StringBuilder retVal,
+            string def, byte[] retVal,
             int size, string filePath);
         String iniPath, gameini = ".\\games.ini";
         String current_path;
 
         private string getStringValue(string file, string s, string k)
         {
-            StringBuilder temp = new StringBuilder(255);
+            byte[] temp = new byte[255];
             GetPrivateProfileString(s, k, "", temp, 255, file);
-            return temp.ToString();
+            string s1 = Encoding.UTF8.GetString(temp);
+            s1 = s1.Substring(0, s1.IndexOf('\0')); // remove null terminator
+            return s1;
         }
 
         private void setStringValue(string file, string s, string k, string v)
@@ -112,7 +114,7 @@ namespace pig3config
         }
         void getIniValue(String s, String k)
         {
-            StringBuilder temp = new StringBuilder(255);
+            byte[] temp = new byte[255];
             GetPrivateProfileString(s, k, "", temp, 255, iniPath);
             int v = 0;
             try
@@ -121,7 +123,7 @@ namespace pig3config
             }
             catch (Exception ee)
             {
-               
+
             }
             if (k == "SMOOTH")
             {

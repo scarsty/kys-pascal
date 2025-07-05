@@ -146,6 +146,8 @@ var
   word: array [0 .. 1] of uint16; //= (32, 0);
   tempcolor: TSDL_Color;
   str: utf8string;
+  current: integer;
+  ini: TIniFile;
 begin
   {$IFDEF windows}
   SetConsoleOutputCP(65001);
@@ -157,16 +159,34 @@ begin
   AppPath := '';
   {$ENDIF}
   {$IFDEF android}
-  AppPath := SDL_AndroidGetExternalStoragePath() + '/game/';
+  AppPath := '/sdcard/kys-pascal/';
+  if (not fileexists(AppPath + 'kysmod.ini')) and (not fileexists(AppPath + 'games.ini')) then
+    AppPath := SDL_AndroidGetExternalStoragePath() + '/';
   //for i := 1 to 4 do
   //AppPath:= ExtractFileDir(AppPath);
   str := SDL_AndroidGetExternalStoragePath() + '/place_game_here';
   //if not fileexists(str) then
   FileClose(filecreate(str));
+  SDL_SetHint(SDL_HINT_ORIENTATIONS, 'LandscapeLeft LandscapeRight');
   CellPhone := 1;
   {$ENDIF}
 
-  CellPhone := 1;
+  //CellPhone := 1;
+
+  if fileexists(AppPath + 'games.ini') then
+  begin
+    try
+      ini := TIniFile.Create(AppPath + 'games.ini');
+      current := ini.ReadInteger('games', 'current', 0);
+      str := ini.ReadString('games', IntToStr(current), ':');
+      current := pos('kys', str);
+      str := copy(str, current, 20);
+      AppPath := AppPath + str + '/';
+    finally
+      ini.Free;
+    end;
+  end;
+
 
   ReadFiles;
 
