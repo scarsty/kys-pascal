@@ -256,7 +256,7 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
      * It can be overridden by derived classes.
      */
     protected String getMainFunction() {
-        return "SDL_main";
+        return "Run";
     }
 
     /**

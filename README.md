@@ -33,6 +33,32 @@ Delphi和Free Pascal对宽字符串和可变长度字符串的赋值处理不同
 
 即显示时仅使用utf-8编码，存档维持Big5编码。不再使用widestring和widechar。
 
+## 关于Android版本
+
+使用CodeTyphon来配置交叉编译器比较简单，除此之外，还需下载对应系统的运行库，供链接时使用。
+
+SDL一般是在java部分调用SDL_main这个函数，可以查找以下两个部分，修改对应的地方即可。
+
+```java
+    protected String getMainFunction() {
+        return "Run";    //原为SDL_main
+    }
+
+    protected String[] getLibraries() {
+        return new String[] {
+            "SDL2",
+            // "SDL2_image",
+            // "SDL2_mixer",
+            // "SDL2_net",
+            // "SDL2_ttf",
+            "kys"    //原为main
+        };
+    }
+```
+
+工程中有批处理，可以命令行编译so文件。
+
+
 ## 注意
 
 除了用于怀旧和运行较老的mod之外，均不建议使用。
@@ -40,3 +66,5 @@ Delphi和Free Pascal对宽字符串和可变长度字符串的赋值处理不同
 很多设计现在来看很冗余，因此也不推荐深入研究此源码。
 
 建议改用c++版：<https://github.com/scarsty/kys-cpp>。
+
+

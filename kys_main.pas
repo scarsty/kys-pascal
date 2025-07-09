@@ -54,7 +54,6 @@ uses
   Generics.Collections;
 
 //程序重要子程
-function SDL_main(argc: integer; argv: ppansichar): integer;
 procedure Run;
 procedure Quit;
 procedure SetMODVersion;
@@ -139,14 +138,6 @@ uses
   kys_engine,
   kys_battle,
   kys_draw;
-
-function SDL_main(argc: integer; argv: ppansichar): integer;
-var
-  th: PSDL_Thread;
-begin
-  Run;
-  Result := 0;
-end;
 
 //初始化字体, 音效, 视频, 启动游戏
 procedure Run;
