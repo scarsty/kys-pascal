@@ -155,7 +155,7 @@ var
   word: array [0 .. 1] of uint16; //= (32, 0);
   tempcolor: TSDL_Color;
   str: utf8string;
-  current: integer;
+  current, temp: integer;
   ini: TIniFile;
 begin
   {$IFDEF windows}
@@ -178,6 +178,8 @@ begin
   FileClose(filecreate(str));
   SDL_SetHint(SDL_HINT_ORIENTATIONS, 'LandscapeLeft LandscapeRight');
   CellPhone := 1;
+  SDL_AndroidRequestPermission('MANAGE_EXTERNAL_STORAGE');
+  //SDL_AndroidRequestPermission('android.permission.WRITE_EXTERNAL_STORAGE');
   {$ENDIF}
 
   //CellPhone := 1;
@@ -241,7 +243,12 @@ begin
   if (CellPhone = 1) then
   begin
     if (RESOLUTIONY > RESOLUTIONX) then
+    begin
       ScreenRotate := 0;
+      temp := RESOLUTIONY;
+      RESOLUTIONY := RESOLUTIONX;
+      RESOLUTIONX := temp;
+    end;
     //SDL_WarpMouseInWindow(window, RESOLUTIONX, RESOLUTIONY);
   end;
 
