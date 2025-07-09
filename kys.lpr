@@ -27,6 +27,7 @@ uses
 
   {$IFDEF android}
 exports
+  SDL_main,
   Run;
   {$ENDIF}
 
