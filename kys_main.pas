@@ -178,7 +178,7 @@ begin
   FileClose(filecreate(str));
   SDL_SetHint(SDL_HINT_ORIENTATIONS, 'LandscapeLeft LandscapeRight');
   CellPhone := 1;
-  SDL_AndroidRequestPermission('MANAGE_EXTERNAL_STORAGE');
+  //SDL_AndroidRequestPermission('MANAGE_EXTERNAL_STORAGE');
   //SDL_AndroidRequestPermission('android.permission.WRITE_EXTERNAL_STORAGE');
   {$ENDIF}
 

@@ -1187,6 +1187,7 @@ begin
       dest.x := x_pos;
       dest.y := y_pos + 2;
       SDL_SetSurfaceColorMod(Text, r, g, b);
+      SDL_SetSurfaceBlendMode(Text, SDL_BLENDMODE_BLEND);
       SDL_SetSurfaceAlphaMod(Text, 255);
       SDL_BlitSurface(Text, nil, sur, @dest);
       //SDL_FreeSurface(Text);
@@ -1208,6 +1209,8 @@ begin
       dest.x := x_pos;
       dest.y := y_pos;
       SDL_SetSurfaceColorMod(Text, r, g, b);
+      SDL_SetSurfaceBlendMode(Text, SDL_BLENDMODE_BLEND);
+      SDL_SetSurfaceAlphaMod(Text, 255);
       SDL_BlitSurface(Text, nil, sur, @dest);
       //SDL_FreeSurface(Text);
       i := i + 1;
@@ -1228,6 +1231,8 @@ begin
       dest.x := x_pos;
       dest.y := y_pos;
       SDL_SetSurfaceColorMod(Text, r, g, b);
+      SDL_SetSurfaceBlendMode(Text, SDL_BLENDMODE_BLEND);
+      SDL_SetSurfaceAlphaMod(Text, 255);
       SDL_BlitSurface(Text, nil, sur, @dest);
       //SDL_FreeSurface(Text);
       x_pos := x_pos + 10;
@@ -1574,7 +1579,7 @@ var
   function inSwitchShowVirtualKey(x, y: integer): boolean; inline;
   begin
     //Result := (x > CENTER_X * 2 - 100) and (y < 100);
-    result := false;
+    Result := False;
   end;
 
   function InRegion(x1, y1, x, y, w, h: integer): boolean;
@@ -1931,7 +1936,7 @@ function Simplified2Traditional(str: utf8string): utf8string;
 var
   l: integer;
 begin
-{$ifdef windows}
+  {$ifdef windows}
   str := transcode(str, 65001, 936);
   l := length(str);
   setlength(Result, l + 3);
@@ -1939,9 +1944,9 @@ begin
   if l > 0 then
     LCMapStringA($0800, $4000000, @str[1], l, @Result[1], l);
   Result := transcode(Result, 936, 65001);
-{$else}
-  result := str;
-{$endif}
+  {$else}
+  Result := str;
+  {$endif}
   //writeln(L,str,',',result,GetUserDefaultLCID);
 end;
 
