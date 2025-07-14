@@ -13,8 +13,8 @@ uses
   {$ELSE}
   Windows,
   {$ENDIF}
-  SDL2_image,
-  SDL2,
+  SDL3_image,
+  SDL3,
   Math,
   StrUtils,
   Classes,
@@ -740,7 +740,7 @@ begin
   s := sign(x2 - x1);
   i := x1 + s;
   if s <> 0 then
-    while (SDL_PollEvent(@event) >= 0) do
+    while (SDL_WaitEvent(@event) or true) do
     begin
       CheckBasicEvent;
       SDL_Delay(50);
@@ -756,7 +756,7 @@ begin
   s := sign(y2 - y1);
   i := y1 + s;
   if s <> 0 then
-    while (SDL_PollEvent(@event) >= 0) do
+    while (SDL_WaitEvent(@event) or true) do
     begin
       CheckBasicEvent;
       SDL_Delay(50);
@@ -801,7 +801,7 @@ begin
   if enum = -1 then
   begin
     i := beginpic;
-    while SDL_PollEvent(@event) >= 0 do
+    while SDL_WaitEvent(@event) or true do
     begin
       CheckBasicEvent;
       CurSceneRolePic := i div 2;
@@ -817,7 +817,7 @@ begin
   else
   begin
     i := beginpic;
-    while SDL_PollEvent(@event) >= 0 do
+    while SDL_WaitEvent(@event) or true do
     begin
       CheckBasicEvent;
       DData[CurScene, enum, 5] := i;
@@ -872,7 +872,7 @@ begin
   if s < 0 then
     Sface := 2;
   if s <> 0 then
-    while SDL_PollEvent(@event) >= 0 do
+    while SDL_WaitEvent(@event) or true do
     begin
       CheckBasicEvent;
       SDL_Delay(50);
@@ -894,7 +894,7 @@ begin
   if s < 0 then
     Sface := 0;
   if s <> 0 then
-    while SDL_PollEvent(@event) >= 0 do
+    while SDL_WaitEvent(@event) or true do
     begin
       CheckBasicEvent;
       SDL_Delay(50);
@@ -1172,7 +1172,7 @@ begin
   if enum2 = -1 then enum2 := curevent;
   SData[CurScene, 3, DData[CurScene, enum2, 10], DData[CurScene, enum2, 9]] := enum2;
   i := 0;
-  while SDL_PollEvent(@event) >= 0 do
+  while SDL_WaitEvent(@event) or true do
   begin
     CheckBasicEvent;
     DData[CurScene, enum1, 5] := beginpic1 + i;
@@ -1199,7 +1199,7 @@ begin
   SData[CurScene, 3, DData[CurScene, enum2, 10], DData[CurScene, enum2, 9]] := enum2;
   SData[CurScene, 3, DData[CurScene, enum3, 10], DData[CurScene, enum3, 9]] := enum3;
   i := 0;
-  while SDL_PollEvent(@event) >= 0 do
+  while SDL_WaitEvent(@event) or true do
   begin
     CheckBasicEvent;
     DData[CurScene, enum1, 5] := beginpic1 + i;
@@ -1534,7 +1534,7 @@ begin
 
   i := 0;
   tempscr := img_load(putf8char(AppPath + 'resource/end.png'));
-  while SDL_PollEvent(@event) >= 0 do
+  while SDL_WaitEvent(@event) or true do
   begin
     CheckBasicEvent;
     if i mod 5 = 0 then
@@ -1549,7 +1549,7 @@ begin
     if i < CENTER_Y * 2 - tempscr.h then
       break;
   end;
-  SDL_FreeSurface(tempscr);
+  SDL_DestroySurface(tempscr);
   WaitAnyKey;
 
 end;
@@ -2129,7 +2129,7 @@ begin
       DrawBig5ShadowText(screen, p1, e3 + 3, e4 + 22 * i + 2, ColColor(e5 and $FF), ColColor((e5 and $FF00) shl 8));
       SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
       i := WaitAnyKey;
-      if i = SDLK_y then
+      if i = SDLK_Y then
         x50[$7000] := 0
       else
         x50[$7000] := 1;
@@ -2747,18 +2747,18 @@ begin
     ix := 0;
     iy := 0;
     skipSync := False;
-    while SDL_PollEvent(@event) >= 0 do
+    while SDL_WaitEvent(@event) or true do
     begin
       CheckBasicEvent;
       //部分功能
-      if (event.key.keysym.sym = SDLK_ESCAPE) or (event.button.button = SDL_BUTTON_RIGHT) then
+      if (event.key.key = SDLK_ESCAPE) or (event.button.button = SDL_BUTTON_RIGHT) then
       begin
         skipSync := True;
         SkipTalk := 1;
         //CleanKeyValue;
         break;
       end;
-      if (event.key.keysym.sym = SDLK_RETURN) or (event.key.keysym.sym = SDLK_SPACE) or (event.button.button = SDL_BUTTON_LEFT) then
+      if (event.key.key = SDLK_RETURN) or (event.key.key = SDLK_SPACE) or (event.button.button = SDL_BUTTON_LEFT) then
       begin
         skipSync := True;
         SkipTalk := 0;
@@ -2956,15 +2956,15 @@ begin
   sure := 0; //1-键盘按下, 2-鼠标按下
   pvalue := -1;
   pmenu := -1;
-  while SDL_PollEvent(@event) >= 0 do
+  while SDL_WaitEvent(@event) or true do
   begin
     CheckBasicEvent;
     case event.type_ of
-      SDL_KEYUP:
+      SDL_EVENT_KEY_UP:
       begin
-        case event.key.keysym.sym of
-          SDLK_0 .. SDLK_9: menu := event.key.keysym.sym - SDLK_0;
-          SDLK_KP_1 .. SDLK_KP_9: menu := event.key.keysym.sym - SDLK_KP_1 + 1;
+        case event.key.key of
+          SDLK_0 .. SDLK_9: menu := event.key.key - SDLK_0;
+          SDLK_KP_1 .. SDLK_KP_9: menu := event.key.key - SDLK_KP_1 + 1;
           SDLK_KP_0: menu := 0;
           SDLK_MINUS, SDLK_KP_MINUS: menu := 10;
           SDLK_DELETE: menu := 12;
@@ -2972,7 +2972,7 @@ begin
         end;
         sure := 1;
       end;
-      SDL_MOUSEMOTION:
+      SDL_EVENT_MOUSE_MOTION:
       begin
         menu := -1;
         for i := 0 to high(button) do
@@ -2984,7 +2984,7 @@ begin
           end;
         end;
       end;
-      SDL_MOUSEBUTTONUP:
+      SDL_EVENT_MOUSE_BUTTON_UP:
       begin
         case event.button.button of
           SDL_BUTTON_LEFT:
@@ -3068,8 +3068,8 @@ begin
   r.y := y;
   r.w := w;
   r.h := h;
-  SDL_StartTextInput();
-  SDL_SetTextInputRect(@r);
+  SDL_StartTextInput(window);
+  SDL_SetTextInputArea(window, @r, 0);
   while True do
   begin
     i := i + 1;
@@ -3081,11 +3081,11 @@ begin
     SDL_PollEvent(@event);
     CheckBasicEvent;
     case event.type_ of
-      SDL_TEXTINPUT:
+      SDL_EVENT_TEXT_INPUT:
       begin
         str := str + event.Text.Text;
       end;
-      SDL_MOUSEBUTTONUP:
+      SDL_EVENT_MOUSE_BUTTON_UP:
       begin
         if (event.button.button = SDL_BUTTON_RIGHT) then
         begin
@@ -3093,19 +3093,19 @@ begin
           break;
         end;
       end;
-      SDL_KEYUP:
+      SDL_EVENT_KEY_UP:
       begin
-        if event.key.keysym.sym = SDLK_RETURN then
+        if event.key.key = SDLK_RETURN then
         begin
           Result := True;
           break;
         end;
-        if event.key.keysym.sym = SDLK_ESCAPE then
+        if event.key.key = SDLK_ESCAPE then
         begin
           Result := False;
           break;
         end;
-        if event.key.keysym.sym = SDLK_BACKSPACE then
+        if event.key.key = SDLK_BACKSPACE then
         begin
           l := length(str);
           if (l >= 3) and (byte(str[l]) >= 128) then
@@ -3121,7 +3121,7 @@ begin
     end;
     SDL_Delay(16);
   end;
-  SDL_StopTextInput();
+  SDL_StopTextInput(window);
 end;
 
 procedure SetAttribute(rnum, selecttype, modlevel, minlevel, maxlevel: integer);

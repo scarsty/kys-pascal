@@ -46,9 +46,9 @@ uses
   StrUtils,
   Dialogs,
   Math,
-  SDL2_TTF,
-  SDL2,
-  SDL2_image,
+  SDL3_TTF,
+  SDL3,
+  SDL3_image,
   iniFiles,
   bass,
   Generics.Collections;
@@ -69,7 +69,7 @@ function WaitAnyKey: integer;
 procedure Walk;
 function CanWalk(x, y: integer): boolean;
 function CheckEntrance: boolean;
-function UpdateSceneAmi(interval: uint32; param: pointer): uint32; cdecl;
+function UpdateSceneAmi(param: pointer; timerid: TSDL_TimerID; interval: uint32 ): uint32; cdecl;
 function WalkInScene(Open: integer): integer;
 procedure FindWay(x1, y1: integer);
 procedure Moveman(x1, y1, x2, y2: integer);
@@ -161,16 +161,16 @@ begin
   {$IFDEF android}
   AppPath := '/sdcard/kys-pascal/';
   if (not fileexists(AppPath + 'kysmod.ini')) and (not fileexists(AppPath + 'games.ini')) then
-    AppPath := SDL_AndroidGetExternalStoragePath() + '/';
+    AppPath := SDL_GetAndroidExternalStoragePath() + '/';
   //for i := 1 to 4 do
   //AppPath:= ExtractFileDir(AppPath);
-  str := SDL_AndroidGetExternalStoragePath() + '/place_game_here';
+  str := SDL_GetAndroidExternalStoragePath() + '/place_game_here';
   //if not fileexists(str) then
   FileClose(filecreate(str));
   SDL_SetHint(SDL_HINT_ORIENTATIONS, 'LandscapeLeft LandscapeRight');
   CellPhone := 1;
-  //SDL_AndroidRequestPermission('MANAGE_EXTERNAL_STORAGE');
-  //SDL_AndroidRequestPermission('android.permission.WRITE_EXTERNAL_STORAGE');
+  //SDL_RequestAndroidPermission('MANAGE_EXTERNAL_STORAGE');
+  //SDL_RequestAndroidPermission('android.permission.WRITE_EXTERNAL_STORAGE');
   {$ENDIF}
 
   //CellPhone := 1;
@@ -199,12 +199,12 @@ begin
   engfont := TTF_OpenFont(putf8char(AppPath + ENGLISH_FONT), ENGLISH_FONT_SIZE);
 
   //此处测试中文字体的空格宽度
-  Text := TTF_RenderUNICODE_solid(font, @word[0], tempcolor);
+  Text := TTF_RenderText_solid(font, @word[0], 1, tempcolor);
   //writeln(SDL_geterror());
   //writeln(text.w);
   CHNFONT_SPACEWIDTH := Text.w;
   //CHNFONT_SPACEWIDTH := 10;
-  SDL_FreeSurface(Text);
+  SDL_DestroySurface(Text);
 
   //初始化音频系统
   //SDL_Init(SDL_INIT_AUDIO);
@@ -217,18 +217,18 @@ begin
   //初始化视频系统
   Randomize;
   //SDL_Init(SDL_INIT_VIDEO);
-  if (SDL_Init(SDL_INIT_VIDEO) < 0) then
+  if not SDL_Init(SDL_INIT_VIDEO) then
   begin
     //MessageBox(0, putf8char(Format('Couldn''t initialize SDL : %s', [SDL_GetError])), 'Error', MB_OK or MB_ICONHAND);
     SDL_Quit;
     exit;
   end;
 
-  SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, '1');
-  SDL_SetHint(SDL_HINT_IME_SHOW_UI, '1');
+  //SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, '1');
+  //SDL_SetHint(SDL_HINT_IME_SHOW_UI, '1');
 
   ScreenFlag := SDL_WINDOW_RESIZABLE;
-  window := SDL_CreateWindow(putf8char(TitleString), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, RESOLUTIONX, RESOLUTIONY, ScreenFlag);
+  window := SDL_CreateWindow(putf8char(TitleString), RESOLUTIONX, RESOLUTIONY, ScreenFlag);
   SDL_GetWindowSize(window, @RESOLUTIONX, @RESOLUTIONY);
 
   if (CellPhone = 1) then
@@ -245,23 +245,23 @@ begin
 
   //SDL_WM_SetCaption(putf8char(TitleString), 's.weyl');
 
-  render := SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED or SDL_RENDERER_TARGETTEXTURE);
-  screen := SDL_CreateRGBSurface(ScreenFlag, CENTER_X * 2, CENTER_Y * 2, 32, RMask, GMask, BMask, 0);
+  render := SDL_CreateRenderer(window, '');
+  screen := SDL_CreateSurface(CENTER_X * 2, CENTER_Y * 2, SDL_GetPixelFormatForMasks(32, Rmask, Gmask, Bmask, Amask));
   screenTex := SDL_CreateTexture(render, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, CENTER_X * 2, CENTER_Y * 2);
   //prescreen := SDL_CreateRGBSurface(ScreenFlag, CENTER_X * 2, CENTER_Y * 2, 32, RMask, GMask, BMask, 0);
   //prescreen := SDL_DisplayFormat(screen);
-  freshscreen := SDL_CreateRGBSurface(ScreenFlag, CENTER_X * 2, CENTER_Y * 2, 32, RMask, GMask, BMask, 0);
+  freshscreen := SDL_CreateSurface(CENTER_X * 2, CENTER_Y * 2, SDL_GetPixelFormatForMasks(32, Rmask, Gmask, Bmask, Amask));
 
   ImageWidth := (36 * 32 + CENTER_X) * 2;
   ImageHeight := (18 * 32 + CENTER_Y) * 2;
 
-  ImgScene := SDL_CreateRGBSurface(screen.flags, ImageWidth, ImageHeight, 32, RMask, GMask, BMask, 0);
+  ImgScene := SDL_CreateSurface(ImageWidth, ImageHeight, SDL_GetPixelFormatForMasks(32, Rmask, Gmask, Bmask, 0));
   //ImgScene := SDL_DisplayFormat(ImgScene);
-  ImgSceneBack := SDL_CreateRGBSurface(screen.flags, ImageWidth, ImageHeight, 32, RMask, GMask, BMask, 0);
-  ImgBField := SDL_CreateRGBSurface(screen.flags, ImageWidth, ImageHeight, 32, RMask, GMask, BMask, 0);
-  ImgBBuild := SDL_CreateRGBSurface(screen.flags, ImageWidth, ImageHeight, 32, RMask, GMask, BMask, 0);
-  SDL_SetColorKey(ImgSceneBack, 1, 1);
-  SDL_SetColorKey(ImgBBuild, 1, 1);
+  ImgSceneBack := SDL_CreateSurface(ImageWidth, ImageHeight, SDL_GetPixelFormatForMasks(32, Rmask, Gmask, Bmask, 0));
+  ImgBField := SDL_CreateSurface(ImageWidth, ImageHeight, SDL_GetPixelFormatForMasks(32, Rmask, Gmask, Bmask, 0));
+  ImgBBuild := SDL_CreateSurface(ImageWidth, ImageHeight, SDL_GetPixelFormatForMasks(32, Rmask, Gmask, Bmask, 0));
+  SDL_SetSurfaceColorKey(ImgSceneBack, True, 1);
+  SDL_SetSurfaceColorKey(ImgBBuild, True, 1);
   setlength(BlockImg, ImageWidth * ImageHeight);
   setlength(BlockImg2, ImageWidth * ImageHeight);
 
@@ -594,18 +594,18 @@ begin
 
   //事件等待
   Selected := False;
-  while (SDL_WaitEvent(@event) >= 0) do
+  while (SDL_WaitEvent(@event)) do
   begin
     CheckBasicEvent;
     case event.type_ of //键盘事件
-      SDL_KEYUP:
+      SDL_EVENT_KEY_UP:
       begin
-        if ((event.key.keysym.sym = SDLK_RETURN) or (event.key.keysym.sym = SDLK_SPACE)) then
+        if ((event.key.key = SDLK_RETURN) or (event.key.key = SDLK_SPACE)) then
         begin
           Selected := True;
         end;
         //按下方向键上
-        if event.key.keysym.sym = SDLK_UP then
+        if event.key.key = SDLK_UP then
         begin
           menu := menu - 1;
           if menu < 0 then
@@ -615,7 +615,7 @@ begin
           SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
         end;
         //按下方向键下
-        if event.key.keysym.sym = SDLK_DOWN then
+        if event.key.key = SDLK_DOWN then
         begin
           menu := menu + 1;
           if menu > 2 then
@@ -626,7 +626,7 @@ begin
         end;
       end;
       //按下鼠标(UP表示抬起按键才执行)
-      SDL_MOUSEBUTTONUP:
+      SDL_EVENT_MOUSE_BUTTON_UP:
       begin
         if (event.button.button = SDL_BUTTON_LEFT) and (round(event.button.x / (RESOLUTIONX / screen.w)) > x) and (round(event.button.x / (RESOLUTIONX / screen.w)) < x + 80) and (round(event.button.y / (RESOLUTIONY / screen.h)) > y) and (round(event.button.y / (RESOLUTIONY / screen.h)) < y + 60) then
         begin
@@ -634,7 +634,7 @@ begin
         end;
       end;
       //鼠标移动
-      SDL_MOUSEMOTION:
+      SDL_EVENT_MOUSE_MOTION:
       begin
         if (round(event.button.x / (RESOLUTIONX / screen.w)) > x) and (round(event.button.x / (RESOLUTIONX / screen.w)) < x + 80) and (round(event.button.y / (RESOLUTIONY / screen.h)) > y) and (round(event.button.y / (RESOLUTIONY / screen.h)) < y + 60) then
         begin
@@ -1700,21 +1700,21 @@ var
   x, y: integer;
 begin
   //event.type_ := SDL_NOEVENT;
-  //SDL_EventState(SDL_KEYDOWN, SDL_ENABLE);
-  //SDL_EventState(SDL_KEYUP, SDL_ENABLE);
+  //SDL_EventState(SDL_EVENT_KEY_DOWN, SDL_ENABLE);
+  //SDL_EventState(SDL_EVENT_KEY_UP, SDL_ENABLE);
   //SDL_EventState(SDL_mousebuttonUP, SDL_ENABLE);
   //SDL_EventState(SDL_mousebuttonDOWN, SDL_ENABLE);
-  event.key.keysym.sym := 0;
+  event.key.key := 0;
   event.button.button := 0;
-  while (SDL_PollEvent(@event) >= 0) do
+  while (SDL_WaitEvent(@event) or true) do
   begin
     CheckBasicEvent;
-    if (event.type_ = SDL_KEYUP) or (event.type_ = SDL_MOUSEBUTTONUP) then
-      if (event.key.keysym.sym <> 0) or (event.button.button <> 0) then
+    if (event.type_ = SDL_EVENT_KEY_UP) or (event.type_ = SDL_EVENT_MOUSE_BUTTON_UP) then
+      if (event.key.key <> 0) or (event.button.button <> 0) then
         break;
     SDL_Delay(20);
   end;
-  Result := event.key.keysym.sym;
+  Result := event.key.key;
 
   if event.button.button = SDL_BUTTON_LEFT then
   begin
@@ -1735,13 +1735,13 @@ begin
       if (x > CENTER_X * 2 - 100) and (y > CENTER_Y * 2 - 100) then
         Result := SDLK_RETURN;
       if (x > CENTER_X * 2 - 100) and (y < 100) then
-        Result := SDLK_y;
+        Result := SDLK_Y;
     end;
   end;
   if event.button.button = SDL_BUTTON_RIGHT then
     Result := SDLK_ESCAPE;
 
-  event.key.keysym.sym := 0;
+  event.key.key := 0;
   event.button.button := 0;
 end;
 
@@ -1777,8 +1777,9 @@ begin
 
   //ExecScript('test.txt');
   //事件轮询(并非等待)
-  while SDL_PollEvent(@event) >= 0 do
+  while true  do
   begin
+    SDL_PollEvent(@event);
     //如果当前处于标题画面, 则退出, 用于战斗失败
     if where >= 3 then
     begin
@@ -1835,31 +1836,31 @@ begin
     CheckBasicEvent;
     case event.type_ of
       //方向键使用压下按键事件, 按下方向设置状态为行走
-      SDL_KEYDOWN:
+      SDL_EVENT_KEY_DOWN:
       begin
-        if (event.key.keysym.sym = SDLK_LEFT) then
+        if (event.key.key = SDLK_LEFT) then
         begin
           Mface := 2;
           walking := 1;
         end;
-        if (event.key.keysym.sym = SDLK_RIGHT) then
+        if (event.key.key = SDLK_RIGHT) then
         begin
           Mface := 1;
           walking := 1;
         end;
-        if (event.key.keysym.sym = SDLK_UP) then
+        if (event.key.key = SDLK_UP) then
         begin
           Mface := 0;
           walking := 1;
         end;
-        if (event.key.keysym.sym = SDLK_DOWN) then
+        if (event.key.key = SDLK_DOWN) then
         begin
           Mface := 3;
           walking := 1;
         end;
       end;
       //功能键(esc)使用松开按键事件
-      SDL_KEYUP:
+      SDL_EVENT_KEY_UP:
       begin
         keystate := putf8char(SDL_GetKeyboardState(nil));
         if (pbyte(keystate + SDL_scancode_LEFT)^ = 0) and (pbyte(keystate + SDL_scancode_RIGHT)^ = 0) and (pbyte(keystate + SDL_scancode_UP)^ = 0) and (pbyte(keystate + SDL_scancode_DOWN)^ = 0) then
@@ -1868,17 +1869,17 @@ begin
           Speed := 0;
         end;
         //keystate := nil;
-        {if event.key.keysym.sym in [sdlk_left, sdlk_right, sdlk_up, sdlk_down] then
+        {if event.key.key in [sdlk_left, sdlk_right, sdlk_up, sdlk_down] then
           begin
           walking := 0;
           end;}
-        if (event.key.keysym.sym = SDLK_ESCAPE) then
+        if (event.key.key = SDLK_ESCAPE) then
         begin
-          //event.key.keysym.sym:=0;
+          //event.key.key:=0;
           MenuEsc;
           //walking := 0;
         end;
-        {if (event.key.keysym.sym = sdlk_return) and (event.key.keysym.modifier = kmod_lalt) then
+        {if (event.key.key = sdlk_return) and (event.key.key.modifier = kmod_lalt) then
           begin
           if fullscreen = 1 then
           screen := SDL_SetVideoMode(CENTER_X * 2, CENTER_Y * 2, 32, ScreenFlag)
@@ -1887,7 +1888,7 @@ begin
           fullscreen := 1 - fullscreen;
           end;}
       end;
-      SDL_MOUSEMOTION:
+      SDL_EVENT_MOUSE_MOTION:
       begin
         if ShowVirtualKey = 0 then
         begin
@@ -1902,7 +1903,7 @@ begin
             Mface := 1;
         end;
       end;
-      SDL_MOUSEBUTTONUP:
+      SDL_EVENT_MOUSE_BUTTON_UP:
       begin
         if event.button.button = SDL_BUTTON_RIGHT then
         begin
@@ -2072,7 +2073,7 @@ begin
       WalkInScene(0);
     end;
 
-    event.key.keysym.sym := 0;
+    event.key.key := 0;
     event.button.button := 0;
     //走路时不重复画了
     if walking = 0 then
@@ -2170,7 +2171,7 @@ begin
       //如达成条件, 进入场景并初始化场景坐标
       SaveR(11);
       WalkInScene(0);
-      event.key.keysym.sym := 0;
+      event.key.key := 0;
       event.button.button := 0;
       //waitanykey;
     end;
@@ -2180,7 +2181,7 @@ begin
 
 end;
 
-function UpdateSceneAmi(interval: uint32; param: pointer): uint32;
+function UpdateSceneAmi(param: pointer; timerid: TSDL_TimerID; interval: uint32 ): uint32;
 begin
   Result := 200;
   //while True do
@@ -2254,7 +2255,7 @@ begin
 
   //if SCENEAMI = 2 then
   //UpDate := SDL_CreateThread(@UpdateSceneAmi, nil, nil);
-  while (SDL_PollEvent(@event) >= 0) do
+  while (SDL_PollEvent(@event))or true do
   begin
     if where <> 1 then
     begin
@@ -2354,7 +2355,7 @@ begin
 
     CheckBasicEvent;
     case event.type_ of
-      SDL_KEYUP:
+      SDL_EVENT_KEY_UP:
       begin
         keystate := putf8char(SDL_GetKeyboardState(nil));
         if (pbyte(keystate + SDL_scancode_LEFT)^ = 0) and (pbyte(keystate + SDL_scancode_RIGHT)^ = 0) and (pbyte(keystate + SDL_scancode_UP)^ = 0) and (pbyte(keystate + SDL_scancode_DOWN)^ = 0) then
@@ -2363,7 +2364,7 @@ begin
           Speed := 0;
         end;
         //keystate := nil;
-        if (event.key.keysym.sym = SDLK_ESCAPE) then
+        if (event.key.key = SDLK_ESCAPE) then
         begin
           MenuEsc;
           walking := 0;
@@ -2371,29 +2372,29 @@ begin
           //mousewalking := 0;
         end;
         //按下回车或空格, 检查面对方向是否有第1类事件
-        if (event.key.keysym.sym = SDLK_RETURN) or (event.key.keysym.sym = SDLK_SPACE) then
+        if (event.key.key = SDLK_RETURN) or (event.key.key = SDLK_SPACE) then
         begin
           CheckEvent1;
         end;
       end;
-      SDL_KEYDOWN:
+      SDL_EVENT_KEY_DOWN:
       begin
-        if (event.key.keysym.sym = SDLK_LEFT) then
+        if (event.key.key = SDLK_LEFT) then
         begin
           SFace := 2;
           walking := 1;
         end;
-        if (event.key.keysym.sym = SDLK_RIGHT) then
+        if (event.key.key = SDLK_RIGHT) then
         begin
           SFace := 1;
           walking := 1;
         end;
-        if (event.key.keysym.sym = SDLK_UP) then
+        if (event.key.key = SDLK_UP) then
         begin
           SFace := 0;
           walking := 1;
         end;
-        if (event.key.keysym.sym = SDLK_DOWN) then
+        if (event.key.key = SDLK_DOWN) then
         begin
           SFace := 3;
           walking := 1;
@@ -2417,7 +2418,7 @@ begin
         if event.button.button = sdl_button_middle then
         CheckEvent1;
         end;}
-      SDL_MOUSEMOTION:
+      SDL_EVENT_MOUSE_MOTION:
       begin
         if ShowVirtualKey = 0 then
         begin
@@ -2432,7 +2433,7 @@ begin
             Mface := 1;
         end;
       end;
-      SDL_MOUSEBUTTONUP:
+      SDL_EVENT_MOUSE_BUTTON_UP:
       begin
         if event.button.button = SDL_BUTTON_RIGHT then
         begin
@@ -2604,7 +2605,7 @@ begin
       //SDL_Delay(WALK_SPEED2);
     end;
 
-    event.key.keysym.sym := 0;
+    event.key.key := 0;
     event.button.button := 0;
 
     if walking or Speed = 0 then
@@ -2928,13 +2929,13 @@ begin
   RecordFreshScreen(x, y, w + 1, max * 22 + 29);
   ShowCommonMenu(x, y, w, max, menu, menuString, menuEngString);
   SDL_UpdateRect2(screen, x, y, w + 1, max * 22 + 29);
-  while (SDL_WaitEvent(@event) >= 0) do
+  while (SDL_WaitEvent(@event)) do
   begin
     CheckBasicEvent;
     case event.type_ of
-      SDL_KEYUP:
+      SDL_EVENT_KEY_UP:
       begin
-        if (event.key.keysym.sym = SDLK_DOWN) then
+        if (event.key.key = SDLK_DOWN) then
         begin
           menu := menu + 1;
           if menu > max then
@@ -2942,7 +2943,7 @@ begin
           ShowCommonMenu(x, y, w, max, menu, menuString, menuEngString);
           SDL_UpdateRect2(screen, x, y, w + 1, max * 22 + 29);
         end;
-        if (event.key.keysym.sym = SDLK_UP) then
+        if (event.key.key = SDLK_UP) then
         begin
           menu := menu - 1;
           if menu < 0 then
@@ -2950,14 +2951,14 @@ begin
           ShowCommonMenu(x, y, w, max, menu, menuString, menuEngString);
           SDL_UpdateRect2(screen, x, y, w + 1, max * 22 + 29);
         end;
-        if ((event.key.keysym.sym = SDLK_ESCAPE)) {and (where <= 2)} then
+        if ((event.key.key = SDLK_ESCAPE)) {and (where <= 2)} then
         begin
           Result := -1;
           //ReDraw;
           //SDL_UpdateRect2(screen, x, y, w + 1, max * 22 + 29);
           break;
         end;
-        if (event.key.keysym.sym = SDLK_RETURN) or (event.key.keysym.sym = SDLK_SPACE) then
+        if (event.key.key = SDLK_RETURN) or (event.key.key = SDLK_SPACE) then
         begin
           Result := menu;
           //Redraw;
@@ -2965,7 +2966,7 @@ begin
           break;
         end;
       end;
-      SDL_MOUSEBUTTONUP:
+      SDL_EVENT_MOUSE_BUTTON_UP:
       begin
         if (event.button.button = SDL_BUTTON_RIGHT) {and (where <= 2)} then
         begin
@@ -2985,7 +2986,7 @@ begin
           end;
         end;
       end;
-      SDL_MOUSEMOTION:
+      SDL_EVENT_MOUSE_MOTION:
       begin
         if (round(event.button.x / (RESOLUTIONX / screen.w)) >= x) and (round(event.button.x / (RESOLUTIONX / screen.w)) < x + w) and (round(event.button.y / (RESOLUTIONY / screen.h)) > y) and (round(event.button.y / (RESOLUTIONY / screen.h)) < y + max * 22 + 29) then
         begin
@@ -3006,7 +3007,7 @@ begin
   end;
 
   //清空键盘键和鼠标键值, 避免影响其余部分
-  event.key.keysym.sym := 0;
+  event.key.key := 0;
   event.button.button := 0;
 
 end;
@@ -3022,13 +3023,13 @@ begin
   ShowCommonMenu(x, y, w, max, menu, menuString, menuEngString);
   SDL_UpdateRect2(screen, x, y, w + 1, max * 22 + 29);
   fn(menu);
-  while (SDL_WaitEvent(@event) >= 0) do
+  while (SDL_WaitEvent(@event)) do
   begin
     CheckBasicEvent;
     case event.type_ of
-      SDL_KEYUP:
+      SDL_EVENT_KEY_UP:
       begin
-        if (event.key.keysym.sym = SDLK_DOWN) then
+        if (event.key.key = SDLK_DOWN) then
         begin
           menu := menu + 1;
           if menu > max then
@@ -3037,7 +3038,7 @@ begin
           SDL_UpdateRect2(screen, x, y, w + 1, max * 22 + 29);
           fn(menu);
         end;
-        if (event.key.keysym.sym = SDLK_UP) then
+        if (event.key.key = SDLK_UP) then
         begin
           menu := menu - 1;
           if menu < 0 then
@@ -3046,7 +3047,7 @@ begin
           SDL_UpdateRect2(screen, x, y, w + 1, max * 22 + 29);
           fn(menu);
         end;
-        if ((event.key.keysym.sym = SDLK_ESCAPE)) {and (where <= 2)} then
+        if ((event.key.key = SDLK_ESCAPE)) {and (where <= 2)} then
         begin
           Result := -1;
           //ReDraw;
@@ -3054,7 +3055,7 @@ begin
           break;
         end;
       end;
-      SDL_MOUSEBUTTONUP:
+      SDL_EVENT_MOUSE_BUTTON_UP:
       begin
         if (event.button.button = SDL_BUTTON_RIGHT) {and (where <= 2)} then
         begin
@@ -3064,7 +3065,7 @@ begin
           break;
         end;
       end;
-      SDL_MOUSEMOTION:
+      SDL_EVENT_MOUSE_MOTION:
       begin
         if (round(event.button.x / (RESOLUTIONX / screen.w)) >= x) and (round(event.button.x / (RESOLUTIONX / screen.w)) < x + w) and (round(event.button.y / (RESOLUTIONY / screen.h)) > y) and (round(event.button.y / (RESOLUTIONY / screen.h)) < y + max * 22 + 29) then
         begin
@@ -3085,7 +3086,7 @@ begin
     end;
   end;
   //清空键盘键和鼠标键值, 避免影响其余部分
-  event.key.keysym.sym := 0;
+  event.key.key := 0;
   event.button.button := 0;
 end;
 
@@ -3146,13 +3147,13 @@ begin
   RecordFreshScreen(x, y, w + 1, max * 22 + 29);
   ShowCommonScrollMenu(x, y, w, max, maxshow, menu, menutop, menuString, menuEngString);
   SDL_UpdateRect2(screen, x, y, w + 1, maxshow * 22 + 29);
-  while (SDL_WaitEvent(@event) >= 0) do
+  while (SDL_WaitEvent(@event)) do
   begin
     CheckBasicEvent;
     case event.type_ of
-      SDL_KEYUP:
+      SDL_EVENT_KEY_UP:
       begin
-        if (event.key.keysym.sym = SDLK_DOWN) then
+        if (event.key.key = SDLK_DOWN) then
         begin
           menu := menu + 1;
           if menu - menutop >= maxshow then
@@ -3167,7 +3168,7 @@ begin
           ShowCommonScrollMenu(x, y, w, max, maxshow, menu, menutop, menuString, menuEngString);
           SDL_UpdateRect2(screen, x, y, w + 1, maxshow * 22 + 29);
         end;
-        if (event.key.keysym.sym = SDLK_UP) then
+        if (event.key.key = SDLK_UP) then
         begin
           menu := menu - 1;
           if menu <= menutop then
@@ -3182,7 +3183,7 @@ begin
           ShowCommonScrollMenu(x, y, w, max, maxshow, menu, menutop, menuString, menuEngString);
           SDL_UpdateRect2(screen, x, y, w + 1, maxshow * 22 + 29);
         end;
-        if (event.key.keysym.sym = SDLK_PAGEDOWN) then
+        if (event.key.key = SDLK_PAGEDOWN) then
         begin
           menu := menu + maxshow;
           menutop := menutop + maxshow;
@@ -3197,7 +3198,7 @@ begin
           ShowCommonScrollMenu(x, y, w, max, maxshow, menu, menutop, menuString, menuEngString);
           SDL_UpdateRect2(screen, x, y, w + 1, maxshow * 22 + 29);
         end;
-        if (event.key.keysym.sym = SDLK_PAGEUP) then
+        if (event.key.key = SDLK_PAGEUP) then
         begin
           menu := menu - maxshow;
           menutop := menutop - maxshow;
@@ -3212,14 +3213,14 @@ begin
           ShowCommonScrollMenu(x, y, w, max, maxshow, menu, menutop, menuString, menuEngString);
           SDL_UpdateRect2(screen, x, y, w + 1, maxshow * 22 + 29);
         end;
-        if ((event.key.keysym.sym = SDLK_ESCAPE)) and (where <= 2) then
+        if ((event.key.key = SDLK_ESCAPE)) and (where <= 2) then
         begin
           Result := -1;
           //ReDraw;
           //SDL_UpdateRect2(screen, x, y, w + 1, maxshow * 22 + 29);
           break;
         end;
-        if (event.key.keysym.sym = SDLK_RETURN) or (event.key.keysym.sym = SDLK_SPACE) then
+        if (event.key.key = SDLK_RETURN) or (event.key.key = SDLK_SPACE) then
         begin
           Result := menu;
           //Redraw;
@@ -3227,7 +3228,7 @@ begin
           break;
         end;
       end;
-      SDL_MOUSEBUTTONUP:
+      SDL_EVENT_MOUSE_BUTTON_UP:
       begin
         if (event.button.button = SDL_BUTTON_RIGHT) and (where <= 2) then
         begin
@@ -3247,7 +3248,7 @@ begin
           end;
         end;
       end;
-      SDL_MOUSEWHEEL:
+      SDL_EVENT_MOUSE_WHEEL:
       begin
         if (event.wheel.y > 0) then
         begin
@@ -3280,7 +3281,7 @@ begin
           SDL_UpdateRect2(screen, x, y, w + 1, maxshow * 22 + 29);
         end;
       end;
-      SDL_MOUSEMOTION:
+      SDL_EVENT_MOUSE_MOTION:
       begin
         if (round(event.button.x / (RESOLUTIONX / screen.w)) >= x) and (round(event.button.x / (RESOLUTIONX / screen.w)) < x + w) and (round(event.button.y / (RESOLUTIONY / screen.h)) > y) and (round(event.button.y / (RESOLUTIONY / screen.h)) < y + max * 22 + 29) then
         begin
@@ -3300,7 +3301,7 @@ begin
     end;
   end;
   //清空键盘键和鼠标键值, 避免影响其余部分
-  event.key.keysym.sym := 0;
+  event.key.key := 0;
   event.button.button := 0;
 
 end;
@@ -3345,13 +3346,13 @@ begin
   RecordFreshScreen(x, y, w + 1, 29);
   ShowCommonMenu2(x, y, w, menu, menuString);
   SDL_UpdateRect2(screen, x, y, w + 1, 29);
-  while (SDL_WaitEvent(@event) >= 0) do
+  while (SDL_WaitEvent(@event)) do
   begin
     CheckBasicEvent;
     case event.type_ of
-      SDL_KEYUP:
+      SDL_EVENT_KEY_UP:
       begin
-        if (event.key.keysym.sym = SDLK_LEFT) or (event.key.keysym.sym = SDLK_RIGHT) then
+        if (event.key.key = SDLK_LEFT) or (event.key.key = SDLK_RIGHT) then
         begin
           if menu = 1 then
             menu := 0
@@ -3360,14 +3361,14 @@ begin
           ShowCommonMenu2(x, y, w, menu, menuString);
           SDL_UpdateRect2(screen, x, y, w + 1, 29);
         end;
-        if ((event.key.keysym.sym = SDLK_ESCAPE)) and (where <= 2) then
+        if ((event.key.key = SDLK_ESCAPE)) and (where <= 2) then
         begin
           Result := -1;
           //ReDraw;
           //SDL_UpdateRect2(screen, x, y, w + 1, 29);
           break;
         end;
-        if (event.key.keysym.sym = SDLK_RETURN) or (event.key.keysym.sym = SDLK_SPACE) then
+        if (event.key.key = SDLK_RETURN) or (event.key.key = SDLK_SPACE) then
         begin
           Result := menu;
           //Redraw;
@@ -3375,7 +3376,7 @@ begin
           break;
         end;
       end;
-      SDL_MOUSEBUTTONUP:
+      SDL_EVENT_MOUSE_BUTTON_UP:
       begin
         if (event.button.button = SDL_BUTTON_RIGHT) and (where <= 2) then
         begin
@@ -3395,7 +3396,7 @@ begin
           end;
         end;
       end;
-      SDL_MOUSEMOTION:
+      SDL_EVENT_MOUSE_MOTION:
       begin
         if (round(event.button.x / (RESOLUTIONX / screen.w)) >= x) and (round(event.button.x / (RESOLUTIONX / screen.w)) < x + w) and (round(event.button.y / (RESOLUTIONY / screen.h)) > y) and (round(event.button.y / (RESOLUTIONY / screen.h)) < y + 29) then
         begin
@@ -3415,7 +3416,7 @@ begin
     end;
   end;
   //清空键盘键和鼠标键值, 避免影响其余部分
-  event.key.keysym.sym := 0;
+  event.key.key := 0;
   event.button.button := 0;
 
 end;
@@ -3522,8 +3523,8 @@ begin
   {SDL_EnableKeyRepeat(0, 0);
     //DrawMMap;
     showMenu(menu);
-    //SDL_EventState(SDL_KEYDOWN,SDL_IGNORE);
-    while (SDL_WaitEvent(@event) >= 0) do
+    //SDL_EventState(SDL_EVENT_KEY_DOWN,SDL_IGNORE);
+    while (SDL_WaitEvent(@event)) do
     begin
     if where >= 3 then
     begin
@@ -3531,29 +3532,29 @@ begin
     end;
     CheckBasicEvent;
     case event.type_ of
-    SDL_KEYUP:
+    SDL_EVENT_KEY_UP:
     begin
-    if (event.key.keysym.sym = sdlk_down) then
+    if (event.key.key = sdlk_down) then
     begin
     menu := menu + 1;
     if menu > 5 - 0 * 2 then
     menu := 0;
     showMenu(menu);
     end;
-    if (event.key.keysym.sym = sdlk_up) then
+    if (event.key.key = sdlk_up) then
     begin
     menu := menu - 1;
     if menu < 0 then
     menu := 5 - 0 * 2;
     showMenu(menu);
     end;
-    if (event.key.keysym.sym = sdlk_escape) then
+    if (event.key.key = sdlk_escape) then
     begin
     ReDraw;
     SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
     break;
     end;
-    if (event.key.keysym.sym = sdlk_return) or (event.key.keysym.sym = sdlk_space) then
+    if (event.key.key = sdlk_return) or (event.key.key = sdlk_space) then
     begin
     case menu of
     0: MenuMedcine;
@@ -3566,7 +3567,7 @@ begin
     showmenu(menu);
     end;
     end;
-    SDL_MOUSEBUTTONUP:
+    SDL_EVENT_MOUSE_BUTTON_UP:
     begin
     if event.button.button = sdl_button_right then
     begin
@@ -3592,7 +3593,7 @@ begin
     end;
     end;
     end;
-    SDL_MOUSEMOTION:
+    SDL_EVENT_MOUSE_MOTION:
     begin
     if (round(event.button.y / (resolutiony / screen.h)) > 32) and (round(event.button.y / (resolutiony / screen.h)) < 32 + 22 * 6)
     and (round(event.button.x / (resolutionx / screen.w)) > 27) and (round(event.button.x / (resolutionx / screen.w)) < 27 + 46) then
@@ -3610,7 +3611,7 @@ begin
 
     end;
     end;
-    event.key.keysym.sym := 0;
+    event.key.key := 0;
     event.button.button := 0;
     SDL_EnableKeyRepeat(50, 30);}
 
@@ -3788,13 +3789,13 @@ begin
       atlu := 0;
       ShowMenuItem(row, col, x, y, atlu);
       SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-      while (SDL_WaitEvent(@event) >= 0) do
+      while (SDL_WaitEvent(@event)) do
       begin
         CheckBasicEvent;
         case event.type_ of
-          SDL_KEYUP:
+          SDL_EVENT_KEY_UP:
           begin
-            if (event.key.keysym.sym = SDLK_DOWN) then
+            if (event.key.key = SDLK_DOWN) then
             begin
               y := y + 1;
               if y < 0 then
@@ -3808,7 +3809,7 @@ begin
               ShowMenuItem(row, col, x, y, atlu);
               SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
             end;
-            if (event.key.keysym.sym = SDLK_UP) then
+            if (event.key.key = SDLK_UP) then
             begin
               y := y - 1;
               if y < 0 then
@@ -3820,7 +3821,7 @@ begin
               ShowMenuItem(row, col, x, y, atlu);
               SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
             end;
-            if (event.key.keysym.sym = SDLK_PAGEDOWN) then
+            if (event.key.key = SDLK_PAGEDOWN) then
             begin
               //y := y + row;
               atlu := atlu + col * row;
@@ -3836,7 +3837,7 @@ begin
               ShowMenuItem(row, col, x, y, atlu);
               SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
             end;
-            if (event.key.keysym.sym = SDLK_PAGEUP) then
+            if (event.key.key = SDLK_PAGEUP) then
             begin
               //y := y - row;
               atlu := atlu - col * row;
@@ -3850,7 +3851,7 @@ begin
               ShowMenuItem(row, col, x, y, atlu);
               SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
             end;
-            if (event.key.keysym.sym = SDLK_RIGHT) then
+            if (event.key.key = SDLK_RIGHT) then
             begin
               x := x + 1;
               if x >= col then
@@ -3858,7 +3859,7 @@ begin
               ShowMenuItem(row, col, x, y, atlu);
               SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
             end;
-            if (event.key.keysym.sym = SDLK_LEFT) then
+            if (event.key.key = SDLK_LEFT) then
             begin
               x := x - 1;
               if x < 0 then
@@ -3866,7 +3867,7 @@ begin
               ShowMenuItem(row, col, x, y, atlu);
               SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
             end;
-            if (event.key.keysym.sym = SDLK_ESCAPE) then
+            if (event.key.key = SDLK_ESCAPE) then
             begin
               //ReDraw;
               //ShowMenu(2);
@@ -3874,7 +3875,7 @@ begin
               //SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
               break;
             end;
-            if (event.key.keysym.sym = SDLK_RETURN) or (event.key.keysym.sym = SDLK_SPACE) then
+            if (event.key.key = SDLK_RETURN) or (event.key.key = SDLK_SPACE) then
             begin
               //ReDraw;
               CurItem := RItemlist[ItemList[(y * col + x + atlu)]].Number;
@@ -3886,7 +3887,7 @@ begin
               break;
             end;
           end;
-          SDL_MOUSEBUTTONUP:
+          SDL_EVENT_MOUSE_BUTTON_UP:
           begin
             if (event.button.button = SDL_BUTTON_RIGHT) then
             begin
@@ -3911,7 +3912,7 @@ begin
               end;
             end;
           end;
-          SDL_MOUSEWHEEL:
+          SDL_EVENT_MOUSE_WHEEL:
           begin
             if (event.wheel.y < 0) then
             begin
@@ -3940,7 +3941,7 @@ begin
               SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
             end;
           end;
-          SDL_MOUSEMOTION:
+          SDL_EVENT_MOUSE_MOTION:
           begin
             if (round(event.button.x / (RESOLUTIONX / screen.w)) >= 110) and (round(event.button.x / (RESOLUTIONX / screen.w)) < 110 + w) and (round(event.button.y / (RESOLUTIONY / screen.h)) > 90) and (round(event.button.y / (RESOLUTIONY / screen.h)) < 308) then
             begin
@@ -4260,7 +4261,7 @@ begin
   for i := 0 to 39 do
   begin
     t := 250 - i * 3;
-    c := SDL_MapRGB(screen.format, t, t, t);
+    c := SDL_MapSurfaceRGB(screen, t, t, t);
     PutPixel(screen, x * d + 6 + i + xp, y * d + 36 + yp, c);
     PutPixel(screen, x * d + 6 + 39 - i + xp, y * d + 36 + 39 + yp, c);
     PutPixel(screen, x * d + 6 + xp, y * d + 36 + i + yp, c);
@@ -4998,35 +4999,35 @@ end;
   begin
   menu := 0;
   showmenusystem(menu);
-  while (SDL_WaitEvent(@event) >= 0) do
+  while (SDL_WaitEvent(@event)) do
   begin
   if where = 3 then
   break;
   CheckBasicEvent;
   case event.type_ of
-  SDL_KEYUP:
+  SDL_EVENT_KEY_UP:
   begin
-  if (event.key.keysym.sym = sdlk_down) then
+  if (event.key.key = sdlk_down) then
   begin
   menu := menu + 1;
   if menu > 3 then
   menu := 0;
   showMenusystem(menu);
   end;
-  if (event.key.keysym.sym = sdlk_up) then
+  if (event.key.key = sdlk_up) then
   begin
   menu := menu - 1;
   if menu < 0 then
   menu := 3;
   showMenusystem(menu);
   end;
-  if (event.key.keysym.sym = sdlk_escape) then
+  if (event.key.key = sdlk_escape) then
   begin
   redraw;
   SDL_UpdateRect2(screen, 80, 30, 47, 95);
   break;
   end;
-  if (event.key.keysym.sym = sdlk_return) or (event.key.keysym.sym = sdlk_space) then
+  if (event.key.key = sdlk_return) or (event.key.key = sdlk_space) then
   begin
   case menu of
   3:
@@ -5049,7 +5050,7 @@ end;
   end;
   end;
   end;
-  SDL_MOUSEBUTTONUP:
+  SDL_EVENT_MOUSE_BUTTON_UP:
   begin
   if (event.button.button = sdl_button_right) then
   begin
@@ -5078,7 +5079,7 @@ end;
   end;
   end;
   end;
-  SDL_MOUSEMOTION:
+  SDL_EVENT_MOUSE_MOTION:
   begin
   if (round(event.button.x / (resolutionx / screen.w)) >= 80) and (round(event.button.x / (resolutionx / screen.w)) < 127)
   and (round(event.button.y / (resolutiony / screen.h)) > 47) and (round(event.button.y / (resolutiony / screen.h)) < 120) then
@@ -5668,7 +5669,7 @@ begin
     len := length(e);
     ConsoleLog('Event %d', [num]);
     //普通事件写成子程, 需跳转事件写成函数
-    while SDL_PollEvent(@event) >= 0 do
+    while SDL_PollEvent(@event) or true do
     begin
       CheckBasicEvent;
       if (i >= len - 1) then
@@ -6036,7 +6037,7 @@ begin
     ExecScript(filename, '');
   end;
 
-  //event.key.keysym.sym := 0;
+  //event.key.key := 0;
   //event.button.button := 0;
   //CurSceneRolePic := tempPic;;
   //CurSceneRolePic := 2500 + SFace * 7 + 1;

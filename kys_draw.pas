@@ -11,8 +11,8 @@ uses
   Windows,
   {$ENDIF}
   Math,
-  SDL2_image,
-  SDL2,
+  SDL3_image,
+  SDL3,
   kys_main,
   kys_type;
 
@@ -280,7 +280,7 @@ begin
     dest.x := px;
     dest.y := py;
     SDL_BlitSurface(image, nil, scr, @dest);
-    //SDL_FreeSurface(image);
+    //SDL_DestroySurface(image);
   end
   else
   begin
@@ -501,12 +501,12 @@ begin
     2: DrawBField;
     3:
     begin
-      SDL_FillRect(screen, nil, 0);
+      SDL_FillSurfaceRect(screen, nil, 0);
       display_img(putf8char(AppPath + 'resource/open.png'), OpenPicPosition.x, OpenPicPosition.y);
     end;
     4:
     begin
-      SDL_FillRect(screen, nil, 0);
+      SDL_FillSurfaceRect(screen, nil, 0);
       display_img(putf8char(AppPath + 'resource/dead.png'), OpenPicPosition.x, OpenPicPosition.y);
     end;
   end;
@@ -780,7 +780,7 @@ var
 begin
   {if BIG_PNG_TILE = 1 then
     begin
-    SDL_FillRect(screen, nil, 0);
+    SDL_FillSurfaceRect(screen, nil, 0);
     dest.x := (-Mx * 18 + My * 18 + 8640 - CENTER_X) div 2;
     dest.y := (Mx * 9 + My * 9 + 18 - CENTER_Y) div 2;
     //dest.x := 8640 div 2;
@@ -791,8 +791,8 @@ begin
     SDL_BlitSurface(MMapSurface, @dest, tempscr, nil);
     tempscr1 := sdl_gfx.zoomSurface(tempscr, 2, 2, 0);
     SDL_BlitSurface(tempscr1, nil, screen, nil);
-    SDL_FreeSurface(tempscr);
-    SDL_FreeSurface(tempscr1);
+    SDL_DestroySurface(tempscr);
+    SDL_DestroySurface(tempscr1);
     end;}
   //由上到下绘制, 先绘制地面和表面, 同时计算出现的建筑数
   k := 0;
@@ -1020,8 +1020,8 @@ begin
     y1 := 0;
     w := ImageWidth;
     h := ImageHeight;
-    SDL_FillRect(ImgScene, nil, 0);
-    SDL_FillRect(ImgSceneBack, nil, 1);
+    SDL_FillSurfaceRect(ImgScene, nil, 0);
+    SDL_FillSurfaceRect(ImgSceneBack, nil, 1);
     ExpandGroundOnImg();
   end
   else
@@ -1220,7 +1220,7 @@ begin
   BlockScreen.x := x;
   BlockScreen.y := y;
   //if (x < 0) or (x >= 2304 - CENTER_X * 2) then
-  //SDL_FillRect(screen, nil, 0);
+  //SDL_FillSurfaceRect(screen, nil, 0);
   SDL_BlitSurface(ImgScene, @dest, screen, nil);
 
 end;
@@ -1286,8 +1286,8 @@ var
   sumi, i1, i2: integer;
 begin
   FillChar(BlockImg2[0], sizeof(BlockImg2[0]) * length(BlockImg2), -1);
-  SDL_FillRect(ImgBField, nil, 0);
-  SDL_FillRect(ImgBBuild, nil, 1);
+  SDL_FillSurfaceRect(ImgBField, nil, 0);
+  SDL_FillSurfaceRect(ImgBBuild, nil, 1);
   ExpandGroundOnImg();
   for sumi := 0 to 126 do
   begin
@@ -1337,7 +1337,7 @@ begin
   BlockScreen.x := x;
   BlockScreen.y := y;
   //if (x < 0) or (x >= 2304 - CENTER_X * 2) then
-  //SDL_FillRect(screen, nil, 0);
+  //SDL_FillSurfaceRect(screen, nil, 0);
   SDL_BlitSurface(ImgBfield, @dest, screen, nil);
   if nobuild = 0 then
     LoadBFieldPart2(x, y, 0);

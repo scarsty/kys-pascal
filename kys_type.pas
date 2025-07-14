@@ -5,8 +5,8 @@
 interface
 
 uses
-  SDL2,
-  SDL2_ttf,
+  SDL3,
+  SDL3_ttf,
   bass,
   lua52,
   Generics.Collections;
