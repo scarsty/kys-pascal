@@ -16,14 +16,15 @@ uses
   SDL2_image,
   SDL2,
   Math,
-  kys_main,
-  kys_type,
+  StrUtils,
+  Classes,
   Dialogs;
 
 //事件系统
 //在英文中, instruct通常不作为名词, swimmingfish在他的一份反汇编文件中大量使用
 //这个词表示"指令", 所以这里仍保留这种用法
 procedure instruct_0;
+function ReadTalk(talknum: integer): utf8string;
 procedure talk_1(talkstr: utf8string; headnum, dismode: integer);
 procedure instruct_1(talknum, headnum, dismode: integer);
 procedure instruct_2(inum, amount: integer);
@@ -98,7 +99,9 @@ function CutRegion(x: integer): integer;
 function instruct_50e(code, e1, e2, e3, e4, e5, e6: integer): integer;
 function HaveMagic(person, mnum, lv: integer): boolean;
 procedure StudyMagic(rnum, magicnum, newmagicnum, level, dismode: integer);
-procedure NewTalk(headnum, talknum, namenum, place, showhead, color, frame: integer);
+procedure DivideName(fullname: utf8string; var surname, givenname: utf8string);
+function ReplaceStr(const S, Srch, Replace: utf8string): utf8string;
+procedure NewTalk(headnum, talknum, namenum, place, showhead, color, frame: integer; content: utf8string = ''; disname: utf8string = '');
 function EnterNumber(MinValue, MaxValue, x, y: integer; Default: integer = 0): smallint;
 function EnterString(var str: utf8string; x, y, w, h: integer): bool;
 procedure SetAttribute(rnum, selecttype, modlevel, minlevel, maxlevel: integer);
@@ -109,7 +112,9 @@ uses
   kys_script,
   kys_engine,
   kys_battle,
-  kys_draw;
+  kys_draw,
+    kys_main,
+  kys_type;
 
 //事件系统
 //事件指令含义请参阅其他相关文献
@@ -124,6 +129,32 @@ begin
   Redraw;
   //SDL_UpdateRect2(screen,0,0,screen.w,screen.h);
   //EndAmi;
+end;
+
+function ReadTalk(talknum: integer): utf8string;
+var
+  idx, grp, offset, len, i, p, l, headx, heady, diagx, diagy, key: integer;
+  talkarray: array of byte;
+begin
+  len := 0;
+  if talknum = 0 then
+  begin
+    offset := 0;
+    len := TIdx[0];
+  end
+  else
+  begin
+    offset := TIdx[talknum - 1];
+    len := TIdx[talknum] - offset;
+  end;
+  setlength(talkarray, len + 1);
+  move(TDef[offset], talkarray[0], len);
+
+  for i := 0 to len - 1 do
+  begin
+    talkarray[i] := talkarray[i] xor $FF;
+  end;
+  Result := CP950toutf8(@talkarray[0]);
 end;
 
 procedure talk_1(talkstr: utf8string; headnum, dismode: integer);
@@ -216,10 +247,10 @@ begin
       l := 0;
     end;
   end;
-  if (l>=0) then
+  if (l >= 0) then
   begin
     setlength(Lines, length(Lines) + 1);
-      Lines[length(Lines) - 1] := copy(talkstr, p, len - p);
+    Lines[length(Lines) - 1] := copy(talkstr, p, len - p);
   end;
   //talkstr[len-1] := #$20;
   p := 1;
@@ -252,33 +283,11 @@ end;
 
 procedure instruct_1(talknum, headnum, dismode: integer);
 var
-  idx, grp, offset, len, i, p, l, headx, heady, diagx, diagy, key: integer;
-  talkarray: array of byte;
   talkstr, Name: utf8string;
   color: uint32;
 begin
-  len := 0;
-  if talknum = 0 then
-  begin
-    offset := 0;
-    len := TIdx[0];
-  end
-  else
-  begin
-    offset := TIdx[talknum - 1];
-    len := TIdx[talknum] - offset;
-  end;
-  setlength(talkarray, len + 1);
-  move(TDef[offset], talkarray[0], len);
-
-  for i := 0 to len - 1 do
-  begin
-    talkarray[i] := talkarray[i] xor $FF;
-  end;
-
-  talkstr := CP950toutf8(@talkarray[0]);
+  talkstr := ReadTalk(talknum);
   talk_1(talkstr, headnum, dismode);
-
 end;
 
 //得到物品可显示数量, 数量为负显示失去物品
@@ -2365,19 +2374,231 @@ begin
   end;
 end;
 
-procedure NewTalk(headnum, talknum, namenum, place, showhead, color, frame: integer);
+
+procedure DivideName(fullname: utf8string; var surname, givenname: utf8string);
 var
-  k, alen, newcolor, color1, color2, nh, nw, ch, c1, r1, n, namelen, i, t1, grp, idx: integer;
-  offset, len, i1, i2, face, c, nx, ny, hx, hy, hw, hh, x, y, w, h, cell, row: integer;
-  np3, np, np1, np2, tp, p1, ap: putf8char;
-  actorarray, talkarray, namearray, name1, name2: array of byte;
-  words: array [0 .. 1] of uint16;
-  {wd,} str: utf8string;
-  temp2: utf8string;
-  wd: utf8string;
+  surname2: TStringList;
+  len, i, hysur: integer;
 begin
-  words[1] := 0;
-  face := 4900;
+  len := drawLength(fullname);
+  case len of
+    1, 2:
+    begin
+      surname := '';
+      givenname := fullname;
+    end;
+    3, 4:
+    begin
+      surname := midstr(fullname, 1, 3);
+      givenname := midstr(fullname, 4, 3);
+    end;
+    5, 6:
+    begin
+      surname2 := TStringList.Create;
+      surname2.Add('歐陽');
+      surname2.Add('太史');
+      surname2.Add('端木');
+      surname2.Add('上官');
+      surname2.Add('司馬');
+      surname2.Add('東方');
+      surname2.Add('獨孤');
+      surname2.Add('南宮');
+      surname2.Add('萬俟');
+      surname2.Add('聞人');
+      surname2.Add('夏侯');
+      surname2.Add('諸葛');
+      surname2.Add('尉遲');
+      surname2.Add('公羊');
+      surname2.Add('赫連');
+      surname2.Add('澹台');
+      surname2.Add('皇甫');
+      surname2.Add('宗政');
+      surname2.Add('濮陽');
+      surname2.Add('公冶');
+      surname2.Add('太叔');
+      surname2.Add('申屠');
+      surname2.Add('公孫');
+      surname2.Add('慕容');
+      surname2.Add('仲孫');
+      surname2.Add('鍾離');
+      surname2.Add('長孫');
+      surname2.Add('宇文');
+      surname2.Add('司徒');
+      surname2.Add('鮮於');
+      surname2.Add('司空');
+      surname2.Add('閭丘');
+      surname2.Add('子車');
+      surname2.Add('亓官');
+      surname2.Add('司寇');
+      surname2.Add('巫馬');
+      surname2.Add('公西');
+      surname2.Add('顓孫');
+      surname2.Add('壤駟');
+      surname2.Add('公良');
+      surname2.Add('漆雕');
+      surname2.Add('樂正');
+      surname2.Add('宰父');
+      surname2.Add('穀梁');
+      surname2.Add('拓跋');
+      surname2.Add('夾穀');
+      surname2.Add('軒轅');
+      surname2.Add('令狐');
+      surname2.Add('段幹');
+      surname2.Add('百裏');
+      surname2.Add('呼延');
+      surname2.Add('東郭');
+      surname2.Add('南門');
+      surname2.Add('羊舌');
+      surname2.Add('微生');
+      surname2.Add('公戶');
+      surname2.Add('公玉');
+      surname2.Add('公儀');
+      surname2.Add('梁丘');
+      surname2.Add('公仲');
+      surname2.Add('公上');
+      surname2.Add('公門');
+      surname2.Add('公山');
+      surname2.Add('公堅');
+      surname2.Add('左丘');
+      surname2.Add('公伯');
+      surname2.Add('西門');
+      surname2.Add('公祖');
+      surname2.Add('第五');
+      surname2.Add('公乘');
+      surname2.Add('貫丘');
+      surname2.Add('公皙');
+      surname2.Add('南榮');
+      surname2.Add('東裏');
+      surname2.Add('東宮');
+      surname2.Add('仲長');
+      surname2.Add('子書');
+      surname2.Add('子桑');
+      surname2.Add('即墨');
+      surname2.Add('達奚');
+      surname2.Add('褚師');
+      surname2.Add('第二');
+      surname := midstr(fullname, 1, 6);
+      hysur := 0;
+      for i := 0 to surname2.Count - 1 do
+      begin
+        if surname = surname2.Strings[i] then
+        begin
+          hysur := 1;
+          break;
+        end;
+      end;
+      if hysur = 1 then
+      begin
+        givenname := midstr(fullname, 7, 3);
+      end
+      else
+      begin
+        surname := midstr(fullname, 1, 3);
+        givenname := midstr(fullname, 4, 6);
+      end;
+      surname2.Free;
+    end;
+    else
+    begin
+      surname := midstr(fullname, 1, 6);
+      givenname := midstr(fullname, 7, Length(fullname) - 6);
+    end;
+  end;
+  //writeln(len, ',', fullname, ',', surname, ',', givenname);
+end;
+
+function ReplaceStr(const S, Srch, Replace: utf8string): utf8string;
+var
+  i: integer;
+  Source: utf8string;
+begin
+  Source := S;
+  Result := '';
+  repeat
+    //i := Pos(UpperCase(Srch), UpperCase(Source));
+    i := Pos(Srch, Source);
+    if i > 0 then
+    begin
+      Result := Result + Copy(Source, 1, i - 1) + Replace;
+      Source := Copy(Source, i + Length(Srch), MaxInt);
+    end
+    else
+      Result := Result + Source;
+  until i <= 0;
+end;
+
+procedure NewTalk(headnum, talknum, namenum, place, showhead, color, frame: integer; content: utf8string = ''; disname: utf8string = '');
+var
+  FileHandle, Offset, len, I, I2, ix, iy, xtemp, a, len_utf8: integer;
+  Frame_X, Frame_Y, Frame_W, Frame_H, Head_X, Head_Y, Head_W, Head_H, Name_X, Name_Y, Name_W, Name_H, Talk_X, Talk_Y, Talk_W, Talk_H, MaxCol: integer;
+  ForeGroundCol, BackGroundCol: byte;
+  DrawForeGroundCol, DrawBackGroundCol: cardinal;
+  Talk, Name, SurName, GivenName: array of byte;
+  {$IFDEF fpc}
+  FullNameUTF8Str, SurNameUTF8Str, GivenNameUTF8Str: utf8string;
+  {$ENDIF}
+  FullNameStr, SurNameStr, GivenNameStr, TalkStr, NameStr, TempStr: utf8string;
+  Changed: boolean;
+  HeadNumR: integer; //用于重定头像的对应人物, 以正确读取名字
+  skipSync: boolean = False;
+const
+  NameIdxFile = 'resource/name.idx';
+  NameGrpFile = 'resource/name.grp';
+  TalkIdxFile = 'resource/talk.idx';
+  TalkGrpFile = 'resource/talk.grp';
+  RowSpacing = 25; //行距
+  ColSpacing = 20; //列距
+  MaxRow = 5;
+  NameColSpacing = 20; //名字列距
+  FullNameCode: utf8string = '&&';
+  SurNameCode: utf8string = '$$';
+  GivenNameCode: utf8string = '%%';
+  WaitAnyKeyCode: utf8string = '@@';
+  DelayCode: utf8string = '##';
+  NextLineCode: utf8string = '**';
+  ChangeColorCode: utf8string = '^';
+  ExpressionMin: integer = 412;
+  ExpressionMax: integer = 429;
+begin
+  MaxCol := 25;
+  MaxCol := trunc((CENTER_X * 2 - (768 - MaxCol * ColSpacing)) / ColSpacing);
+  // *********设置位置、宽高、颜色等数据*********//
+  //对话框边框位置
+  Frame_X := 50;
+  Frame_Y := CENTER_Y * 2 - 180;
+
+  //对话字串位置及列数、行数
+  Talk_X := Frame_X + 50;
+  Talk_Y := Frame_Y + 35;
+  Talk_W := MaxCol;
+  Talk_H := MaxRow;
+  Name_X := Talk_X;
+  Name_Y := Frame_Y + 7;
+
+  if place > 2 then
+    place := 5 - place;
+
+  if place = 0 then //头像在左
+  begin
+    //头像位置
+    Head_X := 30;
+    Head_Y := CENTER_Y * 2 - 120;
+    //名字位置
+  end
+  else if place = 1 then //头像在右
+  begin
+    Head_X := CENTER_X * 2 - 200;
+    Head_Y := CENTER_Y * 2 - 120;
+    Talk_X := 30;
+    Name_X := Talk_X;
+    Name_Y := Frame_Y + 7;
+  end
+  else if place = 2 then
+  begin
+    Talk_X := Frame_X + 70;
+  end;
+
+  //特殊颜色值
   case color of
     0: color := 28515;
     1: color := 28421;
@@ -2386,402 +2607,292 @@ begin
     4: color := 28466;
     5: color := 28450;
   end;
-  color1 := color and $FF;
-  color2 := (color shr 8) and $FF;
-  x := 68;
-  y := 320;
-  w := 511;
-  h := 109;
-  nw := 86;
-  nh := 28;
-  hx := 68;
-  hy := 244;
-  hw := 57;
-  hh := 72;
-  nx := 129;
-  ny := 288;
-  if showhead = 1 then
-    nx := x;
 
-  row := 5;
-  cell := 25;
-  if place = 1 then
+  //前景、背景颜色
+  ForeGroundCol := color and $FF;
+  BackGroundCol := (color and $FF00) shr 8;
+  // ******************************************//
+  //如果talknum小于0, 则读取x50中的内容
+  if content = '' then
   begin
-    hx := 522;
-    nx := 431;
-    if showhead = 1 then
-      nx := x + w - nw;
-  end;
-
-  len := 0;
-  if talknum = 0 then
-  begin
-    offset := 0;
-    len := TIdx[0];
+    if (talknum >= 0) then
+    begin
+      talkstr := ReadTalk(talknum);
+    end
+    else
+    begin
+      if (-talknum >= low(x50)) and (-talknum <= high(x50)) then
+        TalkStr := putf8char(@x50[-talknum])
+      else
+        TalkStr := '';
+    end;
   end
   else
-  begin
-    offset := TIdx[talknum - 1];
-    len := TIdx[talknum] - offset;
-  end;
+    TalkStr := content;
+  TalkStr := ' ' + TalkStr;
+  // ******************************************//
 
-  setlength(talkarray, len + 1);
-  move(TDef[offset], talkarray[0], len);
-  for i := 0 to len - 1 do
+  // *****************读取名字*****************//
+  if disname = '' then
   begin
-    talkarray[i] := talkarray[i] xor $FF;
-    if talkarray[i] = 255 then
-      talkarray[i] := 0;
-  end;
-  talkarray[len] := 0;
-  tp := @talkarray[0];
-
-  //read name
-  if namenum > 0 then
-  begin
-    namelen := 0;
-    if namenum = 0 then
+    if namenum > 0 then
     begin
-      offset := 0;
-      namelen := TIdx[0];
-    end
-    else
-    begin
-      offset := TIdx[namenum - 1];
-      namelen := TIdx[namenum] - offset;
+      Namestr := ReadTalk(namenum);
     end;
 
-    setlength(namearray, namelen + 1);
-    move(TDef[offset], namearray[0], namelen);
+    HeadNumR := HeadNum;
+    if (HeadNum >= ExpressionMin) and (HeadNum <= ExpressionMax) then
+      HeadNumR := 0;
 
-    for i := 0 to namelen - 2 do
-    begin
-      namearray[i] := namearray[i] xor $FF;
-      if namearray[i] = 255 then
-        namearray[i] := 0;
-    end;
-    namearray[namelen - 1] := 0;
-    np := @namearray[0];
-  end
-  else if namenum = -2 then
-  begin
-    namelen := 10;
-    setlength(namearray, namelen);
-    np := @namearray[0];
-    for i := 0 to length(Rrole) - 1 do
-    begin
-      if Rrole[i].HeadNum = headnum then
+    {if MODVersion = 13 then
       begin
-        p1 := @Rrole[i].Name;
-        for n := 0 to namelen - 1 do
+      if HeadNum = 0 then HeadNum := 434;
+      end;}
+
+    if NameNum = -2 then
+    begin
+      for I := 0 to length(Rrole) - 1 do
+      begin
+        if (Rrole[i].HeadNum = HeadNumR) or ((i = 0) and (HeadNumR = 0)) then
         begin
-          (np + n)^ := (p1 + n)^;
-          //if (p1 + n)^ = char(0) then break;
+          len := 20;
+          setlength(Name, len + 1);
+          Move(Rrole[i].Name[0], Name[0], len);
+          Name[len] := 0;
+          break;
         end;
-        (np + n)^ := char(0);
-        (np + n + 1)^ := char(0);
+      end;
+    end;
+
+    if (namenum = -2) then
+      NameStr := cp950toutf8(@Name[0])
+    else if (namenum = -1) or (namenum = 0) then
+      NameStr := '';
+    //if {(MODVersion in [0, 31]) and} (namenum = 0) then
+    //  NameStr := cp950toutf8(Rrole[0].Name);
+  end
+  else
+    NameStr := disname;
+
+  //if Length(NameStr) > 10 then
+  //begin
+  //NameStr := '';
+  //HeadNum := -1;
+  //end;
+  // ******************************************//
+
+  // *****************分析名字*****************//
+  setlength(Name, 20);
+  Move(Rrole[0].Name[0], Name[0], 20);
+  //FullNameStr := CP950ToUTF8(putf8char(@Name[0]));
+  FullNameStr := cp950toutf8(@Name[0]);
+
+  {$IFDEF fpc}
+  //FullNameUTF8Str := UTF8Encode(FullNameStr);
+  {$ELSE}
+  //DivideName(FullNameStr, SurNameStr, GivenNameStr);
+  {$ENDIF}
+
+  // ******************************************//
+
+  // ***************替换对话字符串*************//
+  //TalkStr := ReplaceStr(TalkStr, '＜'), utf8decode('^4');
+  //替换字符串中的姓名
+  if (Pos(FullNameCode, TalkStr) > 0) then
+    TalkStr := ReplaceStr(TalkStr, FullNameCode, FullNameStr);
+  SurNameStr := '';
+  GivenNameStr := '';
+  if (Pos(SurNameCode, TalkStr) > 0) or (Pos(GivenNameCode, TalkStr) > 0) then
+  begin
+    //DivideName(FullNameStr, SurNameStr, GivenNameStr);
+    //SurNameStr := SurNameUTF8Str;
+    //GivenNameStr := GivenNameUTF8Str;
+    TalkStr := ReplaceStr(TalkStr, SurNameCode, SurNameStr);
+    TalkStr := ReplaceStr(TalkStr, GivenNameCode, GivenNameStr);
+  end;
+
+  // ******************************************//
+
+  // *****************显示对话*****************//
+
+  //SetRolePic(0);
+  Redraw;
+  //RecordFreshScreen;
+
+  DrawForeGroundCol := ColColor(ForeGroundCol);
+  DrawBackGroundCol := ColColor(BackGroundCol);
+  len := length(TalkStr);
+  I := 1;
+  CleanKeyValue;
+  while (True) do
+  begin
+    //显示背景
+    //display_img('resource/talk.png', Frame_X, Frame_Y);
+    //LoadFreshScreen;
+    //DrawTPic(25, 0, Frame_Y - 60, nil, 0,30,0,0,0.75,0.75);
+    redraw;
+    DrawRectangleWithoutFrame(screen, 0, Frame_Y, CENTER_X * 2, 170, 0, 40);
+    //显示头像
+    if (showhead = 0) and (HeadNum >= 0) then
+    begin
+      DrawHeadPic(HeadNum, Head_X, Head_Y);
+    end;
+    //显示名字
+    if (NameStr <> '') or (showhead <> 0) then
+    begin
+      DrawShadowText(NameStr, Name_X + 0, Name_Y, ColColor(5), ColColor(7));
+    end;
+    UpdateAllScreen;
+    //显示对话
+    ix := 0;
+    iy := 0;
+    skipSync := False;
+    while SDL_PollEvent(@event) >= 0 do
+    begin
+      CheckBasicEvent;
+      //部分功能
+      if (event.key.keysym.sym = SDLK_ESCAPE) or (event.button.button = SDL_BUTTON_RIGHT) then
+      begin
+        skipSync := True;
+        SkipTalk := 1;
+        //CleanKeyValue;
         break;
       end;
-    end;
-  end;
-
-  p1 := @Rrole[0].Name;
-  alen := length(p1) + 2;
-  setlength(actorarray, alen);
-  ap := @actorarray[0];
-  for n := 0 to alen - 1 do
-  begin
-    (ap + n)^ := (p1 + n)^;
-    if (p1 + n)^ = char(0) then
-      break;
-  end;
-  (ap + n)^ := char($0);
-  (ap + n + 1)^ := char(0);
-
-  if alen = 4 then
-  begin
-    setlength(name1, 3);
-    np1 := @name1[0];
-    np1^ := ap^;
-    (np1 + 1)^ := (ap + 1)^;
-    (np1 + 2)^ := char(0);
-    setlength(name2, 3);
-    np2 := @name2[0];
-    np2^ := ap^;
-    (np2 + 1)^ := (ap + 1)^;
-    (np2 + 2)^ := char(0);
-  end
-  else if alen = 6 then
-  begin
-    setlength(name1, 3);
-    np1 := @name1[0];
-    np1^ := ap^;
-    (np1 + 1)^ := (ap + 1)^;
-    (np1 + 2)^ := char(0);
-    setlength(name2, 3);
-    np2 := @name2[0];
-    np2^ := (ap + 2)^;
-    (np2 + 1)^ := (ap + 3)^;
-    (np2 + 2)^ := char(0);
-  end
-  else if alen > 6 then
-  begin
-    if ((PWord(ap)^ = $6EAB) and ((PWord(ap + 2)^ = $63AE))) or ((PWord(ap)^ = $E8A6) and ((PWord(ap + 2)^ = $F9AA))) or ((PWord(ap)^ = $46AA) and ((PWord(ap + 2)^ = $E8A4))) or ((PWord(ap)^ = $4FA5) and ((PWord(ap + 2)^ = $B0AA))) or ((PWord(ap)^ = $7DBC) and ((PWord(ap + 2)^ = $65AE))) or ((PWord(ap)^ = $71A5) and ((PWord(ap + 2)^ = $A8B0))) or ((PWord(ap)^ = $D1BD) and ((PWord(ap + 2)^ = $AFB8))) or ((PWord(ap)^ = $71A5) and ((PWord(ap + 2)^ = $C5AA))) or ((PWord(ap)^ = $D3A4) and ((PWord(ap + 2)^ = $76A5))) or ((PWord(ap)^ = $BDA4) and ((PWord(ap + 2)^ = $5DAE))) or ((PWord(ap)^ = $DABC) and ((PWord(ap + 2)^ = $A7B6))) or ((PWord(ap)^ = $43AD) and ((PWord(ap + 2)^ = $DFAB))) or ((PWord(ap)^ = $71A5) and ((PWord(ap + 2)^ = $7BAE))) or ((PWord(ap)^ = $B9A7) and ((PWord(ap + 2)^ = $43C3))) or ((PWord(ap)^ = $61B0) and ((PWord(ap + 2)^ = $D5C1))) or ((PWord(ap)^ = $74A6) and ((PWord(ap + 2)^ = $E5A4))) or ((PWord(ap)^ = $DDA9) and ((PWord(ap + 2)^ = $5BB6))) then
-    begin
-      setlength(name1, 5);
-      np1 := @name1[0];
-      np1^ := ap^;
-      (np1 + 1)^ := (ap + 1)^;
-      (np1 + 2)^ := (ap + 2)^;
-      (np1 + 3)^ := (ap + 3)^;
-      (np1 + 4)^ := char(0);
-      setlength(name2, alen + 1 - 4);
-      np2 := @name2[0];
-      for i := 0 to length(name2) - 1 do
-        (np2 + i)^ := (ap + i + 4)^;
-    end
-    else
-    begin
-      setlength(name1, 3);
-      np1 := @name1[0];
-      np1^ := ap^;
-      (np1 + 1)^ := (ap + 1)^;
-      (np1 + 2)^ := char(0);
-      setlength(name2, alen + 1 - 2);
-      np2 := @name2[0];
-      for i := 0 to length(name2) - 1 do
-        (np2 + i)^ := (ap + i + 2)^;
-    end;
-  end;
-
-  str := ' ' + tp;
-
-  setlength(wd, 0);
-  i := 0;
-  while i < length(str) do
-  begin
-    setlength(wd, length(wd) + 1);
-    wd[length(wd) - 1] := str[i];
-    if (integer(str[i]) in [$81 .. $FE]) {and (integer(str[i + 1]) <> $7E)} then
-    begin
-      setlength(wd, length(wd) + 1);
-      wd[length(wd) - 1] := str[i + 1];
-      wd[length(wd) - 2] := str[i];
-      Inc(i, 2);
-      continue;
-    end;
-    if (integer(str[i]) in [$20 .. $7F]) then
-    begin
-      if str[i] = '^' then
+      if (event.key.keysym.sym = SDLK_RETURN) or (event.key.keysym.sym = SDLK_SPACE) or (event.button.button = SDL_BUTTON_LEFT) then
       begin
-        if (integer(str[i + 1]) in [$30 .. $39]) or (str[i + 1] = '^') then
+        skipSync := True;
+        SkipTalk := 0;
+      end;
+      //if SkipTalk = 1 then
+      //break;
+      if not ((ix < Talk_W) and (iy < Talk_H) and (I <= len)) then
+        break;
+      //检查是否等待按键
+      if midstr(talkstr, I, length(WaitAnyKeyCode)) = WaitAnyKeyCode then
+      begin
+        Inc(I, length(TempStr));
+        //updateallscreen;
+        WaitAnyKey;
+        Continue;
+      end;
+      //检查是否延时
+      if midstr(talkstr, I, length(DelayCode)) = DelayCode then
+      begin
+        Inc(I, length(DelayCode));
+        //updateallscreen;
+        SDL_Delay(500);
+        Continue;
+      end;
+      //检查是否换行
+      if midstr(talkstr, I, length(NextLineCode)) = NextLineCode then
+      begin
+        //当恰好处于换行位置时的处理(屏蔽, 未处理)
+        //if I mod Talk_W <> 1 then
+        //begin
+        Inc(iy);
+        ix := 0;
+        //end;
+        Inc(I, length(NextLineCode));
+        if iy >= Talk_H then
         begin
-          setlength(wd, length(wd) + 1);
-          wd[length(wd) - 1] := str[i + 1];
-          Inc(i, 2);
-          continue;
+          if I <= len then
+          begin
+            WaitAnyKey;
+          end;
+          //LoadFreshScreen;;
+          break;
         end;
-      end
-      else if (str[i] = '*') and (str[i + 1] = '*') then
+        Continue;
+      end;
+      //检查是否更换颜色
+      Changed := False;
+      for I2 := 0 to 5 do
+        if midstr(talkstr, I, length(ChangeColorCode) + 1) = ChangeColorCode + IntToStr(I2) then
+        begin
+          DrawBackGroundCol := ColColor($6F);
+          case I2 of
+            0: DrawForeGroundCol := ColColor($63);
+            1: DrawForeGroundCol := ColColor($05);
+            2: DrawForeGroundCol := ColColor($13);
+            3: DrawForeGroundCol := ColColor($93);
+            4: DrawForeGroundCol := ColColor($32);
+            5: DrawForeGroundCol := ColColor($22);
+          end;
+          Inc(I, length(ChangeColorCode) + 1);
+          Changed := True; //更换颜色
+          break;
+        end;
+      if Changed = True then
       begin
-        setlength(wd, length(wd) + 1);
-        wd[length(wd) - 1] := str[i + 1];
-        Inc(i, 2);
-        continue;
-      end
-      else if (str[i] = '&') and (str[i + 1] = '&') then
-      begin
-        setlength(wd, length(wd) + 1);
-        wd[length(wd) - 1] := str[i + 1];
-        Inc(i, 2);
-        continue;
-      end
-      else if (str[i] = '#') and (str[i + 1] = '#') then
-      begin
-        setlength(wd, length(wd) + 1);
-        wd[length(wd) - 1] := str[i + 1];
-        Inc(i, 2);
-        continue;
-      end
-      else if (str[i] = '@') and (str[i + 1] = '@') then
-      begin
-        setlength(wd, length(wd) + 1);
-        wd[length(wd) - 1] := str[i + 1];
-        Inc(i, 2);
-        continue;
-      end
-      else if (str[i] = '$') and (str[i + 1] = '$') then
-      begin
-        setlength(wd, length(wd) + 1);
-        wd[length(wd) - 1] := str[i + 1];
-        Inc(i, 2);
-        continue;
-      end
-      else if (str[i] = '%') and (str[i + 1] = '%') then
-      begin
-        setlength(wd, length(wd) + 1);
-        wd[length(wd) - 1] := str[i + 1];
-        Inc(i, 2);
         continue;
       end;
-      setlength(wd, length(wd) + 1);
-      wd[length(wd) - 1] := str[i];
-      wd[length(wd) - 2] := ' ';
-    end;
-    Inc(i);
-  end;
-  tp := @wd[3];
-
-  ch := 0;
-
-  while ((PWord(tp + ch))^ shl 8 <> 0) and ((PWord(tp + ch))^ shr 8 <> 0) do
-  begin
-    Redraw;
-    c1 := 0;
-    r1 := 0;
-    DrawRectangle(screen, x, y, w, h, frame, ColColor($FF), 40);
-    if (showhead = 0) or (headnum < 0) then
-    begin
-      DrawRectangle(screen, hx, hy, hw, hh, frame, ColColor($FF), 40);
-      if headnum = 0 then
+      //检查是否换回默认颜色
+      if midstr(talkstr, I, length(ChangeColorCode) * 2) = ChangeColorCode + ChangeColorCode then
       begin
-        DrawHeadPic(Rrole[0].HeadNum, hx, hy + 68);
-      end
-      else
-      begin
-        DrawHeadPic(headnum, hx, hy + 68);
+        DrawBackGroundCol := ColColor(BackGroundCol);
+        DrawForeGroundCol := ColColor(ForeGroundCol);
+        Inc(I, length(ChangeColorCode) * 2);
+        Continue;
       end;
-    end;
-
-    if namenum <> 0 then
-    begin
-      DrawRectangle(screen, nx, ny, nw, nh, frame, ColColor($FF), 40);
-      namelen := length(np);
-      if namelen > 0 then
-        DrawBig5ShadowText(screen, np, nx + 40 - namelen * 9 div 2, ny + 4, ColColor($63), ColColor($70));
-    end;
-
-    while r1 < row do
-    begin
-      words[0] := (PWord(tp + ch))^;
-      if (words[0] shr 8 <> 0) and (words[0] shl 8 <> 0) then
+      //写字符
+      if I <= len then
       begin
-        ch := ch + 2;
-        if (words[0] and $FF) = $5E then //^^改变文字颜色
+        tempstr := TalkStr[I];
+        len_utf8 := utf8follow(TalkStr[I]);
+        tempstr := midstr(talkstr, i, len_utf8);
+        tempstr := tempstr + utf8char(0);
+        xtemp := Talk_X + ColSpacing * ix;
+        //调整半角字符的位置
+        if uint16(tempstr[1]) < $1000 then
+          xtemp := xtemp + 5;
+        DrawShadowText(TempStr, xtemp, Talk_Y + RowSpacing * iy, DrawForeGroundCol, DrawBackGroundCol);
+      end;
+      Inc(I, length(tempstr) - 1);
+      if (not skipSync) and (SkipTalk = 0) then
+      begin
+        SDL_Delay(5); //每个字符间都延时
+        UpdateAllScreen;
+      end;
+      Inc(ix);
+      if (ix >= Talk_W) or (iy >= Talk_H) then
+      begin
+        ix := 0;
+        Inc(iy);
+        if iy >= Talk_H then
         begin
-          case smallint((words[0] and $FF00) shr 8) - $30 of
-            0: newcolor := 28515;
-            1: newcolor := 28421;
-            2: newcolor := 28435;
-            3: newcolor := 28563;
-            4: newcolor := 28466;
-            5: newcolor := 28450;
-            64: newcolor := color;
-            else
-              newcolor := color;
-          end;
-          color1 := newcolor and $FF;
-          color2 := (newcolor shr 8) and $FF;
-        end
-        else if words[0] = $2323 then //## 延时
-        begin
-          SDL_Delay(500);
-        end
-        else if words[0] = $2A2A then // **换行
-        begin
-          if c1 > 0 then
-            Inc(r1);
-          c1 := 0;
-        end
-        else if words[0] = $4040 then //@@等待击键
-        begin
-          SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-          k := WaitAnyKey;
-          while (k = SDLK_RIGHT) or (k = SDLK_LEFT) or (k = SDLK_UP) or (k = SDLK_DOWN) do
+          if I - 1 <= len then
           begin
-            k := WaitAnyKey;
-          end;
-        end
-        else if (words[0] = $2626) or (words[0] = $2525) or (words[0] = $2424) then
-        begin
-          case words[0] of
-            $2626: np3 := ap; //&&显示姓名
-            $2525: np3 := np2; //%%显示名
-            $2424: np3 := np1; //$$显示姓
-          end;
-          i := 0;
-          while (PWord(np3 + i)^ shr 8 <> 0) and (PWord(np3 + i)^ shl 8 <> 0) do
-          begin
-            words[0] := PWord(np3 + i)^;
-            i := i + 2;
-            DrawBig5ShadowText(screen, @words[0], x + 6 + CHINESE_FONT_SIZE * c1, y + 4 + CHINESE_FONT_SIZE * r1, ColColor(color1), ColColor(color2));
-            Inc(c1);
-            if c1 = cell then
+            UpdateAllScreen;
+            if (SkipTalk = 0) then
             begin
-              c1 := 0;
-              Inc(r1);
-              if r1 = row then
-              begin
-                SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-                k := WaitAnyKey;
-                while (k = SDLK_RIGHT) or (k = SDLK_LEFT) or (k = SDLK_UP) or (k = SDLK_DOWN) do
-                begin
-                  k := WaitAnyKey;
-                end;
-                c1 := 0;
-                r1 := 0;
-                Redraw;
-                DrawRectangle(screen, x, y, w, h, frame, ColColor($FF), 40);
-                if (showhead = 0) or (headnum < 0) then
-                begin
-                  DrawRectangle(screen, hx, hy, hw, hh, frame, ColColor($FF), 40);
-                  if headnum = 0 then
-                  begin
-                    DrawHeadPic(Rrole[0].HeadNum, hx, hy + 68);
-                  end
-                  else
-                  begin
-                    DrawHeadPic(headnum, hx, hy + 68);
-                  end;
-                end;
-                if namenum <> 0 then
-                begin
-                  DrawRectangle(screen, nx, ny, nw, nh, frame, ColColor($FF), 40);
-                  namelen := length(np);
-                  if namelen > 0 then
-                    DrawBig5ShadowText(screen, np, nx + 40 - namelen * 9 div 2, ny + 4, ColColor($63), ColColor($70));
-                end;
-              end;
+              WaitAnyKey;
+              if skipSync then
+                WaitAnyKey;
+              skipSync := False;
             end;
           end;
-        end
-        else //显示文字
-        begin
-          DrawBig5ShadowText(screen, @words[0], x + 6 + CHINESE_FONT_SIZE * c1, y + 4 + CHINESE_FONT_SIZE * r1, ColColor(color1), ColColor(color2));
-          Inc(c1);
-          if c1 = cell then
-          begin
-            c1 := 0;
-            Inc(r1);
-          end;
+          UpdateAllScreen;
+          //LoadFreshScreen;
+          break;
         end;
-      end
-      else
-        break;
+      end;
     end;
-    SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-    k := WaitAnyKey;
-    while (k = SDLK_RIGHT) or (k = SDLK_LEFT) or (k = SDLK_UP) or (k = SDLK_DOWN) do
-    begin
-      k := WaitAnyKey;
-    end;
-    if (words[0] and $FF = 0) or (words[0] and $FF00 = 0) then
+    if I > len then
       break;
+    //if SkipTalk = 1 then
+    //break;
   end;
-  Redraw;
-  setlength(wd, 0);
-  setlength(str, 0);
-  setlength(temp2, 0);
+  //FreeFreshScreen;
+  UpdateAllScreen;
+  if SkipTalk = 0 then
+  begin
+    WaitAnyKey;
+    if skipSync then
+      WaitAnyKey;
+  end;
+  //Redraw;
+  // ******************************************//
+
 end;
 
 //输入数字, 最小值, 最大值, 坐标x, y. 当结果被范围修正时有提示.

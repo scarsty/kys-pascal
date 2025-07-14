@@ -123,14 +123,14 @@
     <RunParams>
       <local>
         <LaunchingApplication PathPlusParams="C:/Windows/system32/cmd.exe /C ${TargetCmdLine}"/>
-        <WorkingDirectory Value="D:/kys-all/pascal复刻版/all-mod"/>
+        <WorkingDirectory Value="D:/kys-all/_pascal/all-mod/kys-dream"/>
       </local>
       <FormatVersion Value="2"/>
       <Modes Count="1">
         <Mode0 Name="default">
           <local>
             <LaunchingApplication PathPlusParams="C:/Windows/system32/cmd.exe /C ${TargetCmdLine}"/>
-            <WorkingDirectory Value="D:/kys-all/pascal复刻版/all-mod"/>
+            <WorkingDirectory Value="D:/kys-all/_pascal/all-mod/kys-dream"/>
           </local>
         </Mode0>
       </Modes>

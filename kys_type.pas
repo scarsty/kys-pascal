@@ -428,6 +428,8 @@ var
   Image: PSDL_Surface;   //标题
   ImageName: utf8string;
 
+  SkipTalk: integer=0;
+
 const
   //色值蒙版, 注意透明蒙版在创建RGB表面时需设为0
   RMask: uint32 = $FF0000;
