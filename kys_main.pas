@@ -3110,7 +3110,7 @@ var
   temp: PSDL_Surface;
 begin
   LoadFreshScreen(x, y, w + 1, max * 22 + 29);
-  DrawRectangle(screen, x, y, w, max * 22 + 28, 0, ColColor(255), 0);
+  DrawRectangle(screen, x, y, w, max * 22 + 28, 0, ColColor(255), 50);
   if (length(menuEngString) > 0) and (length(menuString) = length(menuEngString)) then
     p := 1
   else

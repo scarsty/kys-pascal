@@ -1470,7 +1470,7 @@ end;
 
 procedure SDL_GetMouseState2(var x, y: integer);
 var
-  tempx, tempy: float;
+  tempx, tempy: single;
 begin
   SDL_GetMouseState(@tempx, @tempy);
   x := round(tempx * screen.w / RESOLUTIONX);
