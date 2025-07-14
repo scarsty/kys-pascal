@@ -130,6 +130,8 @@ procedure CloudCreateOnSide(num: integer);
 
 function IsCave(snum: integer): boolean;
 
+function SDL_GetAndroidExternalStoragePath(): PAnsiChar; cdecl; external 'libSDL3.so';
+
 implementation
 
 uses
@@ -5669,7 +5671,7 @@ begin
       end;}
     i := 0;
     len := length(e);
-    ConsoleLog('Event %d', [num]);
+    kyslog('Event %d', [num]);
     //普通事件写成子程, 需跳转事件写成函数
     while SDL_PollEvent(@event) or True do
     begin

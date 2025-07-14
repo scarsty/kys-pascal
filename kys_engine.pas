@@ -121,8 +121,8 @@ function Traditional2Simplified(str: utf8string): utf8string;
 procedure tic;
 procedure toc;
 
-procedure ConsoleLog(formatstring: utf8string; content: array of const; cr: boolean = True); overload;
-procedure ConsoleLog(formatstring: string = ''; cr: boolean = True); overload;
+procedure kyslog(formatstring: utf8string; content: array of const; cr: boolean = True); overload;
+procedure kyslog(formatstring: string = ''; cr: boolean = True); overload;
 
 function utf8follow(c1: utf8char): integer;
 
@@ -1170,7 +1170,7 @@ begin
       k := byte(word0[1]);
       if not fonts.ContainsKey(k) then
       begin
-        ConsoleLog('%s(%d)', [midstr(word, i, 1), fonts.Count], False);
+        kyslog('%s(%d)', [midstr(word, i, 1), fonts.Count], False);
         fonts.add(k, TTF_RenderText_blended(engfont, @word0[1], 1, tempcolor));
       end;
       Text := fonts.Items[k];
@@ -1192,7 +1192,7 @@ begin
       k := byte(word0[1]) + 256 * byte(word0[2]) + 65536 * byte(word0[3]);
       if not fonts.ContainsKey(k) then
       begin
-        ConsoleLog('%s(%d)', [midstr(word, i, 2), fonts.Count], False);
+        kyslog('%s(%d)', [midstr(word, i, 2), fonts.Count], False);
         fonts.add(k, TTF_RenderText_blended(font, @word0[1], 2, tempcolor));
       end;
       got := fonts.TryGetValue(k, Text);
@@ -1214,7 +1214,7 @@ begin
       k := byte(word0[1]) + 256 * byte(word0[2]) + 65536 * byte(word0[3]);
       if not fonts.ContainsKey(k) then
       begin
-        ConsoleLog('%s(%d)', [midstr(word, i, 3), fonts.Count], False);
+        kyslog('%s(%d)', [midstr(word, i, 3), fonts.Count], False);
         fonts.add(k, TTF_RenderText_blended(font, @word0[1], 3, tempcolor));
       end;
       got := fonts.TryGetValue(k, Text);
@@ -1686,7 +1686,7 @@ begin
           //event.button.y := RESOLUTIONY div 2;
           event.button.button := SDL_BUTTON_RIGHT;
           event.key.key := SDLK_ESCAPE;
-          ConsoleLog('Change to escape');
+          kyslog('Change to escape');
         end
         else if inReturn(x, y) then
         begin
@@ -1694,7 +1694,7 @@ begin
           //event.button.y := RESOLUTIONY div 2;
           event.type_ := SDL_EVENT_KEY_UP;
           event.key.key := SDLK_RETURN;
-          ConsoleLog('Change to return');
+          kyslog('Change to return');
         end
         else if (showVirtualKey <> 0) and (inVirtualKey(x, y, VirtualKeyValue) <> 0) then
         begin
@@ -1937,7 +1937,7 @@ end;
 procedure toc;
 begin
   QueryPerformanceCounter(cccc2);
-  ConsoleLog(' %3.2f us', [(cccc2 - cccc1) / tttt * 1E6]);
+  kyslog(' %3.2f us', [(cccc2 - cccc1) / tttt * 1E6]);
 end;
 
 {$ELSE}
@@ -1949,12 +1949,12 @@ end;
 
 procedure toc;
 begin
-  ConsoleLog(' %d ms', [SDL_GetTicks - tttt]);
+  kyslog(' %d ms', [SDL_GetTicks - tttt]);
 end;
 
 {$ENDIF}
 
-procedure ConsoleLog(formatstring: utf8string; content: array of const; cr: boolean = True); overload;
+procedure kyslog(formatstring: utf8string; content: array of const; cr: boolean = True); overload;
 var
   i: integer;
   str: utf8string;
@@ -1963,7 +1963,7 @@ begin
   SDL_log('%s', [@str[1]]);
 end;
 
-procedure ConsoleLog(formatstring: string = ''; cr: boolean = True); overload;
+procedure kyslog(formatstring: string = ''; cr: boolean = True); overload;
 var
   i: integer;
   str: utf8string;

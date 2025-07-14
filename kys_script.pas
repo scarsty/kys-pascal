@@ -446,13 +446,13 @@ begin
   try
     if (Script[1] = char($EF)) and (Script[2] = char($BB)) and (Script[3] = char($BF)) then
     begin
-      ConsoleLog('Found BOM, replace it to space');
+      kyslog('Found BOM, replace it to space');
       Script[1] := ' ';
       Script[2] := ' ';
       Script[3] := ' ';
     end;
     Script := LowerCase(Script);
-    //ConsoleLog(script);
+    //kyslog(script);
     Result := lual_loadbuffer(Lua_script, @script[1], length(script), 'code');
     if Result = 0 then
     begin
@@ -467,7 +467,7 @@ begin
     //lua_gc(Lua_script, LUA_GCCOLLECT, 0);
     if Result <> 0 then
     begin
-      ConsoleLog(lua_tostring(Lua_script, -1));
+      kyslog(lua_tostring(Lua_script, -1));
       lua_pop(Lua_script, 1);
     end;
   except
