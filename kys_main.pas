@@ -69,7 +69,7 @@ function WaitAnyKey: integer;
 procedure Walk;
 function CanWalk(x, y: integer): boolean;
 function CheckEntrance: boolean;
-function UpdateSceneAmi(param: pointer; timerid: TSDL_TimerID; interval: uint32 ): uint32; cdecl;
+function UpdateSceneAmi(param: pointer; timerid: TSDL_TimerID; interval: uint32): uint32; cdecl;
 function WalkInScene(Open: integer): integer;
 procedure FindWay(x1, y1: integer);
 procedure Moveman(x1, y1, x2, y2: integer);
@@ -148,6 +148,7 @@ var
   str: utf8string;
   current, temp: integer;
   ini: TIniFile;
+  render_str: putf8char = 'direct3d';
 begin
   {$IFDEF windows}
   SetConsoleOutputCP(65001);
@@ -171,6 +172,7 @@ begin
   CellPhone := 1;
   //SDL_RequestAndroidPermission('MANAGE_EXTERNAL_STORAGE');
   //SDL_RequestAndroidPermission('android.permission.WRITE_EXTERNAL_STORAGE');
+  render_str := '';
   {$ENDIF}
 
   //CellPhone := 1;
@@ -244,8 +246,8 @@ begin
   end;
 
   //SDL_WM_SetCaption(putf8char(TitleString), 's.weyl');
-
-  render := SDL_CreateRenderer(window, '');
+  SDL_SetHint(SDL_HINT_RENDER_DRIVER, 'direct3d,vulkan,direct3d12,direct3d11,opengl');
+  render := SDL_CreateRenderer(window, render_str);
   screen := SDL_CreateSurface(CENTER_X * 2, CENTER_Y * 2, SDL_GetPixelFormatForMasks(32, Rmask, Gmask, Bmask, Amask));
   screenTex := SDL_CreateTexture(render, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, CENTER_X * 2, CENTER_Y * 2);
   //prescreen := SDL_CreateRGBSurface(ScreenFlag, CENTER_X * 2, CENTER_Y * 2, 32, RMask, GMask, BMask, 0);
@@ -1706,7 +1708,7 @@ begin
   //SDL_EventState(SDL_mousebuttonDOWN, SDL_ENABLE);
   event.key.key := 0;
   event.button.button := 0;
-  while (SDL_WaitEvent(@event) or true) do
+  while (SDL_PollEvent(@event) or True) do
   begin
     CheckBasicEvent;
     if (event.type_ = SDL_EVENT_KEY_UP) or (event.type_ = SDL_EVENT_MOUSE_BUTTON_UP) then
@@ -1777,7 +1779,7 @@ begin
 
   //ExecScript('test.txt');
   //事件轮询(并非等待)
-  while true  do
+  while True do
   begin
     SDL_PollEvent(@event);
     //如果当前处于标题画面, 则退出, 用于战斗失败
@@ -2181,7 +2183,7 @@ begin
 
 end;
 
-function UpdateSceneAmi(param: pointer; timerid: TSDL_TimerID; interval: uint32 ): uint32;
+function UpdateSceneAmi(param: pointer; timerid: TSDL_TimerID; interval: uint32): uint32;
 begin
   Result := 200;
   //while True do
@@ -2255,7 +2257,7 @@ begin
 
   //if SCENEAMI = 2 then
   //UpDate := SDL_CreateThread(@UpdateSceneAmi, nil, nil);
-  while (SDL_PollEvent(@event))or true do
+  while (SDL_PollEvent(@event)) or True do
   begin
     if where <> 1 then
     begin
@@ -3106,7 +3108,7 @@ var
   temp: PSDL_Surface;
 begin
   LoadFreshScreen(x, y, w + 1, max * 22 + 29);
-  DrawRectangle(screen, x, y, w, max * 22 + 28, 0, ColColor(255), 50);
+  DrawRectangle(screen, x, y, w, max * 22 + 28, 0, ColColor(255), 0);
   if (length(menuEngString) > 0) and (length(menuString) = length(menuEngString)) then
     p := 1
   else
@@ -5669,7 +5671,7 @@ begin
     len := length(e);
     ConsoleLog('Event %d', [num]);
     //普通事件写成子程, 需跳转事件写成函数
-    while SDL_PollEvent(@event) or true do
+    while SDL_PollEvent(@event) or True do
     begin
       CheckBasicEvent;
       if (i >= len - 1) then

@@ -161,7 +161,7 @@ begin
       begin
         BHead[i] := SDL_CreateSurface(56, 71, SDL_GetPixelFormatForMasks(32, Rmask, Gmask, Bmask, Amask));
         SDL_FillSurfaceRect(BHead[i], nil, 1);
-        SDL_SetSurfaceColorKey(BHead[i], true, 1);
+        SDL_SetSurfaceColorKey(BHead[i], True, 1);
         DrawHeadPic(Rrole[Brole[i].rnum].HeadNum, 0, 0, BHead[i]);
       end;
       Brole[i].BHead := i;
@@ -499,7 +499,7 @@ begin
       RecordFreshScreen(0, 0, screen.w, screen.h);
       DrawProgress;
       act := 0;
-      while SDL_WaitEvent(@event) or true do
+      while SDL_PollEvent(@event) or True do
       begin
         for i := 0 to BRoleAmount - 1 do
         begin
@@ -526,7 +526,7 @@ begin
 
     while ((i < BRoleAmount) and (Bstatus = 0)) do
     begin
-      while (SDL_WaitEvent(@event) or true) do
+      while (SDL_PollEvent(@event) or True) do
       begin
         CheckBasicEvent;
         if (event.key.key = SDLK_ESCAPE) or (event.button.button = SDL_BUTTON_RIGHT) then
@@ -1043,7 +1043,7 @@ begin
     end;
 
     a := 1;
-    while (SDL_WaitEvent(@event) or true) do
+    while (SDL_PollEvent(@event) or True) do
     begin
       CheckBasicEvent;
       if (Brole[bnum].Step = 0) or ((Bx = Ax) and (By = Ay)) then
@@ -1170,7 +1170,7 @@ end;
   showsimpleStatus(Brole[Bfield[2, AX, AY]].rnum, 330, 330);
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
   SDL_EnableKeyRepeat(10, 100);
-  while (SDL_WaitEvent(@event) or true) do
+  while (SDL_PollEvent(@event) or true) do
   begin
   CheckBasicEvent;
   case event.type_ of
@@ -2042,7 +2042,7 @@ begin
     sdl_delay(20);
     end;}
   i := beginpic;
-  while (SDL_WaitEvent(@event) or true) do
+  while (SDL_PollEvent(@event) or True) do
   begin
     CheckBasicEvent;
     DrawBFieldWithEft(i, beginpic, endpic, min, bnum, forteam, 1, $FFFFFFFF);
@@ -2285,7 +2285,7 @@ begin
     Brole[i].ShowNumber := -1;
   end;
   i1 := 0;
-  while SDL_WaitEvent(@event) or true do
+  while SDL_PollEvent(@event) or True do
   begin
     CheckBasicEvent;
     Redraw;
@@ -2350,7 +2350,7 @@ begin
   end;
   //撤退渐变效果
   i := 0;
-  while (SDL_WaitEvent(@event) or true) and needeffect do
+  while (SDL_PollEvent(@event) or True) and needeffect do
   begin
     CheckBasicEvent;
     DrawBfieldWithoutRole(Bx, By);
@@ -2801,7 +2801,7 @@ begin
     spic := beginpic + Rrole[rnum].SoundDealy[mode] - 1;
     //PlaySound2(rmagic[mnum].SoundNum, 0);
     i := beginpic;
-    while (SDL_WaitEvent(@event) or true) do
+    while (SDL_PollEvent(@event) or True) do
     begin
       CheckBasicEvent;
       DrawBFieldWithAction(bnum, i);
@@ -3618,7 +3618,7 @@ begin
   end;
 
   //检查是否有esc被按下
-  if SDL_WaitEvent(@event) or true then
+  if SDL_PollEvent(@event) or True then
   begin
     CheckBasicEvent;
   end;

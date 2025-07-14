@@ -113,7 +113,7 @@ uses
   kys_engine,
   kys_battle,
   kys_draw,
-    kys_main,
+  kys_main,
   kys_type;
 
 //事件系统
@@ -740,7 +740,7 @@ begin
   s := sign(x2 - x1);
   i := x1 + s;
   if s <> 0 then
-    while (SDL_WaitEvent(@event) or true) do
+    while (SDL_PollEvent(@event) or True) do
     begin
       CheckBasicEvent;
       SDL_Delay(50);
@@ -756,7 +756,7 @@ begin
   s := sign(y2 - y1);
   i := y1 + s;
   if s <> 0 then
-    while (SDL_WaitEvent(@event) or true) do
+    while (SDL_PollEvent(@event) or True) do
     begin
       CheckBasicEvent;
       SDL_Delay(50);
@@ -801,7 +801,7 @@ begin
   if enum = -1 then
   begin
     i := beginpic;
-    while SDL_WaitEvent(@event) or true do
+    while SDL_PollEvent(@event) or True do
     begin
       CheckBasicEvent;
       CurSceneRolePic := i div 2;
@@ -817,7 +817,7 @@ begin
   else
   begin
     i := beginpic;
-    while SDL_WaitEvent(@event) or true do
+    while SDL_PollEvent(@event) or True do
     begin
       CheckBasicEvent;
       DData[CurScene, enum, 5] := i;
@@ -872,7 +872,7 @@ begin
   if s < 0 then
     Sface := 2;
   if s <> 0 then
-    while SDL_WaitEvent(@event) or true do
+    while SDL_PollEvent(@event) or True do
     begin
       CheckBasicEvent;
       SDL_Delay(50);
@@ -894,7 +894,7 @@ begin
   if s < 0 then
     Sface := 0;
   if s <> 0 then
-    while SDL_WaitEvent(@event) or true do
+    while SDL_PollEvent(@event) or True do
     begin
       CheckBasicEvent;
       SDL_Delay(50);
@@ -1172,7 +1172,7 @@ begin
   if enum2 = -1 then enum2 := curevent;
   SData[CurScene, 3, DData[CurScene, enum2, 10], DData[CurScene, enum2, 9]] := enum2;
   i := 0;
-  while SDL_WaitEvent(@event) or true do
+  while SDL_PollEvent(@event) or True do
   begin
     CheckBasicEvent;
     DData[CurScene, enum1, 5] := beginpic1 + i;
@@ -1199,7 +1199,7 @@ begin
   SData[CurScene, 3, DData[CurScene, enum2, 10], DData[CurScene, enum2, 9]] := enum2;
   SData[CurScene, 3, DData[CurScene, enum3, 10], DData[CurScene, enum3, 9]] := enum3;
   i := 0;
-  while SDL_WaitEvent(@event) or true do
+  while SDL_PollEvent(@event) or True do
   begin
     CheckBasicEvent;
     DData[CurScene, enum1, 5] := beginpic1 + i;
@@ -1534,7 +1534,7 @@ begin
 
   i := 0;
   tempscr := img_load(putf8char(AppPath + 'resource/end.png'));
-  while SDL_WaitEvent(@event) or true do
+  while SDL_PollEvent(@event) or True do
   begin
     CheckBasicEvent;
     if i mod 5 = 0 then
@@ -2747,7 +2747,7 @@ begin
     ix := 0;
     iy := 0;
     skipSync := False;
-    while SDL_WaitEvent(@event) or true do
+    while SDL_PollEvent(@event) or True do
     begin
       CheckBasicEvent;
       //部分功能
@@ -2956,7 +2956,7 @@ begin
   sure := 0; //1-键盘按下, 2-鼠标按下
   pvalue := -1;
   pmenu := -1;
-  while SDL_WaitEvent(@event) or true do
+  while SDL_PollEvent(@event) or True do
   begin
     CheckBasicEvent;
     case event.type_ of
