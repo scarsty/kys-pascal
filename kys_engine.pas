@@ -1156,6 +1156,7 @@ begin
   tempcolor.r := 255;
   tempcolor.g := 255;
   tempcolor.b := 255;
+  tempcolor.a := 255;
   dest.x := x_pos;
   len := length(word);
   if len = 0 then

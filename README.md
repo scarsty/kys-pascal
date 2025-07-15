@@ -46,11 +46,8 @@ SDL一般是在java部分调用SDL_main这个函数，可以查找以下两个�
 
     protected String[] getLibraries() {
         return new String[] {
-            "SDL2",
-            // "SDL2_image",
-            // "SDL2_mixer",
-            // "SDL2_net",
-            // "SDL2_ttf",
+            "SDL3",
+            ///...
             "kys"    //原为main
         };
     }
