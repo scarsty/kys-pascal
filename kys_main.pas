@@ -259,11 +259,11 @@ begin
   ImageWidth := (36 * 32 + CENTER_X) * 2;
   ImageHeight := (18 * 32 + CENTER_Y) * 2;
 
-  ImgScene := SDL_CreateSurface(ImageWidth, ImageHeight, SDL_GetPixelFormatForMasks(32, Rmask, Gmask, Bmask, 0));
+  ImgScene := SDL_CreateSurface(ImageWidth, ImageHeight, SDL_GetPixelFormatForMasks(32, Rmask, Gmask, Bmask, Amask));
   //ImgScene := SDL_DisplayFormat(ImgScene);
-  ImgSceneBack := SDL_CreateSurface(ImageWidth, ImageHeight, SDL_GetPixelFormatForMasks(32, Rmask, Gmask, Bmask, 0));
-  ImgBField := SDL_CreateSurface(ImageWidth, ImageHeight, SDL_GetPixelFormatForMasks(32, Rmask, Gmask, Bmask, 0));
-  ImgBBuild := SDL_CreateSurface(ImageWidth, ImageHeight, SDL_GetPixelFormatForMasks(32, Rmask, Gmask, Bmask, 0));
+  ImgSceneBack := SDL_CreateSurface(ImageWidth, ImageHeight, SDL_GetPixelFormatForMasks(32, Rmask, Gmask, Bmask, Amask));
+  ImgBField := SDL_CreateSurface(ImageWidth, ImageHeight, SDL_GetPixelFormatForMasks(32, Rmask, Gmask, Bmask, Amask));
+  ImgBBuild := SDL_CreateSurface(ImageWidth, ImageHeight, SDL_GetPixelFormatForMasks(32, Rmask, Gmask, Bmask, Amask));
   SDL_SetSurfaceColorKey(ImgSceneBack, True, 1);
   SDL_SetSurfaceColorKey(ImgBBuild, True, 1);
   setlength(BlockImg, ImageWidth * ImageHeight);

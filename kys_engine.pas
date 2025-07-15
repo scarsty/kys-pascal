@@ -1079,7 +1079,7 @@ begin
                   //depth := (py div 9 - 1);
                   psmallint(BlockImageW + (x * heightI + y) * sizeI)^ := depth;
                 end;
-                pix := SDL_MapSurfaceRGBA(screen, pix1, pix2, pix3, pix4);
+                pix := SDL_MapSurfaceRGBA(screen, pix1, pix2, pix3, 255);
                 PutPixel(Image, x, y, pix);
               end;
             end;
