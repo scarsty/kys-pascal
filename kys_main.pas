@@ -278,7 +278,7 @@ begin
   InitialScript;
   InitialMusic;
 
-  SDL_SetEventFilter(@EventFilter, nil);
+  SDL_AddEventWatch(@EventFilter, nil);
   mutex := SDL_CreateMutex();
 
   SDL_AddTimer(200, UpdateSceneAmi, nil);

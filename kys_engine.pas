@@ -27,7 +27,7 @@ uses
   kys_type,
   StrUtils;
 
-function EventFilter(p: pointer; e: PSDL_Event): longint; cdecl;
+function EventFilter(p: pointer; e: PSDL_Event): boolean; cdecl;
 //音频子程
 procedure InitialMusic;
 procedure PlayMP3(MusicNum, times: integer; frombeginning: integer = 1); overload;
@@ -131,15 +131,17 @@ implementation
 uses
   kys_draw;
 
-function EventFilter(p: pointer; e: PSDL_Event): longint; cdecl;
+function EventFilter(p: pointer; e: PSDL_Event): boolean; cdecl;
 begin
-  Result := 1;
+  Result := True;
   {or (e.type_ = SDL_EVENT_FINGER_MOTION)}
   case e.type_ of
-    SDL_EVENT_FINGER_UP, SDL_EVENT_FINGER_DOWN, SDL_EVENT_GAMEPAD_AXIS_MOTION, SDL_EVENT_GAMEPAD_BUTTON_DOWN, SDL_EVENT_GAMEPAD_BUTTON_UP: Result := 0;
+    SDL_EVENT_FINGER_UP, SDL_EVENT_FINGER_DOWN, SDL_EVENT_GAMEPAD_AXIS_MOTION, SDL_EVENT_GAMEPAD_BUTTON_DOWN, SDL_EVENT_GAMEPAD_BUTTON_UP: Result := False;
     SDL_EVENT_FINGER_MOTION:
       if CellPhone = 0 then
-        Result := 0;
+        Result := False;
+    SDL_EVENT_DID_ENTER_FOREGROUND: PlayMP3(nowmusic, -1, 0);
+    SDL_EVENT_DID_ENTER_BACKGROUND: StopMP3();
   end;
 end;
 
