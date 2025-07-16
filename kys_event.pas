@@ -2751,14 +2751,14 @@ begin
     begin
       CheckBasicEvent;
       //部分功能
-      if (event.key.key = SDLK_ESCAPE) or (event.button.button = SDL_BUTTON_RIGHT) then
+      if ((event.type_ = SDL_EVENT_KEY_UP) and (event.key.key = SDLK_ESCAPE)) or ((event.type_ = SDL_EVENT_MOUSE_BUTTON_UP) and (event.button.button = SDL_BUTTON_RIGHT)) then
       begin
         skipSync := True;
         SkipTalk := 1;
         //CleanKeyValue;
         break;
       end;
-      if (event.key.key = SDLK_RETURN) or (event.key.key = SDLK_SPACE) or (event.button.button = SDL_BUTTON_LEFT) then
+      if ((event.type_ = SDL_EVENT_KEY_UP) and ((event.key.key = SDLK_RETURN) or (event.key.key = SDLK_SPACE))) or ((event.type_ = SDL_EVENT_MOUSE_BUTTON_UP) and (event.button.button = SDL_BUTTON_LEFT)) then
       begin
         skipSync := True;
         SkipTalk := 0;
