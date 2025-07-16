@@ -61,3 +61,4 @@ kys-pascal-androidstudio/app/jni/SDL2_image
 kys-pascal-androidstudio/app/jni/SDL2_ttf
 kys-pascal-androidstudio/build
 *.so
+*.apk
