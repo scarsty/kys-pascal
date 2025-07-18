@@ -169,7 +169,7 @@ var
   CENTER_X: integer = 400;
   CENTER_Y: integer = 225;
 
-  AppPath: utf8string; //程序的路径
+  AppPath, AppPathCommon: utf8string; //程序的路径，公用文件的路径
 
   //游戏本身的常量
   //以下为常数表, 其中多数可以由ini文件改变

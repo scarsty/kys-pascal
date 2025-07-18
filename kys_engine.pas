@@ -153,7 +153,10 @@ var
   Flag: longword;
 begin
   BASS_Set3DFactors(1, 0, 0);
-  sf.font := BASS_MIDI_FontInit(putf8char(AppPath + 'music/mid.sf2'), 0);
+  str := AppPath + 'music/mid.sf2';
+  if (not FileExists(str)) then
+    str := AppPathCommon + 'music/mid.sf2';
+  sf.font := BASS_MIDI_FontInit(putf8char(str), 0);
   BASS_MIDI_StreamSetFonts(0, sf, 1);
   sf.preset := -1; //use all presets
   sf.bank := 0;

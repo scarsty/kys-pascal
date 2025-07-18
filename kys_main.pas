@@ -193,14 +193,21 @@ begin
     end;
   end;
 
+  AppPathCommon := AppPath + '../kys-pascal/';
+
 
   ReadFiles;
 
   SetMODVersion;
 
   TTF_Init();
-  font := TTF_OpenFont(putf8char(AppPath + CHINESE_FONT), CHINESE_FONT_SIZE);
-  engfont := TTF_OpenFont(putf8char(AppPath + ENGLISH_FONT), ENGLISH_FONT_SIZE);
+  str :=  AppPath + CHINESE_FONT;
+  if (not fileexists(str)) then str:=   AppPathCommon + CHINESE_FONT;
+  font := TTF_OpenFont(putf8char(str), CHINESE_FONT_SIZE);
+
+    str :=  AppPath + ENGLISH_FONT;
+  if (not fileexists(str)) then str:=   AppPathCommon + ENGLISH_FONT;
+  engfont := TTF_OpenFont(putf8char(str), ENGLISH_FONT_SIZE);
 
   //此处测试中文字体的空格宽度
   Text := TTF_RenderText_solid(font, @word[0], 1, tempcolor);
