@@ -644,6 +644,7 @@ begin
         if (event.button.button = SDL_BUTTON_LEFT) and (round(event.button.x / (RESOLUTIONX / screen.w)) > x) and (round(event.button.x / (RESOLUTIONX / screen.w)) < x + 80) and (round(event.button.y / (RESOLUTIONY / screen.h)) > y) and (round(event.button.y / (RESOLUTIONY / screen.h)) < y + 60) then
         begin
           Selected := True;
+          menu := (round(event.button.y / (RESOLUTIONY / screen.h)) - y) div 20;
         end;
       end;
       //鼠标移动
