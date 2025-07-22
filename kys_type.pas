@@ -224,6 +224,7 @@ var
   Rmagic: array [0 .. 998] of TMagic;
   RShop: array [0 .. 10] of TShop;
   //R文件数据, 均远大于原有容量
+  SceneAmount: integer = 0;
 
   SData: array [0 .. 400, 0 .. 5, 0 .. 63, 0 .. 63] of smallint;
   DData: array [0 .. 400, 0 .. 199, 0 .. 10] of smallint;

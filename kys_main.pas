@@ -130,7 +130,9 @@ procedure CloudCreateOnSide(num: integer);
 
 function IsCave(snum: integer): boolean;
 
-function SDL_GetAndroidExternalStoragePath(): PAnsiChar; cdecl; external 'libSDL3.so';
+procedure teleport();
+
+function SDL_GetAndroidExternalStoragePath(): pansichar; cdecl; external 'libSDL3.so';
 
 implementation
 
@@ -201,12 +203,12 @@ begin
   SetMODVersion;
 
   TTF_Init();
-  str :=  AppPath + CHINESE_FONT;
-  if (not fileexists(str)) then str:=   AppPathCommon + CHINESE_FONT;
+  str := AppPath + CHINESE_FONT;
+  if (not fileexists(str)) then str := AppPathCommon + CHINESE_FONT;
   font := TTF_OpenFont(putf8char(str), CHINESE_FONT_SIZE);
 
-    str :=  AppPath + ENGLISH_FONT;
-  if (not fileexists(str)) then str:=   AppPathCommon + ENGLISH_FONT;
+  str := AppPath + ENGLISH_FONT;
+  if (not fileexists(str)) then str := AppPathCommon + ENGLISH_FONT;
   engfont := TTF_OpenFont(putf8char(str), ENGLISH_FONT_SIZE);
 
   //此处测试中文字体的空格宽度
@@ -1553,7 +1555,7 @@ end;
 procedure LoadR(num: integer);
 var
   filename: utf8string;
-  idx, grp, i1, i2, len, SceneAmount: integer;
+  idx, grp, i1, i2, len: integer;
   BasicOffset, RoleOffset, ItemOffset, SceneOffset, MagicOffset, WeiShopOffset, i: integer;
 begin
   SaveNum := num;
@@ -3261,7 +3263,7 @@ begin
       end;
       SDL_EVENT_MOUSE_WHEEL:
       begin
-        if (event.wheel.y > 0) then
+        if (event.wheel.y < 0) then
         begin
           menu := menu + 1;
           if menu - menutop >= maxshow then
@@ -3276,7 +3278,7 @@ begin
           ShowCommonScrollMenu(x, y, w, max, maxshow, menu, menutop, menuString, menuEngString);
           SDL_UpdateRect2(screen, x, y, w + 1, maxshow * 22 + 29);
         end;
-        if (event.wheel.y < 0) then
+        if (event.wheel.y > 0) then
         begin
           menu := menu - 1;
           if menu <= menutop then
@@ -3487,7 +3489,7 @@ end;
 //主选单
 procedure MenuEsc;
 var
-  word: array [0 .. 5] of utf8string;
+  word: array [0 .. 6] of utf8string;
   i: integer;
 begin
   NeedRefreshScene := 0;
@@ -3496,19 +3498,25 @@ begin
   word[2] := '物品';
   word[3] := '狀態';
   word[4] := '離隊';
-  word[5] := '系統';
+  word[6] := '系統';
+  word[5] := '傳送';
   if MODVersion = 22 then
     word[4] := '特殊';
 
   i := 0;
   while i >= 0 do
   begin
-    i := CommonMenu(27, 30, 46, 5, i, word);
+    i := CommonMenu(27, 30, 46, 6, i, word);
     case i of
       0: MenuMedcine;
       1: MenuMedPoison;
       2: MenuItem;
-      5: MenuSystem;
+      5: begin
+        Teleport;
+        //Redraw; SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+        break;
+      end;
+      6: MenuSystem;
       4: MenuLeave;
       3:
       begin
@@ -3525,7 +3533,7 @@ begin
     end;
     Redraw;
     SDL_UpdateRect2(screen, 80, 0, screen.w - 80, screen.h);
-    if where = 3 then
+    if (where = 3) then
       break;
   end;
   Redraw;
@@ -6097,6 +6105,68 @@ end;
 function IsCave(snum: integer): boolean;
 begin
   Result := snum in [5, 7, 10, 41, 42, 46, 65, 66, 67, 72, 79];
+end;
+
+procedure teleport();
+var
+  scene_list, scene_list2: array[0..200] of integer;
+  i, j, n, notzero: integer;
+  strings, stringseng: array of utf8string;
+
+  function calturn(i: integer): integer;
+  begin
+    Result := RScene[i].MainEntranceX1 *3 div 2 + RScene[i].MainEntranceY1*1;
+  end;
+
+begin
+  for i := 0 to SceneAmount - 1 do
+  begin
+    scene_list[i] := i;
+  end;
+
+  for i := 0 to SceneAmount - 2 do
+  begin
+    for j := i + 1 to SceneAmount - 1 do
+    begin
+      if calturn(scene_list[i]) > calturn(scene_list[j]) then
+      begin
+        n := scene_list[i];
+        scene_list[i] := scene_list[j];
+        scene_list[j] := n;
+      end;
+    end;
+  end;
+
+  for i := 0 to SceneAmount - 1 do
+  begin
+    if (RScene[scene_list[i]].MainEntranceX1 > 0) and (RScene[scene_list[i]].MainEntranceY1 > 0) then
+    begin
+      notzero := i;
+      break;
+    end;
+  end;
+
+  i := notzero;
+  n := 0;
+  while (i < SceneAmount) do
+  begin
+    scene_list2[n] := scene_list[i];
+    Inc(i, 5);
+    Inc(n);
+  end;
+
+  setlength(strings, n);
+  for i := 0 to n - 1 do
+  begin
+    strings[i] := CP950toutf8(RScene[scene_list2[i]].Name);
+  end;
+  i := CommonMenu(100, 30, 200, n - 1, strings);
+  if i >= 0 then
+  begin
+    Mx := RScene[scene_list2[i]].MainEntranceX1;
+    My := RScene[scene_list2[i]].MainEntranceY1;
+  end;
+
 end;
 
 end.
