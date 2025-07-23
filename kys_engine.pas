@@ -126,6 +126,9 @@ procedure kyslog(formatstring: string = ''; cr: boolean = True); overload;
 
 function utf8follow(c1: utf8char): integer;
 
+function checkFileName(f: utf8string): utf8string;
+function InRegion(x1, y1, x, y, w, h: integer): boolean;
+
 implementation
 
 uses
@@ -1535,12 +1538,12 @@ var
 
   function inReturn(x, y: integer): boolean; inline;
   begin
-    Result := (x > CENTER_X * 2 - 100) and (y > CENTER_Y * 2 - 100);
+    Result := InRegion(x, y, CENTER_X * 2 - 200, CENTER_Y * 2 - 100, 100, 100);
   end;
 
   function inEscape(x, y: integer): boolean; inline;
   begin
-    Result := (x < 100) and (y < 100);
+    Result := InRegion(x, y, CENTER_X * 2 - 100, CENTER_Y * 2 - 200, 100, 100);
   end;
 
   function inSwitchShowVirtualKey(x, y: integer): boolean; inline;
@@ -1549,14 +1552,15 @@ var
     Result := False;
   end;
 
-  function InRegion(x1, y1, x, y, w, h: integer): boolean;
-  begin
-    Result := (x1 >= x) and (y1 >= y) and (x1 < x + w) and (y1 < y + h);
-  end;
-
   function inVirtualKey(x, y: integer; var key: uint32): uint32;
   begin
     Result := 0;
+    //if InRegion(x, y, CENTER_X * 2 - 200, CENTER_Y * 2 - 200, 100, 100) then
+      //Result := SDLK_TAB;
+    if InRegion(x, y, CENTER_X * 2 - 100, CENTER_Y * 2 - 100, 100, 100) then
+      Result := SDLK_TAB;
+    if InRegion(x, y, VirtualKeyX - VirtualKeySize, VirtualKeyY, VirtualKeySize * 3, VirtualKeySize * 3) then
+      Result := SDLK_TAB;
     if InRegion(x, y, VirtualKeyX, VirtualKeyY, VirtualKeySize, VirtualKeySize) then
       Result := SDLK_UP;
     if InRegion(x, y, VirtualKeyX - VirtualKeySize, VirtualKeyY + VirtualKeySize, VirtualKeySize, VirtualKeySize) then
@@ -1996,6 +2000,18 @@ begin
     Result := 6
   else
     Result := 1;    //skip one char
+end;
+
+function checkFileName(f: utf8string): utf8string;
+begin
+  Result := AppPath + f;
+  if (not fileexists(Result)) then
+    Result := AppPathCommon + f;
+end;
+
+function InRegion(x1, y1, x, y, w, h: integer): boolean;
+begin
+  Result := (x1 >= x) and (y1 >= y) and (x1 < x + w) and (y1 < y + h);
 end;
 
 end.

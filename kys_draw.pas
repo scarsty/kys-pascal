@@ -1001,7 +1001,6 @@ end;
 procedure InitialScene(); overload;
 begin
   InitialScene(0);
-
 end;
 
 //如参数不为0, 仅修改可见部分的场景映像. 参数为0与无参数相同
@@ -1020,7 +1019,7 @@ begin
     y1 := 0;
     w := ImageWidth;
     h := ImageHeight;
-    SDL_FillSurfaceRect(ImgScene, nil, 0);
+    SDL_FillSurfaceRect(ImgScene, nil, $ff000000);
     SDL_FillSurfaceRect(ImgSceneBack, nil, 1);
     ExpandGroundOnImg();
   end
@@ -1286,7 +1285,7 @@ var
   sumi, i1, i2: integer;
 begin
   FillChar(BlockImg2[0], sizeof(BlockImg2[0]) * length(BlockImg2), -1);
-  SDL_FillSurfaceRect(ImgBField, nil, 0);
+  SDL_FillSurfaceRect(ImgBField, nil, $ff000000);
   SDL_FillSurfaceRect(ImgBBuild, nil, 1);
   ExpandGroundOnImg();
   for sumi := 0 to 126 do
@@ -1657,6 +1656,7 @@ procedure DrawVirtualKey;
 var
   u, d, l, r: integer;
   rect: TSDL_Rect;
+  w, h: integer;
 begin
   if ShowVirtualKey <> 0 then
   begin
@@ -1670,10 +1670,14 @@ begin
       SDLK_DOWN: d := 0;
       SDLK_RIGHT: r := 0;
     end;
+    w := CENTER_X * 2;
+    h := CENTER_Y * 2;
     SDL_SetSurfaceAlphaMod(VirtualKeyU, 255 - u);
     SDL_SetSurfaceAlphaMod(VirtualKeyD, 255 - d);
     SDL_SetSurfaceAlphaMod(VirtualKeyL, 255 - l);
     SDL_SetSurfaceAlphaMod(VirtualKeyR, 255 - r);
+    SDL_SetSurfaceAlphaMod(VirtualKeyA, 128);
+    SDL_SetSurfaceAlphaMod(VirtualKeyB, 128);
 
     rect.x := VirtualKeyX;
     rect.y := VirtualKeyY;
@@ -1690,6 +1694,15 @@ begin
     rect.x := VirtualKeyX + VirtualKeySize;
     rect.y := VirtualKeyY + VirtualKeySize;
     SDL_BlitSurface(VirtualKeyR, nil, screen, @rect);
+
+    rect.x := w - 200;
+    rect.y := h - 100;
+    SDL_BlitSurface(VirtualKeyA, nil, screen, @rect);
+
+    rect.x := w - 100;
+    rect.y := h - 200;
+    SDL_BlitSurface(VirtualKeyB, nil, screen, @rect);
+
   end;
 end;
 

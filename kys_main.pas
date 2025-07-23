@@ -273,7 +273,9 @@ begin
   ImgSceneBack := SDL_CreateSurface(ImageWidth, ImageHeight, SDL_GetPixelFormatForMasks(32, Rmask, Gmask, Bmask, Amask));
   ImgBField := SDL_CreateSurface(ImageWidth, ImageHeight, SDL_GetPixelFormatForMasks(32, Rmask, Gmask, Bmask, Amask));
   ImgBBuild := SDL_CreateSurface(ImageWidth, ImageHeight, SDL_GetPixelFormatForMasks(32, Rmask, Gmask, Bmask, Amask));
+  SDL_SetSurfaceColorKey(ImgScene, False, 1);
   SDL_SetSurfaceColorKey(ImgSceneBack, True, 1);
+  SDL_SetSurfaceColorKey(ImgBField, False, 1);
   SDL_SetSurfaceColorKey(ImgBBuild, True, 1);
   setlength(BlockImg, ImageWidth * ImageHeight);
   setlength(BlockImg2, ImageWidth * ImageHeight);
@@ -506,10 +508,12 @@ begin
       VirtualKeyY := Kys_ini.ReadInteger('system', 'Virtual_Key_Y', 250);
       if FileExists(AppPath + 'resource/u.png') then
       begin
-        VirtualKeyU := IMG_Load(putf8char(AppPath + 'resource/u.png'));
-        VirtualKeyD := IMG_Load(putf8char(AppPath + 'resource/d.png'));
-        VirtualKeyL := IMG_Load(putf8char(AppPath + 'resource/l.png'));
-        VirtualKeyR := IMG_Load(putf8char(AppPath + 'resource/r.png'));
+        VirtualKeyU := IMG_Load(putf8char(checkFileName('resource/u.png')));
+        VirtualKeyD := IMG_Load(putf8char(checkFileName('resource/d.png')));
+        VirtualKeyL := IMG_Load(putf8char(checkFileName('resource/l.png')));
+        VirtualKeyR := IMG_Load(putf8char(checkFileName('resource/r.png')));
+        VirtualKeyA := IMG_Load(putf8char(checkFileName('resource/a.png')));
+        VirtualKeyB := IMG_Load(putf8char(checkFileName('resource/b.png')));
       end
       else
         ShowVirtualKey := 0;
@@ -3499,25 +3503,25 @@ begin
   word[2] := '物品';
   word[3] := '狀態';
   word[4] := '離隊';
-  word[6] := '系統';
-  word[5] := '傳送';
+  word[5] := '系統';
+  //word[5] := '傳送';
   if MODVersion = 22 then
     word[4] := '特殊';
 
   i := 0;
   while i >= 0 do
   begin
-    i := CommonMenu(27, 30, 46, 6, i, word);
+    i := CommonMenu(27, 30, 46, 5, i, word);
     case i of
       0: MenuMedcine;
       1: MenuMedPoison;
       2: MenuItem;
-      5: begin
+      6: begin
         Teleport;
         //Redraw; SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
         break;
       end;
-      6: MenuSystem;
+      5: MenuSystem;
       4: MenuLeave;
       3:
       begin
@@ -6116,7 +6120,7 @@ var
 
   function calturn(i: integer): integer;
   begin
-    Result := RScene[i].MainEntranceX1 *3 div 2 + RScene[i].MainEntranceY1*1;
+    Result := RScene[i].MainEntranceX1 * 3 div 2 + RScene[i].MainEntranceY1 * 1;
   end;
 
 begin

@@ -418,7 +418,7 @@ var
   FreeWalking: boolean = False;
   BattleSelecting: boolean = False; //是否处于战场上选择
 
-  VirtualKeyU, VirtualKeyD, VirtualKeyL, VirtualKeyR: PSDL_Surface;
+  VirtualKeyU, VirtualKeyD, VirtualKeyL, VirtualKeyR, VirtualKeyA, VirtualKeyB: PSDL_Surface;
   //虚拟按键相关
   ShowVirtualKey: integer = 0;
   VirtualKeyValue: uint32 = 0;
