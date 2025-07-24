@@ -6105,11 +6105,6 @@ var
   i, j, n, notzero, step, x, y, x1, y1: integer;
   strings, stringseng: array of utf8string;
 
-  function calturn(i: integer): integer;
-  begin
-    Result := RScene[i].MainEntranceX1 * 3 div 2 + RScene[i].MainEntranceY1 * 1;
-  end;
-
   procedure drawtelemap();
   var
     i, j, x, y: integer;
@@ -6121,16 +6116,16 @@ var
       begin
         x1 := center_x - (x - y);
         y1 := (x + y) div 2;
-        DrawMPic(earth[x, y] div 2, x1, y1 + 18, 0, 0, 0, 0, -1, 2);
+        DrawMPic(earth[x, y] div 2, x1, y1 + 18, 0, 0, 0, 0, -1, 1);
         //if surface[x, y] > 0 then
-        //DrawMPic(surface[x, y] div 2, x1, y1 + 18, 0, 0, 0, 0, -1, 2);
+        //DrawMPic(surface[x, y] div 2, x1, y1 + 18, 0, 0, 0, 0, -1, 1);
         //if building[x, y]>100 then
-        //DrawMPic(building[x, y] div 2, x1, y1+18, 0, 0, 0, 0, -1, 2);
+        //DrawMPic(building[x, y] div 2, x1, y1+18, 0, 0, 0, 0, -1, 1);
       end;
     for i := 0 to SceneAmount - 1 do
     begin
-      x := RScene[scene_list[i]].MainEntranceX1;
-      y := RScene[scene_list[i]].MainEntranceY1;
+      x := RScene[i].MainEntranceX1;
+      y := RScene[i].MainEntranceY1;
       if (x > 0) and (y > 0) then
       begin
         x1 := center_x - (x - y);
@@ -6147,25 +6142,6 @@ var
   end;
 
 begin
-  for i := 0 to SceneAmount - 1 do
-  begin
-    scene_list[i] := i;
-  end;
-
-  for i := 0 to SceneAmount - 2 do
-  begin
-    for j := i + 1 to SceneAmount - 1 do
-    begin
-      if calturn(scene_list[i]) > calturn(scene_list[j]) then
-      begin
-        n := scene_list[i];
-        scene_list[i] := scene_list[j];
-        scene_list[j] := n;
-      end;
-    end;
-  end;
-
-
   while SDL_PollEvent(@event) or True do
   begin
     drawtelemap();
@@ -6196,6 +6172,15 @@ begin
         end;
         if (event.button.button = SDL_BUTTON_LEFT) then
         begin
+          SDL_GetMouseState2(x1, y1);
+          x := (y1 * 2 - x1 + center_x) div 2;
+          y := y1 * 2 - x;
+          if inregion(x, y, 0, 0, 480, 480) then
+          begin
+            Mx := x;
+            My := y;
+            break;
+          end;
         end;
       end;
       SDL_EVENT_MOUSE_MOTION:
@@ -6203,40 +6188,6 @@ begin
       end;
     end;
   end;
-
-  exit;
-
-  for i := 0 to SceneAmount - 1 do
-  begin
-    if (RScene[scene_list[i]].MainEntranceX1 > 0) and (RScene[scene_list[i]].MainEntranceY1 > 0) then
-    begin
-      notzero := i;
-      break;
-    end;
-  end;
-
-  i := notzero;
-  n := 0;
-  step := (SceneAmount - i) div 15;
-  while (i < SceneAmount) do
-  begin
-    scene_list2[n] := scene_list[i];
-    Inc(i, step);
-    Inc(n);
-  end;
-
-  setlength(strings, n);
-  for i := 0 to n - 1 do
-  begin
-    strings[i] := CP950toutf8(RScene[scene_list2[i]].Name);
-  end;
-  i := CommonMenu(300, 30, 200, n - 1, strings);
-  if i >= 0 then
-  begin
-    Mx := RScene[scene_list2[i]].MainEntranceX1;
-    My := RScene[scene_list2[i]].MainEntranceY1;
-  end;
-
 end;
 
 end.
