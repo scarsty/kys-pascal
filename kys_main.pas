@@ -179,7 +179,7 @@ begin
   render_str := '';
   {$ENDIF}
 
-  //CellPhone := 1;
+  CellPhone := 1;
 
   if fileexists(AppPath + 'games.ini') then
   begin
@@ -196,7 +196,6 @@ begin
   end;
 
   AppPathCommon := AppPath + '../kys-pascal/';
-
 
   ReadFiles;
 
@@ -348,8 +347,8 @@ begin
     begin
       TitleString := 'All Heros in Kam Yung''s Stories - We Are Dragons';
       setlength(Asound, 37);
-      TitlePosition.x := 100;
-      TitlePosition.y := 270;
+      //TitlePosition.x := 100;
+      //TitlePosition.y := 270;
     end;
     21:
     begin
@@ -409,8 +408,8 @@ begin
     begin
       TitleString := 'All Heros in Kam Yung''s Stories - Awaking of Dragons';
       setlength(Music, 999);
-      TitlePosition.x := 100;
-      TitlePosition.y := 270;
+      //TitlePosition.x := 100;
+      //TitlePosition.y := 270;
     end;
     91:
     begin
@@ -1733,32 +1732,15 @@ begin
     SDL_Delay(20);
   end;
   Result := event.key.key;
-
-  if event.button.button = SDL_BUTTON_LEFT then
+  if event.type_ = SDL_EVENT_MOUSE_BUTTON_UP then
   begin
-    Result := SDLK_SPACE;
-    if CellPhone = 1 then
+    if event.button.button = SDL_BUTTON_LEFT then
     begin
-      SDL_GetMouseState2(x, y);
-      if (y < 100) then
-        Result := SDLK_UP;
-      if (x < 100) then
-        Result := SDLK_LEFT;
-      if (x > CENTER_X * 2 - 100) then
-        Result := SDLK_RIGHT;
-      if (y > CENTER_Y * 2 - 100) then
-        Result := SDLK_DOWN;
-      if (x < 100) and (y > CENTER_Y * 2 - 100) then
-        Result := SDLK_RETURN;
-      if (x > CENTER_X * 2 - 100) and (y > CENTER_Y * 2 - 100) then
-        Result := SDLK_RETURN;
-      if (x > CENTER_X * 2 - 100) and (y < 100) then
-        Result := SDLK_Y;
+      Result := SDLK_SPACE;
     end;
+    if event.button.button = SDL_BUTTON_RIGHT then
+      Result := SDLK_ESCAPE;
   end;
-  if event.button.button = SDL_BUTTON_RIGHT then
-    Result := SDLK_ESCAPE;
-
   event.key.key := 0;
   event.button.button := 0;
 end;
