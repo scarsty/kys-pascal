@@ -179,7 +179,7 @@ begin
   render_str := '';
   {$ENDIF}
 
-  CellPhone := 1;
+  //CellPhone := 1;
 
   if fileexists(AppPath + 'games.ini') then
   begin
@@ -347,8 +347,8 @@ begin
     begin
       TitleString := 'All Heros in Kam Yung''s Stories - We Are Dragons';
       setlength(Asound, 37);
-      //TitlePosition.x := 100;
-      //TitlePosition.y := 270;
+      TitlePosition.x := 200;
+      TitlePosition.y := 250;
     end;
     21:
     begin
@@ -408,8 +408,8 @@ begin
     begin
       TitleString := 'All Heros in Kam Yung''s Stories - Awaking of Dragons';
       setlength(Music, 999);
-      //TitlePosition.x := 100;
-      //TitlePosition.y := 270;
+      TitlePosition.x := 200;
+      TitlePosition.y := 250;
     end;
     91:
     begin
@@ -4972,7 +4972,7 @@ var
 begin
   word[0] := '讀取';
   word[1] := '存檔';
-  word[2] := '全屏';
+  word[2] := '傳送';
   word[3] := '離開';
   if FULLSCREEN = 1 then
     word[2] := '窗口';
@@ -4988,8 +4988,13 @@ begin
       0: MenuLoad;
       2:
       begin
-        SwitchFullscreen;
-        break;
+        if where = 0 then
+        begin
+          Teleport;
+          Redraw;
+          SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+          break;
+        end;
       end;
     end;
     if where = 3 then
@@ -6097,12 +6102,48 @@ end;
 procedure teleport();
 var
   scene_list, scene_list2: array[0..200] of integer;
-  i, j, n, notzero: integer;
+  i, j, n, notzero, step, x, y, x1, y1: integer;
   strings, stringseng: array of utf8string;
 
   function calturn(i: integer): integer;
   begin
     Result := RScene[i].MainEntranceX1 * 3 div 2 + RScene[i].MainEntranceY1 * 1;
+  end;
+
+  procedure drawtelemap();
+  var
+    i, j, x, y: integer;
+  begin
+    Redraw;
+    DrawRectangleWithoutFrame(screen, 0, 0, screen.w, screen.h, $ff000000, 50);
+    for x := 0 to 479 do
+      for y := 0 to 479 do
+      begin
+        x1 := center_x - (x - y);
+        y1 := (x + y) div 2;
+        DrawMPic(earth[x, y] div 2, x1, y1 + 18, 0, 0, 0, 0, -1, 2);
+        //if surface[x, y] > 0 then
+        //DrawMPic(surface[x, y] div 2, x1, y1 + 18, 0, 0, 0, 0, -1, 2);
+        //if building[x, y]>100 then
+        //DrawMPic(building[x, y] div 2, x1, y1+18, 0, 0, 0, 0, -1, 2);
+      end;
+    for i := 0 to SceneAmount - 1 do
+    begin
+      x := RScene[scene_list[i]].MainEntranceX1;
+      y := RScene[scene_list[i]].MainEntranceY1;
+      if (x > 0) and (y > 0) then
+      begin
+        x1 := center_x - (x - y);
+        y1 := (x + y) div 2;
+        DrawRectangleWithoutFrame(screen, x1, y1, 5, 5, $ffffffff, 50);
+        //kyslog('%d %d',[x1,y1]);
+      end;
+    end;
+    x1 := center_x - (mx - my);
+    y1 := (mx + my) div 2;
+    DrawRectangleWithoutFrame(screen, x1, y1, 5, 5, $ffff0000, 50);
+    SDL_Delay(16);
+    UpdateAllScreen;
   end;
 
 begin
@@ -6124,6 +6165,47 @@ begin
     end;
   end;
 
+
+  while SDL_PollEvent(@event) or True do
+  begin
+    drawtelemap();
+    CheckBasicEvent;
+    case event.type_ of
+      SDL_EVENT_KEY_UP:
+      begin
+        if (event.key.key = SDLK_DOWN) then
+        begin
+        end;
+        if (event.key.key = SDLK_UP) then
+        begin
+        end;
+        if ((event.key.key = SDLK_ESCAPE)) {and (where <= 2)} then
+        begin
+          break;
+        end;
+        if (event.key.key = SDLK_RETURN) or (event.key.key = SDLK_SPACE) then
+        begin
+          break;
+        end;
+      end;
+      SDL_EVENT_MOUSE_BUTTON_UP:
+      begin
+        if (event.button.button = SDL_BUTTON_RIGHT) {and (where <= 2)} then
+        begin
+          break;
+        end;
+        if (event.button.button = SDL_BUTTON_LEFT) then
+        begin
+        end;
+      end;
+      SDL_EVENT_MOUSE_MOTION:
+      begin
+      end;
+    end;
+  end;
+
+  exit;
+
   for i := 0 to SceneAmount - 1 do
   begin
     if (RScene[scene_list[i]].MainEntranceX1 > 0) and (RScene[scene_list[i]].MainEntranceY1 > 0) then
@@ -6135,10 +6217,11 @@ begin
 
   i := notzero;
   n := 0;
+  step := (SceneAmount - i) div 15;
   while (i < SceneAmount) do
   begin
     scene_list2[n] := scene_list[i];
-    Inc(i, 5);
+    Inc(i, step);
     Inc(n);
   end;
 
@@ -6147,7 +6230,7 @@ begin
   begin
     strings[i] := CP950toutf8(RScene[scene_list2[i]].Name);
   end;
-  i := CommonMenu(100, 30, 200, n - 1, strings);
+  i := CommonMenu(300, 30, 200, n - 1, strings);
   if i >= 0 then
   begin
     Mx := RScene[scene_list2[i]].MainEntranceX1;

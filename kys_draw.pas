@@ -19,7 +19,7 @@ uses
 //画单个图片的子程
 procedure DrawTitlePic(imgnum, px, py: integer);
 procedure DrawMPic(num, px, py: integer; Framenum: integer = -1); overload;
-procedure DrawMPic(num, px, py, shadow, alpha: integer; mixColor: uint32; mixAlpha: integer; Framenum: integer = -1); overload;
+procedure DrawMPic(num, px, py, shadow, alpha: integer; mixColor: uint32; mixAlpha: integer; Framenum: integer = -1; totalpix: integer = 0); overload;
 procedure DrawSPic(num, px, py: integer); overload;
 procedure DrawSPic(num, px, py, x, y, w, h: integer); overload;
 procedure DrawSPic(num, px, py, shadow, alpha, depth: integer; mixColor: uint32; mixAlpha: integer); overload;
@@ -107,7 +107,7 @@ begin
 end;
 
 //显示主地图贴图
-procedure DrawMPic(num, px, py, shadow, alpha: integer; mixColor: uint32; mixAlpha: integer; Framenum: integer = -1); overload;
+procedure DrawMPic(num, px, py, shadow, alpha: integer; mixColor: uint32; mixAlpha: integer; Framenum: integer = -1; totalpix: integer = 0); overload;
 var
   NeedGRP: integer;
 begin
@@ -131,7 +131,7 @@ begin
     end;
     if (PNG_TILE = 0) or (NeedGRP = 1) then
     begin
-      DrawRLE8Pic(@ACol[0], num, px, py, @Midx[0], @Mpic[0], nil, nil, 0, 0, 0, shadow, alpha, nil, nil, 0, 0, 0, 4096, mixColor, mixAlpha);
+      DrawRLE8Pic(@ACol[0], num, px, py, @Midx[0], @Mpic[0], nil, nil, 0, 0, 0, shadow, alpha, nil, nil, 0, 0, 0, 4096, mixColor, mixAlpha, totalpix);
     end;
   end;
 end;

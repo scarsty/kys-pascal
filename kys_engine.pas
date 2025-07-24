@@ -63,7 +63,7 @@ function JudgeInScreen(px, py, w, h, xs, ys: integer): boolean; overload; inline
 function JudgeInScreen(px, py, w, h, xs, ys, xx, yy, xw, yh: integer): boolean; overload; inline;
 procedure DrawRLE8Pic(colorPanel: putf8char; num, px, py: integer; Pidx: Pinteger; Ppic: pbyte; RectArea: putf8char; Image: PSDL_Surface; widthI, heightI, sizeI: integer; shadow: integer); overload; inline;
 procedure DrawRLE8Pic(colorPanel: putf8char; num, px, py: integer; Pidx: Pinteger; Ppic: pbyte; RectArea: putf8char; Image: PSDL_Surface; widthI, heightI, sizeI: integer; shadow, alpha: integer); overload; inline;
-procedure DrawRLE8Pic(colorPanel: putf8char; num, px, py: integer; Pidx: Pinteger; Ppic: pbyte; RectArea: putf8char; Image: PSDL_Surface; widthI, heightI, sizeI: integer; shadow, alpha: integer; BlockImageW: putf8char; BlockPosition: putf8char; widthW, heightW, sizeW: integer; depth: integer; mixColor: uint32; mixAlpha: integer); overload;
+procedure DrawRLE8Pic(colorPanel: putf8char; num, px, py: integer; Pidx: Pinteger; Ppic: pbyte; RectArea: putf8char; Image: PSDL_Surface; widthI, heightI, sizeI: integer; shadow, alpha: integer; BlockImageW: putf8char; BlockPosition: putf8char; widthW, heightW, sizeW: integer; depth: integer; mixColor: uint32; mixAlpha: integer; totalpix: integer = 0); overload;
 function GetPositionOnScreen(x, y, CenterX, CenterY: integer): TPosition;
 
 //显示文字的子程
@@ -914,7 +914,7 @@ end;
 //即该值起作用的机会有两种: Image不为空到映像, 且BlockImageW不为空. 或者Image为空(到屏幕), 且BlockPosition不为空
 //如果在画到屏幕时避免该值起作用, 可以设为一个很大的值
 //MixColor: Uint32; MixAlpha: integer 图片的混合颜色和混合度, 仅在画到屏幕上时有效
-procedure DrawRLE8Pic(colorPanel: putf8char; num, px, py: integer; Pidx: Pinteger; Ppic: pbyte; RectArea: putf8char; Image: PSDL_Surface; widthI, heightI, sizeI: integer; shadow, alpha: integer; BlockImageW: putf8char; BlockPosition: putf8char; widthW, heightW, sizeW: integer; depth: integer; mixColor: uint32; mixAlpha: integer); overload;
+procedure DrawRLE8Pic(colorPanel: putf8char; num, px, py: integer; Pidx: Pinteger; Ppic: pbyte; RectArea: putf8char; Image: PSDL_Surface; widthI, heightI, sizeI: integer; shadow, alpha: integer; BlockImageW: putf8char; BlockPosition: putf8char; widthW, heightW, sizeW: integer; depth: integer; mixColor: uint32; mixAlpha: integer; totalpix: integer = 0); overload;
 var
   w, h, xs, ys, x, y, blockx, blocky: smallint;
   offset, length, p, isAlpha, lenInt: integer;
@@ -922,6 +922,7 @@ var
   pix, colorin: uint32;
   pix1, pix2, pix3, pix4, color1, color2, color3, color4: byte;
   area: TSDL_Rect;
+  total: integer = 0;
 begin
   if num = 0 then
     offset := 0
@@ -1073,6 +1074,8 @@ begin
               if (alpha < 100) or (pixdepth <= curdepth) then
               begin
                 PutPixel(screen, x, y, pix);
+                Inc(total);
+                if (totalpix > 0) and (total >= totalpix) then exit;
               end;
             end
             else
@@ -1087,6 +1090,8 @@ begin
                 end;
                 pix := SDL_MapSurfaceRGBA(screen, pix1, pix2, pix3, 255);
                 PutPixel(Image, x, y, pix);
+                Inc(total);
+                if (totalpix > 0) and (total >= totalpix) then exit;
               end;
             end;
           end;
@@ -1556,11 +1561,11 @@ var
   begin
     Result := 0;
     //if InRegion(x, y, CENTER_X * 2 - 200, CENTER_Y * 2 - 200, 100, 100) then
-      //Result := SDLK_TAB;
-    if InRegion(x, y, CENTER_X * 2 - 100, CENTER_Y * 2 - 100, 100, 100) then
-      Result := SDLK_TAB;
-    if InRegion(x, y, VirtualKeyX - VirtualKeySize, VirtualKeyY, VirtualKeySize * 3, VirtualKeySize * 3) then
-      Result := SDLK_TAB;
+    //Result := SDLK_TAB;
+    //if InRegion(x, y, CENTER_X * 2 - 100, CENTER_Y * 2 - 100, 100, 100) then
+    //Result := SDLK_TAB;
+    //if InRegion(x, y, VirtualKeyX - VirtualKeySize, VirtualKeyY, VirtualKeySize * 3, VirtualKeySize * 3) then
+    //Result := SDLK_TAB;
     if InRegion(x, y, VirtualKeyX, VirtualKeyY, VirtualKeySize, VirtualKeySize) then
       Result := SDLK_UP;
     if InRegion(x, y, VirtualKeyX - VirtualKeySize, VirtualKeyY + VirtualKeySize, VirtualKeySize, VirtualKeySize) then
