@@ -6109,19 +6109,7 @@ var
   var
     i, j, x, y: integer;
   begin
-    Redraw;
-    DrawRectangleWithoutFrame(screen, 0, 0, screen.w, screen.h, $ff000000, 50);
-    for x := 0 to 479 do
-      for y := 0 to 479 do
-      begin
-        x1 := center_x - (x - y);
-        y1 := (x + y) div 2;
-        DrawMPic(earth[x, y] div 2, x1, y1 + 18, 0, 0, 0, 0, -1, 1);
-        //if surface[x, y] > 0 then
-        //DrawMPic(surface[x, y] div 2, x1, y1 + 18, 0, 0, 0, 0, -1, 1);
-        //if building[x, y]>100 then
-        //DrawMPic(building[x, y] div 2, x1, y1+18, 0, 0, 0, 0, -1, 1);
-      end;
+    LoadFreshScreen(0, 0, screen.w, screen.h);
     for i := 0 to SceneAmount - 1 do
     begin
       x := RScene[i].MainEntranceX1;
@@ -6142,6 +6130,20 @@ var
   end;
 
 begin
+  Redraw;
+  DrawRectangleWithoutFrame(screen, 0, 0, screen.w, screen.h, $ff000000, 50);
+  for x := 0 to 479 do
+    for y := 0 to 479 do
+    begin
+      x1 := center_x - (x - y);
+      y1 := (x + y) div 2;
+      DrawMPic(earth[x, y] div 2, x1, y1 + 18, 0, 0, 0, 0, -1, 1);
+      //if surface[x, y] > 0 then
+        //DrawMPic(surface[x, y] div 2, x1, y1 + 18, 0, 0, 0, 0, -1, 1);
+      //if building[x, y] > 100 then
+        //DrawMPic(building[x, y] div 2, x1, y1 + 18, 0, 0, 0, 0, -1, 1);
+    end;
+  RecordFreshScreen(0, 0, screen.w, screen.h);
   while SDL_PollEvent(@event) or True do
   begin
     drawtelemap();
