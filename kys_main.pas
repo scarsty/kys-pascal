@@ -1737,6 +1737,12 @@ begin
     if event.button.button = SDL_BUTTON_LEFT then
     begin
       Result := SDLK_SPACE;
+      if CellPhone = 1 then
+      begin
+        SDL_GetMouseState2(x, y);
+        if (x > CENTER_X * 2 - 100) and (y < 100) then
+          Result := SDLK_Y;    //特别处理50 35所需
+      end;
     end;
     if event.button.button = SDL_BUTTON_RIGHT then
       Result := SDLK_ESCAPE;
@@ -6139,9 +6145,9 @@ begin
       y1 := (x + y) div 2;
       DrawMPic(earth[x, y] div 2, x1, y1 + 18, 0, 0, 0, 0, -1, 1);
       //if surface[x, y] > 0 then
-        //DrawMPic(surface[x, y] div 2, x1, y1 + 18, 0, 0, 0, 0, -1, 1);
+      //DrawMPic(surface[x, y] div 2, x1, y1 + 18, 0, 0, 0, 0, -1, 1);
       //if building[x, y] > 100 then
-        //DrawMPic(building[x, y] div 2, x1, y1 + 18, 0, 0, 0, 0, -1, 1);
+      //DrawMPic(building[x, y] div 2, x1, y1 + 18, 0, 0, 0, 0, -1, 1);
     end;
   RecordFreshScreen(0, 0, screen.w, screen.h);
   while SDL_PollEvent(@event) or True do
