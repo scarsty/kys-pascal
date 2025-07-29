@@ -69,6 +69,7 @@ function WaitAnyKey: integer;
 procedure Walk;
 function CanWalk(x, y: integer): boolean;
 function CheckEntrance: boolean;
+function CheckCanEnter(snum: integer): boolean;
 function UpdateSceneAmi(param: pointer; timerid: TSDL_TimerID; interval: uint32): uint32; cdecl;
 function WalkInScene(Open: integer): integer;
 procedure FindWay(x1, y1: integer);
@@ -109,7 +110,7 @@ procedure ShowStatus(rnum: integer); overload;
 procedure ShowStatus(rnum, x, y: integer); overload;
 procedure ShowSimpleStatus(rnum, x, y: integer);
 procedure MenuLeave;
-procedure MenuSystem;
+function MenuSystem: integer;
 procedure ShowMenuSystem(menu: integer);
 procedure MenuLoad;
 function MenuLoadAtBeginning: integer;
@@ -130,7 +131,7 @@ procedure CloudCreateOnSide(num: integer);
 
 function IsCave(snum: integer): boolean;
 
-procedure teleport();
+function teleport(): integer;
 
 function SDL_GetAndroidExternalStoragePath(): pansichar; cdecl; external 'libSDL3.so';
 
@@ -2155,16 +2156,8 @@ begin
   Result := False;
   if (Entrance[x, y] >= 0) then
   begin
-    Result := False;
     snum := Entrance[x, y];
-    if (Rscene[snum].EnCondition = 0) then
-      Result := True;
-    //是否有人轻功超过70
-    if (Rscene[snum].EnCondition = 2) then
-      for i := 0 to 5 do
-        if teamlist[i] >= 0 then
-          if Rrole[teamlist[i]].Speed > 70 then
-            Result := True;
+    Result := checkCanEnter(snum);
     if Result = True then
     begin
       instruct_14;
@@ -2185,6 +2178,21 @@ begin
   end;
   //result:=canentrance;
 
+end;
+
+function CheckCanEnter(snum: integer): boolean;
+var
+  i: integer;
+begin
+  Result := False;
+  if (Rscene[snum].EnCondition = 0) then
+    Result := True;
+  //是否有人轻功超过70
+  if (Rscene[snum].EnCondition = 2) then
+    for i := 0 to 5 do
+      if teamlist[i] >= 0 then
+        if Rrole[teamlist[i]].Speed > 70 then
+          Result := True;
 end;
 
 function UpdateSceneAmi(param: pointer; timerid: TSDL_TimerID; interval: uint32): uint32;
@@ -3483,7 +3491,7 @@ end;
 procedure MenuEsc;
 var
   word: array [0 .. 6] of utf8string;
-  i: integer;
+  i, i1: integer;
 begin
   NeedRefreshScene := 0;
   word[0] := '醫療';
@@ -3491,25 +3499,41 @@ begin
   word[2] := '物品';
   word[3] := '狀態';
   word[4] := '離隊';
-  word[5] := '系統';
-  //word[5] := '傳送';
+  word[6] := '系統';
+  word[5] := '傳送';
   if MODVersion = 22 then
     word[4] := '特殊';
 
   i := 0;
   while i >= 0 do
   begin
-    i := CommonMenu(27, 30, 46, 5, i, word);
+    i := CommonMenu(27, 30, 46, 6, i, word);
     case i of
       0: MenuMedcine;
       1: MenuMedPoison;
       2: MenuItem;
-      6: begin
-        Teleport;
-        //Redraw; SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-        break;
+      5:
+      begin
+        if where = 0 then
+        begin
+          i1 := Teleport;
+          Redraw;
+          SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+          if i1 <> 0 then
+            break;
+        end
+        else
+        begin
+          DrawTextWithRect('子場景不可傳送!', 80, 30, 160, ColColor(5), ColColor(7));
+          SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+          waitanykey;
+        end;
       end;
-      5: MenuSystem;
+      6:
+      begin
+        i1 := MenuSystem;
+        if (i1 >= 2) then break;
+      end;
       4: MenuLeave;
       3:
       begin
@@ -4971,28 +4995,29 @@ begin
 end;
 
 //系统选单
-procedure MenuSystem;
+function MenuSystem: integer;
 var
   word: array [0 .. 3] of utf8string;
   i: integer;
 begin
+  Result := -1;
   word[0] := '讀取';
   word[1] := '存檔';
-  word[2] := '傳送';
-  word[3] := '離開';
+  word[3] := '傳送';
+  word[2] := '離開';
   if FULLSCREEN = 1 then
     word[2] := '窗口';
 
   i := 0;
   while i >= 0 do
   begin
-    i := CommonMenu(80, 30, 46, 3, i, word);
-
+    i := CommonMenu(80, 30, 46, 2, i, word);
+    Result := i;
     case i of
-      3: MenuQuit;
+      2: MenuQuit;
       1: MenuSave;
       0: MenuLoad;
-      2:
+      3:
       begin
         if where = 0 then
         begin
@@ -5000,6 +5025,12 @@ begin
           Redraw;
           SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
           break;
+        end
+        else
+        begin
+          DrawTextWithRect('子場景不可傳送!', 135, 30, 160, ColColor(5), ColColor(7));
+          SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+          waitanykey;
         end;
       end;
     end;
@@ -6105,17 +6136,19 @@ begin
   Result := snum in [5, 7, 10, 41, 42, 46, 65, 66, 67, 72, 79];
 end;
 
-procedure teleport();
+//返回非零表示传送
+function teleport(): integer;
 var
-  scene_list, scene_list2: array[0..200] of integer;
-  i, j, n, notzero, step, x, y, x1, y1: integer;
-  strings, stringseng: array of utf8string;
+  i, j, n, x, y, x1, y1, scene: integer;
 
-  procedure drawtelemap();
+  function drawtelemap(): integer;
   var
-    i, j, x, y: integer;
+    i, j, x, y, xm, ym, x2, y2: integer;
+    str: utf8string;
   begin
+    Result := -1;
     LoadFreshScreen(0, 0, screen.w, screen.h);
+    SDL_GetMouseState2(xm, ym);
     for i := 0 to SceneAmount - 1 do
     begin
       x := RScene[i].MainEntranceX1;
@@ -6125,17 +6158,30 @@ var
         x1 := center_x - (x - y);
         y1 := (x + y) div 2;
         DrawRectangleWithoutFrame(screen, x1, y1, 5, 5, $ffffffff, 50);
+        if InRegion(xm, ym, x1, y1, 5, 5) then
+        begin
+          Result := i;
+          x2 := x1;
+          y2 := y1;
+        end;
         //kyslog('%d %d',[x1,y1]);
       end;
     end;
     x1 := center_x - (mx - my);
     y1 := (mx + my) div 2;
     DrawRectangleWithoutFrame(screen, x1, y1, 5, 5, $ffff0000, 50);
+    if Result >= 0 then
+    begin
+      DrawRectangleWithoutFrame(screen, x2, y2, 5, 5, $ffffffff, 50);
+      str := cp950toutf8(Rscene[Result].Name);
+      DrawTextWithRect(screen, str, x2 + 7, y2 - 5, -1, ColColor(5), ColColor(7));
+    end;
     SDL_Delay(16);
     UpdateAllScreen;
   end;
 
 begin
+  Result := 0;
   Redraw;
   DrawRectangleWithoutFrame(screen, 0, 0, screen.w, screen.h, $ff000000, 50);
   for x := 0 to 479 do
@@ -6152,7 +6198,7 @@ begin
   RecordFreshScreen(0, 0, screen.w, screen.h);
   while SDL_PollEvent(@event) or True do
   begin
-    drawtelemap();
+    scene := drawtelemap();
     CheckBasicEvent;
     case event.type_ of
       SDL_EVENT_KEY_UP:
@@ -6187,6 +6233,23 @@ begin
           begin
             Mx := x;
             My := y;
+            Result := 1;
+            if scene >= 0 then
+            begin
+              if CheckCanEnter(scene) then
+              begin
+                instruct_14;
+                CurScene := scene;
+                SStep := 0;
+                Sx := Rscene[CurScene].EntranceX;
+                Sy := Rscene[CurScene].EntranceY;
+                //如达成条件, 进入场景并初始化场景坐标
+                SaveR(11);
+                WalkInScene(0);
+              end;
+            end;
+            event.key.key := 0;
+            event.button.button := 0;
             break;
           end;
         end;

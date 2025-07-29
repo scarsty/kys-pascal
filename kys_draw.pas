@@ -501,12 +501,12 @@ begin
     2: DrawBField;
     3:
     begin
-      SDL_FillSurfaceRect(screen, nil, 0);
+      SDL_FillSurfaceRect(screen, nil, $ff000000);
       display_img(putf8char(AppPath + 'resource/open.png'), OpenPicPosition.x, OpenPicPosition.y);
     end;
     4:
     begin
-      SDL_FillSurfaceRect(screen, nil, 0);
+      SDL_FillSurfaceRect(screen, nil, $ff000000);
       display_img(putf8char(AppPath + 'resource/dead.png'), OpenPicPosition.x, OpenPicPosition.y);
     end;
   end;

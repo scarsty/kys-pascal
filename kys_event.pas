@@ -161,7 +161,7 @@ procedure talk_1(talkstr: utf8string; headnum, dismode: integer);
 var
   idx, grp, offset, len, i, p, l, headx, heady, diagx, diagy, key: integer;
   Name: utf8string;
-  Lines: array of utf8string;
+  Lines, Lines2: array of utf8string;
   color: uint32;
 begin
   case dismode of
@@ -252,6 +252,16 @@ begin
     setlength(Lines, length(Lines) + 1);
     Lines[length(Lines) - 1] := copy(talkstr, p, len - p);
   end;
+  //这里过于复杂，干脆在最后去掉空行
+  for i := 0 to length(Lines) - 1 do
+  begin
+    if length(Lines[i]) > 0 then
+    begin
+      setlength(Lines2, length(Lines2) + 1);
+      Lines2[length(Lines2) - 1] := Lines[i];
+    end;
+  end;
+  Lines := lines2;
   //talkstr[len-1] := #$20;
   p := 1;
   l := 0;

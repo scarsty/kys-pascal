@@ -1313,6 +1313,8 @@ var
   len: integer;
   p: putf8char;
 begin
+  if w < 0 then
+    w := DrawLength(word) * 10 + 7;
   DrawRectangle(sur, x, y, w, 28, 0, ColColor(255), 50);
   DrawShadowText(sur, word, x + 3, y + 2, color1, color2);
   SDL_UpdateRect2(screen, x, y, w + 1, 29);
@@ -1658,6 +1660,7 @@ begin
     SDL_EVENT_WINDOW_RESIZED:
     begin
       ResizeWindow(event.window.data1, event.window.data2);
+      UpdateAllScreen;
     end;
     SDL_EVENT_DID_ENTER_FOREGROUND: PlayMP3(nowmusic, -1, 0);
     SDL_EVENT_DID_ENTER_BACKGROUND: StopMP3(0);
