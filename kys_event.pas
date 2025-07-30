@@ -102,6 +102,7 @@ procedure StudyMagic(rnum, magicnum, newmagicnum, level, dismode: integer);
 procedure DivideName(fullname: utf8string; var surname, givenname: utf8string);
 function ReplaceStr(const S, Srch, Replace: utf8string): utf8string;
 procedure NewTalk(headnum, talknum, namenum, place, showhead, color, frame: integer; content: utf8string = ''; disname: utf8string = '');
+procedure NewTalk_old(headnum, talknum, namenum, place, showhead, color, frame: integer);
 function EnterNumber(MinValue, MaxValue, x, y: integer; Default: integer = 0): smallint;
 function EnterString(var str: utf8string; x, y, w, h: integer): bool;
 procedure SetAttribute(rnum, selecttype, modlevel, minlevel, maxlevel: integer);
@@ -2320,7 +2321,6 @@ begin
     51: //Enter a number.
     begin
       x50[e1] := EnterNumber(0, 32767, CENTER_X, CENTER_Y - 100);
-      ;
     end;
     52: //Judge someone grasp some mggic.
     begin
@@ -2903,6 +2903,425 @@ begin
   //Redraw;
   // ******************************************//
 
+end;
+
+procedure NewTalk_old(headnum, talknum, namenum, place, showhead, color, frame: integer);
+var
+  k, alen, newcolor, color1, color2, nh, nw, ch, c1, r1, n, namelen, i, t1, grp, idx: integer;
+  offset, len, i1, i2, face, c, nx, ny, hx, hy, hw, hh, x, y, w, h, cell, row: integer;
+  np3, np, np1, np2, tp, p1, ap: putf8char;
+  actorarray, talkarray, namearray, name1, name2: array of byte;
+  words: array [0 .. 1] of uint16;
+  {wd,} str: utf8string;
+  temp2: utf8string;
+  wd: utf8string;
+begin
+  words[1] := 0;
+  face := 4900;
+  case color of
+    0: color := 28515;
+    1: color := 28421;
+    2: color := 28435;
+    3: color := 28563;
+    4: color := 28466;
+    5: color := 28450;
+  end;
+  color1 := color and $FF;
+  color2 := (color shr 8) and $FF;
+  x := 68;
+  y := 320;
+  w := 511;
+  h := 109;
+  nw := 86;
+  nh := 28;
+  hx := 68;
+  hy := 244;
+  hw := 57;
+  hh := 72;
+  nx := 129;
+  ny := 288;
+  if showhead = 1 then
+    nx := x;
+
+  row := 5;
+  cell := 25;
+  if place = 1 then
+  begin
+    hx := 522;
+    nx := 431;
+    if showhead = 1 then
+      nx := x + w - nw;
+  end;
+
+  len := 0;
+  if talknum = 0 then
+  begin
+    offset := 0;
+    len := TIdx[0];
+  end
+  else
+  begin
+    offset := TIdx[talknum - 1];
+    len := TIdx[talknum] - offset;
+  end;
+
+  setlength(talkarray, len + 1);
+  move(TDef[offset], talkarray[0], len);
+  for i := 0 to len - 1 do
+  begin
+    talkarray[i] := talkarray[i] xor $FF;
+    if talkarray[i] = 255 then
+      talkarray[i] := 0;
+  end;
+  talkarray[len] := 0;
+  tp := @talkarray[0];
+
+  //read name
+  if namenum > 0 then
+  begin
+    namelen := 0;
+    if namenum = 0 then
+    begin
+      offset := 0;
+      namelen := TIdx[0];
+    end
+    else
+    begin
+      offset := TIdx[namenum - 1];
+      namelen := TIdx[namenum] - offset;
+    end;
+
+    setlength(namearray, namelen + 1);
+    move(TDef[offset], namearray[0], namelen);
+
+    for i := 0 to namelen - 2 do
+    begin
+      namearray[i] := namearray[i] xor $FF;
+      if namearray[i] = 255 then
+        namearray[i] := 0;
+    end;
+    namearray[namelen - 1] := 0;
+    np := @namearray[0];
+  end
+  else if namenum = -2 then
+  begin
+    namelen := 10;
+    setlength(namearray, namelen);
+    np := @namearray[0];
+    for i := 0 to length(Rrole) - 1 do
+    begin
+      if Rrole[i].HeadNum = headnum then
+      begin
+        p1 := @Rrole[i].Name;
+        for n := 0 to namelen - 1 do
+        begin
+          (np + n)^ := (p1 + n)^;
+          //if (p1 + n)^ = char(0) then break;
+        end;
+        (np + n)^ := char(0);
+        (np + n + 1)^ := char(0);
+        break;
+      end;
+    end;
+  end;
+
+  p1 := @Rrole[0].Name;
+  alen := length(p1) + 2;
+  setlength(actorarray, alen);
+  ap := @actorarray[0];
+  for n := 0 to alen - 1 do
+  begin
+    (ap + n)^ := (p1 + n)^;
+    if (p1 + n)^ = char(0) then
+      break;
+  end;
+  (ap + n)^ := char($0);
+  (ap + n + 1)^ := char(0);
+
+  if alen = 4 then
+  begin
+    setlength(name1, 3);
+    np1 := @name1[0];
+    np1^ := ap^;
+    (np1 + 1)^ := (ap + 1)^;
+    (np1 + 2)^ := char(0);
+    setlength(name2, 3);
+    np2 := @name2[0];
+    np2^ := ap^;
+    (np2 + 1)^ := (ap + 1)^;
+    (np2 + 2)^ := char(0);
+  end
+  else if alen = 6 then
+  begin
+    setlength(name1, 3);
+    np1 := @name1[0];
+    np1^ := ap^;
+    (np1 + 1)^ := (ap + 1)^;
+    (np1 + 2)^ := char(0);
+    setlength(name2, 3);
+    np2 := @name2[0];
+    np2^ := (ap + 2)^;
+    (np2 + 1)^ := (ap + 3)^;
+    (np2 + 2)^ := char(0);
+  end
+  else if alen > 6 then
+  begin
+    if ((PWord(ap)^ = $6EAB) and ((PWord(ap + 2)^ = $63AE))) or ((PWord(ap)^ = $E8A6) and ((PWord(ap + 2)^ = $F9AA))) or ((PWord(ap)^ = $46AA) and ((PWord(ap + 2)^ = $E8A4))) or ((PWord(ap)^ = $4FA5) and ((PWord(ap + 2)^ = $B0AA))) or ((PWord(ap)^ = $7DBC) and ((PWord(ap + 2)^ = $65AE))) or ((PWord(ap)^ = $71A5) and ((PWord(ap + 2)^ = $A8B0))) or ((PWord(ap)^ = $D1BD) and ((PWord(ap + 2)^ = $AFB8))) or ((PWord(ap)^ = $71A5) and ((PWord(ap + 2)^ = $C5AA))) or ((PWord(ap)^ = $D3A4) and ((PWord(ap + 2)^ = $76A5))) or ((PWord(ap)^ = $BDA4) and ((PWord(ap + 2)^ = $5DAE))) or ((PWord(ap)^ = $DABC) and ((PWord(ap + 2)^ = $A7B6))) or ((PWord(ap)^ = $43AD) and ((PWord(ap + 2)^ = $DFAB))) or ((PWord(ap)^ = $71A5) and ((PWord(ap + 2)^ = $7BAE))) or ((PWord(ap)^ = $B9A7) and ((PWord(ap + 2)^ = $43C3))) or ((PWord(ap)^ = $61B0) and ((PWord(ap + 2)^ = $D5C1))) or ((PWord(ap)^ = $74A6) and ((PWord(ap + 2)^ = $E5A4))) or ((PWord(ap)^ = $DDA9) and ((PWord(ap + 2)^ = $5BB6))) then
+    begin
+      setlength(name1, 5);
+      np1 := @name1[0];
+      np1^ := ap^;
+      (np1 + 1)^ := (ap + 1)^;
+      (np1 + 2)^ := (ap + 2)^;
+      (np1 + 3)^ := (ap + 3)^;
+      (np1 + 4)^ := char(0);
+      setlength(name2, alen + 1 - 4);
+      np2 := @name2[0];
+      for i := 0 to length(name2) - 1 do
+        (np2 + i)^ := (ap + i + 4)^;
+    end
+    else
+    begin
+      setlength(name1, 3);
+      np1 := @name1[0];
+      np1^ := ap^;
+      (np1 + 1)^ := (ap + 1)^;
+      (np1 + 2)^ := char(0);
+      setlength(name2, alen + 1 - 2);
+      np2 := @name2[0];
+      for i := 0 to length(name2) - 1 do
+        (np2 + i)^ := (ap + i + 2)^;
+    end;
+  end;
+
+  str := ' ' + tp;
+
+  setlength(wd, 0);
+  i := 0;
+  while i < length(str) do
+  begin
+    setlength(wd, length(wd) + 1);
+    wd[length(wd) - 1] := str[i];
+    if (integer(str[i]) in [$81 .. $FE]) {and (integer(str[i + 1]) <> $7E)} then
+    begin
+      setlength(wd, length(wd) + 1);
+      wd[length(wd) - 1] := str[i + 1];
+      wd[length(wd) - 2] := str[i];
+      Inc(i, 2);
+      continue;
+    end;
+    if (integer(str[i]) in [$20 .. $7F]) then
+    begin
+      if str[i] = '^' then
+      begin
+        if (integer(str[i + 1]) in [$30 .. $39]) or (str[i + 1] = '^') then
+        begin
+          setlength(wd, length(wd) + 1);
+          wd[length(wd) - 1] := str[i + 1];
+          Inc(i, 2);
+          continue;
+        end;
+      end
+      else if (str[i] = '*') and (str[i + 1] = '*') then
+      begin
+        setlength(wd, length(wd) + 1);
+        wd[length(wd) - 1] := str[i + 1];
+        Inc(i, 2);
+        continue;
+      end
+      else if (str[i] = '&') and (str[i + 1] = '&') then
+      begin
+        setlength(wd, length(wd) + 1);
+        wd[length(wd) - 1] := str[i + 1];
+        Inc(i, 2);
+        continue;
+      end
+      else if (str[i] = '#') and (str[i + 1] = '#') then
+      begin
+        setlength(wd, length(wd) + 1);
+        wd[length(wd) - 1] := str[i + 1];
+        Inc(i, 2);
+        continue;
+      end
+      else if (str[i] = '@') and (str[i + 1] = '@') then
+      begin
+        setlength(wd, length(wd) + 1);
+        wd[length(wd) - 1] := str[i + 1];
+        Inc(i, 2);
+        continue;
+      end
+      else if (str[i] = '$') and (str[i + 1] = '$') then
+      begin
+        setlength(wd, length(wd) + 1);
+        wd[length(wd) - 1] := str[i + 1];
+        Inc(i, 2);
+        continue;
+      end
+      else if (str[i] = '%') and (str[i + 1] = '%') then
+      begin
+        setlength(wd, length(wd) + 1);
+        wd[length(wd) - 1] := str[i + 1];
+        Inc(i, 2);
+        continue;
+      end;
+      setlength(wd, length(wd) + 1);
+      wd[length(wd) - 1] := str[i];
+      wd[length(wd) - 2] := ' ';
+    end;
+    Inc(i);
+  end;
+  tp := @wd[3];
+
+  ch := 0;
+
+  while ((PWord(tp + ch))^ shl 8 <> 0) and ((PWord(tp + ch))^ shr 8 <> 0) do
+  begin
+    Redraw;
+    c1 := 0;
+    r1 := 0;
+    DrawRectangle(screen, x, y, w, h, frame, ColColor($FF), 40);
+    if (showhead = 0) or (headnum < 0) then
+    begin
+      DrawRectangle(screen, hx, hy, hw, hh, frame, ColColor($FF), 40);
+      if headnum = 0 then
+      begin
+        DrawHeadPic(Rrole[0].HeadNum, hx, hy + 68);
+      end
+      else
+      begin
+        DrawHeadPic(headnum, hx, hy + 68);
+      end;
+    end;
+
+    if namenum <> 0 then
+    begin
+      DrawRectangle(screen, nx, ny, nw, nh, frame, ColColor($FF), 40);
+      namelen := length(np);
+      if namelen > 0 then
+        DrawBig5ShadowText(screen, np, nx + 40 - namelen * 9 div 2, ny + 4, ColColor($63), ColColor($70));
+    end;
+
+    while r1 < row do
+    begin
+      words[0] := (PWord(tp + ch))^;
+      if (words[0] shr 8 <> 0) and (words[0] shl 8 <> 0) then
+      begin
+        ch := ch + 2;
+        if (words[0] and $FF) = $5E then //^^改变文字颜色
+        begin
+          case smallint((words[0] and $FF00) shr 8) - $30 of
+            0: newcolor := 28515;
+            1: newcolor := 28421;
+            2: newcolor := 28435;
+            3: newcolor := 28563;
+            4: newcolor := 28466;
+            5: newcolor := 28450;
+            64: newcolor := color;
+            else
+              newcolor := color;
+          end;
+          color1 := newcolor and $FF;
+          color2 := (newcolor shr 8) and $FF;
+        end
+        else if words[0] = $2323 then //## 延时
+        begin
+          SDL_Delay(500);
+        end
+        else if words[0] = $2A2A then // **换行
+        begin
+          if c1 > 0 then
+            Inc(r1);
+          c1 := 0;
+        end
+        else if words[0] = $4040 then //@@等待击键
+        begin
+          SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+          k := WaitAnyKey;
+          while (k = SDLK_RIGHT) or (k = SDLK_LEFT) or (k = SDLK_UP) or (k = SDLK_DOWN) do
+          begin
+            k := WaitAnyKey;
+          end;
+        end
+        else if (words[0] = $2626) or (words[0] = $2525) or (words[0] = $2424) then
+        begin
+          case words[0] of
+            $2626: np3 := ap; //&&显示姓名
+            $2525: np3 := np2; //%%显示名
+            $2424: np3 := np1; //$$显示姓
+          end;
+          i := 0;
+          while (PWord(np3 + i)^ shr 8 <> 0) and (PWord(np3 + i)^ shl 8 <> 0) do
+          begin
+            words[0] := PWord(np3 + i)^;
+            i := i + 2;
+            DrawBig5ShadowText(screen, @words[0], x + 6 + CHINESE_FONT_SIZE * c1, y + 4 + CHINESE_FONT_SIZE * r1, ColColor(color1), ColColor(color2));
+            Inc(c1);
+            if c1 = cell then
+            begin
+              c1 := 0;
+              Inc(r1);
+              if r1 = row then
+              begin
+                SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+                k := WaitAnyKey;
+                while (k = SDLK_RIGHT) or (k = SDLK_LEFT) or (k = SDLK_UP) or (k = SDLK_DOWN) do
+                begin
+                  k := WaitAnyKey;
+                end;
+                c1 := 0;
+                r1 := 0;
+                Redraw;
+                DrawRectangle(screen, x, y, w, h, frame, ColColor($FF), 40);
+                if (showhead = 0) or (headnum < 0) then
+                begin
+                  DrawRectangle(screen, hx, hy, hw, hh, frame, ColColor($FF), 40);
+                  if headnum = 0 then
+                  begin
+                    DrawHeadPic(Rrole[0].HeadNum, hx, hy + 68);
+                  end
+                  else
+                  begin
+                    DrawHeadPic(headnum, hx, hy + 68);
+                  end;
+                end;
+                if namenum <> 0 then
+                begin
+                  DrawRectangle(screen, nx, ny, nw, nh, frame, ColColor($FF), 40);
+                  namelen := length(np);
+                  if namelen > 0 then
+                    DrawBig5ShadowText(screen, np, nx + 40 - namelen * 9 div 2, ny + 4, ColColor($63), ColColor($70));
+                end;
+              end;
+            end;
+          end;
+        end
+        else //显示文字
+        begin
+          DrawBig5ShadowText(screen, @words[0], x + 6 + CHINESE_FONT_SIZE * c1, y + 4 + CHINESE_FONT_SIZE * r1, ColColor(color1), ColColor(color2));
+          Inc(c1);
+          if c1 = cell then
+          begin
+            c1 := 0;
+            Inc(r1);
+          end;
+        end;
+      end
+      else
+        break;
+    end;
+    SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+    k := WaitAnyKey;
+    while (k = SDLK_RIGHT) or (k = SDLK_LEFT) or (k = SDLK_UP) or (k = SDLK_DOWN) do
+    begin
+      k := WaitAnyKey;
+    end;
+    if (words[0] and $FF = 0) or (words[0] and $FF00 = 0) then
+      break;
+  end;
+  Redraw;
+  setlength(wd, 0);
+  setlength(str, 0);
+  setlength(temp2, 0);
 end;
 
 //输入数字, 最小值, 最大值, 坐标x, y. 当结果被范围修正时有提示.
