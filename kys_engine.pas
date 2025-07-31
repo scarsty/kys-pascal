@@ -25,7 +25,8 @@ uses
   //unzip,
   kys_main,
   kys_type,
-  StrUtils;
+  StrUtils,
+  simplecc;
 
 function EventFilter(p: pointer; e: PSDL_Event): boolean; cdecl;
 //音频子程
@@ -1185,11 +1186,11 @@ begin
       if not fonts.ContainsKey(k) then
       begin
         kyslog('%s(%d)', [midstr(word, i, 1), fonts.Count], False);
-        fonts.add(k, TTF_RenderText_blended(engfont, @word0[1], 1, tempcolor));
+        fonts.add(k, TTF_RenderText_blended(font, @word0[1], 1, tempcolor));
       end;
       Text := fonts.Items[k];
       dest.x := x_pos;
-      dest.y := y_pos + 2;
+      dest.y := y_pos;
       SDL_SetSurfaceColorMod(Text, r, g, b);
       SDL_SetSurfaceBlendMode(Text, SDL_BLENDMODE_BLEND);
       SDL_SetSurfaceAlphaMod(Text, 255);
@@ -1908,57 +1909,15 @@ begin
 end;
 
 function Simplified2Traditional(str: utf8string): utf8string;
-var
-  l: integer;
 begin
-  {$ifdef windows}
-  str := transcode(str, 65001, 936);
-  l := length(str);
-  setlength(Result, l + 3);
-  Result[l + 1] := char(0);
-  if l > 0 then
-    LCMapStringA($0800, $4000000, @str[1], l, @Result[1], l);
-  Result := transcode(Result, 936, 65001);
-  {$else}
-  Result := str;
-  {$endif}
-  //writeln(L,str,',',result,GetUserDefaultLCID);
+  Result := simplecc_convert1(ccs2t, str);
 end;
 
 //繁体汉字转化成简体汉字
 function Traditional2Simplified(str: utf8string): utf8string; //返回繁体字符串
-var
-  L: integer;
 begin
-  {$IFDEF windows}
-  str := UTF8ToCP936(str);
-  L := Length(str);
-  SetLength(Result, L + 1);
-  Result[L + 1] := char(0);
-  if L > 0 then
-    LCMapString($0800, $02000000, putf8char(str), L, @Result[1], L);
-  Result := CP936TOUTF8(Result);
-  {$ELSE}
-  Result := str;
-  {$ENDIF}
+  Result := simplecc_convert1(cct2s, str);
 end;
-
-{$IFDEF mswindows}
-
-procedure tic;
-begin
-  QueryPerformanceFrequency(tttt);
-  QueryPerformanceCounter(cccc1);
-  //tttt := SDL_GetTicks;
-end;
-
-procedure toc;
-begin
-  QueryPerformanceCounter(cccc2);
-  kyslog(' %3.2f us', [(cccc2 - cccc1) / tttt * 1E6]);
-end;
-
-{$ELSE}
 
 procedure tic;
 begin
@@ -1969,8 +1928,6 @@ procedure toc;
 begin
   kyslog(' %d ms', [SDL_GetTicks - tttt]);
 end;
-
-{$ENDIF}
 
 procedure kyslog(formatstring: utf8string; content: array of const; cr: boolean = True); overload;
 var

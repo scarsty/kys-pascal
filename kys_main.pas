@@ -51,7 +51,8 @@ uses
   SDL3_image,
   iniFiles,
   bass,
-  Generics.Collections;
+  Generics.Collections,
+  simplecc;
 
 //程序重要子程
 procedure Run;
@@ -111,7 +112,6 @@ procedure ShowStatus(rnum, x, y: integer); overload;
 procedure ShowSimpleStatus(rnum, x, y: integer);
 procedure MenuLeave;
 function MenuSystem: integer;
-procedure ShowMenuSystem(menu: integer);
 procedure MenuLoad;
 function MenuLoadAtBeginning: integer;
 procedure MenuSave;
@@ -561,6 +561,12 @@ begin
   setlength(ItemSurface, 999);
   fonts := TDictionary<integer, PSDL_Surface>.Create;
 
+  cct2s := simplecc_create();
+  simplecc_load1(cct2s, checkFileName('cc/TSCharacters.txt'));
+  simplecc_load1(cct2s, checkFileName('cc/TSPhrases.txt'));
+  ccs2t := simplecc_create();
+  simplecc_load1(ccs2t, checkFileName('cc/STCharacters.txt'));
+  simplecc_load1(ccs2t, checkFileName('cc/STPhrases.txt'));
 end;
 
 //Main game.
@@ -3556,107 +3562,12 @@ begin
   Redraw;
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
   NeedRefreshScene := 1;
-  {SDL_EnableKeyRepeat(0, 0);
-    //DrawMMap;
-    showMenu(menu);
-    //SDL_EventState(SDL_EVENT_KEY_DOWN,SDL_IGNORE);
-    while (SDL_WaitEvent(@event)) do
-    begin
-    if where >= 3 then
-    begin
-    break;
-    end;
-    CheckBasicEvent;
-    case event.type_ of
-    SDL_EVENT_KEY_UP:
-    begin
-    if (event.key.key = sdlk_down) then
-    begin
-    menu := menu + 1;
-    if menu > 5 - 0 * 2 then
-    menu := 0;
-    showMenu(menu);
-    end;
-    if (event.key.key = sdlk_up) then
-    begin
-    menu := menu - 1;
-    if menu < 0 then
-    menu := 5 - 0 * 2;
-    showMenu(menu);
-    end;
-    if (event.key.key = sdlk_escape) then
-    begin
-    ReDraw;
-    SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-    break;
-    end;
-    if (event.key.key = sdlk_return) or (event.key.key = sdlk_space) then
-    begin
-    case menu of
-    0: MenuMedcine;
-    1: MenuMedPoison;
-    2: MenuItem;
-    5: MenuSystem;
-    4: MenuLeave;
-    3: MenuStatus;
-    end;
-    showmenu(menu);
-    end;
-    end;
-    SDL_EVENT_MOUSE_BUTTON_UP:
-    begin
-    if event.button.button = sdl_button_right then
-    begin
-    ReDraw;
-    SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-    break;
-    end;
-    if event.button.button = sdl_button_left then
-    begin
-    if (round(event.button.y / (resolutiony / screen.h)) > 32) and (round(event.button.y / (resolutiony / screen.h)) < 32 + 22 * (6 - 0 * 2))
-    and (round(event.button.x / (resolutionx / screen.w)) > 27) and (round(event.button.x / (resolutionx / screen.w)) < 27 + 46) then
-    begin
-    showmenu(menu);
-    case menu of
-    0: MenuMedcine;
-    1: MenuMedPoison;
-    2: MenuItem;
-    5: MenuSystem;
-    4: MenuLeave;
-    3: MenuStatus;
-    end;
-    showmenu(menu);
-    end;
-    end;
-    end;
-    SDL_EVENT_MOUSE_MOTION:
-    begin
-    if (round(event.button.y / (resolutiony / screen.h)) > 32) and (round(event.button.y / (resolutiony / screen.h)) < 32 + 22 * 6)
-    and (round(event.button.x / (resolutionx / screen.w)) > 27) and (round(event.button.x / (resolutionx / screen.w)) < 27 + 46) then
-    begin
-    menup := menu;
-    menu := (round(event.button.y / (resolutiony / screen.h)) - 32) div 22;
-    if menu > 5 - 0 * 2 then
-    menu := 5 - 0 * 2;
-    if menu < 0 then
-    menu := 0;
-    if menup <> menu then
-    showmenu(menu);
-    end;
-    end;
-
-    end;
-    end;
-    event.key.key := 0;
-    event.button.button := 0;
-    SDL_EnableKeyRepeat(50, 30);}
-
 end;
 
 //显示主选单
 procedure ShowMenu(menu: integer);
 var
-  word: array [0 .. 5] of utf8string;
+  word: array [0 .. 6] of utf8string;
   i, max: integer;
 begin
   word[0] := '醫療';
@@ -3664,13 +3575,14 @@ begin
   word[2] := '物品';
   word[3] := '狀態';
   word[4] := '離隊';
-  word[5] := '系統';
+  word[6] := '系統';
+  word[5] := '傳送';
   if MODVersion = 22 then
     word[4] := '特殊';
   if where = 0 then
-    max := 5
+    max := 6
   else
-    max := 5;
+    max := 6;
   //LoadFreshScreen(27, 30, 47, max * 22 + 29);
   Redraw;
   DrawRectangle(screen, 27, 30, 46, max * 22 + 28, 0, ColColor(255), 50);
@@ -5042,140 +4954,6 @@ begin
 
 end;
 
-{var
-  i, menu, menup: integer;
-  begin
-  menu := 0;
-  showmenusystem(menu);
-  while (SDL_WaitEvent(@event)) do
-  begin
-  if where = 3 then
-  break;
-  CheckBasicEvent;
-  case event.type_ of
-  SDL_EVENT_KEY_UP:
-  begin
-  if (event.key.key = sdlk_down) then
-  begin
-  menu := menu + 1;
-  if menu > 3 then
-  menu := 0;
-  showMenusystem(menu);
-  end;
-  if (event.key.key = sdlk_up) then
-  begin
-  menu := menu - 1;
-  if menu < 0 then
-  menu := 3;
-  showMenusystem(menu);
-  end;
-  if (event.key.key = sdlk_escape) then
-  begin
-  redraw;
-  SDL_UpdateRect2(screen, 80, 30, 47, 95);
-  break;
-  end;
-  if (event.key.key = sdlk_return) or (event.key.key = sdlk_space) then
-  begin
-  case menu of
-  3:
-  begin
-  MenuQuit;
-  end;
-  1:
-  begin
-  MenuSave;
-  end;
-  0:
-  begin
-  Menuload;
-  end;
-  2:
-  begin
-  SwitchFullScreen;
-  break;
-  end;
-  end;
-  end;
-  end;
-  SDL_EVENT_MOUSE_BUTTON_UP:
-  begin
-  if (event.button.button = sdl_button_right) then
-  begin
-  redraw;
-  SDL_UpdateRect2(screen, 80, 30, 47, 95);
-  break;
-  end;
-  if (event.button.button = sdl_button_left) then
-  case menu of
-  3:
-  begin
-  MenuQuit;
-  end;
-  1:
-  begin
-  MenuSave;
-  end;
-  0:
-  begin
-  Menuload;
-  end;
-  2:
-  begin
-  SwitchFullScreen;
-  break;
-  end;
-  end;
-  end;
-  SDL_EVENT_MOUSE_MOTION:
-  begin
-  if (round(event.button.x / (resolutionx / screen.w)) >= 80) and (round(event.button.x / (resolutionx / screen.w)) < 127)
-  and (round(event.button.y / (resolutiony / screen.h)) > 47) and (round(event.button.y / (resolutiony / screen.h)) < 120) then
-  begin
-  menup := menu;
-  menu := (round(event.button.y / (resolutiony / screen.h)) - 32) div 22;
-  if menu > 3 then
-  menu := 3;
-  if menu < 0 then
-  menu := 0;
-  if menup <> menu then
-  showMenusystem(menu);
-  end;
-  end;
-  end;
-  end;
-
-  end;}
-
-//显示系统选单
-procedure ShowMenuSystem(menu: integer);
-{var
-  word: array[0..3] of utf8string;
-  i: integer;}
-begin
-  {Word[0] := ' 讀取');
-    Word[1] := ' 存檔');
-    Word[2] := ' 全屏');
-    Word[3] := ' 離開');
-    if fullscreen = 1 then
-    Word[2] := ' 窗口');
-
-    DrawRectangle(80, 30, 46, 92, 0, colcolor(255), 30);
-    for i := 0 to 3 do
-    if i = menu then
-    begin
-    drawtext(screen, @word[i][1], 64, 32 + 22 * i, colcolor($64));
-    drawtext(screen, @word[i][1], 63, 32 + 22 * i, colcolor($66));
-    end
-    else
-    begin
-    drawtext(screen, @word[i][1], 64, 32 + 22 * i, colcolor($5));
-    drawtext(screen, @word[i][1], 63, 32 + 22 * i, colcolor($7));
-    end;
-    SDL_UpdateRect2(screen, 80, 30, 47, 93);}
-
-end;
-
 //读档选单
 procedure MenuLoad;
 var
@@ -5222,9 +5000,7 @@ begin
     SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
   end;
   //edraw;
-  ShowMenu(5);
-  ShowMenuSystem(0);
-
+  //ShowMenu(5);
 end;
 
 //特殊的读档选单, 仅用在开始时读档
@@ -5303,8 +5079,8 @@ begin
   if menu >= 0 then
     SaveR(menu + 1);
   //Redraw;
-  ShowMenu(5);
-  ShowMenuSystem(1);
+  //ShowMenu(5);
+  //ShowMenuSystem(1);
 end;
 
 //退出选单
@@ -5344,8 +5120,8 @@ begin
   end;
   if menu <> 1 then
   begin
-    ShowMenu(5);
-    ShowMenuSystem(3);
+    //ShowMenu(5);
+    //ShowMenuSystem(3);
   end;
 end;
 

@@ -403,8 +403,6 @@ var
 
   CHNFONT_SPACEWIDTH: integer;
 
-  tttt, cccc1, cccc2: int64;
-
   //手柄控制相关
   joy: PSDL_Joystick;
   JOY_RETURN, JOY_ESCAPE, JOY_LEFT, JOY_RIGHT, JOY_UP, JOY_DOWN, JOY_MOUSE_LEFT: uint32;
@@ -430,6 +428,12 @@ var
   ImageName: utf8string;
 
   SkipTalk: integer = 0;
+
+  //临时计时
+  tttt: uint64;
+
+  //简繁转换
+  cct2s, ccs2t: Pointer;
 
 const
   //色值蒙版, 注意透明蒙版在创建RGB表面时需设为0
