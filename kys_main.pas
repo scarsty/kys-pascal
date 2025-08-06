@@ -327,10 +327,10 @@ begin
   setlength(Asound, 25);
   StartMusic := 16;
   TitleString := 'All Heros in Kam Yung''s Stories - Replicated Edition';
-  OpenPicPosition.x := CENTER_X - 320;
-  OpenPicPosition.y := CENTER_Y - 220;
-  TitlePosition.x := OpenPicPosition.x + 275;
-  TitlePosition.y := OpenPicPosition.y + 125;
+  OpenPicPosition.x := -1;
+  OpenPicPosition.y := -1;
+  TitlePosition.x :=  CENTER_X - 320 + 275;
+  TitlePosition.y := CENTER_Y - 220 + 125;
 
   case MODVersion of
     0:
@@ -341,7 +341,7 @@ begin
     begin
       TitleString := 'All Heros in Kam Yung''s Stories - A Pig';
       TitlePosition.y := 270;
-      OpenPicPosition.y := OpenPicPosition.y + 20;
+      //OpenPicPosition.y := OpenPicPosition.y + 20;
       CENTER_Y := 240;
     end;
     12:
@@ -386,7 +386,7 @@ begin
     begin
       TitleString := 'All Heros in Kam Yung''s Stories - Here is PTT';
       TitlePosition.y := 255;
-      OpenPicPosition.y := OpenPicPosition.y + 20;
+      //OpenPicPosition.y := OpenPicPosition.y + 20;
       CENTER_Y := 240;
     end;
     51:
@@ -400,7 +400,7 @@ begin
       TitleString := 'All Heros in Kam Yung''s Stories - Books from Heaven';
       TitlePosition.x := 60;
       TitlePosition.y := 270;
-      OpenPicPosition.y := OpenPicPosition.y + 20;
+      //OpenPicPosition.y := OpenPicPosition.y + 20;
       MAX_ITEM_AMOUNT := 400;
       setlength(Esound, 207);
       setlength(Asound, 37);
@@ -416,6 +416,10 @@ begin
     begin
       TitleString := 'All Heros in Kam Yung''s Stories - What''s Loving';
       setlength(Music, 999);
+    end;
+    else
+    begin
+      TitlePosition.y := 270;
     end;
   end;
 
@@ -879,7 +883,7 @@ begin
       i := WaitAnyKey;
     until (i = SDLK_ESCAPE) or (i = SDLK_RETURN);
 
-    if MODVersion = 0 then
+    if (MODVersion = 0) or (MODVersion = 100) then
     begin
       if input_name = 'TXDX尊使' then
       begin

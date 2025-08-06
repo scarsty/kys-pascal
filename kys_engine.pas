@@ -859,6 +859,8 @@ begin
       //MessageBox(0, putf8char(Format('Couldn''t load %s : %s', [file_name, SDL_GetError])), 'Error', MB_OK or MB_ICONHAND);
       exit;
     end;
+    if (x < 0) then x := CENTER_X - image.w div 2;
+    if (y < 0) then y := CENTER_Y - image.h div 2;
     dest.x := x;
     dest.y := y;
     SDL_BlitSurface(Image, nil, screen, @dest);
