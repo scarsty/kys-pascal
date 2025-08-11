@@ -321,15 +321,14 @@ var
   filename: utf8string;
   Kys_ini: TIniFile;
 begin
-
-  setlength(Music, 24);
-  setlength(Esound, 53);
-  setlength(Asound, 25);
+  setlength(Music, 200);
+  setlength(Esound, 300);
+  setlength(Asound, 200);
   StartMusic := 16;
   TitleString := 'All Heros in Kam Yung''s Stories - Replicated Edition';
   OpenPicPosition.x := -1;
   OpenPicPosition.y := -1;
-  TitlePosition.x :=  CENTER_X - 320 + 275;
+  TitlePosition.x := CENTER_X - 320 + 275;
   TitlePosition.y := CENTER_Y - 220 + 125;
 
   case MODVersion of
@@ -347,7 +346,6 @@ begin
     12:
     begin
       TitleString := 'All Heros in Kam Yung''s Stories - We Are Dragons';
-      setlength(Asound, 37);
       TitlePosition.x := 200;
       TitlePosition.y := 250;
     end;
@@ -356,13 +354,11 @@ begin
       TitleString := 'All Heros in Kam Yung''s Stories - Books';
       TitlePosition.x := 275;
       TitlePosition.y := 285;
-      setlength(Esound, 59);
     end;
     22:
     begin
       TitleString := 'Why I have to go after a pineapple in the period of Three Kingdoms??';
       MAX_ITEM_AMOUNT := 456;
-      setlength(Music, 38);
       StartMusic := 37;
       CENTER_Y := 240;
     end;
@@ -371,16 +367,12 @@ begin
       TitleString := 'All Heros in Kam Yung''s Stories - Four Dreams';
       //TitlePosition.x := 275;
       TitlePosition.y := 165;
-      setlength(Music, 25);
-      setlength(Esound, 84);
       StartMusic := 24;
       CENTER_Y := 240;
     end;
     31:
     begin
       TitleString := 'All Heros in Kam Yung''s Stories - Wider Rivers and Deeper Lakes';
-      setlength(Esound, 99);
-      setlength(Asound, 71);
     end;
     41:
     begin
@@ -402,8 +394,11 @@ begin
       TitlePosition.y := 270;
       //OpenPicPosition.y := OpenPicPosition.y + 20;
       MAX_ITEM_AMOUNT := 400;
-      setlength(Esound, 207);
-      setlength(Asound, 37);
+    end;
+    72:
+    begin
+      TitleString := 'All Heros in Kam Yung''s Stories - Shake the World';
+      MAX_ITEM_AMOUNT := 400;
     end;
     81:
     begin
@@ -415,7 +410,6 @@ begin
     91:
     begin
       TitleString := 'All Heros in Kam Yung''s Stories - What''s Loving';
-      setlength(Music, 999);
     end;
     else
     begin
@@ -510,17 +504,13 @@ begin
       ShowVirtualKey := Kys_ini.ReadInteger('system', 'Virtual_Key', 1);
       VirtualKeyX := Kys_ini.ReadInteger('system', 'Virtual_Key_X', 100);
       VirtualKeyY := Kys_ini.ReadInteger('system', 'Virtual_Key_Y', 250);
-      if FileExists(AppPath + 'resource/u.png') then
-      begin
-        VirtualKeyU := IMG_Load(putf8char(checkFileName('resource/u.png')));
-        VirtualKeyD := IMG_Load(putf8char(checkFileName('resource/d.png')));
-        VirtualKeyL := IMG_Load(putf8char(checkFileName('resource/l.png')));
-        VirtualKeyR := IMG_Load(putf8char(checkFileName('resource/r.png')));
-        VirtualKeyA := IMG_Load(putf8char(checkFileName('resource/a.png')));
-        VirtualKeyB := IMG_Load(putf8char(checkFileName('resource/b.png')));
-      end
-      else
-        ShowVirtualKey := 0;
+
+      VirtualKeyU := IMG_Load(putf8char(checkFileName('resource/u.png')));
+      VirtualKeyD := IMG_Load(putf8char(checkFileName('resource/d.png')));
+      VirtualKeyL := IMG_Load(putf8char(checkFileName('resource/l.png')));
+      VirtualKeyR := IMG_Load(putf8char(checkFileName('resource/r.png')));
+      VirtualKeyA := IMG_Load(putf8char(checkFileName('resource/a.png')));
+      VirtualKeyB := IMG_Load(putf8char(checkFileName('resource/b.png')));
     end
     else
       ShowVirtualKey := 0;
@@ -3534,7 +3524,7 @@ begin
         end
         else
         begin
-          DrawTextWithRect('子場景不可傳送!', 80, 30, 160, ColColor(5), ColColor(7));
+          DrawTextWithRect('子場景不可傳送!', 80, 30, 172, ColColor($21), ColColor($23));
           SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
           waitanykey;
         end;
@@ -4902,7 +4892,7 @@ begin
   end
   else
   begin
-    str := '場景內不可離隊！';
+    str := '子場景不可離隊！';
     DrawTextWithRect(screen, str, 80, 30, 172, ColColor($21), ColColor($23));
     WaitAnyKey;
   end;
@@ -5004,7 +4994,7 @@ begin
     SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
   end;
   //edraw;
-  //ShowMenu(5);
+  ShowMenu(6);
 end;
 
 //特殊的读档选单, 仅用在开始时读档
@@ -5083,7 +5073,7 @@ begin
   if menu >= 0 then
     SaveR(menu + 1);
   //Redraw;
-  //ShowMenu(5);
+  ShowMenu(6);
   //ShowMenuSystem(1);
 end;
 
