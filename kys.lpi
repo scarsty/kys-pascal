@@ -18,6 +18,13 @@
     <i18n>
       <EnableI18N LFM="False"/>
     </i18n>
+    <VersionInfo>
+      <AutoIncrementBuild Value="True"/>
+      <MajorVersionNr Value="1"/>
+      <RevisionNr Value="9"/>
+      <BuildNr Value="3277"/>
+      <StringTable CompanyName="tiexuedanxin" OriginalFilename="kys"/>
+    </VersionInfo>
     <BuildModes Count="3">
       <Item1 Name="Debug" Default="True"/>
       <Item2 Name="Release">
@@ -123,14 +130,14 @@
     <RunParams>
       <local>
         <LaunchingApplication PathPlusParams="C:/Windows/system32/cmd.exe /C ${TargetCmdLine}"/>
-        <WorkingDirectory Value="D:/kys-all/_pascal/all-mod/kys-pascal"/>
+        <WorkingDirectory Value="D:/kys-all/_pascal/20in1/kys-Dragon"/>
       </local>
       <FormatVersion Value="2"/>
       <Modes Count="1">
         <Mode0 Name="default">
           <local>
             <LaunchingApplication PathPlusParams="C:/Windows/system32/cmd.exe /C ${TargetCmdLine}"/>
-            <WorkingDirectory Value="D:/kys-all/_pascal/all-mod/kys-pascal"/>
+            <WorkingDirectory Value="D:/kys-all/_pascal/20in1/kys-Dragon"/>
           </local>
         </Mode0>
       </Modes>

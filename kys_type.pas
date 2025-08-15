@@ -421,9 +421,11 @@ var
   //虚拟按键相关
   ShowVirtualKey: integer = 0;
   VirtualKeyValue: uint32 = 0;
-  VirtualKeyX: integer = 150;
-  VirtualKeyY: integer = 250;
+  VirtualCrossX: integer = 150;
+  VirtualCrossY: integer = 250;
   VIrtualKeySize: integer = 60;
+
+  VirtualAX, VirtualAY, VirtualBX, VirtualBY: integer;
 
   Image: PSDL_Surface;   //标题
   ImageName: utf8string;

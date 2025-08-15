@@ -1188,11 +1188,11 @@ begin
       if not fonts.ContainsKey(k) then
       begin
         kyslog('%s(%d)', [midstr(word, i, 1), fonts.Count], False);
-        fonts.add(k, TTF_RenderText_blended(font, @word0[1], 1, tempcolor));
+        fonts.add(k, TTF_RenderText_blended(engfont, @word0[1], 1, tempcolor));
       end;
       Text := fonts.Items[k];
       dest.x := x_pos;
-      dest.y := y_pos;
+      dest.y := y_pos + 2;
       SDL_SetSurfaceColorMod(Text, r, g, b);
       SDL_SetSurfaceBlendMode(Text, SDL_BLENDMODE_BLEND);
       SDL_SetSurfaceAlphaMod(Text, 255);
@@ -1319,7 +1319,7 @@ begin
   if w < 0 then
     w := DrawLength(word) * 10 + 7;
   DrawRectangle(sur, x, y, w, 28, 0, ColColor(255), 50);
-  DrawShadowText(sur, word, x + 3, y + 2, color1, color2);
+  DrawShadowText(sur, word, x + 3, y + 3, color1, color2);
   SDL_UpdateRect2(screen, x, y, w + 1, 29);
 end;
 
@@ -1548,12 +1548,12 @@ var
 
   function inReturn(x, y: integer): boolean; inline;
   begin
-    Result := InRegion(x, y, CENTER_X * 2 - 200, CENTER_Y * 2 - 100, 100, 100);
+    Result := InRegion(x, y, VirtualAX, VirtualAY, 100, 100);
   end;
 
   function inEscape(x, y: integer): boolean; inline;
   begin
-    Result := InRegion(x, y, CENTER_X * 2 - 100, CENTER_Y * 2 - 200, 100, 100);
+    Result := InRegion(x, y, VirtualBX, VirtualBY, 100, 100);
   end;
 
   function inSwitchShowVirtualKey(x, y: integer): boolean; inline;
@@ -1569,15 +1569,15 @@ var
     //Result := SDLK_TAB;
     //if InRegion(x, y, CENTER_X * 2 - 100, CENTER_Y * 2 - 100, 100, 100) then
     //Result := SDLK_TAB;
-    //if InRegion(x, y, VirtualKeyX - VirtualKeySize, VirtualKeyY, VirtualKeySize * 3, VirtualKeySize * 3) then
+    //if InRegion(x, y, VirtualCrossX - VirtualKeySize, VirtualCrossY, VirtualKeySize * 3, VirtualKeySize * 3) then
     //Result := SDLK_TAB;
-    if InRegion(x, y, VirtualKeyX, VirtualKeyY, VirtualKeySize, VirtualKeySize) then
+    if InRegion(x, y, VirtualCrossX, VirtualCrossY, VirtualKeySize, VirtualKeySize) then
       Result := SDLK_UP;
-    if InRegion(x, y, VirtualKeyX - VirtualKeySize, VirtualKeyY + VirtualKeySize, VirtualKeySize, VirtualKeySize) then
+    if InRegion(x, y, VirtualCrossX - VirtualKeySize, VirtualCrossY + VirtualKeySize, VirtualKeySize, VirtualKeySize) then
       Result := SDLK_LEFT;
-    if InRegion(x, y, VirtualKeyX, VirtualKeyY + VirtualKeySize * 2, VirtualKeySize, VirtualKeySize) then
+    if InRegion(x, y, VirtualCrossX, VirtualCrossY + VirtualKeySize * 2, VirtualKeySize, VirtualKeySize) then
       Result := SDLK_DOWN;
-    if InRegion(x, y, VirtualKeyX + VirtualKeySize, VirtualKeyY + VirtualKeySize, VirtualKeySize, VirtualKeySize) then
+    if InRegion(x, y, VirtualCrossX + VirtualKeySize, VirtualCrossY + VirtualKeySize, VirtualKeySize, VirtualKeySize) then
       Result := SDLK_RIGHT;
     key := Result;
   end;

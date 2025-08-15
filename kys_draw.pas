@@ -1679,28 +1679,28 @@ begin
     SDL_SetSurfaceAlphaMod(VirtualKeyA, 128);
     SDL_SetSurfaceAlphaMod(VirtualKeyB, 128);
 
-    rect.x := VirtualKeyX;
-    rect.y := VirtualKeyY;
+    rect.x := VirtualCrossX;
+    rect.y := VirtualCrossY;
     SDL_BlitSurface(VirtualKeyU, nil, screen, @rect);
 
-    rect.x := VirtualKeyX - VirtualKeySize;
-    rect.y := VirtualKeyY + VirtualKeySize;
+    rect.x := VirtualCrossX - VirtualKeySize;
+    rect.y := VirtualCrossY + VirtualKeySize;
     SDL_BlitSurface(VirtualKeyL, nil, screen, @rect);
 
-    rect.x := VirtualKeyX;
-    rect.y := VirtualKeyY + VirtualKeySize * 2;
+    rect.x := VirtualCrossX;
+    rect.y := VirtualCrossY + VirtualKeySize * 2;
     SDL_BlitSurface(VirtualKeyD, nil, screen, @rect);
 
-    rect.x := VirtualKeyX + VirtualKeySize;
-    rect.y := VirtualKeyY + VirtualKeySize;
+    rect.x := VirtualCrossX + VirtualKeySize;
+    rect.y := VirtualCrossY + VirtualKeySize;
     SDL_BlitSurface(VirtualKeyR, nil, screen, @rect);
 
-    rect.x := w - 200;
-    rect.y := h - 100;
+    rect.x := VirtualAX;
+    rect.y := VirtualAY;
     SDL_BlitSurface(VirtualKeyA, nil, screen, @rect);
 
-    rect.x := w - 100;
-    rect.y := h - 200;
+    rect.x := VirtualBX;
+    rect.y := VirtualBY;
     SDL_BlitSurface(VirtualKeyB, nil, screen, @rect);
 
   end;

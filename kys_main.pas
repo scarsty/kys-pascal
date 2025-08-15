@@ -435,7 +435,7 @@ end;
 //读取必须的文件
 procedure ReadFiles;
 var
-  grp, idx, tnum, len, col, i, k: integer;
+  grp, idx, tnum, len, col, i, k, w, h: integer;
   filename: utf8string;
   Kys_ini: TIniFile;
   LoadPNGTilesThread: PSDL_Thread;
@@ -501,9 +501,15 @@ begin
     WMP_4_PIC := Kys_ini.ReadInteger('system', 'WMP_4_PIC', 0);
     if CellPhone <> 0 then
     begin
-      ShowVirtualKey := Kys_ini.ReadInteger('system', 'Virtual_Key', 1);
-      VirtualKeyX := Kys_ini.ReadInteger('system', 'Virtual_Key_X', 100);
-      VirtualKeyY := Kys_ini.ReadInteger('system', 'Virtual_Key_Y', 250);
+      ShowVirtualKey := Kys_ini.ReadInteger('system', 'VirtualKey', 1);
+      VirtualCrossX := Kys_ini.ReadInteger('system', 'VirtualCrossX', 100);
+      VirtualCrossY := Kys_ini.ReadInteger('system', 'VirtualCrossY', 250);
+      w := CENTER_X * 2;
+      h := CENTER_Y * 2;
+      VirtualAX := Kys_ini.ReadInteger('system', 'VirtualAX', w - 200);
+      VirtualAY := Kys_ini.ReadInteger('system', 'VirtualAY', h - 100);
+      VirtualBX := Kys_ini.ReadInteger('system', 'VirtualBX', w - 100);
+      VirtualBY := Kys_ini.ReadInteger('system', 'VirtualBY', h - 200);
 
       VirtualKeyU := IMG_Load(putf8char(checkFileName('resource/u.png')));
       VirtualKeyD := IMG_Load(putf8char(checkFileName('resource/d.png')));
@@ -3335,15 +3341,15 @@ begin
   for i := menutop to menutop + maxshow - 1 do
     if (i = menu) and (i < length(menuString)) then
     begin
-      DrawShadowText(screen, menuString[i], x + 3, y + 2 + 22 * (i - menutop), ColColor($64), ColColor($66));
+      DrawShadowText(screen, menuString[i], x + 3, y + 3 + 22 * (i - menutop), ColColor($64), ColColor($66));
       if p = 1 then
-        DrawEngShadowText(screen, menuEngString[i], x + 93, y + 2 + 22 * (i - menutop), ColColor($64), ColColor($66));
+        DrawEngShadowText(screen, menuEngString[i], x + 93, y + 3 + 22 * (i - menutop), ColColor($64), ColColor($66));
     end
     else
     begin
-      DrawShadowText(screen, menuString[i], x + 3, y + 2 + 22 * (i - menutop), ColColor($5), ColColor($7));
+      DrawShadowText(screen, menuString[i], x + 3, y + 3 + 22 * (i - menutop), ColColor($5), ColColor($7));
       if p = 1 then
-        DrawEngShadowText(screen, menuEngString[i], x + 93, y + 2 + 22 * (i - menutop), ColColor($5), ColColor($7));
+        DrawEngShadowText(screen, menuEngString[i], x + 93, y + 3 + 22 * (i - menutop), ColColor($5), ColColor($7));
     end;
 
 end;

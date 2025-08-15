@@ -1502,7 +1502,7 @@ end;
 procedure EndAmi;
 var
   x, y, i, len: integer;
-  str: utf8string;
+  str, str1: utf8string;
   p: integer;
   tempscr: PSDL_Surface;
   dest: TSDL_Rect;
@@ -1521,17 +1521,18 @@ begin
   DrawRectangleWithoutFrame(screen, 0, 0, CENTER_X * 2, CENTER_Y * 2, 0, 60);
   for i := 1 to len + 1 do
   begin
-    if str[i] = widechar(10) then
+    if str[i] = utf8char(10) then
       str[i] := ' ';
-    if str[i] = widechar(13) then
+    if str[i] = utf8char(13) then
     begin
-      str[i] := widechar(0);
-      DrawShadowText(screen, str[p], x, y, ColColor($FF), ColColor($FF));
+      str[i] := utf8char(0);
+      str1 := midstr(str, p, i - p);
+      DrawShadowText(screen, str1, x, y, ColColor($FF), ColColor($FF));
       p := i + 1;
       y := y + 25;
       SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
     end;
-    if str[i] = widechar($2A) then
+    if str[i] = utf8char($2A) then
     begin
       str[i] := ' ';
       y := 80;
@@ -1545,22 +1546,25 @@ begin
 
   i := 0;
   tempscr := img_load(putf8char(AppPath + 'resource/end.png'));
-  while SDL_PollEvent(@event) or True do
+  if tempscr <> nil then
   begin
-    CheckBasicEvent;
-    if i mod 5 = 0 then
+    while SDL_PollEvent(@event) or True do
     begin
-      dest.x := 0;
-      dest.y := i;
-      SDL_BlitSurface(tempscr, nil, screen, @dest);
-      SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-      SDL_Delay(20);
+      CheckBasicEvent;
+      if i mod 5 = 0 then
+      begin
+        dest.x := center_x - tempscr.w div 2;
+        dest.y := i;
+        SDL_BlitSurface(tempscr, nil, screen, @dest);
+        SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+        SDL_Delay(20);
+      end;
+      i := i - 1;
+      if i < CENTER_Y * 2 - tempscr.h then
+        break;
     end;
-    i := i - 1;
-    if i < CENTER_Y * 2 - tempscr.h then
-      break;
+    SDL_DestroySurface(tempscr);
   end;
-  SDL_DestroySurface(tempscr);
   WaitAnyKey;
 
 end;

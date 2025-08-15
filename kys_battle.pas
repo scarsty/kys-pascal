@@ -2008,32 +2008,35 @@ var
   str: utf8string;
 begin
   SelectModeColor(mode, color1, color2, str, 1);
-  min := 1000;
-  max := 0;
-  for i1 := 0 to 63 do
-    for i2 := 0 to 63 do
-    begin
-      if Bfield[4, i1, i2] > 0 then
-      begin
-        if Bfield[4, i1, i2] > max then
-          max := Bfield[4, i1, i2];
-        if Bfield[4, i1, i2] < min then
-          min := Bfield[4, i1, i2];
-      end;
-    end;
 
-  beginpic := 0;
-  //含音效
-  posA := GetPositionOnScreen(Ax, Ay, CENTER_X, CENTER_Y);
-  posB := GetPositionOnScreen(Bx, By, CENTER_X, CENTER_Y);
-  x := posA.x - posB.x;
-  y := posB.y - posA.y;
-  z := -((Ax + Ay) - (Bx + By)) * 9;
-  playsoundE(enum, 0, x, y, z);
-  //playsoundE(enum, 0, x, y, z);
-  for i := 0 to enum - 1 do
-    beginpic := beginpic + effectlist[i];
-  endpic := beginpic + effectlist[enum] - 1;
+  if (enum >= 0) and (enum <= high(effectlist)) then
+  begin
+    min := 1000;
+    max := 0;
+    for i1 := 0 to 63 do
+      for i2 := 0 to 63 do
+      begin
+        if Bfield[4, i1, i2] > 0 then
+        begin
+          if Bfield[4, i1, i2] > max then
+            max := Bfield[4, i1, i2];
+          if Bfield[4, i1, i2] < min then
+            min := Bfield[4, i1, i2];
+        end;
+      end;
+
+    beginpic := 0;
+    //含音效
+    posA := GetPositionOnScreen(Ax, Ay, CENTER_X, CENTER_Y);
+    posB := GetPositionOnScreen(Bx, By, CENTER_X, CENTER_Y);
+    x := posA.x - posB.x;
+    y := posB.y - posA.y;
+    z := -((Ax + Ay) - (Bx + By)) * 9;
+    playsoundE(enum, 0, x, y, z);
+    //playsoundE(enum, 0, x, y, z);
+    for i := 0 to enum - 1 do
+      beginpic := beginpic + effectlist[i];
+    endpic := beginpic + effectlist[enum] - 1;
 
   {for i := beginpic to endpic do
     begin
@@ -2041,16 +2044,17 @@ begin
     SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
     sdl_delay(20);
     end;}
-  i := beginpic;
-  while (SDL_PollEvent(@event) or True) do
-  begin
-    CheckBasicEvent;
-    DrawBFieldWithEft(i, beginpic, endpic, min, bnum, forteam, 1, $FFFFFFFF);
-    SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-    SDL_Delay(BATTLE_SPEED);
-    i := i + 1;
-    if i > endpic + max - min then
-      break;
+    i := beginpic;
+    while (SDL_PollEvent(@event) or True) do
+    begin
+      CheckBasicEvent;
+      DrawBFieldWithEft(i, beginpic, endpic, min, bnum, forteam, 1, $FFFFFFFF);
+      SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+      SDL_Delay(BATTLE_SPEED);
+      i := i + 1;
+      if i > endpic + max - min then
+        break;
+    end;
   end;
   Brole[bnum].Pic := 0;
 end;
@@ -3040,7 +3044,7 @@ begin
               if (Ritem[Rrole[rnum].TakingItem[i]].ItemType = 4) and (Ritem[Rrole[rnum].TakingItem[i]].AddCurrentHP < maxhurt) then
               begin
                 maxhurt := Ritem[RItemList[i].Number].AddCurrentHP;
-                inum := RItemList[i].Number;
+                inum := Rrole[rnum].TakingItem[i];
               end;
           end;
         end;
