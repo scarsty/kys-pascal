@@ -4911,44 +4911,35 @@ function MenuSystem: integer;
 var
   word: array [0 .. 3] of utf8string;
   i: integer;
+  fs: boolean;
 begin
   Result := -1;
   word[0] := '讀取';
   word[1] := '存檔';
-  word[3] := '傳送';
-  word[2] := '離開';
-  if FULLSCREEN = 1 then
-    word[2] := '窗口';
-
+  word[3] := '離開';
+  fs := (SDL_GetWindowFlags(window) and 1) <> 0;
   i := 0;
   while i >= 0 do
   begin
-    i := CommonMenu(80, 30, 46, 2, i, word);
+    word[2] := '全屏';
+    if fs then
+      word[2] := '窗口';
+    i := CommonMenu(80, 30, 46, 3, i, word);
     Result := i;
     case i of
-      2: MenuQuit;
+      3: MenuQuit;
       1: MenuSave;
       0: MenuLoad;
-      3:
+      2:
       begin
-        if where = 0 then
-        begin
-          Teleport;
-          Redraw;
-          SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-          break;
-        end
-        else
-        begin
-          DrawTextWithRect('子場景不可傳送!', 135, 30, 160, ColColor(5), ColColor(7));
-          SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-          waitanykey;
-        end;
+        fs := not fs;
+        SDL_SetWindowFullscreen(window, fs);
       end;
     end;
     if where = 3 then
       break;
     Redraw;
+    ShowMenu(6);
     SDL_UpdateRect2(screen, 133, 0, screen.w - 133, screen.h);
   end;
 
