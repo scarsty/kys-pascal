@@ -473,6 +473,7 @@ begin
     MED_LIFE := Kys_ini.ReadInteger('constant', 'MED_LIFE', 4);
     NOVEL_BOOK := Kys_ini.ReadInteger('constant', 'NOVEL_BOOK', 144);
     MAX_ADD_PRO := Kys_ini.ReadInteger('constant', 'MAX_ADD_PRO', 0);
+    MAX_ITEM_AMOUNT := Kys_ini.ReadInteger('constant', 'MAX_ITEM_AMOUNT', 200);
 
     BATTLE_SPEED := Kys_ini.ReadInteger('system', 'BATTLE_SPEED', 10);
     WALK_SPEED := Kys_ini.ReadInteger('system', 'WALK_SPEED', 10);
