@@ -503,6 +503,7 @@ begin
     begin
       SDL_FillSurfaceRect(screen, nil, $ff000000);
       display_img(putf8char(AppPath + 'resource/open.png'), OpenPicPosition.x, OpenPicPosition.y);
+      DrawVirtualKey;
     end;
     4:
     begin

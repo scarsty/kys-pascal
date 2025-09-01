@@ -1565,12 +1565,10 @@ var
   function inVirtualKey(x, y: integer; var key: uint32): uint32;
   begin
     Result := 0;
-    //if InRegion(x, y, CENTER_X * 2 - 200, CENTER_Y * 2 - 200, 100, 100) then
-    //Result := SDLK_TAB;
-    //if InRegion(x, y, CENTER_X * 2 - 100, CENTER_Y * 2 - 100, 100, 100) then
-    //Result := SDLK_TAB;
-    //if InRegion(x, y, VirtualCrossX - VirtualKeySize, VirtualCrossY, VirtualKeySize * 3, VirtualKeySize * 3) then
-    //Result := SDLK_TAB;
+    if InRegion(x, y, CENTER_X * 2 - 200, CENTER_Y * 2 - 200, 200, 200) then
+      Result := SDLK_TAB;
+    if InRegion(x, y, 0, VirtualCrossY, VirtualKeySize * 2 + VirtualCrossX, CENTER_Y * 2 - VirtualCrossY) then
+      Result := SDLK_TAB;
     if InRegion(x, y, VirtualCrossX, VirtualCrossY, VirtualKeySize, VirtualKeySize) then
       Result := SDLK_UP;
     if InRegion(x, y, VirtualCrossX - VirtualKeySize, VirtualCrossY + VirtualKeySize, VirtualKeySize, VirtualKeySize) then
