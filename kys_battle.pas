@@ -3216,7 +3216,7 @@ begin
       end;
       SDL_EVENT_MOUSE_BUTTON_UP:
       begin
-        if (event.button.button = SDL_BUTTON_LEFT) then
+        if (event.button.button = SDL_BUTTON_LEFT) and MouseInRegion(x, y, w, amount * 22 + 28, xm, ym) then
         begin
           if (menu > -1) then
           begin
@@ -3248,9 +3248,7 @@ begin
             menu := -2;
           if menup <> menu then
             ShowTeamModeMenu;
-        end
-        else
-          menu := -1;
+        end;
       end;
     end;
     event.key.key := 0;
