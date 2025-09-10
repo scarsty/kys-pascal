@@ -85,8 +85,8 @@ namespace pig3config
             WALK_SPEED0.ValueChanged += (s, e) => WALK_SPEED1.Value = WALK_SPEED0.Value;
             walk_speed20.ValueChanged += (s, e) => walk_speed21.Value = walk_speed20.Value;
             battle_speed0.ValueChanged += (s, e) => battle_speed1.Value = battle_speed0.Value;
-            VOLUME0.ValueChanged += (s, e) => VOLUME1.Value = VOLUME0.Value;
-            VOLUMEWAV0.ValueChanged += (s, e) => VOLUMEWAV1.Value = VOLUMEWAV0.Value;
+            EXP_RATE0.ValueChanged += (s, e) => EXP_RATE1.Value = EXP_RATE0.Value;
+            EXP_RATE0.ValueChanged += (s, e) => EXP_RATE1.Value = EXP_RATE0.Value;
 
             WALK_SPEED1.KeyUp += (s, e) => WALK_SPEED0.Value = Convert.ToInt32(WALK_SPEED1.Value);
             WALK_SPEED1.ValueChanged += (s, e) => WALK_SPEED0.Value = Convert.ToInt32(WALK_SPEED1.Value);
@@ -98,6 +98,8 @@ namespace pig3config
             VOLUME1.ValueChanged += (s, e) => VOLUME0.Value = Convert.ToInt32(VOLUME1.Value);
             VOLUMEWAV1.KeyUp += (s, e) => VOLUMEWAV0.Value = Convert.ToInt32(VOLUMEWAV1.Value);
             VOLUMEWAV1.ValueChanged += (s, e) => VOLUMEWAV0.Value = Convert.ToInt32(VOLUMEWAV1.Value);
+            EXP_RATE1.KeyUp += (s, e) => EXP_RATE0.Value = Convert.ToInt32(EXP_RATE1.Value);
+            EXP_RATE1.ValueChanged += (s, e) => EXP_RATE0.Value = Convert.ToInt32(EXP_RATE1.Value);
         }
 
         void Form1_FormClosed(object sender, FormClosedEventArgs e)
@@ -163,6 +165,11 @@ namespace pig3config
             {
                 VOLUMEWAV0.Value = v;
                 VOLUMEWAV1.Value = v;
+            }
+            if (k == "EXP_RATE")
+            {if (v < 1) v = 1;
+                EXP_RATE0.Value = v;
+                EXP_RATE1.Value = v;
             }
             foreach (Control cc in this.groupBox1.Controls)
             {
@@ -231,6 +238,12 @@ namespace pig3config
             if (k == "VOLUMEWAV")
             {
                 v = Convert.ToInt32(VOLUMEWAV1.Value);
+                WritePrivateProfileString(s, k, Convert.ToString(v), iniPath);
+                return;
+            }
+            if (k == "EXP_RATE")
+            {
+                v = Convert.ToInt32(EXP_RATE1.Value);
                 WritePrivateProfileString(s, k, Convert.ToString(v), iniPath);
                 return;
             }
@@ -305,6 +318,7 @@ namespace pig3config
             configIniValue(i, "constant", "MAX_ADD_PRO");
             configIniValue(i, "system", "WMP_4_PIC");
             configIniValue(i, "system", "KDEF_SCRIPT");
+            configIniValue(i, "system", "EXP_RATE");
         }
 
         private void pictureBox1_Click(object sender, EventArgs e)

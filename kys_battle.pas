@@ -2479,9 +2479,7 @@ begin
       basicvalue := warsta.ExpGot div amount
     else
       basicvalue := 0;
-    //设置问题，菠萝的基本经验过低
-    if MODVersion = 22 then
-      basicvalue := basicvalue * 30;
+    basicvalue := round(basicvalue * EXP_RATE);
     if (Brole[i].Team = 0) and (Brole[i].Dead = 0) then
     begin
       p := min(Rrole[rnum].Exp + basicvalue, pmax);

@@ -180,7 +180,7 @@ begin
   render_str := '';
   {$ENDIF}
 
-  //CellPhone := 1;
+  CellPhone := 0;
 
   if fileexists(AppPath + 'games.ini') then
   begin
@@ -500,6 +500,7 @@ begin
     TRY_FIND_GRP := Kys_ini.ReadInteger('system', 'TRY_FIND_GRP', 0);
     EXPAND_GROUND := Kys_ini.ReadInteger('system', 'EXPAND_GROUND', 0);
     WMP_4_PIC := Kys_ini.ReadInteger('system', 'WMP_4_PIC', 0);
+    EXP_RATE := Kys_ini.ReadFloat('system', 'EXP_RATE', 1.0);
     if CellPhone <> 0 then
     begin
       ShowVirtualKey := Kys_ini.ReadInteger('system', 'VirtualKey', 1);

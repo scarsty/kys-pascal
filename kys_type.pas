@@ -438,6 +438,9 @@ var
   //简繁转换
   cct2s, ccs2t: Pointer;
 
+  //经验倍率
+  EXP_RATE: real = 1;
+
 const
   //色值蒙版, 注意透明蒙版在创建RGB表面时需设为0
   RMask: uint32 = $FF0000;
