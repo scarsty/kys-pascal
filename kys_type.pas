@@ -7,7 +7,7 @@ interface
 uses
   SDL3,
   SDL3_ttf,
-  bass,
+  SDL3_mixer,
   lua52,
   Generics.Collections;
 
@@ -318,9 +318,9 @@ var
   VOLUME, VOLUMEWAV, SOUND3D: integer; //音乐音量 音效音量 是否启用3D音效
   SoundFlag: longword;
 
-  Music: array of HSTREAM;
-  ESound: array of HSAMPLE;
-  ASound: array of HSAMPLE;
+  Music: array of PMix_Music;
+  ESound: array of PMix_Music;
+  ASound: array of PMix_Music;
 
   StartMusic: integer;
   ExitSceneMusicNum: integer; //离开场景的音乐

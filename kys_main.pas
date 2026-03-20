@@ -50,7 +50,6 @@ uses
   SDL3,
   SDL3_image,
   iniFiles,
-  bass,
   Generics.Collections,
   simplecc;
 

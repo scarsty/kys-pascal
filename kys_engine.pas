@@ -19,8 +19,6 @@ uses
   SDL3_TTF,
   SDL3_image,
   SDL3,
-  bassmidi,
-  bass,
   //ziputils,
   //unzip,
   kys_main,

@@ -63,3 +63,4 @@ kys-pascal-androidstudio/build
 *.so
 *.apk
 cc
+cpp-migration/build
