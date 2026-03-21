@@ -77,7 +77,7 @@ bool KysBattle::run(int battleNum, int getexp) {
 
 bool KysBattle::loadBattleField(int battleNum) {
     // Read war.sta
-    std::string warPath = state_.appPath_ + "resource/War.sta";
+    std::string warPath = state_.appPath_ + "/resource/War.sta";
     std::ifstream fwar(warPath, std::ios::binary);
     if (!fwar) return false;
 
@@ -93,7 +93,7 @@ bool KysBattle::loadBattleField(int battleNum) {
     // Read warfld.grp/idx
     std::streamoff grpOffset = 0;
     if (fieldNum > 0) {
-        std::string idxPath = state_.appPath_ + "resource/warfld.idx";
+        std::string idxPath = state_.appPath_ + "/resource/warfld.idx";
         std::ifstream fidx(idxPath, std::ios::binary);
         if (fidx) {
             fidx.seekg(static_cast<std::streamoff>((fieldNum - 1) * 4));
@@ -103,7 +103,7 @@ bool KysBattle::loadBattleField(int battleNum) {
         }
     }
 
-    std::string grpPath = state_.appPath_ + "resource/warfld.grp";
+    std::string grpPath = state_.appPath_ + "/resource/warfld.grp";
     std::ifstream fgrp(grpPath, std::ios::binary);
     if (!fgrp) return false;
     fgrp.seekg(grpOffset);
@@ -1549,9 +1549,9 @@ void KysBattle::drawRoleOnField(int gx, int gy, int alpha) {
     int face = brole_[ri].element.face;
     int team = brole_[ri].element.team;
 
-    // Try rendering battle sprite
+    // Try rendering battle sprite (wdx/wmp tiles, matching Pascal DrawBPic)
     int tile = headNum * 4 + face + kBeginBattleRolePic;
-    bool drawn = sceneCache_.renderTile(tile, px, py - 20);
+    bool drawn = warCache_.renderTile(tile, px, py - 20);
 
     if (!drawn) {
         // Fallback: colored diamond

@@ -536,7 +536,7 @@ int SdlRuntime::runLoop(int milliseconds) {
     });
 
     // --- Battle callback ---
-    MMapGrpCache warGrpCache(renderer, appPath_, "resource/warfld.idx", "resource/warfld.grp", "resource/mmap.col");
+    MMapGrpCache warGrpCache(renderer, appPath_, "resource/wdx", "resource/wmp", "resource/mmap.col");
 
     state_->setBattleCallback([&](int battleNum, int getexp) -> bool {
         KysBattle battle(*state_, renderer, frameTexture,

@@ -7,13 +7,21 @@
 #include <string>
 
 int main(int argc, char** argv) {
+    // Default: no arguments → run sdl-loop in current directory
+    if (argc < 2) {
+        auto state = std::make_unique<kys::KysState>(".");
+        (void)state->loadR(0);
+        (void)state->loadWorldData();
+        kys::SdlRuntime runtime(state.get(), ".");
+        return runtime.runLoop(0);
+    }
+
     if (argc < 3) {
         std::cerr << "Usage:\n"
+                  << "  kys_save_tool                (run game in current directory)\n"
                   << "  kys_save_tool <appPath> load <slot>\n"
                   << "  kys_save_tool <appPath> save <slot>\n"
                   << "  kys_save_tool <appPath> resource-scan <png_tile_mode>\n"
-                  << "  kys_save_tool <appPath> script-api-list (disabled)\n"
-                  << "  kys_save_tool <appPath> script-run <lua_file> [function] [slot] (disabled)\n"
                   << "  kys_save_tool <appPath> sdl-loop [milliseconds, 0=run until close]\n";
         return 1;
     }
