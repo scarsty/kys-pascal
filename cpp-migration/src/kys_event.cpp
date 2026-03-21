@@ -966,11 +966,15 @@ void KysState::executeEventCode(int eventId) {
                 break;
             }
             case 6: {
-                // battle(battlenum, jump1, jump2, getexp): simulate success
+                // battle(battlenum, jump1, jump2, getexp)
                 if (pc + 4 >= n) { return; }
                 currentBattle_ = readAt(pc + 1);
-                (void)readAt(pc + 4); // getexp – unused for now
-                branchOffset(pc + 2, pc + 3, true);
+                int getexp = readAt(pc + 4);
+                bool victory = true;
+                if (battleCallback_) {
+                    victory = battleCallback_(currentBattle_, getexp);
+                }
+                branchOffset(pc + 2, pc + 3, victory);
                 pc += 5;
                 break;
             }
@@ -1054,12 +1058,14 @@ void KysState::executeEventCode(int eventId) {
                 break;
             }
             case 13: {
-                // bright screen (renderer-side effect, ignored here)
+                // bright screen: redraw the scene
+                if (redrawCallback_) { redrawCallback_(); }
                 pc += 1;
                 break;
             }
             case 14: {
-                // black screen (renderer-side effect, ignored here)
+                // black screen: fill display with black (used before battle)
+                if (blackScreenCallback_) { blackScreenCallback_(); }
                 pc += 1;
                 break;
             }

@@ -193,6 +193,50 @@ union TShop {
     i16 data[15];
 };
 
+struct TBattleRoleElement {
+    i16 rnum;          // Role number from Rrole array
+    i16 team;          // 0 = player, 1 = enemy
+    i16 y, x;          // Grid position (0-63)
+    i16 face;          // Direction: 0=left, 1=down, 2=up, 3=right
+    i16 dead;          // 0 = alive, 1 = dead
+    i16 step;          // Remaining movement steps this turn
+    i16 acted;         // 0 = not acted, 1 = acted, 2 = moved
+    i16 pic;
+    i16 showNumber;    // Damage number to display (-1 = none)
+    i16 unUse1, unUse2, unUse3;
+    i16 expGot;        // Experience gained
+    i16 autoFlag;      // 0 = manual, 1 = auto
+    i16 realSpeed;
+    i16 realProgress;
+    i16 bHead;
+    i16 autoMode;      // 0=manual, 1=all-attack, 2=balanced, 3=bystander
+};
+
+union TBattleRole {
+    TBattleRoleElement element;
+    i16 data[19];
+};
+
+struct TWarDataElement {
+    i16 warNum;
+    char name[10];     // 10 ansichar = 10 bytes = 5 i16 slots
+    i16 bFieldNum;
+    i16 expGot;
+    i16 musicNum;
+    i16 teamMate[6];
+    i16 autoTeamMate[6];
+    i16 teamY[6];
+    i16 teamX[6];
+    i16 enemy[20];
+    i16 enemyY[20];
+    i16 enemyX[20];
+};
+
+union TWarData {
+    TWarDataElement element;
+    i16 data[93];
+};
+
 #pragma pack(pop)
 
 static_assert(sizeof(TItemList) == 4, "TItemList size mismatch");
@@ -201,5 +245,7 @@ static_assert(sizeof(TItem) == 190, "TItem size mismatch");
 static_assert(sizeof(TScene) == 52, "TScene size mismatch");
 static_assert(sizeof(TMagic) == 136, "TMagic size mismatch");
 static_assert(sizeof(TShop) == 30, "TShop size mismatch");
+static_assert(sizeof(TBattleRole) == 38, "TBattleRole size mismatch");
+static_assert(sizeof(TWarData) == 186, "TWarData size mismatch");
 
 } // namespace kys

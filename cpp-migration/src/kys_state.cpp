@@ -302,13 +302,17 @@ bool KysState::newGame() {
     inShip_ = 0;
     
     // BEGIN position constants (from kysmod.ini)
-    // These would typically be read from config, but hardcoding for now
-    const int BEGIN_SCENE = 70;
-    const int BEGIN_Sx = 20;
-    const int BEGIN_Sy = 19;
+    constexpr int BEGIN_SCENE = 70;
+    constexpr int BEGIN_Sx = 20;
+    constexpr int BEGIN_Sy = 19;
+    constexpr int BEGIN_EVENT = 691;
     
     // Enter the initial scene at the beginning position
     changeScene(BEGIN_SCENE, BEGIN_Sx, BEGIN_Sy);
+    sFace_ = 2;  // Default facing direction (left)
+    
+    // Defer the opening story event so the scene can render first
+    pendingInitEvent_ = BEGIN_EVENT;
     
     return true;
 }
@@ -665,6 +669,24 @@ void KysState::setDrawRectCallback(DrawRectCallback cb) {
 
 void KysState::setDrawPicCallback(DrawPicCallback cb) {
     drawPicCallback_ = std::move(cb);
+}
+
+void KysState::setBattleCallback(BattleCallback cb) {
+    battleCallback_ = std::move(cb);
+}
+
+void KysState::setRedrawCallback(RedrawCallback cb) {
+    redrawCallback_ = std::move(cb);
+}
+
+void KysState::setBlackScreenCallback(BlackScreenCallback cb) {
+    blackScreenCallback_ = std::move(cb);
+}
+
+int KysState::popPendingInitEvent() {
+    int ev = pendingInitEvent_;
+    pendingInitEvent_ = -1;
+    return ev;
 }
 
 void KysState::addItemAmount(int itemNumber, int amount) {

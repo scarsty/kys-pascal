@@ -1,5 +1,6 @@
 #include "sdl_runtime.hpp"
 
+#include "kys_battle.hpp"
 #include "kys_draw.hpp"
 #include "kys_menu.hpp"
 #include "kys_state.hpp"
@@ -189,8 +190,15 @@ int SdlRuntime::runLoop(int milliseconds) {
         return tex;
     };
 
+    // Callable scene/map renderer — declared here, assigned later after all variables exist.
+    // Renders the current view (scene or world map) to frameTexture.
+    std::function<void()> renderViewToFrame;
+
     // Draw dialog/blocking panel. headNum >= 0 draws head portrait; headPlace: 0=left, 1=right.
     auto drawBlockingPanel = [&](const std::string& title, const std::vector<std::string>& lines, int mode, bool drawYesNo, int sel, int headNum = -1, int headPlace = 0) {
+        // Refresh the scene onto frameTexture so dialog backgrounds are always correct
+        if (renderViewToFrame) { renderViewToFrame(); }
+
         int ww = kRenderWidth;
         int wh = kRenderHeight;
         SDL_GetWindowSize(window, &ww, &wh);
@@ -526,7 +534,18 @@ int SdlRuntime::runLoop(int milliseconds) {
         }
         // type 0 = map pic, type 2 = external pic — not yet implemented
     });
-    
+
+    // --- Battle callback ---
+    MMapGrpCache warGrpCache(renderer, appPath_, "resource/warfld.idx", "resource/warfld.grp", "resource/mmap.col");
+
+    state_->setBattleCallback([&](int battleNum, int getexp) -> bool {
+        KysBattle battle(*state_, renderer, frameTexture,
+                         kRenderWidth, kRenderHeight,
+                         warGrpCache, sceneGrpCache,
+                         hasFont ? &overlay : nullptr);
+        return battle.run(battleNum, getexp);
+    });
+
     // Color definitions matching Pascal ColColor scheme:
     // Value colors (data/numbers) - bright yellow/orange
     constexpr uint8_t colValueR = 255, colValueG = 200, colValueB = 80;
@@ -1110,9 +1129,8 @@ int SdlRuntime::runLoop(int milliseconds) {
                 break;
             case MainMenuState::Page::Title:
                 if (index == 0) {
-                    // New game
-                    state_->newGame();
-                    if (state_->loadWorldData()) {
+                    // New game: load world data first, then run newGame which triggers BEGIN_EVENT
+                    if (state_->loadWorldData() && state_->newGame()) {
                         menu.open = false;
                     } else {
                         menu.setStatus("新遊戲初始化失敗");
@@ -1129,6 +1147,150 @@ int SdlRuntime::runLoop(int milliseconds) {
     };
 
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+
+    // Assign the renderViewToFrame lambda (all captured variables exist by now).
+    renderViewToFrame = [&]() {
+        if (!useFixedRender || !frameTexture) return;
+        SDL_SetRenderTarget(renderer, frameTexture);
+        SDL_SetRenderDrawColor(renderer, 18, 24, 32, 255);
+        SDL_RenderClear(renderer);
+
+        const int centerX = kRenderWidth / 2;
+        const int centerY = kRenderHeight / 2;
+
+        if (state_->where() == 0) {
+            const int widthRegion = centerX / 36 + 3;
+            const int sumRegion = centerY / 9 + 2;
+            const int mapCX = state_->mapX();
+            const int mapCY = state_->mapY();
+
+            std::vector<BuildDraw> builds;
+            builds.reserve(2500);
+
+            for (int sum = -sumRegion; sum <= sumRegion + 15; ++sum) {
+                for (int i = -widthRegion; i <= widthRegion; ++i) {
+                    const int i1 = mapCX + i + (sum / 2);
+                    const int i2 = mapCY - i + (sum - sum / 2);
+                    const auto pos = getPositionOnScreen(i1, i2, mapCX, mapCY, centerX, centerY);
+                    if (i1 < 0 || i1 >= KysState::kWorldSize || i2 < 0 || i2 >= KysState::kWorldSize) {
+                        mainGrpCache.renderTile(0, pos.first, pos.second);
+                        continue;
+                    }
+                    const int earth = state_->earthAt(i1, i2) / 2;
+                    mainGrpCache.renderTile(earth, pos.first, pos.second);
+                    const int surface = state_->surfaceAt(i1, i2) / 2;
+                    if (surface > 0) {
+                        mainGrpCache.renderTile(surface, pos.first, pos.second);
+                    }
+                    const int building = state_->buildingAt(i1, i2) / 2;
+                    if (building > 0) {
+                        const TileHeader h = mainGrpCache.headerFor(building);
+                        const int width = h.valid ? h.width : 36;
+                        const int height = h.valid ? h.height : 18;
+                        const int yoffset = h.valid ? h.ys : 0;
+                        int c = ((i1 + i2) - (width + 35) / 36 - (yoffset - height + 1) / 9) * 1024 + i2;
+                        builds.push_back(BuildDraw{i1, i2, building, c});
+                    }
+                }
+            }
+            std::sort(builds.begin(), builds.end(), [](const BuildDraw& a, const BuildDraw& b) {
+                return a.sortKey < b.sortKey;
+            });
+            const int actorSortKey = (mapCX + mapCY) * 1024 + mapCY;
+            bool actorDrawn = false;
+            const int actorTile = (state_->inShip() != 0)
+                ? (3714 + mFace * 4 + ((mStep + 1) / 2))
+                : (2501 + mFace * 7 + mStep);
+            auto drawActor = [&]() {
+                mainGrpCache.renderTile(actorTile, centerX, centerY);
+            };
+            for (const auto& b : builds) {
+                if (!actorDrawn && actorSortKey <= b.sortKey) {
+                    drawActor();
+                    actorDrawn = true;
+                }
+                const auto pos = getPositionOnScreen(b.mapX, b.mapY, mapCX, mapCY, centerX, centerY);
+                mainGrpCache.renderTile(b.tile, pos.first, pos.second);
+            }
+            if (!actorDrawn) { drawActor(); }
+            for (const auto& cloud : clouds) {
+                const int drawX = static_cast<int>(cloud.x - (-static_cast<float>(mapCX) * 18.0f + static_cast<float>(mapCY) * 18.0f + 8640.0f - static_cast<float>(centerX)));
+                const int drawY = static_cast<int>(cloud.y - (static_cast<float>(mapCX) * 9.0f + static_cast<float>(mapCY) * 9.0f + 9.0f - static_cast<float>(centerY)));
+                cloudGrpCache.renderTile(cloud.pic, drawX, drawY);
+            }
+        } else {
+            const int sceneId = state_->currentScene();
+            const int sx = state_->sceneX();
+            const int sy = state_->sceneY();
+            const int widthRegion = centerX / 36 + 2;
+            const int sumRegion = centerY / 9 + 1;
+
+            for (int sum = -sumRegion; sum <= sumRegion + 10; ++sum) {
+                for (int i = -widthRegion; i <= widthRegion; ++i) {
+                    const int x = sx + i + (sum / 2);
+                    const int y = sy - i + (sum - sum / 2);
+                    const auto pos = getPositionOnScreen(x, y, sx, sy, centerX, centerY);
+                    if (x < 0 || x > 63 || y < 0 || y > 63 || sceneId < 0) continue;
+                    const int groundHeight = state_->getSData(sceneId, 4, x, y);
+                    const int groundTile = state_->getSData(sceneId, 0, x, y) / 2;
+                    if (groundTile > 0 && groundHeight <= 0) {
+                        sceneGrpCache.renderTile(groundTile, pos.first, pos.second);
+                    }
+                }
+            }
+
+            for (int sum = -sumRegion; sum <= sumRegion + 10; ++sum) {
+                for (int i = -widthRegion; i <= widthRegion; ++i) {
+                    const int x = sx + i + (sum / 2);
+                    const int y = sy - i + (sum - sum / 2);
+                    const auto pos = getPositionOnScreen(x, y, sx, sy, centerX, centerY);
+                    if (x < 0 || x > 63 || y < 0 || y > 63 || sceneId < 0) continue;
+                    const int height1 = state_->getSData(sceneId, 4, x, y);
+                    const int height2 = state_->getSData(sceneId, 5, x, y);
+                    const int groundTile = state_->getSData(sceneId, 0, x, y) / 2;
+                    const int buildingTile = state_->getSData(sceneId, 1, x, y) / 2;
+                    const int upperTile = state_->getSData(sceneId, 2, x, y) / 2;
+                    const int eventIndex = state_->getSData(sceneId, 3, x, y);
+
+                    if (groundTile > 0 && height1 > 0) {
+                        sceneGrpCache.renderTile(groundTile, pos.first, pos.second);
+                    }
+                    if (buildingTile > 0) {
+                        sceneGrpCache.renderTile(buildingTile, pos.first, pos.second - height1);
+                    }
+                    if (x == sx && y == sy) {
+                        const int roleTile = 2501 + state_->sceneFace() * 7 + sStep;
+                        sceneGrpCache.renderTile(roleTile, pos.first, pos.second - height1);
+                    }
+                    if (upperTile > 0) {
+                        sceneGrpCache.renderTile(upperTile, pos.first, pos.second - height2);
+                    }
+                    if (eventIndex >= 0) {
+                        const int eventTile = state_->getDData(sceneId, eventIndex, 5) / 2;
+                        if (eventTile > 0) {
+                            sceneGrpCache.renderTile(eventTile, pos.first, pos.second - height1);
+                        }
+                    }
+                }
+            }
+        }
+        // Leave render target as frameTexture for callers that need to draw more
+    };
+
+    // Set screen callbacks for event system (instruct_13 / instruct_14)
+    state_->setRedrawCallback([&]() {
+        renderViewToFrame();
+        presentFrame();
+    });
+
+    state_->setBlackScreenCallback([&]() {
+        if (useFixedRender && frameTexture) {
+            SDL_SetRenderTarget(renderer, frameTexture);
+            SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+            SDL_RenderClear(renderer);
+        }
+        presentFrame();
+    });
 
     while (running) {
         const auto frameNow = std::chrono::steady_clock::now();
@@ -1431,233 +1593,42 @@ int SdlRuntime::runLoop(int milliseconds) {
             }
         }
 
-        if (useFixedRender) {
-            SDL_SetRenderTarget(renderer, frameTexture);
+        // Render the current view (scene or world map) to frameTexture
+        renderViewToFrame();
+
+        // Check for deferred init event (runs once after first frame renders)
+        {
+            const int initEv = state_->popPendingInitEvent();
+            if (initEv >= 0) {
+                presentFrame();  // show the scene first
+                state_->callEvent(initEv);
+                renderViewToFrame();  // refresh after event modifies scene
+            }
         }
 
-        SDL_SetRenderDrawColor(renderer, 18, 24, 32, 255);
-        SDL_RenderClear(renderer);
-
-        int ww = kRenderWidth;
-        int wh = kRenderHeight;
-        if (!useFixedRender) {
-            SDL_GetWindowSize(window, &ww, &wh);
-        }
-
-        const int centerX = ww / 2;
-        const int centerY = wh / 2;
-
-        if (state_->where() == 0) {
-            const int widthRegion = centerX / 36 + 3;
-            const int sumRegion = centerY / 9 + 2;
-            const int mapCX = state_->mapX();
-            const int mapCY = state_->mapY();
-
-            std::vector<BuildDraw> builds;
-            builds.reserve(2500);
-
-            for (int sum = -sumRegion; sum <= sumRegion + 15; ++sum) {
-                for (int i = -widthRegion; i <= widthRegion; ++i) {
-                    const int i1 = mapCX + i + (sum / 2);
-                    const int i2 = mapCY - i + (sum - sum / 2);
-                    const auto pos = getPositionOnScreen(i1, i2, mapCX, mapCY, centerX, centerY);
-
-                    if (i1 < 0 || i1 >= KysState::kWorldSize || i2 < 0 || i2 >= KysState::kWorldSize) {
-                        if (!mainGrpCache.renderTile(0, pos.first, pos.second)) {
-                            SDL_FRect r{static_cast<float>(pos.first), static_cast<float>(pos.second), 36.0f, 18.0f};
-                            mapColor(renderer, 0, 0);
-                            SDL_RenderFillRect(renderer, &r);
-                        }
-                        continue;
-                    }
-
-                    const int earth = state_->earthAt(i1, i2) / 2;
-                    if (!mainGrpCache.renderTile(earth, pos.first, pos.second)) {
-                        SDL_Texture* t = texCache.loadMMapTexture(earth);
-                        if (t) {
-                            SDL_FRect r{static_cast<float>(pos.first), static_cast<float>(pos.second), 36.0f, 18.0f};
-                            SDL_RenderTexture(renderer, t, nullptr, &r);
-                        }
-                    }
-
-                    const int surface = state_->surfaceAt(i1, i2) / 2;
-                    if (surface > 0) {
-                        if (!mainGrpCache.renderTile(surface, pos.first, pos.second)) {
-                            SDL_Texture* t = texCache.loadMMapTexture(surface);
-                            if (t) {
-                                SDL_FRect r{static_cast<float>(pos.first), static_cast<float>(pos.second), 36.0f, 18.0f};
-                                SDL_RenderTexture(renderer, t, nullptr, &r);
-                            }
-                        }
-                    }
-
-                    const int building = state_->buildingAt(i1, i2) / 2;
-                    if (building > 0) {
-                        const TileHeader h = mainGrpCache.headerFor(building);
-                        const int width = h.valid ? h.width : 36;
-                        const int height = h.valid ? h.height : 18;
-                        const int yoffset = h.valid ? h.ys : 0;
-                        int c = ((i1 + i2) - (width + 35) / 36 - (yoffset - height + 1) / 9) * 1024 + i2;
-                        builds.push_back(BuildDraw{i1, i2, building, c});
-                    }
-                }
-            }
-
-            std::sort(builds.begin(), builds.end(), [](const BuildDraw& a, const BuildDraw& b) {
-                return a.sortKey < b.sortKey;
-            });
-
-            const int actorSortKey = (mapCX + mapCY) * 1024 + mapCY;
-            bool actorDrawn = false;
-            const int actorTile = (state_->inShip() != 0)
-                ? (3714 + mFace * 4 + ((mStep + 1) / 2))
-                : (2501 + mFace * 7 + mStep);
-
-            auto drawActor = [&]() {
-                if (!mainGrpCache.renderTile(actorTile, centerX, centerY)) {
-                    SDL_FRect roleRect{static_cast<float>(centerX - 6), static_cast<float>(centerY - 18), 12.0f, 18.0f};
-                    if (state_->inShip() != 0) {
-                        SDL_SetRenderDrawColor(renderer, 190, 140, 70, 255);
-                    } else {
-                        SDL_SetRenderDrawColor(renderer, 250, 240, 80, 255);
-                    }
-                    SDL_RenderFillRect(renderer, &roleRect);
-                }
-            };
-
-            for (const auto& b : builds) {
-                if (!actorDrawn && actorSortKey <= b.sortKey) {
-                    drawActor();
-                    actorDrawn = true;
-                }
-                const auto pos = getPositionOnScreen(b.mapX, b.mapY, mapCX, mapCY, centerX, centerY);
-                if (!mainGrpCache.renderTile(b.tile, pos.first, pos.second)) {
-                    SDL_Texture* t = texCache.loadMMapTexture(b.tile);
-                    if (t) {
-                        SDL_FRect r{static_cast<float>(pos.first), static_cast<float>(pos.second), 36.0f, 18.0f};
-                        SDL_RenderTexture(renderer, t, nullptr, &r);
-                    }
-                }
-            }
-
-            if (!actorDrawn) {
-                drawActor();
-            }
-
-            for (const auto& cloud : clouds) {
-                const int drawX = static_cast<int>(cloud.x - (-static_cast<float>(mapCX) * 18.0f + static_cast<float>(mapCY) * 18.0f + 8640.0f - static_cast<float>(centerX)));
-                const int drawY = static_cast<int>(cloud.y - (static_cast<float>(mapCX) * 9.0f + static_cast<float>(mapCY) * 9.0f + 9.0f - static_cast<float>(centerY)));
-                cloudGrpCache.renderTile(cloud.pic, drawX, drawY);
-            }
-        } else {
+        // Scene animation: update event layer tile indices (per-frame, not in renderViewToFrame)
+        if (state_->where() != 0) {
             const int sceneId = state_->currentScene();
-            const int sx = state_->sceneX();
-            const int sy = state_->sceneY();
-            const int widthRegion = centerX / 36 + 2;
-            const int sumRegion = centerY / 9 + 1;
-
-            for (int sum = -sumRegion; sum <= sumRegion + 10; ++sum) {
-                for (int i = -widthRegion; i <= widthRegion; ++i) {
-                    const int x = sx + i + (sum / 2);
-                    const int y = sy - i + (sum - sum / 2);
-                    const auto pos = getPositionOnScreen(x, y, sx, sy, centerX, centerY);
-                    if (x < 0 || x > 63 || y < 0 || y > 63 || sceneId < 0) {
-                        continue;
-                    }
-
-                    const int groundHeight = state_->getSData(sceneId, 4, x, y);
-                    const int groundTile = state_->getSData(sceneId, 0, x, y) / 2;
-                    if (groundTile > 0 && groundHeight <= 0) {
-                        if (!sceneGrpCache.renderTile(groundTile, pos.first, pos.second)) {
-                            SDL_FRect r{static_cast<float>(pos.first), static_cast<float>(pos.second), 36.0f, 18.0f};
-                            mapColor(renderer, groundTile, 0);
-                            SDL_RenderFillRect(renderer, &r);
-                        }
-                    }
-                }
-            }
-
-            for (int sum = -sumRegion; sum <= sumRegion + 10; ++sum) {
-                for (int i = -widthRegion; i <= widthRegion; ++i) {
-                    const int x = sx + i + (sum / 2);
-                    const int y = sy - i + (sum - sum / 2);
-                    const auto pos = getPositionOnScreen(x, y, sx, sy, centerX, centerY);
-                    if (x < 0 || x > 63 || y < 0 || y > 63 || sceneId < 0) {
-                        continue;
-                    }
-
-                    const int height1 = state_->getSData(sceneId, 4, x, y);
-                    const int height2 = state_->getSData(sceneId, 5, x, y);
-                    const int groundTile = state_->getSData(sceneId, 0, x, y) / 2;
-                    const int buildingTile = state_->getSData(sceneId, 1, x, y) / 2;
-                    const int upperTile = state_->getSData(sceneId, 2, x, y) / 2;
-                    const int eventIndex = state_->getSData(sceneId, 3, x, y);
-
-                    if (groundTile > 0 && height1 > 0) {
-                        if (!sceneGrpCache.renderTile(groundTile, pos.first, pos.second)) {
-                            SDL_FRect r{static_cast<float>(pos.first), static_cast<float>(pos.second), 36.0f, 18.0f};
-                            mapColor(renderer, groundTile, 0);
-                            SDL_RenderFillRect(renderer, &r);
-                        }
-                    }
-
-                    if (buildingTile > 0) {
-                        if (!sceneGrpCache.renderTile(buildingTile, pos.first, pos.second - height1)) {
-                            SDL_FRect r{static_cast<float>(pos.first), static_cast<float>(pos.second - height1), 36.0f, 18.0f};
-                            mapColor(renderer, buildingTile, 1);
-                            SDL_RenderFillRect(renderer, &r);
-                        }
-                    }
-
-                    // Insert role between building and upper/event layers so foreground tiles
-                    // can still occlude the actor as in original scene masking behaviour.
-                    if (x == sx && y == sy) {
-                        const int roleTile = 2501 + state_->sceneFace() * 7 + sStep;
-                        if (!sceneGrpCache.renderTile(roleTile, pos.first, pos.second - height1)) {
-                            SDL_FRect roleRect{static_cast<float>(pos.first - 4), static_cast<float>(pos.second - 14 - height1), 8.0f, 14.0f};
-                            SDL_SetRenderDrawColor(renderer, 250, 240, 80, 255);
-                            SDL_RenderFillRect(renderer, &roleRect);
-                        }
-                    }
-
-                    if (upperTile > 0) {
-                        if (!sceneGrpCache.renderTile(upperTile, pos.first, pos.second - height2)) {
-                            SDL_FRect r{static_cast<float>(pos.first), static_cast<float>(pos.second - height2), 36.0f, 18.0f};
-                            mapColor(renderer, upperTile, 2);
-                            SDL_RenderFillRect(renderer, &r);
-                        }
-                    }
-
-                    if (eventIndex >= 0) {
-                        const int eventTile = state_->getDData(sceneId, eventIndex, 5) / 2;
-                        if (eventTile > 0) {
-                            if (!sceneGrpCache.renderTile(eventTile, pos.first, pos.second - height1)) {
-                                SDL_FRect r{static_cast<float>(pos.first), static_cast<float>(pos.second - height1), 36.0f, 18.0f};
-                                mapColor(renderer, eventTile, 3);
-                                SDL_RenderFillRect(renderer, &r);
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Scene animation: update event layer tile indices
             if (sceneId >= 0) {
                 for (int eventIdx = 0; eventIdx < 200; ++eventIdx) {
                     const int startTile = state_->getDData(sceneId, eventIdx, 7);
                     const int endTile = state_->getDData(sceneId, eventIdx, 6);
-                    // If startTile < endTile, this event has animation
                     if (startTile < endTile) {
                         int currentTile = state_->getDData(sceneId, eventIdx, 5);
-                        currentTile += 2;  // Move to next animation frame (step of 2 like in Pascal)
+                        currentTile += 2;
                         if (currentTile > endTile) {
-                            currentTile = startTile;  // Loop back to start
+                            currentTile = startTile;
                         }
                         state_->setDData(sceneId, eventIdx, 5, currentTile);
                     }
                 }
             }
         }
+
+        // Window / render-target dimensions for the rest of this frame.
+        // We draw on frameTexture (kRenderWidth x kRenderHeight).
+        const int ww = kRenderWidth;
+        const int wh = kRenderHeight;
 
         SDL_FRect hudBg{8.0f, 8.0f, 420.0f, 44.0f};
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 140);

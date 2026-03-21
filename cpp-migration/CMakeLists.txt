@@ -22,6 +22,7 @@ add_executable(kys_save_tool
     src/main.cpp
     src/kys_state.cpp
     src/kys_event.cpp
+    src/kys_battle.cpp
     src/resource_loader.cpp
     src/sdl_runtime.cpp
 )

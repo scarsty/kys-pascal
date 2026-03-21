@@ -183,6 +183,9 @@ public:
     using DrawStringCallback = std::function<void(const std::string& text, int x, int y, int color)>;
     using DrawRectCallback = std::function<void(int x, int y, int w, int h)>;
     using DrawPicCallback = std::function<void(int type, int picNum, int x, int y)>;
+    using BattleCallback = std::function<bool(int battleNum, int getexp)>;
+    using RedrawCallback = std::function<void()>;
+    using BlackScreenCallback = std::function<void()>;
     void setTalkCallback(TalkCallback cb);
     void setYesNoCallback(YesNoCallback cb);
     void setGetItemCallback(GetItemCallback cb);
@@ -195,11 +198,16 @@ public:
     void setDrawStringCallback(DrawStringCallback cb);
     void setDrawRectCallback(DrawRectCallback cb);
     void setDrawPicCallback(DrawPicCallback cb);
+    void setBattleCallback(BattleCallback cb);
+    void setRedrawCallback(RedrawCallback cb);
+    void setBlackScreenCallback(BlackScreenCallback cb);
+    int popPendingInitEvent();
 
     void removeTeamMember(int teamIndex);
     bool teleportToScene(int sceneId);
 
 private:
+    friend class KysBattle;
     bool readOffsets(SaveOffsets& offsets) const;
     bool ensureEventDefsLoaded();
     std::vector<i16> readEventCode(int eventId);
@@ -284,6 +292,10 @@ private:
     DrawStringCallback drawStringCallback_;
     DrawRectCallback drawRectCallback_;
     DrawPicCallback drawPicCallback_;
+    BattleCallback battleCallback_;
+    RedrawCallback redrawCallback_;
+    BlackScreenCallback blackScreenCallback_;
+    int pendingInitEvent_ = -1;
     std::unordered_map<int, int> eventArgMap_;
     std::vector<int> pendingEvents_;
     std::map<int, std::array<i16, 19>> battleRoleData_;
