@@ -1,6 +1,5 @@
 #include "kys_state.hpp"
 #include "resource_loader.hpp"
-#include "script_bridge.hpp"
 #include "sdl_runtime.hpp"
 
 #include <iostream>
@@ -13,8 +12,8 @@ int main(int argc, char** argv) {
                   << "  kys_save_tool <appPath> load <slot>\n"
                   << "  kys_save_tool <appPath> save <slot>\n"
                   << "  kys_save_tool <appPath> resource-scan <png_tile_mode>\n"
-                  << "  kys_save_tool <appPath> script-api-list\n"
-                  << "  kys_save_tool <appPath> script-run <lua_file> [function] [slot]\n"
+                  << "  kys_save_tool <appPath> script-api-list (disabled)\n"
+                  << "  kys_save_tool <appPath> script-run <lua_file> [function] [slot] (disabled)\n"
                   << "  kys_save_tool <appPath> sdl-loop [milliseconds, 0=run until close]\n";
         return 1;
     }
@@ -43,42 +42,14 @@ int main(int argc, char** argv) {
     }
 
     if (action == "script-api-list") {
-        auto state = std::make_unique<kys::KysState>(appPath);
-        kys::ScriptBridge bridge;
-        bridge.attachState(state.get());
-        if (!bridge.initialize()) {
-            std::cerr << "script bridge init failed\n";
-            return 7;
-        }
-        std::cout << "lua_backend=" << (bridge.hasLuaBackend() ? 1 : 0)
-                  << " api_count=" << bridge.registeredApi().size() << "\n";
-        for (const auto& n : bridge.registeredApi()) {
-            std::cout << n << "\n";
-        }
-        return 0;
+        std::cerr << "script bridge is disabled in this build\n";
+        return 7;
     }
 
     if (action == "script-run") {
-        if (argc < 4) {
-            std::cerr << "script-run requires <lua_file> [function] [slot]\n";
-            return 8;
-        }
-        const std::string luaFile = argv[3];
-        const std::string fn = argc >= 5 ? argv[4] : "";
-        const int slot = argc >= 6 ? std::stoi(argv[5]) : 0;
-
-        auto state = std::make_unique<kys::KysState>(appPath);
-        (void)state->loadR(slot);
-
-        kys::ScriptBridge bridge;
-        bridge.attachState(state.get());
-        if (!bridge.initialize()) {
-            std::cerr << "script bridge init failed\n";
-            return 7;
-        }
-        const int rc = bridge.execScript(luaFile, fn);
-        std::cout << "script rc=" << rc << "\n";
-        return rc;
+        (void)argc;
+        std::cerr << "script bridge is disabled in this build\n";
+        return 8;
     }
 
     if (action == "sdl-loop") {

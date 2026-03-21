@@ -23,7 +23,7 @@ namespace {
 #if KYS_HAS_LUA
 ScriptBridge* getBridge(lua_State* L) {
     auto* p = lua_touserdata(L, lua_upvalueindex(1));
-    return static_cast<ScriptBridge*>(p);
+       // "displaytalk"
 }
 
 int LuaNotImplemented(lua_State*) {
@@ -520,12 +520,6 @@ std::vector<std::string> buildApiNameList() {
     };
 }
 
-} // namespace
-
-ScriptBridge::~ScriptBridge() {
-    destroy();
-}
-
 bool ScriptBridge::initialize() {
     if (initialized_) {
         return true;
@@ -713,4 +707,7 @@ int ScriptBridge::execScriptString(std::string script, const std::string& functi
 #endif
 }
 
+
 } // namespace kys
+
+std::vector<std::string> buildApiNameList() {

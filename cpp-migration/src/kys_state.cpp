@@ -1,6 +1,7 @@
 #include "kys_state.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <fstream>
@@ -84,6 +85,8 @@ KysState::KysState(std::string appPath) : appPath_(std::move(appPath)) {
     earth_.assign(static_cast<std::size_t>(kWorldSize) * static_cast<std::size_t>(kWorldSize), 0);
     surface_.assign(static_cast<std::size_t>(kWorldSize) * static_cast<std::size_t>(kWorldSize), 0);
     building_.assign(static_cast<std::size_t>(kWorldSize) * static_cast<std::size_t>(kWorldSize), 0);
+    buildX_.assign(static_cast<std::size_t>(kWorldSize) * static_cast<std::size_t>(kWorldSize), 0);
+    buildY_.assign(static_cast<std::size_t>(kWorldSize) * static_cast<std::size_t>(kWorldSize), 0);
 }
 
 bool KysState::readExact(std::ifstream& in, void* dst, std::size_t size) {
@@ -323,9 +326,37 @@ bool KysState::loadWorldData() {
         return in.good();
     };
 
-    return loadOne("resource/earth.002", earth_) &&
-           loadOne("resource/surface.002", surface_) &&
-           loadOne("resource/building.002", building_);
+    const bool result = loadOne("resource/earth.002", earth_) &&
+                        loadOne("resource/surface.002", surface_) &&
+                        loadOne("resource/building.002", building_) &&
+                        loadOne("resource/buildx.002", buildX_) &&
+                        loadOne("resource/buildy.002", buildY_);
+
+    // Load talk files (idx/grp pair)
+    if (!talkLoaded_) {
+        std::ifstream idxFile(joinPath(appPath_, "resource/talk.idx"), std::ios::binary);
+        if (idxFile) {
+            idxFile.seekg(0, std::ios::end);
+            const auto idxSize = static_cast<std::size_t>(idxFile.tellg());
+            idxFile.seekg(0, std::ios::beg);
+            tIdx_.resize(idxSize / sizeof(i32));
+            idxFile.read(reinterpret_cast<char*>(tIdx_.data()), static_cast<std::streamsize>(idxSize));
+            idxFile.close();
+        }
+
+        std::ifstream grpFile(joinPath(appPath_, "resource/talk.grp"), std::ios::binary);
+        if (grpFile) {
+            grpFile.seekg(0, std::ios::end);
+            const auto grpSize = static_cast<std::size_t>(grpFile.tellg());
+            grpFile.seekg(0, std::ios::beg);
+            tDef_.resize(grpSize);
+            grpFile.read(reinterpret_cast<char*>(tDef_.data()), static_cast<std::streamsize>(grpSize));
+            grpFile.close();
+        }
+        talkLoaded_ = true;
+    }
+
+    return result;
 }
 
 int KysState::getRoleData(int roleIndex, int dataIndex) const {
@@ -473,6 +504,13 @@ std::string KysState::getItemName(int index) const {
     return cp950ToUtf8(fixedBufToString(rItem_[static_cast<std::size_t>(index)].element.name, 20));
 }
 
+std::string KysState::getItemIntroduction(int index) const {
+    if (index < 0 || index >= kMaxItems) {
+        return {};
+    }
+    return cp950ToUtf8(fixedBufToString(rItem_[static_cast<std::size_t>(index)].element.introduction, 30));
+}
+
 std::string KysState::getMagicName(int index) const {
     if (index < 0 || index >= kMaxMagics) {
         return {};
@@ -581,15 +619,45 @@ void KysState::setInputState(int key, int button, int x, int y) {
     mouseY_ = y;
 }
 
-void KysState::execEvent(int eventId, const std::vector<int>& args) {
-    currentEvent_ = eventId;
-    for (std::size_t i = 0; i < args.size(); ++i) {
-        eventArgMap_[0x7100 + static_cast<int>(i)] = args[i];
-    }
+void KysState::setTalkCallback(TalkCallback cb) {
+    talkCallback_ = std::move(cb);
 }
 
-void KysState::callEvent(int eventId) {
-    currentEvent_ = eventId;
+void KysState::setYesNoCallback(YesNoCallback cb) {
+    yesNoCallback_ = std::move(cb);
+}
+
+void KysState::setGetItemCallback(GetItemCallback cb) {
+    getItemCallback_ = std::move(cb);
+}
+
+void KysState::addItemAmount(int itemNumber, int amount) {
+    if (itemNumber < 0 || itemNumber >= kMaxItems || amount == 0) {
+        return;
+    }
+    for (auto& slot : rItemList_) {
+        if (slot.number == itemNumber) {
+            int nextAmount = static_cast<int>(slot.amount) + amount;
+            if (nextAmount < 0) {
+                nextAmount = 0;
+            }
+            slot.amount = static_cast<i16>(nextAmount);
+            if (slot.amount == 0) {
+                slot.number = -1;
+            }
+            return;
+        }
+    }
+    if (amount < 0) {
+        return;
+    }
+    for (auto& slot : rItemList_) {
+        if (slot.number < 0) {
+            slot.number = static_cast<i16>(itemNumber);
+            slot.amount = static_cast<i16>(amount);
+            return;
+        }
+    }
 }
 
 void KysState::changeScene(int sceneId, int x, int y) {
@@ -660,6 +728,33 @@ void KysState::setScenePosition(int x, int y) {
     sy_ = static_cast<i16>(y);
 }
 
+bool KysState::canWalkOnMap(int x, int y) {
+    if (x <= 0 || x >= kWorldSize - 1 || y <= 0 || y >= kWorldSize - 1) {
+        return false;
+    }
+
+    const auto idx = static_cast<std::size_t>(x) * static_cast<std::size_t>(kWorldSize) + static_cast<std::size_t>(y);
+    bool canWalk = buildX_[idx] == 0;
+    const int earth = earth_[idx];
+
+    if (earth == 838 || (earth >= 612 && earth <= 670)) {
+        canWalk = false;
+    }
+
+    if ((earth >= 358 && earth <= 362) ||
+        (earth >= 506 && earth <= 670) ||
+        (earth >= 1016 && earth <= 1022)) {
+        inShip_ = 1;
+        shipX_ = static_cast<i16>(x);
+        shipY_ = static_cast<i16>(y);
+        shipFace_ = mFace_;
+    } else {
+        inShip_ = 0;
+    }
+
+    return canWalk;
+}
+
 void KysState::setSceneFace(int face) {
     if (face < 0) {
         face = 0;
@@ -704,9 +799,9 @@ bool KysState::tryEnterScene() {
     where_ = 1;
     sx_ = rScene_[static_cast<std::size_t>(sceneId)].element.entranceX;
     sy_ = rScene_[static_cast<std::size_t>(sceneId)].element.entranceY;
+    // Pascal: SFace := Mface (same direction as world map movement)
+    // Then: Mface := 3 - Mface (reversed for world map, handled by setMapFace in runtime)
     sFace_ = mFace_;
-    // Reverse facing direction when entering: Mface := 3 - Mface
-    sFace_ = 3 - sFace_;
     setScenePosition(sx_, sy_);
     return true;
 }
@@ -772,45 +867,6 @@ bool KysState::canWalkInScene(int x, int y) const {
     return true;
 }
 
-int KysState::tryTriggerCurrentSceneEvent() {
-    if (where_ != 1 || curScene_ < 0 || curScene_ > 400) {
-        return -1;
-    }
-    for (int eventIndex = 0; eventIndex < 200; ++eventIndex) {
-        const int ex = getDData(curScene_, eventIndex, 9);
-        const int ey = getDData(curScene_, eventIndex, 10);
-        if (ex == sx_ && ey == sy_) {
-            currentEvent_ = eventIndex;
-            return eventIndex;
-        }
-    }
-    return -1;
-}
-
-int KysState::tryTriggerFacingSceneEvent() {
-    if (where_ != 1 || curScene_ < 0 || curScene_ > 400) {
-        return -1;
-    }
-    int x = sx_;
-    int y = sy_;
-    switch (sFace_) {
-        case 0: x -= 1; break;
-        case 1: y += 1; break;
-        case 2: y -= 1; break;
-        case 3: x += 1; break;
-        default: break;
-    }
-    if (x < 0 || x > 63 || y < 0 || y > 63) {
-        return -1;
-    }
-    const int ev = getSData(curScene_, 3, x, y);
-    if (ev >= 0) {
-        currentEvent_ = ev;
-        return ev;
-    }
-    return -1;
-}
-
 int KysState::earthAt(int x, int y) const {
     if (x < 0 || y < 0 || x >= kWorldSize || y >= kWorldSize) {
         return 0;
@@ -847,6 +903,13 @@ int KysState::roleMaxHp(int roleIndex) const {
         return 0;
     }
     return rRole_[static_cast<std::size_t>(roleIndex)].element.maxHP;
+}
+
+int KysState::roleHeadNum(int roleIndex) const {
+    if (roleIndex < 0 || roleIndex >= kMaxRoles) {
+        return -1;
+    }
+    return rRole_[static_cast<std::size_t>(roleIndex)].element.headNum;
 }
 
 int KysState::rolePoison(int roleIndex) const {
@@ -1311,56 +1374,6 @@ std::string KysState::useItemOnRole(int itemNumber, int roleIndex) {
     }
 
     return "未知物品類型";
-}
-
-std::string KysState::useStoryItem(int itemNumber) {
-    if (itemNumber < 0 || itemNumber >= kMaxItems) {
-        return "物品無效";
-    }
-
-    const auto& item = rItem_[static_cast<std::size_t>(itemNumber)].element;
-    if (item.itemType != 0) {
-        return "非劇情物品";
-    }
-
-    if (item.unKnow7 > 0) {
-        callEvent(item.unKnow7);
-        return "已觸發劇情事件";
-    }
-
-    if (where_ != 1 || curScene_ < 0 || curScene_ > 400) {
-        return "此處無法使用";
-    }
-
-    int x = sx_;
-    int y = sy_;
-    switch (sFace_) {
-        case 0: x -= 1; break;
-        case 1: y += 1; break;
-        case 2: y -= 1; break;
-        case 3: x += 1; break;
-        default: break;
-    }
-
-    if (x < 0 || x > 63 || y < 0 || y > 63) {
-        return "前方無事件";
-    }
-
-    const int sceneEvent = getSData(curScene_, 3, x, y);
-    if (sceneEvent < 0) {
-        return "前方無事件";
-    }
-
-    currentEvent_ = sceneEvent;
-    const int eventId = getDData(curScene_, currentEvent_, 3);
-    if (eventId >= 0) {
-        callEvent(eventId);
-        currentEvent_ = -1;
-        return "事件觸發成功";
-    }
-
-    currentEvent_ = -1;
-    return "事件條件不足";
 }
 
 void KysState::removeTeamMember(int teamIndex) {

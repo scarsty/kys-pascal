@@ -5,6 +5,7 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <functional>
 #include <fstream>
 #include <map>
 #include <string>
@@ -68,6 +69,7 @@ public:
 
     std::string getRoleName(int index) const;
     std::string getItemName(int index) const;
+    std::string getItemIntroduction(int index) const;
     std::string getMagicName(int index) const;
     std::string getSceneName(int index) const;
     std::string getTalk(int talkNum);
@@ -85,6 +87,8 @@ public:
 
     void execEvent(int eventId, const std::vector<int>& args);
     void callEvent(int eventId);
+    bool hasPendingEvent() const;
+    int popPendingEvent();
 
     void changeScene(int sceneId, int x, int y);
     void walkFromTo(int x1, int y1, int x2, int y2);
@@ -99,6 +103,7 @@ public:
     void setMapPosition(int x, int y);
     void setMapFace(int face);
     void setScenePosition(int x, int y);
+    bool canWalkOnMap(int x, int y);
     int entranceSceneAt(int x, int y) const;
     bool tryEnterScene();
     void leaveScene();
@@ -117,11 +122,13 @@ public:
     int sceneAmount() const { return sceneAmount_; }
     int currentScene() const { return curScene_; }
     int where() const { return where_; }
+    int inShip() const { return inShip_; }
     int sceneFace() const { return sFace_; }
     void setSceneFace(int face);
 
     int roleCurrentHp(int roleIndex) const;
     int roleMaxHp(int roleIndex) const;
+    int roleHeadNum(int roleIndex) const;
     int rolePoison(int roleIndex) const;
     int roleLevel(int roleIndex) const;
     int roleCurrentMp(int roleIndex) const;
@@ -162,11 +169,23 @@ public:
     std::string useItemOnRole(int itemNumber, int roleIndex);
     std::string useStoryItem(int itemNumber);
 
+    using TalkCallback = std::function<void(const std::string& text, int headNum, int dismode)>;
+    using YesNoCallback = std::function<bool(const std::string& title, const std::string& text, bool defaultYes)>;
+    using GetItemCallback = std::function<bool(const std::string& itemName, int amount)>;
+    void setTalkCallback(TalkCallback cb);
+    void setYesNoCallback(YesNoCallback cb);
+    void setGetItemCallback(GetItemCallback cb);
+
     void removeTeamMember(int teamIndex);
     bool teleportToScene(int sceneId);
 
 private:
     bool readOffsets(SaveOffsets& offsets) const;
+    bool ensureEventDefsLoaded();
+    std::vector<i16> readEventCode(int eventId);
+    void executeEventCode(int eventId);
+    void execInstruct3(const std::array<int, 13>& list);
+    void addItemAmount(int itemNumber, int amount);
 
     static bool readExact(std::ifstream& in, void* dst, std::size_t size);
     static bool writeExact(std::ofstream& out, const void* src, std::size_t size);
@@ -205,6 +224,8 @@ private:
     std::vector<i16> earth_;
     std::vector<i16> surface_;
     std::vector<i16> building_;
+    std::vector<i16> buildX_;
+    std::vector<i16> buildY_;
 
     std::array<i16, 401 * 6 * 64 * 64> sData_{};
     std::array<i16, 401 * 200 * 11> dData_{};
@@ -215,6 +236,10 @@ private:
     std::vector<std::uint8_t> tDef_;
     bool talkLoaded_ = false;
 
+    std::vector<std::int32_t> kIdx_;
+    std::vector<std::uint8_t> kDef_;
+    bool eventDefLoaded_ = false;
+
     int currentKey_ = 0;
     int currentButton_ = 0;
     int mouseX_ = 0;
@@ -222,8 +247,13 @@ private:
 
     int currentEvent_ = -1;
     int currentBattle_ = 0;
+    int currentItem_ = -1;
+    TalkCallback talkCallback_;
+    YesNoCallback yesNoCallback_;
+    GetItemCallback getItemCallback_;
     std::unordered_map<int, int> eventArgMap_;
+    std::vector<int> pendingEvents_;
     std::map<int, std::array<i16, 19>> battleRoleData_;
-};
 
+};
 } // namespace kys
