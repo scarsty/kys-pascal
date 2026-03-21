@@ -631,6 +631,42 @@ void KysState::setGetItemCallback(GetItemCallback cb) {
     getItemCallback_ = std::move(cb);
 }
 
+void KysState::setAnimationCallback(AnimationCallback cb) {
+    animationCallback_ = std::move(cb);
+}
+
+void KysState::setMusicCallback(MusicCallback cb) {
+    musicCallback_ = std::move(cb);
+}
+
+void KysState::setSoundCallback(SoundCallback cb) {
+    soundCallback_ = std::move(cb);
+}
+
+void KysState::setWaitKeyCallback(WaitKeyCallback cb) {
+    waitKeyCallback_ = std::move(cb);
+}
+
+void KysState::setDelayCallback(DelayCallback cb) {
+    delayCallback_ = std::move(cb);
+}
+
+void KysState::setMenuSelectCallback(MenuSelectCallback cb) {
+    menuSelectCallback_ = std::move(cb);
+}
+
+void KysState::setDrawStringCallback(DrawStringCallback cb) {
+    drawStringCallback_ = std::move(cb);
+}
+
+void KysState::setDrawRectCallback(DrawRectCallback cb) {
+    drawRectCallback_ = std::move(cb);
+}
+
+void KysState::setDrawPicCallback(DrawPicCallback cb) {
+    drawPicCallback_ = std::move(cb);
+}
+
 void KysState::addItemAmount(int itemNumber, int amount) {
     if (itemNumber < 0 || itemNumber >= kMaxItems || amount == 0) {
         return;
@@ -677,8 +713,9 @@ void KysState::walkFromTo(int x1, int y1, int x2, int y2) {
 void KysState::sceneFromTo(int x1, int y1, int x2, int y2) {
     (void)x1;
     (void)y1;
-    sx_ = static_cast<i16>(x2);
-    sy_ = static_cast<i16>(y2);
+    // Pascal: Sx := y2; Sy := x2  (coordinates are swapped)
+    sx_ = static_cast<i16>(y2);
+    sy_ = static_cast<i16>(x2);
 }
 
 int KysState::getBattleRoleData(int roleIndex, int dataIndex) const {
@@ -910,6 +947,20 @@ int KysState::roleHeadNum(int roleIndex) const {
         return -1;
     }
     return rRole_[static_cast<std::size_t>(roleIndex)].element.headNum;
+}
+
+std::string KysState::roleNameByHead(int headNum) const {
+    // Match Pascal's NewTalk: find role whose headNum matches, return their name
+    for (int i = 0; i < kMaxRoles; ++i) {
+        if (rRole_[static_cast<std::size_t>(i)].element.headNum == headNum) {
+            return getRoleName(i);
+        }
+        // Head 0 defaults to role 0 (protagonist)
+        if (i == 0 && headNum == 0) {
+            return getRoleName(0);
+        }
+    }
+    return {};
 }
 
 int KysState::rolePoison(int roleIndex) const {

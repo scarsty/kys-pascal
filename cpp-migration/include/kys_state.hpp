@@ -129,6 +129,7 @@ public:
     int roleCurrentHp(int roleIndex) const;
     int roleMaxHp(int roleIndex) const;
     int roleHeadNum(int roleIndex) const;
+    std::string roleNameByHead(int headNum) const;
     int rolePoison(int roleIndex) const;
     int roleLevel(int roleIndex) const;
     int roleCurrentMp(int roleIndex) const;
@@ -172,9 +173,28 @@ public:
     using TalkCallback = std::function<void(const std::string& text, int headNum, int dismode)>;
     using YesNoCallback = std::function<bool(const std::string& title, const std::string& text, bool defaultYes)>;
     using GetItemCallback = std::function<bool(const std::string& itemName, int amount)>;
+    using AnimationCallback = std::function<void(int eventIndex, int beginPic, int endPic, int delayMs)>;
+    using MusicCallback = std::function<void(int musicNum)>;
+    using SoundCallback = std::function<void(int soundNum)>;
+    // Extended instruction callbacks for UI operations
+    using WaitKeyCallback = std::function<int()>;
+    using DelayCallback = std::function<void(int ms)>;
+    using MenuSelectCallback = std::function<int(int x, int y, const std::vector<std::string>& items)>;
+    using DrawStringCallback = std::function<void(const std::string& text, int x, int y, int color)>;
+    using DrawRectCallback = std::function<void(int x, int y, int w, int h)>;
+    using DrawPicCallback = std::function<void(int type, int picNum, int x, int y)>;
     void setTalkCallback(TalkCallback cb);
     void setYesNoCallback(YesNoCallback cb);
     void setGetItemCallback(GetItemCallback cb);
+    void setAnimationCallback(AnimationCallback cb);
+    void setMusicCallback(MusicCallback cb);
+    void setSoundCallback(SoundCallback cb);
+    void setWaitKeyCallback(WaitKeyCallback cb);
+    void setDelayCallback(DelayCallback cb);
+    void setMenuSelectCallback(MenuSelectCallback cb);
+    void setDrawStringCallback(DrawStringCallback cb);
+    void setDrawRectCallback(DrawRectCallback cb);
+    void setDrawPicCallback(DrawPicCallback cb);
 
     void removeTeamMember(int teamIndex);
     bool teleportToScene(int sceneId);
@@ -186,6 +206,10 @@ private:
     void executeEventCode(int eventId);
     void execInstruct3(const std::array<int, 13>& list);
     void addItemAmount(int itemNumber, int amount);
+    int execInstruct50e(int code, int e1, int e2, int e3, int e4, int e5, int e6);
+    int e50GetValue(int bit, int t, int x) const;
+    static int e50CutRegion(int x);
+    bool haveMagic(int person, int magicNum, int level) const;
 
     static bool readExact(std::ifstream& in, void* dst, std::size_t size);
     static bool writeExact(std::ofstream& out, const void* src, std::size_t size);
@@ -251,9 +275,24 @@ private:
     TalkCallback talkCallback_;
     YesNoCallback yesNoCallback_;
     GetItemCallback getItemCallback_;
+    AnimationCallback animationCallback_;
+    MusicCallback musicCallback_;
+    SoundCallback soundCallback_;
+    WaitKeyCallback waitKeyCallback_;
+    DelayCallback delayCallback_;
+    MenuSelectCallback menuSelectCallback_;
+    DrawStringCallback drawStringCallback_;
+    DrawRectCallback drawRectCallback_;
+    DrawPicCallback drawPicCallback_;
     std::unordered_map<int, int> eventArgMap_;
     std::vector<int> pendingEvents_;
     std::map<int, std::array<i16, 19>> battleRoleData_;
+
+    // instruct_50e extended VM state
+    static constexpr int kX50Size = 0x8000; // 32768 elements
+    std::array<i16, kX50Size> x50_{};
+    int p5032pos_ = -1;
+    int p5032value_ = 0;
 
 };
 } // namespace kys

@@ -149,14 +149,76 @@ int SdlRuntime::runLoop(int milliseconds) {
         return lines;
     };
 
-    auto drawBlockingPanel = [&](const std::string& title, const std::vector<std::string>& lines, int mode, bool drawYesNo, int sel) {
+    constexpr float kPascalScale = 1.2f;
+
+    std::unordered_map<int, SDL_Texture*> headTextureCache;
+    std::unordered_map<int, bool> missingHeadTexture;
+
+    auto loadHeadTexture = [&](int headNum) -> SDL_Texture* {
+        if (headNum < 0) {
+            return nullptr;
+        }
+        if (auto it = headTextureCache.find(headNum); it != headTextureCache.end()) {
+            return it->second;
+        }
+        if (missingHeadTexture.find(headNum) != missingHeadTexture.end()) {
+            return nullptr;
+        }
+        const std::string fileName = std::to_string(headNum) + ".png";
+        const std::array<std::string, 2> paths = {
+            appPath + "/head/" + fileName,
+            "head/" + fileName};
+        SDL_Surface* surface = nullptr;
+        for (const auto& path : paths) {
+            SDL_IOStream* stream = SDL_IOFromFile(path.c_str(), "rb");
+            if (!stream) { continue; }
+            surface = SDL_LoadPNG_IO(stream, true);
+            if (surface) { break; }
+        }
+        if (!surface) {
+            missingHeadTexture[headNum] = true;
+            return nullptr;
+        }
+        SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, surface);
+        SDL_DestroySurface(surface);
+        if (!tex) {
+            missingHeadTexture[headNum] = true;
+            return nullptr;
+        }
+        headTextureCache[headNum] = tex;
+        return tex;
+    };
+
+    // Draw dialog/blocking panel. headNum >= 0 draws head portrait; headPlace: 0=left, 1=right.
+    auto drawBlockingPanel = [&](const std::string& title, const std::vector<std::string>& lines, int mode, bool drawYesNo, int sel, int headNum = -1, int headPlace = 0) {
         int ww = kRenderWidth;
         int wh = kRenderHeight;
         SDL_GetWindowSize(window, &ww, &wh);
+        if (ww <= 0 || wh <= 0) { ww = kRenderWidth; wh = kRenderHeight; }
 
         SDL_SetRenderTarget(renderer, nullptr);
-        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 220);
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
+
+        // Blit the last rendered scene as background
+        if (useFixedRender && frameTexture) {
+            const float scx = static_cast<float>(ww) / static_cast<float>(kRenderWidth);
+            const float scy = static_cast<float>(wh) / static_cast<float>(kRenderHeight);
+            const float sc = std::min(scx, scy);
+            const float outW = static_cast<float>(kRenderWidth) * sc;
+            const float outH = static_cast<float>(kRenderHeight) * sc;
+            SDL_FRect dst{
+                (static_cast<float>(ww) - outW) * 0.5f,
+                (static_cast<float>(wh) - outH) * 0.5f,
+                outW, outH};
+            SDL_RenderTexture(renderer, frameTexture, nullptr, &dst);
+        }
+
+        // Semi-transparent dark overlay so dialog is readable
+        SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+        SDL_FRect fullOvl{0.0f, 0.0f, static_cast<float>(ww), static_cast<float>(wh)};
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 128);
+        SDL_RenderFillRect(renderer, &fullOvl);
 
         const float panelW = static_cast<float>(ww) - 40.0f;
         const float panelH = 180.0f;
@@ -169,12 +231,40 @@ int SdlRuntime::runLoop(int milliseconds) {
         SDL_SetRenderDrawColor(renderer, 236, 216, 142, 240);
         SDL_RenderRect(renderer, &panel);
 
+        // Draw head portrait if available
+        float textXOff = panel.x + 14.0f;  // default text X offset
+        if (headNum >= 0) {
+            SDL_Texture* headTex = loadHeadTexture(headNum);
+            if (headTex) {
+                float texW = 0.0f, texH = 0.0f;
+                SDL_GetTextureSize(headTex, &texW, &texH);
+                // Fit head portrait inside panel with max 100px wide, preserve aspect ratio
+                const float maxHeadW = 100.0f;
+                const float maxHeadH = panelH - 16.0f;
+                const float hsc = std::min(maxHeadW / texW, maxHeadH / texH);
+                const float drawW = texW * hsc;
+                const float drawH = texH * hsc;
+                float headX = 0.0f;
+                if (headPlace == 1) {
+                    // Head on right side
+                    headX = panel.x + panelW - drawW - 10.0f;
+                } else {
+                    // Head on left side
+                    headX = panel.x + 10.0f;
+                    textXOff = panel.x + drawW + 20.0f;
+                }
+                const float headY = panel.y + (panelH - drawH) * 0.5f;
+                SDL_FRect headRect{headX, headY, drawW, drawH};
+                SDL_RenderTexture(renderer, headTex, nullptr, &headRect);
+            }
+        }
+
         if (hasFont) {
             if (!title.empty()) {
-                overlay.draw(renderer, title, static_cast<int>(panel.x + 14.0f), static_cast<int>(panel.y + 10.0f));
+                overlay.draw(renderer, title, static_cast<int>(textXOff), static_cast<int>(panel.y + 10.0f));
             }
             for (int i = 0; i < static_cast<int>(lines.size()) && i < 5; ++i) {
-                overlay.draw(renderer, lines[static_cast<std::size_t>(i)], static_cast<int>(panel.x + 14.0f), static_cast<int>(panel.y + 42.0f + i * 24.0f));
+                overlay.draw(renderer, lines[static_cast<std::size_t>(i)], static_cast<int>(textXOff), static_cast<int>(panel.y + 42.0f + i * 24.0f));
             }
             if (drawYesNo) {
                 const int y = static_cast<int>(panel.y + panel.h - 34.0f);
@@ -188,9 +278,40 @@ int SdlRuntime::runLoop(int milliseconds) {
     };
 
     state_->setTalkCallback([&](const std::string& text, int headNum, int dismode) {
-        (void)headNum;
-        const auto sentences = splitUtf8Sentences(text.empty() ? "（空对白）" : text);
+        // Skip completely empty dialog (Pascal filters empty lines)
+        if (text.empty()) { return; }
+        // Determine head portrait placement from dismode (matching Pascal talk_1)
+        // dismode 0: top panel, head left; 1: bottom panel, head right;
+        // 2: top panel, no head; 3: bottom panel, no head;
+        // 4: top panel, head right; 5: bottom panel, head left
+        int panelMode = 0;     // 0=bottom, 1=top
+        int headPlace = 0;     // 0=left, 1=right
+        int effectiveHead = headNum;
+        switch (dismode) {
+            case 0: panelMode = 1; headPlace = 0; break;
+            case 1: panelMode = 0; headPlace = 1; break;
+            case 2: panelMode = 1; effectiveHead = -1; break;
+            case 3: panelMode = 0; effectiveHead = -1; break;
+            case 4: panelMode = 1; headPlace = 1; break;
+            case 5: panelMode = 0; headPlace = 0; break;
+            default: panelMode = 0; headPlace = 0; break;
+        }
+        // Find role name for title if head is shown
+        std::string title;
+        if (effectiveHead >= 0) {
+            title = state_->roleNameByHead(effectiveHead);
+        }
+        const auto sentences = splitUtf8Sentences(text);
         for (const auto& s : sentences) {
+            // Skip empty sentences (Pascal: only keep non-empty lines)
+            bool allBlank = true;
+            for (const auto& ch : s) {
+                if (ch != ' ' && ch != '\t' && ch != '\r' && ch != '\n') {
+                    allBlank = false;
+                    break;
+                }
+            }
+            if (allBlank) { continue; }
             const auto lines = wrapUtf8Lines(s, 30);
             bool waitNext = true;
             while (waitNext && running) {
@@ -209,7 +330,7 @@ int SdlRuntime::runLoop(int milliseconds) {
                         }
                     }
                 }
-                drawBlockingPanel("对话", lines, dismode, false, 0);
+                drawBlockingPanel(title, lines, panelMode, false, 0, effectiveHead, headPlace);
                 SDL_Delay(16);
             }
             if (!running) {
@@ -279,6 +400,132 @@ int SdlRuntime::runLoop(int milliseconds) {
         }
         return sel == 1;
     });
+
+    // Extended instruction callbacks
+    state_->setWaitKeyCallback([&]() -> int {
+        while (running) {
+            SDL_Event ev;
+            while (SDL_PollEvent(&ev)) {
+                if (ev.type == SDL_EVENT_QUIT) { running = false; return 0; }
+                if (ev.type == SDL_EVENT_KEY_DOWN) {
+                    int key = static_cast<int>(ev.key.key);
+                    // Map arrow keys to Pascal SDL1 codes
+                    if (ev.key.key == SDLK_LEFT) return 154;
+                    if (ev.key.key == SDLK_RIGHT) return 156;
+                    if (ev.key.key == SDLK_UP) return 158;
+                    if (ev.key.key == SDLK_DOWN) return 152;
+                    return key;
+                }
+            }
+            SDL_Delay(16);
+        }
+        return 0;
+    });
+
+    state_->setDelayCallback([&](int ms) {
+        if (ms > 0 && ms < 30000) { SDL_Delay(static_cast<Uint32>(ms)); }
+    });
+
+    state_->setMenuSelectCallback([&](int mx, int my, const std::vector<std::string>& items) -> int {
+        if (items.empty()) return 0;
+        int sel = 0;
+        bool waiting = true;
+        while (waiting && running) {
+            SDL_Event ev;
+            while (SDL_PollEvent(&ev)) {
+                if (ev.type == SDL_EVENT_QUIT) { running = false; waiting = false; break; }
+                if (ev.type == SDL_EVENT_KEY_DOWN) {
+                    if (ev.key.key == SDLK_UP || ev.key.key == SDLK_W) {
+                        sel = (sel - 1 + static_cast<int>(items.size())) % static_cast<int>(items.size());
+                    } else if (ev.key.key == SDLK_DOWN || ev.key.key == SDLK_S) {
+                        sel = (sel + 1) % static_cast<int>(items.size());
+                    } else if (ev.key.key == SDLK_RETURN || ev.key.key == SDLK_SPACE || ev.key.key == SDLK_Z) {
+                        waiting = false; break;
+                    } else if (ev.key.key == SDLK_ESCAPE || ev.key.key == SDLK_X) {
+                        sel = 0; waiting = false; break;
+                    }
+                }
+            }
+            // Render menu: blit frame as background, then overlay menu
+            {
+                int ww = kRenderWidth, wh = kRenderHeight;
+                SDL_GetWindowSize(window, &ww, &wh);
+                if (ww <= 0 || wh <= 0) { ww = kRenderWidth; wh = kRenderHeight; }
+                SDL_SetRenderTarget(renderer, nullptr);
+                SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+                SDL_RenderClear(renderer);
+                if (useFixedRender && frameTexture) {
+                    const float scx = static_cast<float>(ww) / static_cast<float>(kRenderWidth);
+                    const float scy = static_cast<float>(wh) / static_cast<float>(kRenderHeight);
+                    const float sc = std::min(scx, scy);
+                    const float outW = static_cast<float>(kRenderWidth) * sc;
+                    const float outH = static_cast<float>(kRenderHeight) * sc;
+                    SDL_FRect dst{(static_cast<float>(ww) - outW) * 0.5f, (static_cast<float>(wh) - outH) * 0.5f, outW, outH};
+                    SDL_RenderTexture(renderer, frameTexture, nullptr, &dst);
+                }
+                SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+                const float sx = static_cast<float>(mx) * kPascalScale;
+                const float sy = static_cast<float>(my) * kPascalScale;
+                const float mw = 180.0f;
+                const float mh = static_cast<float>(items.size()) * 26.0f + 12.0f;
+                SDL_FRect bg{sx, sy, mw, mh};
+                SDL_SetRenderDrawColor(renderer, 0, 0, 0, 180);
+                SDL_RenderFillRect(renderer, &bg);
+                SDL_SetRenderDrawColor(renderer, 236, 216, 142, 240);
+                SDL_RenderRect(renderer, &bg);
+                if (hasFont) {
+                    for (int i = 0; i < static_cast<int>(items.size()); ++i) {
+                        const int ty = static_cast<int>(sy + 6.0f + i * 26.0f);
+                        if (i == sel) {
+                            overlay.draw(renderer, items[static_cast<std::size_t>(i)],
+                                static_cast<int>(sx + 10.0f), ty, 255, 200, 80);
+                        } else {
+                            overlay.draw(renderer, items[static_cast<std::size_t>(i)],
+                                static_cast<int>(sx + 10.0f), ty, 160, 160, 160);
+                        }
+                    }
+                }
+                SDL_RenderPresent(renderer);
+            }
+            SDL_Delay(16);
+        }
+        return sel;
+    });
+
+    state_->setDrawStringCallback([&](const std::string& text, int x, int y, int color) {
+        if (!hasFont) return;
+        SDL_SetRenderTarget(renderer, frameTexture);
+        // Use a simple white color for now; color could be mapped to Pascal palette
+        overlay.draw(renderer, text, static_cast<int>(x * kPascalScale), static_cast<int>(y * kPascalScale));
+        SDL_SetRenderTarget(renderer, nullptr);
+    });
+
+    state_->setDrawRectCallback([&](int x, int y, int w, int h) {
+        SDL_SetRenderTarget(renderer, frameTexture);
+        SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+        SDL_FRect rect{x * kPascalScale, y * kPascalScale, w * kPascalScale, h * kPascalScale};
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 180);
+        SDL_RenderFillRect(renderer, &rect);
+        SDL_SetRenderDrawColor(renderer, 236, 216, 142, 200);
+        SDL_RenderRect(renderer, &rect);
+        SDL_SetRenderTarget(renderer, nullptr);
+    });
+
+    state_->setDrawPicCallback([&](int type, int picNum, int x, int y) {
+        // type 1 = head portrait
+        if (type == 1) {
+            SDL_Texture* headTex = loadHeadTexture(picNum);
+            if (headTex) {
+                SDL_SetRenderTarget(renderer, frameTexture);
+                float texW = 0.0f, texH = 0.0f;
+                SDL_GetTextureSize(headTex, &texW, &texH);
+                SDL_FRect dst{x * kPascalScale, y * kPascalScale, texW, texH};
+                SDL_RenderTexture(renderer, headTex, nullptr, &dst);
+                SDL_SetRenderTarget(renderer, nullptr);
+            }
+        }
+        // type 0 = map pic, type 2 = external pic — not yet implemented
+    });
     
     // Color definitions matching Pascal ColColor scheme:
     // Value colors (data/numbers) - bright yellow/orange
@@ -294,8 +541,6 @@ int SdlRuntime::runLoop(int milliseconds) {
     SDL_Texture* teleportMapTexture = nullptr;
     bool teleportMapBuilt = false;
     std::mt19937 rng(static_cast<std::mt19937::result_type>(std::chrono::steady_clock::now().time_since_epoch().count()));
-    std::unordered_map<int, SDL_Texture*> headTextureCache;
-    std::unordered_map<int, bool> missingHeadTexture;
 
     struct CloudSprite {
         int pic = 0;
@@ -402,48 +647,6 @@ int SdlRuntime::runLoop(int milliseconds) {
         return titleOpenTexture;
     };
 
-    auto loadHeadTexture = [&](int headNum) -> SDL_Texture* {
-        if (headNum < 0) {
-            return nullptr;
-        }
-        if (auto it = headTextureCache.find(headNum); it != headTextureCache.end()) {
-            return it->second;
-        }
-        if (missingHeadTexture.find(headNum) != missingHeadTexture.end()) {
-            return nullptr;
-        }
-
-        const std::string fileName = std::to_string(headNum) + ".png";
-        const std::array<std::string, 2> paths = {
-            appPath + "/head/" + fileName,
-            "head/" + fileName};
-
-        SDL_Surface* surface = nullptr;
-        for (const auto& path : paths) {
-            SDL_IOStream* stream = SDL_IOFromFile(path.c_str(), "rb");
-            if (!stream) {
-                continue;
-            }
-            surface = SDL_LoadPNG_IO(stream, true);
-            if (surface) {
-                break;
-            }
-        }
-        if (!surface) {
-            missingHeadTexture[headNum] = true;
-            return nullptr;
-        }
-
-        SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, surface);
-        SDL_DestroySurface(surface);
-        if (!tex) {
-            missingHeadTexture[headNum] = true;
-            return nullptr;
-        }
-        headTextureCache[headNum] = tex;
-        return tex;
-    };
-
     auto presentFrame = [&]() {
         if (useFixedRender) {
             SDL_SetRenderTarget(renderer, nullptr);
@@ -473,6 +676,98 @@ int SdlRuntime::runLoop(int milliseconds) {
 
         SDL_RenderPresent(renderer);
         SDL_Delay(16);
+    };
+
+    // Draw a rounded-corner semi-transparent rectangle matching Pascal's DrawRectangle.
+    // Parameters are in Pascal coordinate space (800x450) and will be scaled.
+    auto drawMenuRect = [&](int px, int py, int pw, int ph) {
+        const float x = px * kPascalScale;
+        const float y = py * kPascalScale;
+        const float w = pw * kPascalScale;
+        const float h = ph * kPascalScale;
+        // Semi-transparent black fill (alpha ~50% = 127)
+        SDL_FRect bg{x, y, w + 1.0f, h + 1.0f};
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 127);
+        SDL_RenderFillRect(renderer, &bg);
+        // White frame border with gradient alpha (matching Pascal's DrawRectangle)
+        // Top and bottom edges
+        for (float fi = 0; fi <= w; fi += 1.0f) {
+            const float a = 250.0f - std::abs(fi / w + 0.0f - 1.0f) * 150.0f;
+            const auto alpha = static_cast<uint8_t>(std::max(80.0f, std::min(250.0f, a)));
+            SDL_SetRenderDrawColor(renderer, 255, 255, 255, alpha);
+            SDL_RenderPoint(renderer, x + fi, y);
+            const float a2 = 250.0f - std::abs(fi / w + 1.0f - 1.0f) * 150.0f;
+            const auto alpha2 = static_cast<uint8_t>(std::max(80.0f, std::min(250.0f, a2)));
+            SDL_SetRenderDrawColor(renderer, 255, 255, 255, alpha2);
+            SDL_RenderPoint(renderer, x + fi, y + h);
+        }
+        // Left and right edges
+        for (float fi = 1; fi < h; fi += 1.0f) {
+            const float a = 250.0f - std::abs(0.0f + fi / h - 1.0f) * 150.0f;
+            const auto alpha = static_cast<uint8_t>(std::max(80.0f, std::min(250.0f, a)));
+            SDL_SetRenderDrawColor(renderer, 255, 255, 255, alpha);
+            SDL_RenderPoint(renderer, x, y + fi);
+            const float a2 = 250.0f - std::abs(1.0f + fi / h - 1.0f) * 150.0f;
+            const auto alpha2 = static_cast<uint8_t>(std::max(80.0f, std::min(250.0f, a2)));
+            SDL_SetRenderDrawColor(renderer, 255, 255, 255, alpha2);
+            SDL_RenderPoint(renderer, x + w, y + fi);
+        }
+    };
+
+    // Draw a vertical menu list matching Pascal's ShowCommonMenu.
+    // px,py,pw are Pascal coords; items are menu strings; sel is selected index.
+    // Selected: ColColor($64/$66) ≈ bright yellow; Unselected: ColColor($5/$7) ≈ dim gray.
+    auto drawPascalMenuList = [&](int px, int py, int pw, const std::vector<std::string>& mitems, int sel) {
+        const int max = static_cast<int>(mitems.size()) - 1;
+        const int ph = max * 22 + 28;
+        drawMenuRect(px, py, pw, ph);
+        if (!hasFont) return;
+        // Selected text: bright gold; Unselected: dim white/gray
+        constexpr uint8_t selR = 255, selG = 215, selB = 0;
+        constexpr uint8_t nrmR = 176, nrmG = 176, nrmB = 176;
+        for (int i = 0; i < static_cast<int>(mitems.size()); ++i) {
+            const int tx = static_cast<int>((px + 3) * kPascalScale);
+            const int ty = static_cast<int>((py + 2 + 22 * i) * kPascalScale);
+            if (i == sel) {
+                overlay.draw(renderer, mitems[static_cast<std::size_t>(i)], tx, ty, selR, selG, selB);
+            } else {
+                overlay.draw(renderer, mitems[static_cast<std::size_t>(i)], tx, ty, nrmR, nrmG, nrmB);
+            }
+        }
+    };
+
+    // Draw a title text with small background rect (Pascal DrawTextWithRect).
+    auto drawTitleWithRect = [&](const std::string& text, int px, int py, int pw) {
+        drawMenuRect(px, py, pw, 25);
+        if (hasFont) {
+            const int tx = static_cast<int>((px + 3) * kPascalScale);
+            const int ty = static_cast<int>((py + 2) * kPascalScale);
+            overlay.draw(renderer, text, tx, ty, 200, 200, 240);
+        }
+    };
+
+    // Get Pascal coordinates for a given menu page.
+    // Returns {x, y, w} or {-1,-1,-1} for pages with custom rendering.
+    auto getMenuPageCoords = [](MainMenuState::Page p) -> std::array<int, 3> {
+        switch (p) {
+            case MainMenuState::Page::Root:       return {27, 30, 46};
+            case MainMenuState::Page::System:     return {80, 30, 46};
+            case MainMenuState::Page::LoadSlots:  return {133, 30, 267};
+            case MainMenuState::Page::SaveSlots:  return {133, 30, 267};
+            case MainMenuState::Page::QuitConfirm:return {133, 30, 80};
+            case MainMenuState::Page::Medical:    return {80, 65, 140};
+            case MainMenuState::Page::Detox:      return {80, 65, 140};
+            case MainMenuState::Page::ItemType:   return {80, 30, 87};
+            case MainMenuState::Page::ItemList:   return {80, 55, 180};
+            case MainMenuState::Page::ItemTarget: return {230, 65, 140};
+            case MainMenuState::Page::Status:     return {10, 65, 85};
+            case MainMenuState::Page::LeaveTeam:  return {80, 65, 140};
+            case MainMenuState::Page::Teleport:   return {-1, -1, -1};
+            case MainMenuState::Page::ItemBrowse: return {-1, -1, -1};
+            case MainMenuState::Page::StatusDetail: return {-1, -1, -1};
+            case MainMenuState::Page::Title:      return {-1, -1, -1};
+            default:                              return {-1, -1, -1};
+        }
     };
 
     std::vector<int> teamSlotMap;
@@ -585,7 +880,7 @@ int SdlRuntime::runLoop(int milliseconds) {
                 items = buildTeamLines(false, false);
                 break;
             case MainMenuState::Page::ItemType:
-                items = {"劇情", "裝備", "秘笈", "藥品", "暗器", "整理"};
+                items = {"全部物品", "劇情物品", "神兵寶甲", "武功秘笈", "靈丹妙藥", "傷人暗器", "整理物品"};
                 break;
             case MainMenuState::Page::ItemList:
                 itemSlotMap.clear();
@@ -719,8 +1014,10 @@ int SdlRuntime::runLoop(int milliseconds) {
                 }
                 break;
             case MainMenuState::Page::ItemType:
-                if (index >= 0 && index <= 4) {
-                    menu.selectedItemType = index;
+                // Pascal: 0=全部(type 100/all), 1=劇情(0), 2=神兵(1), 3=秘笈(2), 4=靈丹(3), 5=暗器(4), 6=整理
+                if (index >= 0 && index <= 5) {
+                    const int typeFilter = (index == 0) ? 100 : (index - 1);  // 100 = show all
+                    menu.selectedItemType = typeFilter;
                     menu.itemBrowseRow = 0;
                     menu.itemBrowseList.clear();
                     
@@ -730,7 +1027,7 @@ int SdlRuntime::runLoop(int milliseconds) {
                         const int amount = state_->itemListAmount(i);
                         if (inum >= 0 && amount > 0) {
                             const int t = state_->itemType(inum);
-                            if (t == index) {
+                            if (typeFilter == 100 || t == typeFilter) {
                                 menu.itemBrowseList.push_back(inum);
                             }
                         }
@@ -743,7 +1040,7 @@ int SdlRuntime::runLoop(int milliseconds) {
                         menu.itemBrowseRows = (menu.itemBrowseList.size() + menu.itemBrowseCols - 1) / menu.itemBrowseCols;
                         menu.enter(MainMenuState::Page::ItemBrowse);
                     }
-                } else if (index == 5) {
+                } else if (index == 6) {
                     state_->rearrangeItems();
                     menu.setStatus("物品已整理");
                 }
@@ -1442,23 +1739,17 @@ int SdlRuntime::runLoop(int milliseconds) {
             }
 
             if (menu.page == MainMenuState::Page::StatusDetail) {
-                // Layout matching Pascal ShowStatus(rnum, x, y) exactly
-                const float panelW = 525.0f;
-                const float panelH = 315.0f;
-                SDL_FRect panel{
-                    static_cast<float>(centerX) - panelW * 0.5f,
-                    static_cast<float>(centerY) - panelH * 0.5f,
-                    panelW,
-                    panelH};
-                SDL_SetRenderDrawColor(renderer, 0, 0, 0, 200);
-                SDL_RenderFillRect(renderer, &panel);
-                SDL_SetRenderDrawColor(renderer, 255, 255, 255, 220);
-                SDL_RenderRect(renderer, &panel);
+                // Draw parent menus: Root menu + Status title + Status team list
+                drawPascalMenuList(27, 30, 46, {"醫療", "解毒", "物品", "狀態", "離隊", "傳送", "系統"}, 3);
+                drawTitleWithRect("查看隊員狀態", 10, 30, 132);
+                // Pascal: ShowStatus(rnum, 100, 65) → scaled
+                // Pascal: DrawRectangle(screen, x, y, 525, 315, ...)
+                drawMenuRect(100, 65, 525, 315);
 
                 if (menu.selectedRole >= 0) {
                     const int r = menu.selectedRole;
-                    const int bx = static_cast<int>(panel.x);
-                    const int by = static_cast<int>(panel.y);
+                    const int bx = static_cast<int>(100 * kPascalScale);
+                    const int by = static_cast<int>(65 * kPascalScale);
 
                     // Head portrait at (x+60, y+80) matching Pascal DrawHeadPic
                     const int headNum = state_->roleHeadNum(r);
@@ -1608,6 +1899,8 @@ int SdlRuntime::runLoop(int milliseconds) {
             
             // Special rendering for ItemBrowse page - matching Pascal ShowMenuItem layout
             if (menu.page == MainMenuState::Page::ItemBrowse) {
+                // Draw parent menus: Root menu + ItemType menu
+                drawPascalMenuList(27, 30, 46, {"醫療", "解毒", "物品", "狀態", "離隊", "傳送", "系統"}, 2);
                 const int cols = menu.itemBrowseCols;  // 14
                 constexpr int visRows = 5;
                 constexpr int cellSize = 42;
@@ -1622,37 +1915,22 @@ int SdlRuntime::runLoop(int milliseconds) {
                     return 0;
                 };
 
-                // Panel origin (110, 30) in Pascal's 800x450 coordinate space
-                // Scale to current render target
-                const int ox = 110;  // Pascal fixed X origin for item grid
+                // Panel origin (110, 30) in Pascal's 800x450 coordinate space, scaled by 1.2
+                const int ox = static_cast<int>(110 * kPascalScale);
+                const int scaledCellSize = static_cast<int>(cellSize * kPascalScale);
+                const int scaledW = static_cast<int>(w * kPascalScale);
 
                 // Header bar (110, 30, w, 25): item name + amount
-                SDL_FRect headerBar{static_cast<float>(ox), 30.0f, static_cast<float>(w), 25.0f};
-                SDL_SetRenderDrawColor(renderer, 0, 0, 0, 200);
-                SDL_RenderFillRect(renderer, &headerBar);
-                SDL_SetRenderDrawColor(renderer, 255, 255, 255, 200);
-                SDL_RenderRect(renderer, &headerBar);
+                drawMenuRect(110, 30, w, 25);
 
                 // Description bar (110, 60, w, 25)
-                SDL_FRect descBar{static_cast<float>(ox), 60.0f, static_cast<float>(w), 25.0f};
-                SDL_SetRenderDrawColor(renderer, 0, 0, 0, 200);
-                SDL_RenderFillRect(renderer, &descBar);
-                SDL_SetRenderDrawColor(renderer, 255, 255, 255, 200);
-                SDL_RenderRect(renderer, &descBar);
+                drawMenuRect(110, 60, w, 25);
 
                 // Grid area (110, 90, w, 218)
-                SDL_FRect gridBg{static_cast<float>(ox), 90.0f, static_cast<float>(w), 218.0f};
-                SDL_SetRenderDrawColor(renderer, 0, 0, 0, 200);
-                SDL_RenderFillRect(renderer, &gridBg);
-                SDL_SetRenderDrawColor(renderer, 255, 255, 255, 200);
-                SDL_RenderRect(renderer, &gridBg);
+                drawMenuRect(110, 90, w, 218);
 
                 // Bottom bar (110, 313, w, 25): item type + user
-                SDL_FRect bottomBar{static_cast<float>(ox), 313.0f, static_cast<float>(w), 25.0f};
-                SDL_SetRenderDrawColor(renderer, 0, 0, 0, 200);
-                SDL_RenderFillRect(renderer, &bottomBar);
-                SDL_SetRenderDrawColor(renderer, 255, 255, 255, 200);
-                SDL_RenderRect(renderer, &bottomBar);
+                drawMenuRect(110, 313, w, 25);
 
                 // Cursor position within visible grid
                 const int cx = menu.itemBrowseRow % cols;
@@ -1665,8 +1943,8 @@ int SdlRuntime::runLoop(int milliseconds) {
                         const int idx = menu.itemStartIndex + gy * cols + gx;
                         if (idx >= totalItems || idx < 0) continue;
                         const int itemId = menu.itemBrowseList[static_cast<std::size_t>(idx)];
-                        const float xPos = static_cast<float>(ox + 5 + gx * cellSize);
-                        const float yPos = static_cast<float>(95 + gy * cellSize);
+                        const float xPos = static_cast<float>(ox + static_cast<int>(5 * kPascalScale) + gx * scaledCellSize);
+                        const float yPos = static_cast<float>(static_cast<int>(95 * kPascalScale) + gy * scaledCellSize);
 
                         // Draw item icon PNG
                         const std::string fullPath = appPath + "/item/" + std::to_string(itemId) + ".png";
@@ -1677,8 +1955,8 @@ int SdlRuntime::runLoop(int milliseconds) {
                                 SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
                                 if (texture) {
                                     const float imgScale = std::min(
-                                        static_cast<float>(cellSize - 4) / static_cast<float>(surface->w),
-                                        static_cast<float>(cellSize - 4) / static_cast<float>(surface->h));
+                                        static_cast<float>(scaledCellSize - 4) / static_cast<float>(surface->w),
+                                        static_cast<float>(scaledCellSize - 4) / static_cast<float>(surface->h));
                                     const float dw = surface->w * imgScale;
                                     const float dh = surface->h * imgScale;
                                     // Dim non-selected items like Pascal (shadow=25, alpha=15)
@@ -1687,7 +1965,7 @@ int SdlRuntime::runLoop(int milliseconds) {
                                     } else {
                                         SDL_SetTextureAlphaMod(texture, 180);
                                     }
-                                    SDL_FRect imgRect{xPos + (cellSize - dw) * 0.5f, yPos + (cellSize - dh) * 0.5f, dw, dh};
+                                    SDL_FRect imgRect{xPos + (scaledCellSize - dw) * 0.5f, yPos + (scaledCellSize - dh) * 0.5f, dw, dh};
                                     SDL_RenderTexture(renderer, texture, nullptr, &imgRect);
                                     SDL_DestroyTexture(texture);
                                 }
@@ -1699,9 +1977,9 @@ int SdlRuntime::runLoop(int milliseconds) {
 
                 // Draw cursor frame (white rectangle around selected cell)
                 {
-                    const float fx = static_cast<float>(ox + 5 + cx * cellSize);
-                    const float fy = static_cast<float>(95 + cy * cellSize);
-                    SDL_FRect cursorRect{fx, fy, static_cast<float>(cellSize), static_cast<float>(cellSize)};
+                    const float fx = static_cast<float>(ox + static_cast<int>(5 * kPascalScale) + cx * scaledCellSize);
+                    const float fy = static_cast<float>(static_cast<int>(95 * kPascalScale) + cy * scaledCellSize);
+                    SDL_FRect cursorRect{fx, fy, static_cast<float>(scaledCellSize), static_cast<float>(scaledCellSize)};
                     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 240);
                     SDL_RenderRect(renderer, &cursorRect);
                 }
@@ -1716,30 +1994,30 @@ int SdlRuntime::runLoop(int milliseconds) {
 
                     // Item name centered in header bar
                     const int nameLen = state_->drawLength(itemName);
-                    overlay.draw(renderer, itemName, ox + w / 2 - nameLen * 5, 32, colLabelR, colLabelG, colLabelB);
+                    overlay.draw(renderer, itemName, ox + scaledW / 2 - nameLen * 5, static_cast<int>(32 * kPascalScale), colLabelR, colLabelG, colLabelB);
                     // Amount at right of header
                     {
                         std::ostringstream os;
                         os << std::setw(5) << amount;
-                        overlay.draw(renderer, os.str(), ox + w - 80, 32, colValueR, colValueG, colValueB);
+                        overlay.draw(renderer, os.str(), ox + scaledW - 80, static_cast<int>(32 * kPascalScale), colValueR, colValueG, colValueB);
                     }
 
                     // Introduction centered in desc bar
                     if (!intro.empty()) {
                         const int introLen = state_->drawLength(intro);
-                        overlay.draw(renderer, intro, ox + w / 2 - introLen * 5, 62, colValueR, colValueG, colValueB);
+                        overlay.draw(renderer, intro, ox + scaledW / 2 - introLen * 5, static_cast<int>(62 * kPascalScale), colValueR, colValueG, colValueB);
                     }
 
                     // Bottom bar: item type + user
                     static const std::array<const char*, 5> typeNames = {
                         "劇情物品", "神兵寶甲", "武功秘笈", "靈丹妙藥", "傷人暗器"};
                     if (itemType >= 0 && itemType < 5) {
-                        overlay.draw(renderer, typeNames[static_cast<std::size_t>(itemType)], ox + 7, 315, colLabelR, colLabelG, colLabelB);
+                        overlay.draw(renderer, typeNames[static_cast<std::size_t>(itemType)], ox + static_cast<int>(7 * kPascalScale), static_cast<int>(315 * kPascalScale), colLabelR, colLabelG, colLabelB);
                     }
                     const int user = state_->itemUser(itemId);
                     if (user >= 0) {
-                        overlay.draw(renderer, "使用人：", ox + 97, 315, colLabelR, colLabelG, colLabelB);
-                        overlay.draw(renderer, state_->getRoleName(user), ox + 187, 315, colValueR, colValueG, colValueB);
+                        overlay.draw(renderer, "使用人：", ox + static_cast<int>(97 * kPascalScale), static_cast<int>(315 * kPascalScale), colLabelR, colLabelG, colLabelB);
+                        overlay.draw(renderer, state_->getRoleName(user), ox + static_cast<int>(187 * kPascalScale), static_cast<int>(315 * kPascalScale), colValueR, colValueG, colValueB);
                     }
 
                     // Attribute area below bottom bar - Pascal: (110, 344, w, dynamic)
@@ -1775,11 +2053,7 @@ int SdlRuntime::runLoop(int milliseconds) {
                         if (addCount + needCount > 0) {
                             const int attrRows = (addCount + 5) / 6 + (needCount + 5) / 6;
                             const float attrH = static_cast<float>(attrRows * 20 + 5);
-                            SDL_FRect attrBg{static_cast<float>(ox), 344.0f, static_cast<float>(w), attrH};
-                            SDL_SetRenderDrawColor(renderer, 0, 0, 0, 200);
-                            SDL_RenderFillRect(renderer, &attrBg);
-                            SDL_SetRenderDrawColor(renderer, 255, 255, 255, 200);
-                            SDL_RenderRect(renderer, &attrBg);
+                            drawMenuRect(110, 344, w, static_cast<int>(attrH));
 
                             // Draw add-stats in 6 columns
                             int idx2 = 0;
@@ -1807,8 +2081,8 @@ int SdlRuntime::runLoop(int milliseconds) {
                                     valStr = os.str();
                                 }
 
-                                const int drawX = ox + 7 + (idx2 % 6) * 95;
-                                const int drawY = (idx2 / 6) * 20 + 346;
+                                const int drawX = ox + static_cast<int>(7 * kPascalScale) + (idx2 % 6) * static_cast<int>(95 * kPascalScale);
+                                const int drawY = (idx2 / 6) * static_cast<int>(20 * kPascalScale) + static_cast<int>(346 * kPascalScale);
                                 overlay.draw(renderer, words2[static_cast<std::size_t>(i)], drawX, drawY, colValueR, colValueG, colValueB);
                                 overlay.draw(renderer, valStr, drawX + 20, drawY, colLabelR, colLabelG, colLabelB);
                                 idx2++;
@@ -1841,8 +2115,8 @@ int SdlRuntime::runLoop(int milliseconds) {
                                     valStr = os.str();
                                 }
 
-                                const int drawX = ox + 7 + (idx3 % 6) * 95;
-                                const int drawY = (needBaseRow + idx3 / 6) * 20 + 346;
+                                const int drawX = ox + static_cast<int>(7 * kPascalScale) + (idx3 % 6) * static_cast<int>(95 * kPascalScale);
+                                const int drawY = (needBaseRow + idx3 / 6) * static_cast<int>(20 * kPascalScale) + static_cast<int>(346 * kPascalScale);
                                 overlay.draw(renderer, words3[static_cast<std::size_t>(i)], drawX, drawY, 148, 103, 189);
                                 overlay.draw(renderer, valStr, drawX + 20, drawY, colLabelR, colLabelG, colLabelB);
                                 idx3++;
@@ -1852,7 +2126,7 @@ int SdlRuntime::runLoop(int milliseconds) {
                 }
 
                 if (hasFont) {
-                    overlay.draw(renderer, "[方向鍵:選擇  PgUp/PgDn:翻頁  Enter:使用  Esc:返回]", ox, 340 + 100);
+                    overlay.draw(renderer, "[方向鍵:選擇  PgUp/PgDn:翻頁  Enter:使用  Esc:返回]", ox, static_cast<int>(440 * kPascalScale));
                 }
 
                 presentFrame();
@@ -1982,75 +2256,97 @@ int SdlRuntime::runLoop(int milliseconds) {
                 continue;
             }
 
-            const int maxShow = 10;
-            const int itemCount = static_cast<int>(items.size());
-            int top = 0;
-            if (itemCount > maxShow) {
-                top = menu.selected - maxShow / 2;
-                if (top < 0) top = 0;
-                if (top > itemCount - maxShow) top = itemCount - maxShow;
-            }
-            const int showCount = std::min(maxShow, itemCount);
-            
-            // Keep one header row separated from item rows to avoid overlap.
-            const float headerH = 28.0f;
-            const float itemHeight = 22.0f;
-            const float menuH = headerH + static_cast<float>(showCount) * itemHeight + 6.0f;
-            SDL_FRect menuBg{static_cast<float>(centerX - 180), static_cast<float>(centerY - menuH / 2.0f), 360.0f, menuH};
-            
-            // Draw menu background (black with transparency)
-            SDL_SetRenderDrawColor(renderer, 0, 0, 0, 127);
-            SDL_RenderFillRect(renderer, &menuBg);
+            // === Pascal-style multi-level menu rendering ===
+            // Draw all parent menus in the stack first, then the current page.
+            // This matches Pascal where parent menu remains visible under child.
 
-            // Draw menu border (white/bright color like ColColor(255))
-            SDL_FRect frame{menuBg.x - 1.0f, menuBg.y - 1.0f, menuBg.w + 2.0f, menuBg.h + 2.0f};
-            SDL_SetRenderDrawColor(renderer, 255, 255, 255, 200);
-            SDL_RenderRect(renderer, &frame);
-
-            // Draw menu items
-            for (int row = 0; row < showCount; ++row) {
-                const int i = top + row;
-                const float y = menuBg.y + headerH + static_cast<float>(row) * itemHeight;
-                
-                if (i == menu.selected) {
-                    // Draw selection highlight for selected item
-                    SDL_FRect sel{menuBg.x + 3.0f, y, menuBg.w - 6.0f, itemHeight};
-                    // Selected color: ColColor($64) - bright gold/yellow - RGB(255, 204, 0)
-                    SDL_SetRenderDrawColor(renderer, 255, 204, 0, 180);
-                    SDL_RenderFillRect(renderer, &sel);
-                }
-                
-                if (hasFont) {
-                    // Draw text at x + 3, which matches original Pascal DrawShadowText positioning
-                    if (i == menu.selected) {
-                        // Selected item text color: bright gold
-                        overlay.draw(renderer, items[static_cast<std::size_t>(i)], 
-                                   static_cast<int>(menuBg.x + 3.0f), static_cast<int>(y));
-                    } else {
-                        // Unselected item text color: dark (using normal text)
-                        overlay.draw(renderer, items[static_cast<std::size_t>(i)], 
-                                   static_cast<int>(menuBg.x + 3.0f), static_cast<int>(y));
+            // Helper: build items for a specific page (without side effects)
+            auto buildPageItems = [&](MainMenuState::Page pg) -> std::vector<std::string> {
+                switch (pg) {
+                    case MainMenuState::Page::Root:
+                        return {"醫療", "解毒", "物品", "狀態", "離隊", "傳送", "系統"};
+                    case MainMenuState::Page::System: {
+                        const bool fs = (SDL_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN) != 0;
+                        return {"讀取", "存檔", fs ? "窗口" : "全屏", "離開"};
                     }
+                    case MainMenuState::Page::QuitConfirm:
+                        return {"取消", "確認", "腳本"};
+                    case MainMenuState::Page::ItemType:
+                        return {"全部物品", "劇情物品", "神兵寶甲", "武功秘笈", "靈丹妙藥", "傷人暗器", "整理物品"};
+                    case MainMenuState::Page::Medical:
+                    case MainMenuState::Page::Detox:
+                    case MainMenuState::Page::Status:
+                    case MainMenuState::Page::LeaveTeam:
+                    case MainMenuState::Page::ItemTarget: {
+                        // Build team names
+                        std::vector<std::string> tl;
+                        for (int i = 0; i < KysState::kTeamSize; ++i) {
+                            const int role = state_->getTeam(i);
+                            if (role < 0) continue;
+                            tl.push_back(state_->getRoleName(role));
+                        }
+                        if (tl.empty()) tl.push_back("（無隊友）");
+                        return tl;
+                    }
+                    default:
+                        return {};
+                }
+            };
+
+            // Draw parent menus from the stack (they stay visible behind)
+            for (std::size_t si = 0; si < menu.stack.size(); ++si) {
+                const auto pg = menu.stack[si];
+                const auto coords = getMenuPageCoords(pg);
+                if (coords[0] < 0) continue;
+                // For stack pages, the selected item is unknown (already navigated away),
+                // so highlight the item that was chosen (approximated by the NEXT page in stack or current).
+                // We find which item was chosen by looking at the child page.
+                MainMenuState::Page childPage = (si + 1 < menu.stack.size()) ? menu.stack[si + 1] : menu.page;
+                int highlightIdx = -1;
+                // Map child pages to parent item indices
+                if (pg == MainMenuState::Page::Root) {
+                    if (childPage == MainMenuState::Page::Medical) highlightIdx = 0;
+                    else if (childPage == MainMenuState::Page::Detox) highlightIdx = 1;
+                    else if (childPage == MainMenuState::Page::ItemType || childPage == MainMenuState::Page::ItemBrowse) highlightIdx = 2;
+                    else if (childPage == MainMenuState::Page::Status || childPage == MainMenuState::Page::StatusDetail) highlightIdx = 3;
+                    else if (childPage == MainMenuState::Page::LeaveTeam) highlightIdx = 4;
+                    else if (childPage == MainMenuState::Page::Teleport) highlightIdx = 5;
+                    else if (childPage == MainMenuState::Page::System) highlightIdx = 6;
+                }
+                if (pg == MainMenuState::Page::System) {
+                    if (childPage == MainMenuState::Page::LoadSlots) highlightIdx = 0;
+                    else if (childPage == MainMenuState::Page::SaveSlots) highlightIdx = 1;
+                    else if (childPage == MainMenuState::Page::QuitConfirm) highlightIdx = 3;
+                }
+                auto parentItems = buildPageItems(pg);
+                if (!parentItems.empty()) {
+                    drawPascalMenuList(coords[0], coords[1], coords[2], parentItems, highlightIdx);
+                }
+
+                // Draw title bar for sub-pages that have one
+                if (pg == MainMenuState::Page::Root) {
+                    if (childPage == MainMenuState::Page::Medical || childPage == MainMenuState::Page::ItemTarget)
+                        drawTitleWithRect("隊員醫療能力", 80, 30, 132);
+                    else if (childPage == MainMenuState::Page::Detox)
+                        drawTitleWithRect("隊員解毒能力", 80, 30, 132);
+                    else if (childPage == MainMenuState::Page::Status || childPage == MainMenuState::Page::StatusDetail)
+                        drawTitleWithRect("查看隊員狀態", 10, 30, 132);
+                    else if (childPage == MainMenuState::Page::LeaveTeam)
+                        drawTitleWithRect("要求誰離隊？", 80, 30, 132);
+                }
+                // When Medical/Detox navigates to ItemTarget, draw second title
+                if (pg == MainMenuState::Page::Medical && childPage == MainMenuState::Page::ItemTarget) {
+                    drawTitleWithRect("隊員目前生命", 230, 30, 132);
+                }
+                if (pg == MainMenuState::Page::Detox && childPage == MainMenuState::Page::ItemTarget) {
+                    drawTitleWithRect("隊員中毒程度", 230, 30, 132);
                 }
             }
 
-            if (itemCount > maxShow) {
-                const float barX = menuBg.x + menuBg.w - 10.0f;
-                const float barY = menuBg.y + headerH;
-                const float barH = static_cast<float>(showCount) * itemHeight;
-                SDL_FRect barBg{barX, barY, 4.0f, barH};
-                SDL_SetRenderDrawColor(renderer, 90, 90, 90, 200);
-                SDL_RenderFillRect(renderer, &barBg);
-                const float thumbH = std::max(10.0f, barH * static_cast<float>(showCount) / static_cast<float>(itemCount));
-                const float thumbY = barY + (barH - thumbH) * static_cast<float>(top) / static_cast<float>(itemCount - showCount);
-                SDL_FRect thumb{barX, thumbY, 4.0f, thumbH};
-                SDL_SetRenderDrawColor(renderer, 210, 190, 120, 220);
-                SDL_RenderFillRect(renderer, &thumb);
-            }
-
-            if (hasFont) {
-                const std::string title = MainMenuState::pageTitle(menu.page);
-                overlay.draw(renderer, title, static_cast<int>(menuBg.x + 3.0f), static_cast<int>(menuBg.y + 5.0f));
+            // Draw current page
+            const auto curCoords = getMenuPageCoords(menu.page);
+            if (curCoords[0] >= 0 && !items.empty()) {
+                drawPascalMenuList(curCoords[0], curCoords[1], curCoords[2], items, menu.selected);
             }
         }
 
