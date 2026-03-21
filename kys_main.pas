@@ -180,7 +180,7 @@ begin
   render_str := '';
   {$ENDIF}
 
-  CellPhone := 0;
+  //CellPhone := 1;
 
   if fileexists(AppPath + 'games.ini') then
   begin
@@ -254,6 +254,20 @@ begin
       RESOLUTIONX := temp;
     end;
     //SDL_WarpMouseInWindow(window, RESOLUTIONX, RESOLUTIONY);
+  end;
+
+  //渲染器
+  if (Cellphone = 0) then
+  begin
+    if (RENDERER = 1) then
+      render_str := 'opengl';
+    if (RENDERER = 2) then
+      render_str := 'software';
+  end;
+
+  if RENDERER = 2 then
+  begin
+    SMOOTH := 0;
   end;
 
   //SDL_WM_SetCaption(putf8char(TitleString), 's.weyl');
@@ -500,6 +514,8 @@ begin
     TRY_FIND_GRP := Kys_ini.ReadInteger('system', 'TRY_FIND_GRP', 0);
     EXPAND_GROUND := Kys_ini.ReadInteger('system', 'EXPAND_GROUND', 0);
     WMP_4_PIC := Kys_ini.ReadInteger('system', 'WMP_4_PIC', 0);
+    Touch_Walk := Kys_ini.ReadInteger('system', 'TOUCH_WALK', 1) <> 0;
+    RENDERER := Kys_ini.ReadInteger('system', 'RENDERER', 0);
     EXP_RATE := Kys_ini.ReadFloat('system', 'EXP_RATE', 1.0);
     if CellPhone <> 0 then
     begin
@@ -521,7 +537,10 @@ begin
       VirtualKeyB := IMG_Load(putf8char(checkFileName('resource/b.png')));
     end
     else
+    begin
       ShowVirtualKey := 0;
+      Touch_Walk := true;
+    end;
 
     if (not FileExists(AppPath + 'resource/mmap/index.ka')) and (not FileExists(AppPath + 'resource/mmap.imz')) then
       PNG_TILE := 0;
@@ -1928,7 +1947,7 @@ begin
           nowstep := -1;
           walking := 0;
         end;
-        if event.button.button = SDL_BUTTON_LEFT then
+        if (event.button.button = SDL_BUTTON_LEFT) and Touch_walk then
         begin
           walking := 2;
           GetMousePosition(axp, ayp, Mx, My);
@@ -2479,7 +2498,7 @@ begin
         begin
           CheckEvent1;
         end;
-        if event.button.button = SDL_BUTTON_LEFT then
+        if (event.button.button = SDL_BUTTON_LEFT) and Touch_Walk then
         begin
           if walking = 0 then
           begin

@@ -1637,7 +1637,7 @@ begin
       end;
     end;
     SDL_EVENT_FINGER_MOTION:
-      if CellPhone = 1 then
+      if (CellPhone = 1) then
       begin
         if event.tfinger.fingerId = 1 then
         begin
