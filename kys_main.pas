@@ -48,8 +48,8 @@ uses
   Math,
   SDL3_TTF,
   SDL3,
+  SDL3_mixer,
   iniFiles,
-  bass,
   Generics.Collections,
   simplecc;
 
@@ -217,8 +217,8 @@ begin
   //Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, 2, 16384);
   SoundFlag := 0;
   if SOUND3D = 1 then
-    SoundFlag := BASS_DEVICE_3D or SoundFlag;
-  BASS_Init(-1, 22050, SoundFlag, 0, nil);
+    SoundFlag := 0;
+  MIX_Init;
 
   //初始化视频系统
   Randomize;
@@ -337,7 +337,7 @@ begin
   TTF_Quit;
   SDL_DestroyMutex(mutex);
   SDL_Quit;
-  BASS_Free;
+  MIX_Quit;
   halt(1);
   exit;
 
