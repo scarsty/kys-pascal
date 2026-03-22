@@ -289,7 +289,7 @@ begin
     key := WaitAnyKey;
   until (key <> SDLK_LEFT) and (key <> SDLK_RIGHT) and (key <> SDLK_UP) and (key <> SDLK_DOWN);
   Redraw;
-
+  //SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
 end;
 
 procedure instruct_1(talknum, headnum, dismode: integer);
@@ -467,7 +467,6 @@ begin
     Result := jump2;
   Redraw;
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-
 end;
 
 //战斗
@@ -3510,7 +3509,7 @@ begin
     str2 := str;
     if (i mod 16 < 8) then str2 := str2 + '_';
     DrawTextWithRect(str2, x, y, w, ColColor($66), ColColor($63));
-    SDL_UpdateRect2(screen, x, y, w, h);
+    //SDL_UpdateRect2(screen, x, y, w, h);
     SDL_PollEvent(@event);
     CheckBasicEvent;
     case event.type_ of

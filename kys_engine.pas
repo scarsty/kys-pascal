@@ -26,6 +26,7 @@ uses
   kys_main,
   kys_type,
   StrUtils,
+  Generics.Collections,
   simplecc;
 
 function EventFilter(p: pointer; e: PSDL_Event): boolean; cdecl;
@@ -80,6 +81,7 @@ procedure DrawBig5Text(sur: PSDL_Surface; str: pansichar; x_pos, y_pos: integer;
 procedure DrawBig5ShadowText(sur: PSDL_Surface; word: pansichar; x_pos, y_pos: integer; color1, color2: uint32);
 procedure DrawTextWithRect(constref word: utf8string; x, y, w: integer; color1, color2: uint32); overload;
 procedure DrawTextWithRect(sur: PSDL_Surface; constref word: utf8string; x, y, w: integer; color1, color2: uint32); overload;
+procedure DrawTextWithRectNoUpdate(sur: PSDL_Surface; constref word: utf8string; x, y, w: integer; color1, color2: uint32); overload;
 
 //PNG贴图相关的子程
 procedure DrawPNGTile(PNGIndex: TPNGIndex; FrameNum: integer; RectArea: putf8char; scr: PSDL_Surface; px, py: integer); overload;
@@ -99,6 +101,7 @@ function AngleToDirection(y, x: real): integer;
 
 function DrawLength(str: utf8string): integer; overload;
 function DrawLength(p: putf8char): integer; overload;
+procedure ClearQueuedHiResText;
 
 function round(x: real): integer;
 procedure swap(var x, y: uint32); overload;
@@ -134,6 +137,337 @@ implementation
 
 uses
   kys_draw;
+
+type
+  TQueuedText = record
+    word: utf8string;
+    x_pos: integer;
+    y_pos: integer;
+    color: uint32;
+    screen_dx: integer;
+  end;
+
+var
+  TextQueue: array of TQueuedText;
+  FontHR, EngFontHR: PTTF_Font;
+  FontHRSize, EngFontHRSize: integer;
+  fonts_hr_tex: TDictionary<integer, PSDL_Texture>;
+  HiResTextRenderOk: boolean = False;
+  compositeTexW: integer = 0;
+  compositeTexH: integer = 0;
+
+procedure ClearHiResGlyphCaches;
+var
+  pairSurf: TPair<integer, PSDL_Surface>;
+  pairTex: TPair<integer, PSDL_Texture>;
+begin
+  if fonts_hr <> nil then
+  begin
+    for pairSurf in fonts_hr do
+      SDL_DestroySurface(pairSurf.Value);
+    fonts_hr.Clear;
+  end;
+
+  if fonts_hr_tex <> nil then
+  begin
+    for pairTex in fonts_hr_tex do
+      SDL_DestroyTexture(pairTex.Value);
+    fonts_hr_tex.Clear;
+  end;
+
+  HiResTextRenderOk := False;
+end;
+
+procedure GetHiResGlyphTexture(k: integer; fontObj: PTTF_Font; pText: putf8char; textLen: integer;
+  constref tempcolor: TSDL_Color; var textTex: PSDL_Texture; var glyphW, glyphH: integer);
+var
+  textSurf: PSDL_Surface;
+begin
+  textTex := nil;
+  glyphW := 0;
+  glyphH := 0;
+
+  if fonts_hr = nil then
+    fonts_hr := TDictionary<integer, PSDL_Surface>.Create;
+  if fonts_hr_tex = nil then
+    fonts_hr_tex := TDictionary<integer, PSDL_Texture>.Create;
+
+  textSurf := nil;
+  if not fonts_hr.TryGetValue(k, textSurf) then
+  begin
+    textSurf := TTF_RenderText_blended(fontObj, pText, textLen, tempcolor);
+    if textSurf <> nil then
+      fonts_hr.Add(k, textSurf)
+    else
+      exit;
+  end;
+  glyphW := textSurf.w;
+  glyphH := textSurf.h;
+  if not fonts_hr_tex.TryGetValue(k, textTex) then
+  begin
+    textTex := SDL_CreateTextureFromSurface(render, textSurf);
+    if textTex <> nil then
+      fonts_hr_tex.Add(k, textTex);
+  end;
+end;
+
+procedure QueueTextForHiRes(constref word: utf8string; x_pos, y_pos: integer; color: uint32; adx: integer = 0);
+var
+  n: integer;
+begin
+  n := length(TextQueue);
+  setlength(TextQueue, n + 1);
+  TextQueue[n].word := word;
+  TextQueue[n].x_pos := x_pos;
+  TextQueue[n].y_pos := y_pos;
+  TextQueue[n].color := color;
+  TextQueue[n].screen_dx := adx;
+end;
+
+procedure EnsureHiResFonts(scaleY: real);
+var
+  newCn, newEn: integer;
+  str: utf8string;
+  needResetCache: boolean;
+begin
+  if scaleY <= 0 then
+    scaleY := 1;
+  newCn := max(1, round(CHINESE_FONT_SIZE * scaleY));
+  newEn := max(1, round(ENGLISH_FONT_SIZE * scaleY));
+  needResetCache := False;
+  if (FontHR <> nil) and (FontHRSize <> newCn) then
+  begin
+    TTF_CloseFont(FontHR);
+    FontHR := nil;
+    needResetCache := True;
+  end;
+  if (EngFontHR <> nil) and (EngFontHRSize <> newEn) then
+  begin
+    TTF_CloseFont(EngFontHR);
+    EngFontHR := nil;
+    needResetCache := True;
+  end;
+  if (FontHR = nil) and (FontHRSize <> newCn) then
+    needResetCache := True;
+  if (EngFontHR = nil) and (EngFontHRSize <> newEn) then
+    needResetCache := True;
+
+  if needResetCache then
+    ClearHiResGlyphCaches;
+
+  if fonts_hr_tex = nil then
+    fonts_hr_tex := TDictionary<integer, PSDL_Texture>.Create;
+  if fonts_hr = nil then
+    fonts_hr := TDictionary<integer, PSDL_Surface>.Create;
+
+  if needResetCache then
+  begin
+    FontHRSize := 0;
+    EngFontHRSize := 0;
+  end;
+  if FontHR = nil then
+  begin
+    str := AppPath + CHINESE_FONT;
+    if (not fileexists(str)) then
+      str := AppPathCommon + CHINESE_FONT;
+    FontHR := TTF_OpenFont(putf8char(str), newCn);
+    FontHRSize := newCn;
+  end;
+  if EngFontHR = nil then
+  begin
+    str := AppPath + ENGLISH_FONT;
+    if (not fileexists(str)) then
+      str := AppPathCommon + ENGLISH_FONT;
+    EngFontHR := TTF_OpenFont(putf8char(str), newEn);
+    EngFontHRSize := newEn;
+  end;
+end;
+
+procedure RenderQueuedHiResText(updateX, updateY, updateW, updateH: integer);
+var
+  idx, i, len, k: integer;
+  word: utf8string;
+  word0: array [0 .. 4] of utf8char;
+  TextTex: PSDL_Texture;
+  src, dest: TSDL_FRect;
+  tempcolor: TSDL_Color;
+  scaleX, scaleY: real;
+  stepX, drawX, drawY, advanceUnits: integer;
+  curW, curH: integer;
+  renderSucceeded: boolean;
+  glyphW, glyphH: integer;
+  queueX, queueY, queueW, queueH: integer;
+  remainCount: integer;
+  remainQueue: array of TQueuedText;
+  r, g, b: byte;
+begin
+  if length(TextQueue) = 0 then
+    exit;
+  if (HIRES_TEXT = 0) or (render = nil) then
+    exit;
+  SDL_GetWindowSize(window, @curW, @curH);
+  if (curW > 0) and (curH > 0) then
+  begin
+    RESOLUTIONX := curW;
+    RESOLUTIONY := curH;
+  end;
+  scaleX := RESOLUTIONX / (CENTER_X * 2);
+  scaleY := RESOLUTIONY / (CENTER_Y * 2);
+  if scaleX <= 0 then
+    scaleX := 1;
+  if scaleY <= 0 then
+    scaleY := 1;
+  stepX := max(1, round(10 * scaleX));
+  EnsureHiResFonts(scaleY);
+  if (FontHR = nil) or (EngFontHR = nil) then
+    exit;
+
+  tempcolor.r := 255;
+  tempcolor.g := 255;
+  tempcolor.b := 255;
+  tempcolor.a := 255;
+  renderSucceeded := False;
+  remainCount := 0;
+  setlength(remainQueue, length(TextQueue));
+
+  for idx := 0 to high(TextQueue) do
+  begin
+    word := TextQueue[idx].word;
+    if SIMPLE = 1 then
+      word := Traditional2Simplified(putf8char(word));
+    len := length(word);
+    if len = 0 then
+      continue;
+
+    queueX := TextQueue[idx].x_pos;
+    queueY := TextQueue[idx].y_pos;
+    queueW := DrawLength(word) * 10 + 20;
+    queueH := 24;
+    if (queueX + queueW <= updateX) or (queueX >= updateX + updateW) or
+      (queueY + queueH <= updateY) or (queueY >= updateY + updateH) then
+    begin
+      remainQueue[remainCount] := TextQueue[idx];
+      Inc(remainCount);
+      continue;
+    end;
+
+    drawX := round(TextQueue[idx].x_pos * scaleX) + TextQueue[idx].screen_dx;
+    i := 1;
+    while True do
+    begin
+      advanceUnits := 1;
+      if (byte(word[i]) > 32) and (byte(word[i]) < 128) then
+      begin
+        word0[1] := word[i];
+        word0[2] := utf8char(0);
+        k := byte(word0[1]);
+        GetHiResGlyphTexture(k, EngFontHR, @word0[1], 1, tempcolor, TextTex, glyphW, glyphH);
+        drawY := round((TextQueue[idx].y_pos + 2) * scaleY);
+        SDL_GetRGB(TextQueue[idx].color, SDL_GetPixelFormatDetails(screen.format), SDL_GetSurfacePalette(screen), @r, @g, @b);
+        if TextTex <> nil then
+        begin
+          src.x := 0;
+          src.y := 0;
+          src.w := glyphW;
+          src.h := glyphH;
+          dest.x := drawX;
+          dest.y := drawY;
+          dest.w := glyphW;
+          dest.h := glyphH;
+          SDL_SetTextureColorMod(TextTex, r, g, b);
+          SDL_SetTextureBlendMode(TextTex, SDL_BLENDMODE_BLEND);
+          SDL_SetTextureAlphaMod(TextTex, 255);
+          SDL_RenderTexture(render, TextTex, @src, @dest);
+          renderSucceeded := True;
+        end
+      end;
+
+      if (byte(word[i]) >= $c0) and (byte(word[i]) < $e0) then
+      begin
+        word0[1] := word[i];
+        word0[2] := word[i + 1];
+        word0[3] := utf8char(0);
+        word0[4] := utf8char(0);
+        k := byte(word0[1]) + 256 * byte(word0[2]) + 65536 * byte(word0[3]);
+        GetHiResGlyphTexture(k, FontHR, @word0[1], 2, tempcolor, TextTex, glyphW, glyphH);
+        drawY := round(TextQueue[idx].y_pos * scaleY);
+        SDL_GetRGB(TextQueue[idx].color, SDL_GetPixelFormatDetails(screen.format), SDL_GetSurfacePalette(screen), @r, @g, @b);
+        if TextTex <> nil then
+        begin
+          src.x := 0;
+          src.y := 0;
+          src.w := glyphW;
+          src.h := glyphH;
+          dest.x := drawX;
+          dest.y := drawY;
+          dest.w := glyphW;
+          dest.h := glyphH;
+          SDL_SetTextureColorMod(TextTex, r, g, b);
+          SDL_SetTextureBlendMode(TextTex, SDL_BLENDMODE_BLEND);
+          SDL_SetTextureAlphaMod(TextTex, 255);
+          SDL_RenderTexture(render, TextTex, @src, @dest);
+          renderSucceeded := True;
+        end;
+        i := i + 1;
+      end;
+
+      if (byte(word[i]) >= $e0) then
+      begin
+        word0[1] := word[i];
+        word0[2] := word[i + 1];
+        word0[3] := word[i + 2];
+        word0[4] := utf8char(0);
+        k := byte(word0[1]) + 256 * byte(word0[2]) + 65536 * byte(word0[3]);
+        GetHiResGlyphTexture(k, FontHR, @word0[1], 3, tempcolor, TextTex, glyphW, glyphH);
+        drawY := round(TextQueue[idx].y_pos * scaleY);
+        SDL_GetRGB(TextQueue[idx].color, SDL_GetPixelFormatDetails(screen.format), SDL_GetSurfacePalette(screen), @r, @g, @b);
+        if TextTex <> nil then
+        begin
+          src.x := 0;
+          src.y := 0;
+          src.w := glyphW;
+          src.h := glyphH;
+          dest.x := drawX;
+          dest.y := drawY;
+          dest.w := glyphW;
+          dest.h := glyphH;
+          SDL_SetTextureColorMod(TextTex, r, g, b);
+          SDL_SetTextureBlendMode(TextTex, SDL_BLENDMODE_BLEND);
+          SDL_SetTextureAlphaMod(TextTex, 255);
+          SDL_RenderTexture(render, TextTex, @src, @dest);
+          renderSucceeded := True;
+        end;
+        advanceUnits := 2;
+        i := i + 2;
+      end;
+
+      drawX := drawX + stepX * advanceUnits;
+      i := i + 1;
+      if i > len then
+        break;
+    end;
+  end;
+
+  setlength(TextQueue, remainCount);
+  if remainCount > 0 then
+    move(remainQueue[0], TextQueue[0], remainCount * SizeOf(TQueuedText));
+
+  HiResTextRenderOk := renderSucceeded;
+end;
+
+procedure ClearQueuedHiResText;
+begin
+  setlength(TextQueue, 0);
+  if (compositeTex <> nil) and (render <> nil) then
+  begin
+    SDL_SetRenderTarget(render, compositeTex);
+    SDL_SetRenderDrawBlendMode(render, SDL_BLENDMODE_NONE);
+    SDL_SetRenderDrawColor(render, 0, 0, 0, 0);
+    SDL_RenderClear(render);
+    SDL_SetRenderDrawBlendMode(render, SDL_BLENDMODE_BLEND);
+    SDL_SetRenderTarget(render, nil);
+  end;
+end;
 
 function EventFilter(p: pointer; e: PSDL_Event): boolean; cdecl;
 begin
@@ -800,6 +1134,17 @@ procedure FreeAllSurface;
 var
   i, j: integer;
 begin
+  ClearHiResGlyphCaches;
+  if FontHR <> nil then
+  begin
+    TTF_CloseFont(FontHR);
+    FontHR := nil;
+  end;
+  if EngFontHR <> nil then
+  begin
+    TTF_CloseFont(EngFontHR);
+    EngFontHR := nil;
+  end;
   for i := 0 to high(MPNGTile) do
     SDL_DestroySurface(MPNGTile[i]);
   for i := 0 to high(SPNGTile) do
@@ -821,6 +1166,18 @@ begin
   SDL_DestroySurface(ImgSceneBack);
   SDL_DestroySurface(ImgBField);
   SDL_DestroySurface(ImgBBuild);
+  if compositeTex <> nil then
+  begin
+    SDL_DestroyTexture(compositeTex);
+    compositeTex := nil;
+    compositeTexW := 0;
+    compositeTexH := 0;
+  end;
+  if fonts_hr_tex <> nil then
+  begin
+    fonts_hr_tex.Free;
+    fonts_hr_tex := nil;
+  end;
 end;
 
 //获取某像素信息
@@ -1117,13 +1474,11 @@ begin
   Result.y := (x - CenterX) * 9 + (y - CenterY) * 9 + CENTER_Y;
 end;
 
-//big5转utf8
 function cp950toutf8(str: pansichar; len: integer = -1): utf8string;
 begin
   Result := transcode(utf8string(str), 950, 65001);
 end;
 
-//utf8转big5
 function utf8tocp950(constref str: utf8string): ansistring;
 begin
   Result := transcode(str, 65001, 950);
@@ -1164,6 +1519,13 @@ var
   r, g, b: byte;
   got: bool;
 begin
+  if (HIRES_TEXT <> 0) and (sur = screen) then
+  begin
+    QueueTextForHiRes(word, x_pos, y_pos, color);
+    if HiResTextRenderOk then
+      exit;
+  end;
+
   if SIMPLE = 1 then
   begin
     word := Traditional2Simplified(putf8char(word));
@@ -1267,14 +1629,20 @@ end;
 //显示unicode中文阴影文字, 即将同样内容显示2次, 间隔1像素
 procedure DrawShadowText(sur: PSDL_Surface; constref word: utf8string; x_pos, y_pos: integer; color1, color2: uint32); overload;
 begin
+  if (HIRES_TEXT <> 0) and (sur = screen) then
+  begin
+    // HIRES: queue shadow at same logical pos, shadow always 1 screen-px to the right
+    QueueTextForHiRes(word, x_pos, y_pos, color2, 1);
+    QueueTextForHiRes(word, x_pos, y_pos, color1, 0);
+    exit;
+  end;
   DrawText(sur, word, x_pos + 1, y_pos, color2);
   DrawText(sur, word, x_pos, y_pos, color1);
 end;
 
 procedure DrawShadowText(constref word: utf8string; x_pos, y_pos: integer; color1, color2: uint32); overload;
 begin
-  DrawText(screen, word, x_pos + 1, y_pos, color2);
-  DrawText(screen, word, x_pos, y_pos, color1);
+  DrawShadowText(screen, word, x_pos, y_pos, color1, color2);
 end;
 
 //显示英文阴影文字
@@ -1301,11 +1669,16 @@ var
   words: utf8string;
 begin
   words := cp950toutf8(word);
+  if (HIRES_TEXT <> 0) and (sur = screen) then
+  begin
+    QueueTextForHiRes(words, x_pos, y_pos, color2, 1);
+    QueueTextForHiRes(words, x_pos, y_pos, color1, 0);
+    exit;
+  end;
   DrawText(sur, words, x_pos + 1, y_pos, color2);
   DrawText(sur, words, x_pos, y_pos, color1);
 end;
 
-//显示带边框的文字, 仅用于unicode, 需自定义宽度
 procedure DrawTextWithRect(constref word: utf8string; x, y, w: integer; color1, color2: uint32); overload;
 begin
   DrawTextWithRect(screen, word, x, y, w, color1, color2);
@@ -1316,11 +1689,20 @@ var
   len: integer;
   p: putf8char;
 begin
+  DrawTextWithRectNoUpdate(sur, word, x, y, w, color1, color2);
+  if ((HIRES_TEXT = 0) or (sur = screen)) then
+    SDL_UpdateRect2(screen, x, y, w + 1, 29);
+end;
+
+procedure DrawTextWithRectNoUpdate(sur: PSDL_Surface; constref word: utf8string; x, y, w: integer; color1, color2: uint32); overload;
+var
+  len: integer;
+  p: putf8char;
+begin
   if w < 0 then
     w := DrawLength(word) * 10 + 7;
   DrawRectangle(sur, x, y, w, 28, 0, ColColor(255), 50);
   DrawShadowText(sur, word, x + 3, y + 3, color1, color2);
-  SDL_UpdateRect2(screen, x, y, w + 1, 29);
 end;
 
 //画带边框矩形, (x坐标, y坐标, 宽度, 高度, 内部颜色, 边框颜色, 透明度）
@@ -1455,19 +1837,33 @@ begin
 
 end;
 
-{function TestPNGTile(PNGTile: TPNGTile; num: integer): boolean;
-  begin
-
-  end;}
+procedure EnsureCompositeTex;
+begin
+  if (compositeTex <> nil) and (compositeTexW = RESOLUTIONX) and
+    (compositeTexH = RESOLUTIONY) then
+    exit;
+  if compositeTex <> nil then
+    SDL_DestroyTexture(compositeTex);
+  compositeTex := SDL_CreateTexture(render, SDL_PIXELFORMAT_ARGB8888,
+    SDL_TEXTUREACCESS_TARGET, RESOLUTIONX, RESOLUTIONY);
+  compositeTexW := RESOLUTIONX;
+  compositeTexH := RESOLUTIONY;
+  // Clear to transparent on creation (this is a text-only overlay)
+  SDL_SetRenderTarget(render, compositeTex);
+  SDL_SetRenderDrawBlendMode(render, SDL_BLENDMODE_NONE);
+  SDL_SetRenderDrawColor(render, 0, 0, 0, 0);
+  SDL_RenderClear(render);
+  SDL_SetRenderDrawBlendMode(render, SDL_BLENDMODE_BLEND);
+  SDL_SetRenderTarget(render, nil);
+end;
 
 procedure SDL_UpdateRect2(scr1: PSDL_Surface; x, y, w, h: integer);
 var
-  realx, realy, realw, realh, ZoomType: integer;
-  tempscr: PSDL_Surface;
-  now, Next: uint32;
   dest: TSDL_Rect;
+  clearFRect: TSDL_FRect;
+  scaleX, scaleY: real;
   p: pointer;
-  //TextureID: GLUint;
+  curW, curH: integer;
 begin
   dest.x := x;
   dest.y := y;
@@ -1479,10 +1875,42 @@ begin
     dest.h := CENTER_Y * 2;
   if scr1 = screen then
   begin
-    //Here p is the address to the pixel we want to set
+    // Upload dirty region to screenTex
     p := pointer(nativeuint(screen.pixels) + y * screen.pitch + x * 4);
     SDL_UpdateTexture(screenTex, @dest, p, screen.pitch);
+
+    // Sync window size and compute scale
+    SDL_GetWindowSize(window, @curW, @curH);
+    if (curW > 0) and (curH > 0) then
+    begin
+      RESOLUTIONX := curW;
+      RESOLUTIONY := curH;
+    end;
+    scaleX := RESOLUTIONX / (CENTER_X * 2);
+    scaleY := RESOLUTIONY / (CENTER_Y * 2);
+    if scaleX <= 0 then scaleX := 1;
+    if scaleY <= 0 then scaleY := 1;
+
+    // Ensure the text-overlay texture exists at current window size
+    EnsureCompositeTex;
+
+    // Update text overlay: clear this region then draw fresh text
+    SDL_SetRenderTarget(render, compositeTex);
+    clearFRect.x := dest.x * scaleX;
+    clearFRect.y := dest.y * scaleY;
+    clearFRect.w := dest.w * scaleX;
+    clearFRect.h := dest.h * scaleY;
+    SDL_SetRenderDrawBlendMode(render, SDL_BLENDMODE_NONE);
+    SDL_SetRenderDrawColor(render, 0, 0, 0, 0);
+    SDL_RenderFillRect(render, @clearFRect);
+    SDL_SetRenderDrawBlendMode(render, SDL_BLENDMODE_BLEND);
+    RenderQueuedHiResText(dest.x, dest.y, dest.w, dest.h);
+    SDL_SetRenderTarget(render, nil);
+
+    // Present: full game pixels (screenTex) then text overlay blended on top
     SDL_RenderTexture(render, screenTex, nil, nil);
+    SDL_SetTextureBlendMode(compositeTex, SDL_BLENDMODE_BLEND);
+    SDL_RenderTexture(render, compositeTex, nil, nil);
     SDL_RenderPresent(render);
   end;
 end;

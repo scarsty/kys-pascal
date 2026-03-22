@@ -36,7 +36,7 @@ procedure CalMoveAbility;
 procedure ReArrangeBRole;
 function BattleStatus: integer;
 function BattleMenu(bnum: integer): integer;
-procedure ShowBMenu(MenuStatus, menu, max: integer);
+procedure ShowBMenu(MenuStatus, menu, max: integer; update: boolean = True);
 procedure MoveRole(bnum: integer);
 function MoveAmination(bnum: integer): boolean;
 function SelectAim(bnum, step: integer; AreaType: integer = 0; AreaRange: integer = 0): boolean;
@@ -75,7 +75,7 @@ procedure Medcine(bnum: integer);
 procedure MedPoison(bnum: integer);
 procedure UseHiddenWeapon(bnum, inum: integer);
 procedure Rest(bnum: integer);
-function TeamModeMenu: boolean;
+function TeamModeMenu(bnum: integer): boolean;
 
 procedure AutoBattle(bnum: integer);
 procedure AutoUseItem(bnum, list: integer);
@@ -154,7 +154,8 @@ begin
     begin
       if HeadSurface[Rrole[Brole[i].rnum].HeadNum] = nil then
       begin
-        HeadSurface[Rrole[Brole[i].rnum].HeadNum] := LoadSurfaceFromFile(AppPath + 'head/' + IntToStr(Rrole[Brole[i].rnum].HeadNum) + '.png');
+        HeadSurface[Rrole[Brole[i].rnum].HeadNum] :=
+          LoadSurfaceFromFile(AppPath + 'head/' + IntToStr(Rrole[Brole[i].rnum].HeadNum) + '.png');
       end;
       BHead[i] := HeadSurface[Rrole[Brole[i].rnum].HeadNum];
       if BHead[i] = nil then
@@ -182,7 +183,8 @@ begin
     for i := 0 to BRoleAmount - 1 do
     begin
       path := formatfloat('resource/fight/fight000', Rrole[Brole[i].rnum].HeadNum);
-      LoadPNGTiles(path, FPNGIndex[Rrole[Brole[i].rnum].HeadNum], FPNGTile[Rrole[Brole[i].rnum].HeadNum], 1);
+      LoadPNGTiles(path, FPNGIndex[Rrole[Brole[i].rnum].HeadNum],
+        FPNGTile[Rrole[Brole[i].rnum].HeadNum], 1);
       for j := 0 to 3 do
       begin
         num := BEGIN_BATTLE_ROLE_PIC + Rrole[Brole[i].rnum].HeadNum * 4 + j;
@@ -355,7 +357,8 @@ begin
   menuString[0] := '   全員參戰';
   menuString[max] := '   開始戰鬥';
   str := '選擇參戰人物';
-  DrawTextWithRect(str, CENTER_X - 63, 100, 126, ColColor($21), ColColor($23));
+  DrawTextWithRectNoUpdate(screen, str, CENTER_X - 63, 100, 126,
+    ColColor($21), ColColor($23));
   UpdateAllScreen;
   RecordFreshScreen(0, 0, CENTER_X * 2, CENTER_Y * 2);
   ShowMultiMenu(max, 0, 0, menuString);
@@ -447,15 +450,19 @@ begin
   for i := 0 to max do
     if i = menu then
     begin
-      DrawShadowText(screen, menuString[i], x + 33, y + 3 + 22 * i, ColColor($64), ColColor($66));
+      DrawShadowText(screen, menuString[i], x + 33, y + 3 + 22 * i,
+        ColColor($64), ColColor($66));
       if ((status and (1 shl (i - 1))) > 0) and (i > 0) and (i < max) then
-        DrawShadowText(screen, str1, x + 133, y + 3 + 22 * i, ColColor($64), ColColor($66));
+        DrawShadowText(screen, str1, x + 133, y + 3 + 22 * i,
+          ColColor($64), ColColor($66));
     end
     else
     begin
-      DrawShadowText(screen, menuString[i], x + 33, y + 3 + 22 * i, ColColor($5), ColColor($7));
+      DrawShadowText(screen, menuString[i], x + 33, y + 3 + 22 * i,
+        ColColor($5), ColColor($7));
       if ((status and (1 shl (i - 1))) > 0) and (i > 0) and (i < max) then
-        DrawShadowText(screen, str1, x + 133, y + 3 + 22 * i, ColColor($21), ColColor($23));
+        DrawShadowText(screen, str1, x + 133, y + 3 + 22 * i,
+          ColColor($21), ColColor($23));
     end;
   SDL_UpdateRect2(screen, x + 30, y, 151, max * 22 + 29);
   //UpdateAllScreen;
@@ -577,7 +584,7 @@ begin
                 CallEvent(1077)
               else
               begin
-                if TeamModeMenu then
+                if TeamModeMenu(i) then
                   for j := 0 to BRoleAmount - 1 do
                     if (Brole[j].Team = 0) and (Brole[j].Dead = 0) then
                       Brole[j].Auto := sign(Brole[j].AutoMode);
@@ -771,16 +778,14 @@ begin
     max := max - 1;
   end;
 
+  menu := 0;
   Redraw;
   ShowSimpleStatus(Brole[bnum].rnum, CENTER_X + 100, 50);
   str := format('回合%d', [BattleRound]);
-  DrawTextWithRect(screen, str, 160, 50, DrawLength(str) * 10 + 6, ColColor($21), ColColor($23));
+  DrawTextWithRectNoUpdate(screen, str, 160, 50, DrawLength(str) * 10 + 6, ColColor($21), ColColor($23));
+  RecordFreshScreen(0, 0, screen.w, screen.h);
+  ShowBMenu(MenuStatus, menu, max, False);
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-  menu := 0;
-
-  ShowBMenu(MenuStatus, menu, max);
-
-  //SDL_UpdateRect2(screen,0,0,screen.w,screen.h);
   while (SDL_WaitEvent(@event)) do
   begin
     CheckBasicEvent;
@@ -862,7 +867,7 @@ begin
 end;
 
 //显示战斗主选单
-procedure ShowBMenu(MenuStatus, menu, max: integer);
+procedure ShowBMenu(MenuStatus, menu, max: integer; update: boolean = True);
 var
   i, p: integer;
   word: array [0 .. 9] of utf8string;
@@ -879,8 +884,7 @@ begin
   word[8] := '休息';
   word[9] := '自動';
 
-  Redraw;
-
+  LoadFreshScreen(100, 50, 47, max * 22 + 29);
   DrawRectangle(screen, 100, 50, 47, max * 22 + 28, 0, ColColor(255), 50);
   p := 0;
   for i := 0 to 9 do
@@ -896,8 +900,8 @@ begin
       p := p + 1;
     end;
   end;
-  SDL_UpdateRect2(screen, 100, 50, 48, max * 22 + 29);
-
+  if (update) then
+    SDL_UpdateRect2(screen, 100, 50, 48, max * 22 + 29);
 end;
 
 //移动
@@ -911,7 +915,6 @@ begin
   begin
     MoveAmination(bnum);
   end;
-
 end;
 
 //移动动画
@@ -1466,7 +1469,8 @@ var
   Ylist: array [0 .. 4096] of integer;
   steplist: array [0 .. 4096] of integer;
   curgrid, totalgrid: integer;
-  Bgrid: array [1 .. 4] of integer; //0空位, 1建筑, 2友军, 3敌军, 4出界, 5已走过, 6水面, 7敌人身旁, 8首次无法达到(由第6层标记)
+  Bgrid: array [1 .. 4] of integer;
+  //0空位, 1建筑, 2友军, 3敌军, 4出界, 5已走过, 6水面, 7敌人身旁, 8首次无法达到(由第6层标记)
   Xinc, Yinc: array [1 .. 4] of integer;
   curX, curY, curstep, nextX, nextY, nextnextX, nextnextY: integer;
   i, j, minBeside: integer;
@@ -1650,11 +1654,13 @@ begin
     FillChar(Bfield[3, 0, 0], sizeof(Bfield[3]), -1);
     FillChar(Bfield[7, 0, 0], sizeof(Bfield[7]), 0); //第7层标记敌人身旁的位置
     if Brole[bnum].Acted = 0 then
-      FillChar(Bfield[6, 0, 0], sizeof(Bfield[6]), 0); //第6层标记第一次不能走到的位置, 小于0表示不能到达
+      FillChar(Bfield[6, 0, 0], sizeof(Bfield[6]), 0);
+    //第6层标记第一次不能走到的位置, 小于0表示不能到达
     Bfield[3, Brole[bnum].X, Brole[bnum].Y] := 0;
     SeekPath2(Brole[bnum].X, Brole[bnum].Y, Step, Brole[bnum].Team, mode);
     if Brole[bnum].Acted = 0 then
-      move(Bfield[3, 0, 0], Bfield[6, 0, 0], sizeof(Bfield[3])); //保存第一次可以走到的位置, 后续的移动只能在此范围
+      move(Bfield[3, 0, 0], Bfield[6, 0, 0], sizeof(Bfield[3]));
+    //保存第一次可以走到的位置, 后续的移动只能在此范围
     {else
       for i1 := 0 to 63 do
       for i2 := 0 to 63 do
@@ -1736,7 +1742,8 @@ begin
         end;
         2:
         begin
-          SetAminationPosition(Rmagic[mnum].AttAreaType, Rmagic[mnum].MoveDistance[level - 1], Rmagic[mnum].AttDistance[level - 1]);
+          SetAminationPosition(Rmagic[mnum].AttAreaType,
+            Rmagic[mnum].MoveDistance[level - 1], Rmagic[mnum].AttDistance[level - 1]);
           DrawBFieldWithCursor(-1);
           SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
           i1 := 0;
@@ -1786,7 +1793,6 @@ begin
   PlayMagicAmination(bnum, Rmagic[mnum].AmiNum); //武功效果
   CalHurtRole(bnum, mnum, level); //计算被打到的人物
   ShowHurtValue(Rmagic[mnum].HurtType); //显示数字
-
 end;
 
 //mode = 1 means the hidden weapon.
@@ -1800,7 +1806,7 @@ begin
   if mode = 1 then
     str := CP950ToUtf8(@Ritem[mnum].Name);
   l := drawlength(str);
-  DrawTextWithRect(screen, str, CENTER_X - l * 5, CENTER_Y - 150, l * 10 + 7, ColColor($14), ColColor($16));
+  DrawTextWithRectNoUpdate(screen, str, CENTER_X - l * 5, CENTER_Y - 150, l * 10 + 7, ColColor($14), ColColor($16));
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
   SDL_Delay(500);
 
@@ -1922,14 +1928,18 @@ begin
   begin
     if (p = menu) and ((MenuStatus and (1 shl i) > 0)) then
     begin
-      DrawShadowText(screen, menuString[i], 103, 53 + 22 * p, ColColor($66), ColColor($64));
-      DrawEngShadowText(screen, menuEngString[i], 223, 53 + 22 * p, ColColor($66), ColColor($64));
+      DrawShadowText(screen, menuString[i], 103, 53 + 22 * p,
+        ColColor($66), ColColor($64));
+      DrawEngShadowText(screen, menuEngString[i], 223, 53 + 22 * p,
+        ColColor($66), ColColor($64));
       p := p + 1;
     end
     else if (p <> menu) and ((MenuStatus and (1 shl i) > 0)) then
     begin
-      DrawShadowText(screen, menuString[i], 103, 53 + 22 * p, ColColor($23), ColColor($21));
-      DrawEngShadowText(screen, menuEngString[i], 223, 53 + 22 * p, ColColor($23), ColColor($21));
+      DrawShadowText(screen, menuString[i], 103, 53 + 22 * p,
+        ColColor($23), ColColor($21));
+      DrawEngShadowText(screen, menuEngString[i], 223, 53 + 22 * p,
+        ColColor($23), ColColor($21));
       p := p + 1;
     end;
   end;
@@ -2324,7 +2334,8 @@ begin
     if (Rrole[Brole[i].rnum].Poison > 0) and (Brole[i].Dead = 0) and (Brole[i].Acted = 1) then
     begin
       if POISON_HURT <> 0 then
-        Rrole[Brole[i].rnum].CurrentHP := Rrole[Brole[i].rnum].CurrentHP - Rrole[Brole[i].rnum].Poison div POISON_HURT - 1;
+        Rrole[Brole[i].rnum].CurrentHP :=
+          Rrole[Brole[i].rnum].CurrentHP - Rrole[Brole[i].rnum].Poison div POISON_HURT - 1;
       if Rrole[Brole[i].rnum].CurrentHP <= 0 then
         Rrole[Brole[i].rnum].CurrentHP := 1;
       //Brole[i].ShowNumber := Rrole[Brole[i].rnum, 20] div 2+1;
@@ -2482,6 +2493,7 @@ begin
     basicvalue := round(basicvalue * EXP_RATE);
     if (Brole[i].Team = 0) and (Brole[i].Dead = 0) then
     begin
+      Redraw;
       p := min(Rrole[rnum].Exp + basicvalue, pmax);
       Rrole[rnum].Exp := p;
       p := min(Rrole[rnum].ExpForBook + basicvalue div 5 * 4, pmax);
@@ -2495,7 +2507,6 @@ begin
       str := format('%5d', [Brole[i].ExpGot + basicvalue]);
       DrawEngShadowText(screen, str, 188, 237, ColColor($66), ColColor($64));
       SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
-      Redraw;
       WaitAnyKey;
     end;
 
@@ -2508,6 +2519,7 @@ procedure CheckLevelUp;
 var
   i, rnum: integer;
 begin
+  Redraw;
   RecordFreshScreen(0, 0, screen.w, screen.h);
   for i := 0 to BRoleAmount - 1 do
   begin
@@ -2641,7 +2653,8 @@ begin
         if times > 0 then
         begin
           Redraw;
-          Rrole[rnum].ExpForBook := Rrole[rnum].ExpForBook - Ritem[inum].NeedExp * ap * EatOneItem(rnum, inum, times);
+          Rrole[rnum].ExpForBook :=
+            Rrole[rnum].ExpForBook - Ritem[inum].NeedExp * ap * EatOneItem(rnum, inum, times);
           WaitAnyKey;
         end;
       end;
@@ -3066,7 +3079,8 @@ begin
           Brole[bnum1].ShowNumber := hurt;
           Brole[bnum1].ExpGot := Brole[bnum1].ExpGot + hurt;
           Rrole[rnum1].Hurt := min(Rrole[rnum1].Hurt + hurt div LIFE_HURT, 99);
-          Rrole[rnum1].Poison := min(Rrole[rnum1].Poison + Ritem[inum].AddPoi * (100 - Rrole[rnum1].DefPoi) div 100, 99);
+          Rrole[rnum1].Poison :=
+            min(Rrole[rnum1].Poison + Ritem[inum].AddPoi * (100 - Rrole[rnum1].DefPoi) div 100, 99);
           SetAminationPosition(0, 0);
           ShowMagicName(inum, 1);
           PlayActionAmination(bnum, 0);
@@ -3089,10 +3103,9 @@ begin
   Rrole[rnum].CurrentHP := min(Rrole[rnum].CurrentHP + (5 + Brole[bnum].Step) * Rrole[rnum].MaxHP div 200, Rrole[rnum].MaxHP);
   Rrole[rnum].CurrentMP := min(Rrole[rnum].CurrentMP + (5 + Brole[bnum].Step) * Rrole[rnum].MaxMP div 200, Rrole[rnum].MaxMP);
   Rrole[rnum].PhyPower := min(Rrole[rnum].PhyPower + (5 + Brole[bnum].Step) * MAX_PHYSICAL_POWER div 200, MAX_PHYSICAL_POWER);
-
 end;
 
-function TeamModeMenu: boolean;
+function TeamModeMenu(bnum: integer): boolean;
 var
   menup, x, y, w, h, menu, i, amount, xm, ym: integer;
   a: array of smallint;
@@ -3105,7 +3118,7 @@ var
   var
     i: integer;
   begin
-    Redraw;
+    LoadFreshScreen(x, y, w+1, h+1);
     DrawRectangle(screen, x, y, w, h, 0, ColColor(255), 50);
     for i := 0 to amount - 1 do
     begin
@@ -3160,6 +3173,7 @@ begin
   end;
 
   menu := 0;
+  RecordFreshScreen(0, 0, screen.w, screen.h);
   ShowTeamModeMenu;
   while (SDL_WaitEvent(@event)) do
   begin
@@ -3257,7 +3271,6 @@ begin
   if Result = False then
     for i := 0 to BRoleAmount - 1 do
       Brole[i].AutoMode := tempmode[i];
-
 end;
 
 //The AI. Some codes were written by little samll pig.
@@ -3360,7 +3373,8 @@ begin
       begin
         //showmessage(inttostr(rrole[rnum].UsePoi));
         //CalCanSelect(bnum, 0, Brole[bnum].step);
-        NearestMoveByPro(Ax, Ay, Ax1, Ay1, bnum, 0, min(Rrole[rnum].UsePoi div 15 + 1, 15), 49, -1, 0);
+        NearestMoveByPro(Ax, Ay, Ax1, Ay1, bnum, 0,
+          min(Rrole[rnum].UsePoi div 15 + 1, 15), 49, -1, 0);
         if (Ax1 <> -1) then
         begin
           MoveAmination(bnum);
@@ -3442,7 +3456,8 @@ begin
         Ay := curAy1;
         mnum := curMnum;
         level := curlevel;
-        SetAminationPosition(Rmagic[mnum].AttAreaType, Rmagic[mnum].MoveDistance[level - 1], Rmagic[mnum].AttDistance[level - 1]);
+        SetAminationPosition(Rmagic[mnum].AttAreaType,
+          Rmagic[mnum].MoveDistance[level - 1], Rmagic[mnum].AttDistance[level - 1]);
         Brole[bnum].Acted := 1;
         AttackAction(bnum, p, mnum, level);
       end;
@@ -3709,10 +3724,14 @@ begin
       if (Bfield[3, curX, curY] >= 0) and (Bfield[3, curX, curY] <= step) then
       begin
         case AttAreaType of
-          0: dis := distance; //calpoint(Mx1, My1, Ax1, Ay1, tempmaxhurt, curX, curY, bnum, mnum, level);
-          1: dis := 1; //calline(Mx1, My1, Ax1, Ay1, tempmaxhurt, curX, curY, bnum, mnum, level);
-          2: dis := 0; //calcross(Mx1, My1, Ax1, Ay1, tempmaxhurt, curX, curY, bnum, mnum, level);
-          3: dis := distance; //calarea(Mx1, My1, Ax1, Ay1, tempmaxhurt, curX, curY, bnum, mnum, level);
+          0: dis := distance;
+          //calpoint(Mx1, My1, Ax1, Ay1, tempmaxhurt, curX, curY, bnum, mnum, level);
+          1: dis := 1;
+          //calline(Mx1, My1, Ax1, Ay1, tempmaxhurt, curX, curY, bnum, mnum, level);
+          2: dis := 0;
+          //calcross(Mx1, My1, Ax1, Ay1, tempmaxhurt, curX, curY, bnum, mnum, level);
+          3: dis := distance;
+          //calarea(Mx1, My1, Ax1, Ay1, tempmaxhurt, curX, curY, bnum, mnum, level);
           {4:
             caldirdiamond(Mx1, My1, Ax1, Ay1, tempmaxhurt, curX, curY, bnum, mnum, level);
             5:
@@ -3733,7 +3752,8 @@ begin
             if ((AttAreaType = 0) or (AttAreaType = 3)) and (aimHurt[i1, i2] >= 0) then
             begin
               if aimHurt[i1, i2] > 0 then
-                temphurt := aimHurt[i1, i2] + random(5) - random(5); //点面类攻击已经计算过的点简单处理
+                temphurt := aimHurt[i1, i2] + random(5) - random(5);
+              //点面类攻击已经计算过的点简单处理
             end
             else
             begin

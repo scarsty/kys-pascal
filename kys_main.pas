@@ -237,7 +237,11 @@ begin
     exit;
   end;
 
-  //SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, '1');
+  // 控制缩放采样方式：默认使用最近邻，避免低分辨率画面放大后字体二次模糊。
+  if SMOOTH >= 2 then
+    SDL_SetHint('SDL_RENDER_SCALE_QUALITY', '1')
+  else
+    SDL_SetHint('SDL_RENDER_SCALE_QUALITY', '0');
   //SDL_SetHint(SDL_HINT_IME_SHOW_UI, '1');
 
   ScreenFlag := SDL_WINDOW_RESIZABLE;
@@ -316,7 +320,23 @@ end;
 
 //关闭所有已打开的资源, 退出
 procedure Quit;
+var
+  pair0: TPair<integer, PSDL_Surface>;
 begin
+  if fonts <> nil then
+  begin
+    for pair0 in fonts do
+      SDL_DestroySurface(pair0.Value);
+    fonts.Free;
+    fonts := nil;
+  end;
+  if fonts_hr <> nil then
+  begin
+    for pair0 in fonts_hr do
+      SDL_DestroySurface(pair0.Value);
+    fonts_hr.Free;
+    fonts_hr := nil;
+  end;
   FreeAllSurface;
   DestroyScript;
   TTF_CloseFont(font);
@@ -493,6 +513,7 @@ begin
     WALK_SPEED := Kys_ini.ReadInteger('system', 'WALK_SPEED', 10);
     WALK_SPEED2 := Kys_ini.ReadInteger('system', 'WALK_SPEED2', WALK_SPEED);
     SMOOTH := Kys_ini.ReadInteger('system', 'SMOOTH', 1);
+    HIRES_TEXT := Kys_ini.ReadInteger('system', 'HIRES_TEXT', 1);
     SIMPLE := Kys_ini.ReadInteger('system', 'SIMPLE', 1);
     //CENTER_X := Kys_ini.ReadInteger('system', 'CENTER_X', 320);
     //CENTER_Y := Kys_ini.ReadInteger('system', 'CENTER_Y', 220);
@@ -581,6 +602,7 @@ begin
   setlength(HeadSurface, 999);
   setlength(ItemSurface, 999);
   fonts := TDictionary<integer, PSDL_Surface>.Create;
+  fonts_hr := TDictionary<integer, PSDL_Surface>.Create;
 
   cct2s := simplecc_create();
   simplecc_load1(cct2s, checkFileName('cc/TSCharacters.txt'));
@@ -3372,7 +3394,6 @@ begin
       if p = 1 then
         DrawEngShadowText(screen, menuEngString[i], x + 93, y + 3 + 22 * (i - menutop), ColColor($5), ColColor($7));
     end;
-
 end;
 
 //仅有两个选项的横排选单, 为美观使用横排
@@ -3459,7 +3480,6 @@ begin
   //清空键盘键和鼠标键值, 避免影响其余部分
   event.key.key := 0;
   event.button.button := 0;
-
 end;
 
 //显示仅有两个选项的横排选单
@@ -3479,7 +3499,6 @@ begin
     begin
       DrawShadowText(screen, menuString[i], x + 3 + i * 50, y + 2, ColColor($5), ColColor($7));
     end;
-
 end;
 
 //选择一名队员, 可以附带两个属性显示
@@ -4788,8 +4807,10 @@ begin
       str := format('%5d/=', [uint16(Rrole[rnum].ExpForBook)]);
     DrawEngShadowText(screen, str, x + 380, y + 282, ColColor($64), ColColor($66));
   end;
-
-  SDL_UpdateRect2(screen, x, y, 536, 316);
+  if where = 2 then
+    SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h)
+  else if where <> 3 then
+    SDL_UpdateRect2(screen, x, y, 536, 316);
 
 end;
 
@@ -4886,8 +4907,8 @@ begin
   str := format('%9d', [Rrole[rnum].PhyPower]);
   DrawEngShadowText(screen, str, x + 50, y + 149, ColColor($5), ColColor($7));
 
-  //SDL_UpdateRect2(screen, x, y, 146, 174);
-  SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+  //if not ((HIRES_TEXT <> 0) and (HIRES_BATCH_DRAW <> 0)) then
+  //  SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
 end;
 
 //离队选单
