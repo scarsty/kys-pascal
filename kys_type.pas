@@ -9,6 +9,7 @@ uses
   SDL3_ttf,
   bass,
   lua52,
+  image_loader,
   Generics.Collections;
 
 type

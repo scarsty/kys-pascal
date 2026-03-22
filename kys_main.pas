@@ -49,6 +49,7 @@ uses
   SDL3_TTF,
   SDL3,
   SDL3_image,
+  image_loader,
   iniFiles,
   bass,
   Generics.Collections,
@@ -84,14 +85,10 @@ procedure CheckEvent3;
 //选单子程
 function CommonMenu(x, y, w, max: integer; menuString: array of utf8string): integer; overload;
 function CommonMenu(x, y, w, max, default: integer; menuString: array of utf8string): integer; overload;
-function CommonMenu(x, y, w, max: integer; menuString, menuEngString: array of utf8string): integer; overload;
-function CommonMenu(x, y, w, max, default: integer; menuString, menuEngString: array of utf8string): integer; overload;
-function CommonMenu(x, y, w, max, default: integer; menuString, menuEngString: array of utf8string; fn: TPInt1): integer; overload;
+function CommonMenu(x, y, w, max, default: integer; menuString: array of utf8string; fn: TPInt1): integer; overload;
 procedure ShowCommonMenu(x, y, w, max, menu: integer; menuString: array of utf8string); overload;
-procedure ShowCommonMenu(x, y, w, max, menu: integer; menuString, menuEngString: array of utf8string); overload;
 function CommonScrollMenu(x, y, w, max, maxshow: integer; menuString: array of utf8string): integer; overload;
-function CommonScrollMenu(x, y, w, max, maxshow: integer; menuString, menuEngString: array of utf8string): integer; overload;
-procedure ShowCommonScrollMenu(x, y, w, max, maxshow, menu, menutop: integer; menuString, menuEngString: array of utf8string);
+procedure ShowCommonScrollMenu(x, y, w, max, maxshow, menu, menutop: integer; menuString: array of utf8string);
 function CommonGridMenu(x, y, cols, cellW, maxShowRows, maxItem: integer; menuString: array of utf8string): integer;
 procedure ShowCommonGridMenu(x, y, cols, cellW, maxShowRows, maxItem, menu, topRow: integer; menuString: array of utf8string);
 function CommonMenu2(x, y, w: integer; menuString: array of utf8string): integer;
@@ -553,12 +550,12 @@ begin
       VirtualBX := Kys_ini.ReadInteger('system', 'VirtualBX', w - 100);
       VirtualBY := Kys_ini.ReadInteger('system', 'VirtualBY', h - 200);
 
-      VirtualKeyU := IMG_Load(putf8char(checkFileName('resource/u.png')));
-      VirtualKeyD := IMG_Load(putf8char(checkFileName('resource/d.png')));
-      VirtualKeyL := IMG_Load(putf8char(checkFileName('resource/l.png')));
-      VirtualKeyR := IMG_Load(putf8char(checkFileName('resource/r.png')));
-      VirtualKeyA := IMG_Load(putf8char(checkFileName('resource/a.png')));
-      VirtualKeyB := IMG_Load(putf8char(checkFileName('resource/b.png')));
+      VirtualKeyU := LoadPNG(putf8char(checkFileName('resource/u.png')));
+      VirtualKeyD := LoadPNG(putf8char(checkFileName('resource/d.png')));
+      VirtualKeyL := LoadPNG(putf8char(checkFileName('resource/l.png')));
+      VirtualKeyR := LoadPNG(putf8char(checkFileName('resource/r.png')));
+      VirtualKeyA := LoadPNG(putf8char(checkFileName('resource/a.png')));
+      VirtualKeyB := LoadPNG(putf8char(checkFileName('resource/b.png')));
     end
     else
     begin
@@ -2970,11 +2967,11 @@ end;
 //通用选单, (位置(x, y), 宽度, 最大选项(编号均从0开始))
 //使用前必须设置选单使用的字符串组才有效, 字符串组不可越界使用
 function CommonMenu(x, y, w, max, default: integer; menuString: array of utf8string): integer; overload;
-var
-  menuEngString: array of utf8string;
+procedure fn(i:integer);
 begin
-  setlength(menuEngString, 0);
-  Result := CommonMenu(x, y, w, max, default, menuString, menuEngString);
+end;
+begin
+  Result := CommonMenu(x, y, w, max, default, menuString, @fn);
 end;
 
 function CommonMenu(x, y, w, max: integer; menuString: array of utf8string): integer; overload;
@@ -2982,111 +2979,14 @@ begin
   Result := CommonMenu(x, y, w, max, 0, menuString);
 end;
 
-function CommonMenu(x, y, w, max: integer; menuString, menuEngString: array of utf8string): integer; overload;
-begin
-  Result := CommonMenu(x, y, w, max, 0, menuString, menuEngString);
-end;
-
-function CommonMenu(x, y, w, max, default: integer; menuString, menuEngString: array of utf8string): integer; overload;
+//该选单即时产生显示效果, 由函数指定
+function CommonMenu(x, y, w, max, default: integer; menuString: array of utf8string; fn: TPInt1): integer; overload;
 var
   menu, menup: integer;
 begin
   menu := default;
   RecordFreshScreen(x, y, w + 1, max * 22 + 29);
-  ShowCommonMenu(x, y, w, max, menu, menuString, menuEngString);
-  SDL_UpdateRect2(screen, x, y, w + 1, max * 22 + 29);
-  while (SDL_WaitEvent(@event)) do
-  begin
-    CheckBasicEvent;
-    case event.type_ of
-      SDL_EVENT_KEY_UP:
-      begin
-        if (event.key.key = SDLK_DOWN) then
-        begin
-          menu := menu + 1;
-          if menu > max then
-            menu := 0;
-          ShowCommonMenu(x, y, w, max, menu, menuString, menuEngString);
-          SDL_UpdateRect2(screen, x, y, w + 1, max * 22 + 29);
-        end;
-        if (event.key.key = SDLK_UP) then
-        begin
-          menu := menu - 1;
-          if menu < 0 then
-            menu := max;
-          ShowCommonMenu(x, y, w, max, menu, menuString, menuEngString);
-          SDL_UpdateRect2(screen, x, y, w + 1, max * 22 + 29);
-        end;
-        if ((event.key.key = SDLK_ESCAPE)) {and (where <= 2)} then
-        begin
-          Result := -1;
-          //ReDraw;
-          //SDL_UpdateRect2(screen, x, y, w + 1, max * 22 + 29);
-          break;
-        end;
-        if (event.key.key = SDLK_RETURN) or (event.key.key = SDLK_SPACE) then
-        begin
-          Result := menu;
-          //Redraw;
-          //SDL_UpdateRect2(screen, x, y, w + 1, max * 22 + 29);
-          break;
-        end;
-      end;
-      SDL_EVENT_MOUSE_BUTTON_UP:
-      begin
-        if (event.button.button = SDL_BUTTON_RIGHT) {and (where <= 2)} then
-        begin
-          Result := -1;
-          //ReDraw;
-          //SDL_UpdateRect2(screen, x, y, w + 1, max * 22 + 29);
-          break;
-        end;
-        if (event.button.button = SDL_BUTTON_LEFT) then
-        begin
-          if (round(event.button.x / (RESOLUTIONX / screen.w)) >= x) and (round(event.button.x / (RESOLUTIONX / screen.w)) < x + w) and (round(event.button.y / (RESOLUTIONY / screen.h)) > y) and (round(event.button.y / (RESOLUTIONY / screen.h)) < y + max * 22 + 29) then
-          begin
-            Result := menu;
-            //Redraw;
-            //SDL_UpdateRect2(screen, x, y, w + 1, max * 22 + 29);
-            break;
-          end;
-        end;
-      end;
-      SDL_EVENT_MOUSE_MOTION:
-      begin
-        if (round(event.button.x / (RESOLUTIONX / screen.w)) >= x) and (round(event.button.x / (RESOLUTIONX / screen.w)) < x + w) and (round(event.button.y / (RESOLUTIONY / screen.h)) > y) and (round(event.button.y / (RESOLUTIONY / screen.h)) < y + max * 22 + 29) then
-        begin
-          menup := menu;
-          menu := (round(event.button.y / (RESOLUTIONY / screen.h)) - y - 2) div 22;
-          if menu > max then
-            menu := max;
-          if menu < 0 then
-            menu := 0;
-          if menup <> menu then
-          begin
-            ShowCommonMenu(x, y, w, max, menu, menuString, menuEngString);
-            SDL_UpdateRect2(screen, x, y, w + 1, max * 22 + 29);
-          end;
-        end;
-      end;
-    end;
-  end;
-
-  //清空键盘键和鼠标键值, 避免影响其余部分
-  event.key.key := 0;
-  event.button.button := 0;
-
-end;
-
-//该选单即时产生显示效果, 由函数指定
-function CommonMenu(x, y, w, max, default: integer; menuString, menuEngString: array of utf8string; fn: TPInt1): integer; overload;
-var
-  menu, menup: integer;
-begin
-  menu := default;
-  //SDL_EnableKeyRepeat(0,10);
-  //DrawMMap;
-  ShowCommonMenu(x, y, w, max, menu, menuString, menuEngString);
+  ShowCommonMenu(x, y, w, max, menu, menuString);
   SDL_UpdateRect2(screen, x, y, w + 1, max * 22 + 29);
   fn(menu);
   while (SDL_WaitEvent(@event)) do
@@ -3100,7 +3000,7 @@ begin
           menu := menu + 1;
           if menu > max then
             menu := 0;
-          ShowCommonMenu(x, y, w, max, menu, menuString, menuEngString);
+          ShowCommonMenu(x, y, w, max, menu, menuString);
           SDL_UpdateRect2(screen, x, y, w + 1, max * 22 + 29);
           fn(menu);
         end;
@@ -3109,25 +3009,31 @@ begin
           menu := menu - 1;
           if menu < 0 then
             menu := max;
-          ShowCommonMenu(x, y, w, max, menu, menuString, menuEngString);
+          ShowCommonMenu(x, y, w, max, menu, menuString);
           SDL_UpdateRect2(screen, x, y, w + 1, max * 22 + 29);
           fn(menu);
         end;
         if ((event.key.key = SDLK_ESCAPE)) {and (where <= 2)} then
         begin
           Result := -1;
-          //ReDraw;
-          //SDL_UpdateRect2(screen, x, y, w + 1, max * 22 + 29);
+          break;
+        end;
+        if ((event.key.key = SDLK_RETURN) or (event.key.key = SDLK_SPACE)) {and (where <= 2)} then
+        begin
+          Result := menu;
           break;
         end;
       end;
       SDL_EVENT_MOUSE_BUTTON_UP:
       begin
+        if (event.button.button = SDL_BUTTON_LEFT) {and (where <= 2)} then
+        begin
+          Result := menu;
+          break;
+        end;
         if (event.button.button = SDL_BUTTON_RIGHT) {and (where <= 2)} then
         begin
           Result := -1;
-          //ReDraw;
-          //SDL_UpdateRect2(screen, x, y, w + 1, max * 22 + 29);
           break;
         end;
       end;
@@ -3143,7 +3049,7 @@ begin
             menu := 0;
           if menup <> menu then
           begin
-            ShowCommonMenu(x, y, w, max, menu, menuString, menuEngString);
+            ShowCommonMenu(x, y, w, max, menu, menuString);
             SDL_UpdateRect2(screen, x, y, w + 1, max * 22 + 29);
             fn(menu);
           end;
@@ -3151,7 +3057,6 @@ begin
       end;
     end;
   end;
-  //清空键盘键和鼠标键值, 避免影响其余部分
   event.key.key := 0;
   event.button.button := 0;
 end;
@@ -3160,49 +3065,19 @@ end;
 //这个通用选单包含两个字符串组, 可分别显示中文和英文
 procedure ShowCommonMenu(x, y, w, max, menu: integer; menuString: array of utf8string); overload;
 var
-  menuEngString: array of utf8string;
-begin
-  setlength(menuEngString, 0);
-  ShowCommonMenu(x, y, w, max, menu, menuString, menuEngString);
-end;
-
-procedure ShowCommonMenu(x, y, w, max, menu: integer; menuString, menuEngString: array of utf8string); overload;
-var
-  i, p: integer;
-  temp: PSDL_Surface;
+  i: integer;
 begin
   LoadFreshScreen(x, y, w + 1, max * 22 + 29);
   DrawRectangle(screen, x, y, w, max * 22 + 28, 0, ColColor(255), 50);
-  if (length(menuEngString) > 0) and (length(menuString) = length(menuEngString)) then
-    p := 1
-  else
-    p := 0;
   for i := 0 to min(max, length(menuString) - 1) do
     if i = menu then
-    begin
-      DrawShadowText(screen, menuString[i], x + 3, y + 2 + 22 * i, ColColor($64), ColColor($66));
-      if p = 1 then
-        DrawEngShadowText(screen, menuEngString[i], x + 93, y + 2 + 22 * i, ColColor($64), ColColor($66));
-    end
+      DrawShadowText(screen, menuString[i], x + 3, y + 2 + 22 * i, ColColor($64), ColColor($66))
     else
-    begin
       DrawShadowText(screen, menuString[i], x + 3, y + 2 + 22 * i, ColColor($5), ColColor($7));
-      if p = 1 then
-        DrawEngShadowText(screen, menuEngString[i], x + 93, y + 2 + 22 * i, ColColor($5), ColColor($7));
-    end;
-
 end;
 
 //卷动选单
 function CommonScrollMenu(x, y, w, max, maxshow: integer; menuString: array of utf8string): integer; overload;
-var
-  menuEngString: array of utf8string;
-begin
-  setlength(menuEngString, 0);
-  Result := CommonScrollMenu(x, y, w, max, maxshow, menuString, menuEngString);
-end;
-
-function CommonScrollMenu(x, y, w, max, maxshow: integer; menuString, menuEngString: array of utf8string): integer; overload;
 var
   menu, menup, menutop: integer;
 begin
@@ -3211,7 +3086,7 @@ begin
   //SDL_EnableKeyRepeat(0,10);
   //DrawMMap;
   RecordFreshScreen(x, y, w + 1, max * 22 + 29);
-  ShowCommonScrollMenu(x, y, w, max, maxshow, menu, menutop, menuString, menuEngString);
+  ShowCommonScrollMenu(x, y, w, max, maxshow, menu, menutop, menuString);
   SDL_UpdateRect2(screen, x, y, w + 1, maxshow * 22 + 29);
   while (SDL_WaitEvent(@event)) do
   begin
@@ -3231,7 +3106,7 @@ begin
             menu := 0;
             menutop := 0;
           end;
-          ShowCommonScrollMenu(x, y, w, max, maxshow, menu, menutop, menuString, menuEngString);
+          ShowCommonScrollMenu(x, y, w, max, maxshow, menu, menutop, menuString);
           SDL_UpdateRect2(screen, x, y, w + 1, maxshow * 22 + 29);
         end;
         if (event.key.key = SDLK_UP) then
@@ -3246,7 +3121,7 @@ begin
             menu := max;
             menutop := menu - maxshow + 1;
           end;
-          ShowCommonScrollMenu(x, y, w, max, maxshow, menu, menutop, menuString, menuEngString);
+          ShowCommonScrollMenu(x, y, w, max, maxshow, menu, menutop, menuString);
           SDL_UpdateRect2(screen, x, y, w + 1, maxshow * 22 + 29);
         end;
         if (event.key.key = SDLK_PAGEDOWN) then
@@ -3261,7 +3136,7 @@ begin
           begin
             menutop := max - maxshow + 1;
           end;
-          ShowCommonScrollMenu(x, y, w, max, maxshow, menu, menutop, menuString, menuEngString);
+          ShowCommonScrollMenu(x, y, w, max, maxshow, menu, menutop, menuString);
           SDL_UpdateRect2(screen, x, y, w + 1, maxshow * 22 + 29);
         end;
         if (event.key.key = SDLK_PAGEUP) then
@@ -3276,7 +3151,7 @@ begin
           begin
             menutop := 0;
           end;
-          ShowCommonScrollMenu(x, y, w, max, maxshow, menu, menutop, menuString, menuEngString);
+          ShowCommonScrollMenu(x, y, w, max, maxshow, menu, menutop, menuString);
           SDL_UpdateRect2(screen, x, y, w + 1, maxshow * 22 + 29);
         end;
         if ((event.key.key = SDLK_ESCAPE)) and (where <= 2) then
@@ -3328,7 +3203,7 @@ begin
             menu := 0;
             menutop := 0;
           end;
-          ShowCommonScrollMenu(x, y, w, max, maxshow, menu, menutop, menuString, menuEngString);
+          ShowCommonScrollMenu(x, y, w, max, maxshow, menu, menutop, menuString);
           SDL_UpdateRect2(screen, x, y, w + 1, maxshow * 22 + 29);
         end;
         if (event.wheel.y > 0) then
@@ -3343,7 +3218,7 @@ begin
             menu := max;
             menutop := menu - maxshow + 1;
           end;
-          ShowCommonScrollMenu(x, y, w, max, maxshow, menu, menutop, menuString, menuEngString);
+          ShowCommonScrollMenu(x, y, w, max, maxshow, menu, menutop, menuString);
           SDL_UpdateRect2(screen, x, y, w + 1, maxshow * 22 + 29);
         end;
       end;
@@ -3359,7 +3234,7 @@ begin
             menu := 0;
           if menup <> menu then
           begin
-            ShowCommonScrollMenu(x, y, w, max, maxshow, menu, menutop, menuString, menuEngString);
+            ShowCommonScrollMenu(x, y, w, max, maxshow, menu, menutop, menuString);
             SDL_UpdateRect2(screen, x, y, w + 1, maxshow * 22 + 29);
           end;
         end;
@@ -3372,31 +3247,19 @@ begin
 
 end;
 
-procedure ShowCommonScrollMenu(x, y, w, max, maxshow, menu, menutop: integer; menuString, menuEngString: array of utf8string);
+procedure ShowCommonScrollMenu(x, y, w, max, maxshow, menu, menutop: integer; menuString: array of utf8string);
 var
-  i, p: integer;
+  i: integer;
 begin
-  LoadFreshScreen(x, y, w + 1, max * 22 + 29);
+  LoadFreshScreen(x, y, w + 1, maxshow * 22 + 29);
   if max + 1 < maxshow then
     maxshow := max + 1;
   DrawRectangle(screen, x, y, w, maxshow * 22 + 6, 0, ColColor(255), 50);
-  if (length(menuEngString) > 0) and (length(menuString) = length(menuEngString)) then
-    p := 1
-  else
-    p := 0;
   for i := menutop to menutop + maxshow - 1 do
     if (i = menu) and (i < length(menuString)) then
-    begin
-      DrawShadowText(screen, menuString[i], x + 3, y + 3 + 22 * (i - menutop), ColColor($64), ColColor($66));
-      if p = 1 then
-        DrawEngShadowText(screen, menuEngString[i], x + 93, y + 3 + 22 * (i - menutop), ColColor($64), ColColor($66));
-    end
+      DrawShadowText(screen, menuString[i], x + 3, y + 3 + 22 * (i - menutop), ColColor($64), ColColor($66))
     else
-    begin
       DrawShadowText(screen, menuString[i], x + 3, y + 3 + 22 * (i - menutop), ColColor($5), ColColor($7));
-      if p = 1 then
-        DrawEngShadowText(screen, menuEngString[i], x + 93, y + 3 + 22 * (i - menutop), ColColor($5), ColColor($7));
-    end;
 end;
 
 // 多行多列格子选单渲染: cols列 x (maxItem+1)项, 每列宽cellW像素, 每次显示maxShowRows行
@@ -3659,7 +3522,6 @@ var
 begin
   LoadFreshScreen(x, y, w + 1, 29);
   DrawRectangle(screen, x, y, w, 28, 0, ColColor(255), 50);
-  //if length(Menuengstring) > 0 then p := 1 else p := 0;
   for i := 0 to 1 do
     if i = menu then
     begin
@@ -3675,13 +3537,10 @@ end;
 function SelectOneTeamMember(x, y: integer; str: utf8string; list1, list2: integer): integer;
 var
   i, Amount: integer;
-  menuString, menuEngString: array of utf8string;
+  menuString: array of utf8string;
+  engstr: utf8string;
 begin
   setlength(menuString, 6);
-  if str <> '' then
-    setlength(menuEngString, 6)
-  else
-    setlength(menuEngString, 0);
   Amount := 0;
 
   for i := 0 to 5 do
@@ -3691,15 +3550,16 @@ begin
       menuString[i] := cp950toutf8(@Rrole[teamlist[i]].Name);
       if str <> '' then
       begin
-        menuEngString[i] := format(str, [Rrole[teamlist[i]].Data[list1], Rrole[teamlist[i]].Data[list2]]);
+        engstr := format(str, [Rrole[teamlist[i]].Data[list1], Rrole[teamlist[i]].Data[list2]]);
+        menuString[i] :=  cp950toutf8(format('%-8s%4s', [Rrole[teamlist[i]].Name, engstr]));
       end;
       Amount := Amount + 1;
     end;
   end;
   if str = '' then
-    Result := CommonMenu(x, y, 105, Amount - 1, menuString, menuEngString)
+    Result := CommonMenu(x, y, 105, Amount - 1, menuString)
   else
-    Result := CommonMenu(x, y, 105 + length(menuEngString[0]) * 10, Amount - 1, menuString, menuEngString);
+    Result := CommonMenu(x, y, 105 + length(engstr) * 10 - 10, Amount - 1, menuString);
 
 end;
 
@@ -3893,7 +3753,6 @@ begin
   x := 0;
   y := 0;
   w := col * 42 + 8;
-  //setlength(Menuengstring, 0);
   case where of
     0, 1:
     begin
@@ -4689,7 +4548,7 @@ procedure MenuStatus;
 var
   str: utf8string;
   menu, Amount, i: integer;
-  menuString, menuEngString: array of utf8string;
+  menuString: array of utf8string;
 begin
   str := '查看隊員狀態';
   Redraw;
@@ -4697,7 +4556,6 @@ begin
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
   DrawTextWithRect(screen, str, 10, 30, 132, ColColor($21), ColColor($23));
   setlength(menuString, 6);
-  setlength(menuEngString, 0);
   Amount := 0;
 
   for i := 0 to 5 do
@@ -4709,7 +4567,7 @@ begin
     end;
   end;
 
-  menu := CommonMenu(10, 65, 85, Amount - 1, 0, menuString, menuEngString, @ShowStatusByTeam);
+  menu := CommonMenu(10, 65, 85, Amount - 1, 0, menuString, @ShowStatusByTeam);
   Redraw;
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
   //menu := SelectOneTeamMember(27, 65, '%3d', 15, 0);
@@ -5174,9 +5032,6 @@ var
   filename: utf8string;
 begin
   nowwhere := where;
-  //setlength(menustring, 6);
-  //setlength(Menuengstring, 0);
-  //setlength(menuengstring, 0);
   menuString[0] := '進度一';
   menuString[1] := '進度二';
   menuString[2] := '進度三';
@@ -5246,8 +5101,6 @@ begin
     else
       menuString[i] := menuString[i] + ' -------------------';
   end;
-
-  //writeln(pword(@menustring[0][2])^);
   menu := CommonMenu(CENTER_X - 150, CENTER_Y - 100, 307, 10, menuString);
   if menu >= 0 then
   begin
@@ -5267,8 +5120,6 @@ var
   menuString: array [0 .. 9] of utf8string;
   filename: utf8string;
 begin
-  //setlength(menustring, 5);
-  //setlength(menuengstring, 0);
   menuString[0] := '進度一';
   menuString[1] := '進度二';
   menuString[2] := '進度三';

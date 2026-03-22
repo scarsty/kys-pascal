@@ -684,7 +684,6 @@ var
   menuString: array of utf8string;
 begin
   n := lua_tointeger(L, -1);
-  //setlength(menuengstring, 0);
   len := luaL_len(L, -2);
   n := min(n, len);
   setlength(menuString, n);

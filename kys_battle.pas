@@ -1820,8 +1820,6 @@ var
 begin
   MenuStatus := 0;
   max := 0;
-  //setlength(menustring, 10);
-  //setlength(menuengstring, 10);
   for i := 0 to 9 do
   begin
     if Rrole[rnum].Magic[i] > 0 then

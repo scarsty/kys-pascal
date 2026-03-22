@@ -13,6 +13,7 @@ uses
   Math,
   SDL3_image,
   SDL3,
+  image_loader,
   kys_main,
   kys_type;
 
@@ -275,7 +276,7 @@ begin
     image := HeadSurface[num];
     if image = nil then
     begin
-      image := IMG_Load(putf8char(str));
+      image := LoadPNG(putf8char(str));
       HeadSurface[num] := image;
     end;
     dest.x := px;
@@ -313,7 +314,7 @@ begin
     image := HeadSurface[num];
     if image = nil then
     begin
-      image := IMG_Load(putf8char(str));
+      image := LoadPNG(putf8char(str));
       HeadSurface[num] := image;
     end;
     dest.x := px;

@@ -1579,10 +1579,8 @@ procedure instruct_64;
 var
   i, amount, shopnum, menu, price: integer;
   list: array [0 .. 4] of integer;
-  menuString, menuEngString: array [0 .. 4] of utf8string;
+  menuString: array [0 .. 4] of utf8string;
 begin
-  //setlength(Menustring, 5);
-  //setlength(Menuengstring, 5);
   amount := 0;
   //任选一个商店, 因未写他去其他客栈的指令
   shopnum := random(5);
@@ -1591,8 +1589,7 @@ begin
   begin
     if Rshop[shopnum].Amount[i] > 0 then
     begin
-      menuString[amount] := cp950toutf8(@Ritem[Rshop[shopnum].Item[i]].Name);
-      menuEngString[amount] := format('%10d', [Rshop[shopnum].Price[i]]);
+      menuString[amount] := cp950toutf8(format('%-10s%10d', [Ritem[Rshop[shopnum].Item[i]].Name, Rshop[shopnum].Price[i]]));
       list[amount] := i;
       amount := amount + 1;
     end;
@@ -1600,7 +1597,7 @@ begin
   instruct_1($B9E, $6F, 0);
   if amount >= 1 then
   begin
-    menu := CommonMenu(CENTER_X - 120, 150, 105 + length(menuEngString[0]) * 10, amount - 1, menuString, menuEngString);
+      menu := CommonMenu(CENTER_X - 120, 150, 105 + 10 * 10, amount - 1, menuString);
     Redraw;
     if menu >= 0 then
     begin
