@@ -314,7 +314,7 @@ namespace pig3config
             //configIniValue(i, "system", "THREAD_READ_PNG");
             configIniValue(i, "Music", "VOLUME");
             configIniValue(i, "Music", "VOLUMEWAV");
-            configIniValue(i, "Music", "SOUND3D");
+            configIniValue(i, "system", "HIRES_TEXT");
             configIniValue(i, "constant", "MAX_ADD_PRO");
             configIniValue(i, "system", "WMP_4_PIC");
             configIniValue(i, "system", "KDEF_SCRIPT");

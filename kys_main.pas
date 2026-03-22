@@ -6126,31 +6126,79 @@ end;
 
 function TeleportByList(): integer;
 var
-  i, menu, scene: integer;
+  i, j, menu, scene: integer;
   sceneMenu: array of utf8string;
+  sceneIdx: array of integer;
+  sortKey: array of utf8string;
   nameStr: utf8string;
+  tmpI: integer;
+  tmpS: utf8string;
+
+  { 取 UTF-8 字串最末一个字符 }
+  function LastUTF8Char(const s: utf8string): utf8string;
+  var k: integer;
+  begin
+    k := length(s);
+    if k = 0 then begin Result := ''; exit; end;
+    while (k > 1) and ((byte(s[k]) and $C0) = $80) do dec(k);
+    Result := copy(s, k, length(s) - k + 1);
+  end;
+
 begin
   Result := 0;
   if SceneAmount <= 0 then
     exit;
 
   setlength(sceneMenu, SceneAmount);
+  setlength(sceneIdx,  SceneAmount);
+  setlength(sortKey,   SceneAmount);
+
+  { 建立初始顺序与排序键 }
   for i := 0 to SceneAmount - 1 do
   begin
+    sceneIdx[i] := i;
     nameStr := cp950toutf8(@Rscene[i].Name, 5);
     if DrawLength(nameStr) <= 0 then
       nameStr := format('場景%d', [i]);
-    sceneMenu[i] := format('%3d %s', [i, nameStr]);
+    sortKey[i] := LastUTF8Char(nameStr);
+  end;
+
+  { 插入排序: 按末字升序，同末字按原序号升序 }
+  for i := 1 to SceneAmount - 1 do
+  begin
+    tmpI := sceneIdx[i];
+    tmpS := sortKey[i];
+    j := i - 1;
+    while (j >= 0) and
+          ((sortKey[j] > tmpS) or
+           ((sortKey[j] = tmpS) and (sceneIdx[j] > tmpI))) do
+    begin
+      sceneIdx[j + 1] := sceneIdx[j];
+      sortKey[j + 1] := sortKey[j];
+      dec(j);
+    end;
+    sceneIdx[j + 1] := tmpI;
+    sortKey[j + 1] := tmpS;
+  end;
+
+  { 构建显示字串，只显示场景名 }
+  for i := 0 to SceneAmount - 1 do
+  begin
+    scene := sceneIdx[i];
+    nameStr := cp950toutf8(@Rscene[scene].Name, 5);
+    if DrawLength(nameStr) <= 0 then
+      nameStr := format('場景%d', [scene]);
+    sceneMenu[i] := nameStr;
   end;
 
   Redraw;
   DrawTextWithRect(screen, '傳送列表', 80, 30, 640, ColColor($21), ColColor($23));
-  // 4列 x 160px/列 = 640px, 最多显示10行, 起始 y=60
-  menu := CommonGridMenu(80, 60, 4, 160, 16, SceneAmount - 1, sceneMenu);
+  // 5列 x 128px/列 = 640px, 最多显示16行
+  menu := CommonGridMenu(80, 60, 5, 128, 16, SceneAmount - 1, sceneMenu);
   if menu < 0 then
     exit;
 
-  scene := menu;
+  scene := sceneIdx[menu];   { 映射回实际场景序号 }
   if CheckCanEnter(scene) then
   begin
     instruct_14;
