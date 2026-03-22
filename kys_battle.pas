@@ -30,13 +30,11 @@ function Battle(battlenum, getexp: integer): boolean;
 function InitialBField: boolean;
 procedure InitialBRole(i, rnum, team, x, y: integer);
 function SelectTeamMembers: integer;
-procedure ShowMultiMenu(max, menu, status: integer; menuString: array of utf8string);
 procedure BattleMainControl;
 procedure CalMoveAbility;
 procedure ReArrangeBRole;
 function BattleStatus: integer;
 function BattleMenu(bnum: integer): integer;
-procedure ShowBMenu(MenuStatus, menu, max: integer; update: boolean = True);
 procedure MoveRole(bnum: integer);
 function MoveAmination(bnum: integer): boolean;
 function SelectAim(bnum, step: integer; AreaType: integer = 0; AreaRange: integer = 0): boolean;
@@ -50,7 +48,6 @@ procedure AttackAction(bnum, i, mnum, level: integer); overload;
 procedure AttackAction(bnum, mnum, level: integer); overload;
 procedure ShowMagicName(mnum: integer; mode: integer = 0);
 function SelectMagic(rnum: integer): integer;
-procedure ShowMagicMenu(MenuStatus, menu, max: integer; menuString, menuEngString: array of utf8string);
 procedure SetAminationPosition(mode, step: integer; range: integer = 0); overload;
 procedure SetAminationPosition(Bx, By, Ax, Ay, mode, step: integer; range: integer = 0); overload;
 procedure PlayMagicAmination(bnum, enum: integer; ForTeam: integer = 0; mode: integer = 0);
@@ -341,6 +338,35 @@ var
   i, menu, max, menup: integer;
   menuString: array [0 .. 8] of utf8string;
   str: utf8string;
+  procedure ShowMultiMenu;
+  var
+    i, x, y: integer;
+    str1: utf8string;
+  begin
+    x := CENTER_X - 105;
+    y := 150;
+    LoadFreshScreen(x + 30, y, 151, max * 22 + 29);
+    str1 := '參戰';
+    DrawRectangle(screen, x + 30, y, 150, max * 22 + 28, 0, ColColor(255), 50);
+    for i := 0 to max do
+      if i = menu then
+      begin
+        DrawShadowText(screen, menuString[i], x + 33, y + 3 + 22 * i,
+          ColColor($64), ColColor($66));
+        if ((Result and (1 shl (i - 1))) > 0) and (i > 0) and (i < max) then
+          DrawShadowText(screen, str1, x + 133, y + 3 + 22 * i,
+            ColColor($64), ColColor($66));
+      end
+      else
+      begin
+        DrawShadowText(screen, menuString[i], x + 33, y + 3 + 22 * i,
+          ColColor($5), ColColor($7));
+        if ((Result and (1 shl (i - 1))) > 0) and (i > 0) and (i < max) then
+          DrawShadowText(screen, str1, x + 133, y + 3 + 22 * i,
+            ColColor($21), ColColor($23));
+      end;
+    SDL_UpdateRect2(screen, x + 30, y, 151, max * 22 + 29);
+  end;
 begin
   Result := 0;
   max := 1;
@@ -361,7 +387,7 @@ begin
     ColColor($21), ColColor($23));
   UpdateAllScreen;
   RecordFreshScreen(0, 0, CENTER_X * 2, CENTER_Y * 2);
-  ShowMultiMenu(max, 0, 0, menuString);
+  ShowMultiMenu;
   //sdl_enablekeyrepeat(50, 30);
   while (SDL_WaitEvent(@event)) do
   begin
@@ -378,7 +404,7 @@ begin
             Result := round(power(2, (max - 1)) - 1)
           else
             Result := 0;
-          ShowMultiMenu(max, menu, Result, menuString);
+          ShowMultiMenu;
         end;
         if ((event.key.key = SDLK_RETURN) or (event.key.key = SDLK_SPACE)) and (menu = max) then
         begin
@@ -390,14 +416,14 @@ begin
           menu := menu - 1;
           if menu < 0 then
             menu := max;
-          ShowMultiMenu(max, menu, Result, menuString);
+          ShowMultiMenu;
         end;
         if (event.key.key = SDLK_DOWN) then
         begin
           menu := menu + 1;
           if menu > max then
             menu := 0;
-          ShowMultiMenu(max, menu, Result, menuString);
+          ShowMultiMenu;
         end;
       end;
       SDL_EVENT_MOUSE_BUTTON_UP:
@@ -412,7 +438,7 @@ begin
               Result := round(power(2, (max - 1)) - 1)
             else
               Result := 0;
-            ShowMultiMenu(max, menu, Result, menuString);
+            ShowMultiMenu;
           end;
           if (event.button.button = SDL_BUTTON_LEFT) and (menu = max) then
           begin
@@ -428,7 +454,7 @@ begin
           menup := menu;
           menu := (round(event.button.y / (RESOLUTIONY / screen.h)) - 152) div 22;
           if menup <> menu then
-            ShowMultiMenu(max, menu, Result, menuString);
+            ShowMultiMenu;
         end;
       end;
     end;
@@ -437,37 +463,6 @@ begin
 end;
 
 //显示选择参战人物选单
-procedure ShowMultiMenu(max, menu, status: integer; menuString: array of utf8string);
-var
-  i, x, y: integer;
-  str1: utf8string;
-begin
-  x := CENTER_X - 105;
-  y := 150;
-  LoadFreshScreen(x + 30, y, 151, max * 22 + 29);
-  str1 := '參戰';
-  DrawRectangle(screen, x + 30, y, 150, max * 22 + 28, 0, ColColor(255), 50);
-  for i := 0 to max do
-    if i = menu then
-    begin
-      DrawShadowText(screen, menuString[i], x + 33, y + 3 + 22 * i,
-        ColColor($64), ColColor($66));
-      if ((status and (1 shl (i - 1))) > 0) and (i > 0) and (i < max) then
-        DrawShadowText(screen, str1, x + 133, y + 3 + 22 * i,
-          ColColor($64), ColColor($66));
-    end
-    else
-    begin
-      DrawShadowText(screen, menuString[i], x + 33, y + 3 + 22 * i,
-        ColColor($5), ColColor($7));
-      if ((status and (1 shl (i - 1))) > 0) and (i > 0) and (i < max) then
-        DrawShadowText(screen, str1, x + 133, y + 3 + 22 * i,
-          ColColor($21), ColColor($23));
-    end;
-  SDL_UpdateRect2(screen, x + 30, y, 151, max * 22 + 29);
-  //UpdateAllScreen;
-end;
-
 //战斗主控制
 procedure BattleMainControl;
 var
@@ -721,6 +716,41 @@ var
   i, p, MenuStatus, menu, max, rnum, menup: integer;
   realmenu: array [0 .. 9] of integer;
   str: utf8string;
+  procedure ShowBMenu(update: boolean = True);
+  var
+    i2, p2: integer;
+    word: array [0 .. 9] of utf8string;
+  begin
+    word[0] := '移動';
+    word[1] := '攻擊';
+    word[2] := '用毒';
+    word[3] := '解毒';
+    word[4] := '醫療';
+    word[5] := '物品';
+    word[6] := '等待';
+    word[7] := '狀態';
+    word[8] := '休息';
+    word[9] := '自動';
+
+    LoadFreshScreen(100, 50, 47, max * 22 + 29);
+    DrawRectangle(screen, 100, 50, 47, max * 22 + 28, 0, ColColor(255), 50);
+    p2 := 0;
+    for i2 := 0 to 9 do
+    begin
+      if (p2 = menu) and ((MenuStatus and (1 shl i2) > 0)) then
+      begin
+        DrawShadowText(screen, word[i2], 103, 53 + 22 * p2, ColColor($66), ColColor($64));
+        p2 := p2 + 1;
+      end
+      else if (p2 <> menu) and ((MenuStatus and (1 shl i2) > 0)) then
+      begin
+        DrawShadowText(screen, word[i2], 103, 53 + 22 * p2, ColColor($23), ColColor($21));
+        p2 := p2 + 1;
+      end;
+    end;
+    if (update) then
+      SDL_UpdateRect2(screen, 100, 50, 48, max * 22 + 29);
+  end;
 begin
   MenuStatus := $3E0;
   max := 4;
@@ -784,7 +814,7 @@ begin
   str := format('回合%d', [BattleRound]);
   DrawTextWithRectNoUpdate(screen, str, 160, 50, DrawLength(str) * 10 + 6, ColColor($21), ColColor($23));
   RecordFreshScreen(0, 0, screen.w, screen.h);
-  ShowBMenu(MenuStatus, menu, max, False);
+  ShowBMenu(False);
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
   while (SDL_WaitEvent(@event)) do
   begin
@@ -806,14 +836,14 @@ begin
           menu := menu - 1;
           if menu < 0 then
             menu := max;
-          ShowBMenu(MenuStatus, menu, max);
+          ShowBMenu;
         end;
         if (event.key.key = SDLK_DOWN) then
         begin
           menu := menu + 1;
           if menu > max then
             menu := 0;
-          ShowBMenu(MenuStatus, menu, max);
+          ShowBMenu;
         end;
         {if (event.key.key = sdlk_return) and (event.key.key.modifier = kmod_lalt) then
           begin
@@ -845,7 +875,7 @@ begin
           if menu < 0 then
             menu := 0;
           if menup <> menu then
-            ShowBMenu(MenuStatus, menu, max);
+            ShowBMenu;
         end;
       end;
     end;
@@ -867,43 +897,6 @@ begin
 end;
 
 //显示战斗主选单
-procedure ShowBMenu(MenuStatus, menu, max: integer; update: boolean = True);
-var
-  i, p: integer;
-  word: array [0 .. 9] of utf8string;
-begin
-
-  word[0] := '移動';
-  word[1] := '攻擊';
-  word[2] := '用毒';
-  word[3] := '解毒';
-  word[4] := '醫療';
-  word[5] := '物品';
-  word[6] := '等待';
-  word[7] := '狀態';
-  word[8] := '休息';
-  word[9] := '自動';
-
-  LoadFreshScreen(100, 50, 47, max * 22 + 29);
-  DrawRectangle(screen, 100, 50, 47, max * 22 + 28, 0, ColColor(255), 50);
-  p := 0;
-  for i := 0 to 9 do
-  begin
-    if (p = menu) and ((MenuStatus and (1 shl i) > 0)) then
-    begin
-      DrawShadowText(screen, word[i], 103, 53 + 22 * p, ColColor($66), ColColor($64));
-      p := p + 1;
-    end
-    else if (p <> menu) and ((MenuStatus and (1 shl i) > 0)) then
-    begin
-      DrawShadowText(screen, word[i], 103, 53 + 22 * p, ColColor($23), ColColor($21));
-      p := p + 1;
-    end;
-  end;
-  if (update) then
-    SDL_UpdateRect2(screen, 100, 50, 48, max * 22 + 29);
-end;
-
 //移动
 procedure MoveRole(bnum: integer);
 var
@@ -1817,6 +1810,34 @@ function SelectMagic(rnum: integer): integer;
 var
   i, p, MenuStatus, max, menu, menup: integer;
   menuString, menuEngString: array [0 .. 9] of utf8string;
+  procedure ShowMagicMenu;
+  var
+    i2, p2: integer;
+  begin
+    Redraw;
+    DrawRectangle(screen, 100, 50, 167, max * 22 + 28, 0, ColColor(255), 30);
+    p2 := 0;
+    for i2 := 0 to 9 do
+    begin
+      if (p2 = menu) and ((MenuStatus and (1 shl i2) > 0)) then
+      begin
+        DrawShadowText(screen, menuString[i2], 103, 53 + 22 * p2,
+          ColColor($66), ColColor($64));
+        DrawEngShadowText(screen, menuEngString[i2], 223, 53 + 22 * p2,
+          ColColor($66), ColColor($64));
+        p2 := p2 + 1;
+      end
+      else if (p2 <> menu) and ((MenuStatus and (1 shl i2) > 0)) then
+      begin
+        DrawShadowText(screen, menuString[i2], 103, 53 + 22 * p2,
+          ColColor($23), ColColor($21));
+        DrawEngShadowText(screen, menuEngString[i2], 223, 53 + 22 * p2,
+          ColColor($23), ColColor($21));
+        p2 := p2 + 1;
+      end;
+    end;
+    SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+  end;
 begin
   MenuStatus := 0;
   max := 0;
@@ -1835,7 +1856,7 @@ begin
   Redraw;
   SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
   menu := 0;
-  ShowMagicMenu(MenuStatus, menu, max, menuString, menuEngString);
+  ShowMagicMenu;
   //SDL_UpdateRect2(screen,0,0,screen.w,screen.h);
   Result := 0;
   while (SDL_WaitEvent(@event)) do
@@ -1858,14 +1879,14 @@ begin
           menu := menu - 1;
           if menu < 0 then
             menu := max;
-          ShowMagicMenu(MenuStatus, menu, max, menuString, menuEngString);
+          ShowMagicMenu;
         end;
         if (event.key.key = SDLK_DOWN) then
         begin
           menu := menu + 1;
           if menu > max then
             menu := 0;
-          ShowMagicMenu(MenuStatus, menu, max, menuString, menuEngString);
+          ShowMagicMenu;
         end;
       end;
       SDL_EVENT_MOUSE_BUTTON_UP:
@@ -1891,7 +1912,7 @@ begin
           if menu < 0 then
             menu := 0;
           if menup <> menu then
-            ShowMagicMenu(MenuStatus, menu, max, menuString, menuEngString);
+            ShowMagicMenu;
         end;
       end;
     end;
@@ -1911,37 +1932,6 @@ begin
     end;
     Result := i;
   end;
-
-end;
-
-//显示武功选单
-procedure ShowMagicMenu(MenuStatus, menu, max: integer; menuString, menuEngString: array of utf8string);
-var
-  i, p: integer;
-begin
-  Redraw;
-  DrawRectangle(screen, 100, 50, 167, max * 22 + 28, 0, ColColor(255), 30);
-  p := 0;
-  for i := 0 to 9 do
-  begin
-    if (p = menu) and ((MenuStatus and (1 shl i) > 0)) then
-    begin
-      DrawShadowText(screen, menuString[i], 103, 53 + 22 * p,
-        ColColor($66), ColColor($64));
-      DrawEngShadowText(screen, menuEngString[i], 223, 53 + 22 * p,
-        ColColor($66), ColColor($64));
-      p := p + 1;
-    end
-    else if (p <> menu) and ((MenuStatus and (1 shl i) > 0)) then
-    begin
-      DrawShadowText(screen, menuString[i], 103, 53 + 22 * p,
-        ColColor($23), ColColor($21));
-      DrawEngShadowText(screen, menuEngString[i], 223, 53 + 22 * p,
-        ColColor($23), ColColor($21));
-      p := p + 1;
-    end;
-  end;
-  SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
 
 end;
 
