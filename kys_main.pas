@@ -92,6 +92,8 @@ procedure ShowCommonMenu(x, y, w, max, menu: integer; menuString, menuEngString:
 function CommonScrollMenu(x, y, w, max, maxshow: integer; menuString: array of utf8string): integer; overload;
 function CommonScrollMenu(x, y, w, max, maxshow: integer; menuString, menuEngString: array of utf8string): integer; overload;
 procedure ShowCommonScrollMenu(x, y, w, max, maxshow, menu, menutop: integer; menuString, menuEngString: array of utf8string);
+function CommonGridMenu(x, y, cols, cellW, maxShowRows, maxItem: integer; menuString: array of utf8string): integer;
+procedure ShowCommonGridMenu(x, y, cols, cellW, maxShowRows, maxItem, menu, topRow: integer; menuString: array of utf8string);
 function CommonMenu2(x, y, w: integer; menuString: array of utf8string): integer;
 procedure ShowCommonMenu2(x, y, w, menu: integer; menuString: array of utf8string);
 function SelectOneTeamMember(x, y: integer; str: utf8string; list1, list2: integer): integer;
@@ -132,6 +134,7 @@ procedure CloudCreateOnSide(num: integer);
 function IsCave(snum: integer): boolean;
 
 function teleport(): integer;
+function TeleportByList(): integer;
 
 function SDL_GetAndroidExternalStoragePath(): pansichar; cdecl; external 'libSDL3.so';
 
@@ -3396,6 +3399,173 @@ begin
     end;
 end;
 
+// 多行多列格子选单渲染: cols列 x (maxItem+1)项, 每列宽cellW像素, 每次显示maxShowRows行
+procedure ShowCommonGridMenu(x, y, cols, cellW, maxShowRows, maxItem, menu, topRow: integer;
+                             menuString: array of utf8string);
+var
+  r, c, itemIdx: integer;
+begin
+  LoadFreshScreen(x, y, cols * cellW + 1, maxShowRows * 22 + 7);
+  DrawRectangle(screen, x, y, cols * cellW, maxShowRows * 22 + 6, 0, ColColor(255), 50);
+  for r := 0 to maxShowRows - 1 do
+    for c := 0 to cols - 1 do
+    begin
+      itemIdx := (topRow + r) * cols + c;
+      if itemIdx > maxItem then continue;
+      if itemIdx < length(menuString) then
+      begin
+        if itemIdx = menu then
+          DrawShadowText(screen, menuString[itemIdx], x + 3 + c * cellW, y + 3 + 22 * r,
+            ColColor($64), ColColor($66))
+        else
+          DrawShadowText(screen, menuString[itemIdx], x + 3 + c * cellW, y + 3 + 22 * r,
+            ColColor($5), ColColor($7));
+      end;
+    end;
+end;
+
+// 多行多列格子选单交互: 返回选中项序号(0-based), Esc/右键返回-1
+function CommonGridMenu(x, y, cols, cellW, maxShowRows, maxItem: integer;
+                        menuString: array of utf8string): integer;
+var
+  menu, topRow, totalRows, mx, my, prevMenu, hitItem, hr, hc: integer;
+begin
+  Result := -1;
+  if maxItem < 0 then exit;
+
+  menu := 0;
+  topRow := 0;
+  totalRows := (maxItem + cols) div cols;
+
+  RecordFreshScreen(x, y, cols * cellW + 1, maxShowRows * 22 + 7);
+  ShowCommonGridMenu(x, y, cols, cellW, maxShowRows, maxItem, menu, topRow, menuString);
+  SDL_UpdateRect2(screen, x, y, cols * cellW + 1, maxShowRows * 22 + 7);
+
+  while SDL_WaitEvent(@event) do
+  begin
+    CheckBasicEvent;
+    case event.type_ of
+      SDL_EVENT_KEY_UP:
+      begin
+        prevMenu := menu;
+        if event.key.key = SDLK_RIGHT then
+          if menu < maxItem then inc(menu);
+        if event.key.key = SDLK_LEFT then
+          if menu > 0 then dec(menu);
+        if event.key.key = SDLK_DOWN then
+          menu := min(maxItem, menu + cols);
+        if event.key.key = SDLK_UP then
+          menu := max(0, menu - cols);
+        if event.key.key = SDLK_PAGEDOWN then
+        begin
+          menu := min(maxItem, menu + cols * maxShowRows);
+          topRow := topRow + maxShowRows;
+          if topRow > max(0, totalRows - maxShowRows) then
+            topRow := max(0, totalRows - maxShowRows);
+        end;
+        if event.key.key = SDLK_PAGEUP then
+        begin
+          menu := max(0, menu - cols * maxShowRows);
+          topRow := max(0, topRow - maxShowRows);
+        end;
+        if menu div cols < topRow then
+          topRow := menu div cols;
+        if menu div cols >= topRow + maxShowRows then
+          topRow := menu div cols - maxShowRows + 1;
+        if prevMenu <> menu then
+        begin
+          ShowCommonGridMenu(x, y, cols, cellW, maxShowRows, maxItem, menu, topRow, menuString);
+          SDL_UpdateRect2(screen, x, y, cols * cellW + 1, maxShowRows * 22 + 7);
+        end;
+        if (event.key.key = SDLK_ESCAPE) and (where <= 2) then
+        begin
+          Result := -1;
+          break;
+        end;
+        if (event.key.key = SDLK_RETURN) or (event.key.key = SDLK_SPACE) then
+        begin
+          Result := menu;
+          break;
+        end;
+      end;
+      SDL_EVENT_MOUSE_BUTTON_UP:
+      begin
+        if (event.button.button = SDL_BUTTON_RIGHT) and (where <= 2) then
+        begin
+          Result := -1;
+          break;
+        end;
+        if event.button.button = SDL_BUTTON_LEFT then
+        begin
+          mx := round(event.button.x / (RESOLUTIONX / screen.w));
+          my := round(event.button.y / (RESOLUTIONY / screen.h));
+          if (mx >= x) and (mx < x + cols * cellW) and
+             (my >= y) and (my < y + maxShowRows * 22 + 7) then
+          begin
+            Result := menu;
+            break;
+          end;
+        end;
+      end;
+      SDL_EVENT_MOUSE_WHEEL:
+      begin
+        if event.wheel.y < 0 then
+        begin
+          if topRow + maxShowRows < totalRows then
+          begin
+            inc(topRow);
+            if menu div cols < topRow then
+            begin
+              menu := topRow * cols + (menu mod cols);
+              if menu > maxItem then menu := maxItem;
+            end;
+          end;
+          ShowCommonGridMenu(x, y, cols, cellW, maxShowRows, maxItem, menu, topRow, menuString);
+          SDL_UpdateRect2(screen, x, y, cols * cellW + 1, maxShowRows * 22 + 7);
+        end;
+        if event.wheel.y > 0 then
+        begin
+          if topRow > 0 then
+          begin
+            dec(topRow);
+            if menu div cols >= topRow + maxShowRows then
+            begin
+              menu := (topRow + maxShowRows - 1) * cols + (menu mod cols);
+              if menu > maxItem then menu := maxItem;
+            end;
+          end;
+          ShowCommonGridMenu(x, y, cols, cellW, maxShowRows, maxItem, menu, topRow, menuString);
+          SDL_UpdateRect2(screen, x, y, cols * cellW + 1, maxShowRows * 22 + 7);
+        end;
+      end;
+      SDL_EVENT_MOUSE_MOTION:
+      begin
+        mx := round(event.button.x / (RESOLUTIONX / screen.w));
+        my := round(event.button.y / (RESOLUTIONY / screen.h));
+        if (mx >= x) and (mx < x + cols * cellW) and
+           (my >= y + 3) and (my < y + maxShowRows * 22 + 7) then
+        begin
+          hc := (mx - x) div cellW;
+          hr := (my - y - 3) div 22;
+          hitItem := (topRow + hr) * cols + hc;
+          if (hitItem >= 0) and (hitItem <= maxItem) then
+          begin
+            prevMenu := menu;
+            menu := hitItem;
+            if menu <> prevMenu then
+            begin
+              ShowCommonGridMenu(x, y, cols, cellW, maxShowRows, maxItem, menu, topRow, menuString);
+              SDL_UpdateRect2(screen, x, y, cols * cellW + 1, maxShowRows * 22 + 7);
+            end;
+          end;
+        end;
+      end;
+    end;
+  end;
+  event.key.key := 0;
+  event.button.button := 0;
+end;
+
 //仅有两个选项的横排选单, 为美观使用横排
 //此类选单中每个选项限制为两个中文字, 仅适用于提问'继续', '取消'的情况
 function CommonMenu2(x, y, w: integer; menuString: array of utf8string): integer;
@@ -3537,7 +3707,8 @@ end;
 procedure MenuEsc;
 var
   word: array [0 .. 6] of utf8string;
-  i, i1: integer;
+  i, i1, i2: integer;
+  transportMenu: array [0 .. 1] of utf8string;
 begin
   NeedRefreshScene := 0;
   word[0] := '醫療';
@@ -3562,7 +3733,15 @@ begin
       begin
         if where = 0 then
         begin
-          i1 := Teleport;
+          transportMenu[0] := '地圖';
+          transportMenu[1] := '列表';
+          i2 := CommonMenu(80, 30, 45, 1, transportMenu);
+          if i2 = 0 then
+            i1 := Teleport
+          else if i2 = 1 then
+            i1 := TeleportByList
+          else
+            i1 := 0;
           Redraw;
           SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
           if i1 <> 0 then
@@ -3571,7 +3750,7 @@ begin
         else
         begin
           DrawTextWithRect('子場景不可傳送!', 80, 30, 172, ColColor($21), ColColor($23));
-          SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+          //SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
           waitanykey;
         end;
       end;
@@ -5943,6 +6122,57 @@ end;
 function IsCave(snum: integer): boolean;
 begin
   Result := snum in [5, 7, 10, 41, 42, 46, 65, 66, 67, 72, 79];
+end;
+
+function TeleportByList(): integer;
+var
+  i, menu, scene: integer;
+  sceneMenu: array of utf8string;
+  nameStr: utf8string;
+begin
+  Result := 0;
+  if SceneAmount <= 0 then
+    exit;
+
+  setlength(sceneMenu, SceneAmount);
+  for i := 0 to SceneAmount - 1 do
+  begin
+    nameStr := cp950toutf8(@Rscene[i].Name, 5);
+    if DrawLength(nameStr) <= 0 then
+      nameStr := format('場景%d', [i]);
+    sceneMenu[i] := format('%3d %s', [i, nameStr]);
+  end;
+
+  Redraw;
+  DrawTextWithRect(screen, '傳送列表', 80, 30, 640, ColColor($21), ColColor($23));
+  // 4列 x 160px/列 = 640px, 最多显示10行, 起始 y=60
+  menu := CommonGridMenu(80, 60, 4, 160, 16, SceneAmount - 1, sceneMenu);
+  if menu < 0 then
+    exit;
+
+  scene := menu;
+  if CheckCanEnter(scene) then
+  begin
+    instruct_14;
+    CurScene := scene;
+    SStep := 0;
+    Sx := Rscene[CurScene].EntranceX;
+    Sy := Rscene[CurScene].EntranceY;
+    if (Rscene[scene].MainEntranceX1 > 0) and (Rscene[scene].MainEntranceY1 > 0) then
+    begin
+      Mx := Rscene[scene].MainEntranceX1;
+      My := Rscene[scene].MainEntranceY1;
+    end;
+    SaveR(11);
+    WalkInScene(0);
+    Result := 1;
+  end
+  else
+  begin
+    DrawTextWithRect('此場景目前不可進入!', 80, 30, 192, ColColor($21), ColColor($23));
+    SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+    waitanykey;
+  end;
 end;
 
 //返回非零表示传送
