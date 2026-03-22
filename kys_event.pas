@@ -13,7 +13,6 @@ uses
   {$ELSE}
   Windows,
   {$ENDIF}
-  SDL3_image,
   SDL3,
   Math,
   StrUtils,
@@ -1544,7 +1543,7 @@ begin
   instruct_14;
 
   i := 0;
-  tempscr := img_load(putf8char(AppPath + 'resource/end.png'));
+  tempscr := SDL_LoadPNG(putf8char(AppPath + 'resource/end.png'));
   if tempscr <> nil then
   begin
     while SDL_PollEvent(@event) or True do

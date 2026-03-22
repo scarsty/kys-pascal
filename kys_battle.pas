@@ -17,7 +17,6 @@ uses
   kys_type,
   StrUtils,
   SDL3_TTF,
-  SDL3_image,
   SDL3,
   Math,
   kys_main,

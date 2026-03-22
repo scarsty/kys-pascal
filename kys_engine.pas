@@ -17,7 +17,6 @@ uses
   Math,
   Dialogs,
   SDL3_TTF,
-  SDL3_image,
   SDL3,
   bassmidi,
   bass,
@@ -1110,7 +1109,7 @@ begin
   Result := nil;
   if FileExists(filename) then
   begin
-    tempscr := IMG_Load(putf8char(filename));
+    tempscr := SDL_LoadPNG(putf8char(filename));
     Result := SDL_ConvertSurface(tempscr, screen.format);
     SDL_DestroySurface(tempscr);
   end;
@@ -1208,7 +1207,7 @@ begin
     if ImageName <> file_name then
     begin
       SDL_DestroySurface(Image);
-      Image := IMG_Load(file_name);
+      Image := SDL_LoadPNG(file_name);
       ImageName := file_name;
     end;
     if (Image = nil) then

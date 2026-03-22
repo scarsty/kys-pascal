@@ -22,7 +22,7 @@
       <AutoIncrementBuild Value="True"/>
       <MajorVersionNr Value="1"/>
       <RevisionNr Value="9"/>
-      <BuildNr Value="3278"/>
+      <BuildNr Value="3279"/>
       <StringTable CompanyName="tiexuedanxin" OriginalFilename="kys"/>
     </VersionInfo>
     <BuildModes Count="3">

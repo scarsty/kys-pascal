@@ -48,8 +48,6 @@ uses
   Math,
   SDL3_TTF,
   SDL3,
-  SDL3_image,
-  image_loader,
   iniFiles,
   bass,
   Generics.Collections,
@@ -545,12 +543,12 @@ begin
       VirtualBX := Kys_ini.ReadInteger('system', 'VirtualBX', w - 100);
       VirtualBY := Kys_ini.ReadInteger('system', 'VirtualBY', h - 200);
 
-      VirtualKeyU := LoadPNG(putf8char(checkFileName('resource/u.png')));
-      VirtualKeyD := LoadPNG(putf8char(checkFileName('resource/d.png')));
-      VirtualKeyL := LoadPNG(putf8char(checkFileName('resource/l.png')));
-      VirtualKeyR := LoadPNG(putf8char(checkFileName('resource/r.png')));
-      VirtualKeyA := LoadPNG(putf8char(checkFileName('resource/a.png')));
-      VirtualKeyB := LoadPNG(putf8char(checkFileName('resource/b.png')));
+      VirtualKeyU := SDL_LoadPNG(putf8char(checkFileName('resource/u.png')));
+      VirtualKeyD := SDL_LoadPNG(putf8char(checkFileName('resource/d.png')));
+      VirtualKeyL := SDL_LoadPNG(putf8char(checkFileName('resource/l.png')));
+      VirtualKeyR := SDL_LoadPNG(putf8char(checkFileName('resource/r.png')));
+      VirtualKeyA := SDL_LoadPNG(putf8char(checkFileName('resource/a.png')));
+      VirtualKeyB := SDL_LoadPNG(putf8char(checkFileName('resource/b.png')));
     end
     else
     begin
