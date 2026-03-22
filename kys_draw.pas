@@ -40,6 +40,7 @@ procedure DrawEPic(num, px, py, shadow, alpha, depth: integer; mixColor: uint32;
 procedure DrawFPic(num, px, py, index: integer); overload;
 procedure DrawFPic(num, px, py, index, shadow, alpha, depth: integer; mixColor: uint32; mixAlpha: integer); overload;
 procedure DrawCPic(num, px, py, shadow, alpha: integer; mixColor: uint32; mixAlpha: integer);
+procedure GetPicSize(num: integer; Pidx: Pinteger; Ppic: pbyte; var w, h, xs, ys: integer);
 
 //绘制整个屏幕的子程
 procedure Redraw(WriteFresh: integer = 0);
@@ -490,6 +491,38 @@ begin
   begin
     DrawRLE8Pic(@ACol1[0], num, px, py, @CIdx[0], @CPic[0], nil, nil, 0, 0, 0, shadow, alpha, nil, nil, 0, 0, 0, 0, mixColor, mixAlpha);
   end;
+end;
+
+procedure GetPicSize(num: integer; Pidx: Pinteger; Ppic: pbyte; var w, h, xs, ys: integer);
+var
+  offset: integer;
+begin
+  if num = 0 then
+    offset := 0
+  else
+  begin
+    Inc(Pidx, num - 1);
+    offset := Pidx^;
+  end;
+  Inc(Ppic, offset);
+  w := psmallint((Ppic))^;
+  Inc(Ppic, 2);
+  h := psmallint((Ppic))^;
+  Inc(Ppic, 2);
+  xs := psmallint((Ppic))^;
+  Inc(Ppic, 2);
+  ys := psmallint((Ppic))^;
+  Inc(Ppic, 2);
+end;
+
+procedure GetSPicSize(num: integer; var w, h: integer);
+begin
+
+end;
+
+procedure GetHPicSize(num: integer; var w, h: integer);
+begin
+
 end;
 
 //重画屏幕

@@ -1655,7 +1655,7 @@ end;
 //Expanded 50 instructs.
 function instruct_50e(code, e1, e2, e3, e4, e5, e6: integer): integer;
 var
-  i, t1, grp, idx, offset, len, i1, i2: integer;
+  i, t1, grp, idx, offset, len, i1, i2, x, y, w, h, w1, h1: integer;
   p, p1, p2: putf8char;
   str: utf8string;
   word, word1: utf8string;
@@ -2055,6 +2055,9 @@ begin
       p := @x50[e2];
       p1 := p;
       //for i := 0 to length(p) do showmessage(inttostr(pbyte(p+i)^));
+      x := e3;
+      y := e4;
+      w := 0;
       while byte(p^) > 0 do
       begin
         if byte(p^) = $2A then
@@ -2063,11 +2066,15 @@ begin
           DrawBig5ShadowText(screen, p1, e3 - 2, e4 + 22 * i - 3, ColColor(e5 and $FF), ColColor((e5 and $FF00) shl 8));
           i := i + 1;
           p1 := p + 1;
+          w1 := length(p1) * 11;
+          if (w1 > w) then w := w1;
         end;
         p := p + 1;
       end;
       DrawBig5ShadowText(screen, p1, e3 - 2, e4 + 22 * i - 3, ColColor(e5 and $FF), ColColor((e5 and $FF00) shl 8));
-      SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+      w1 := length(p1) * 11;
+      if (w1 > w) then w := w1;
+      SDL_UpdateRect2(screen, x - 3, y - 3, w + 6, 22 * (i + 1) + 6);
       //waitanykey;
     end;
     34: //Draw a rectangle as background.
@@ -2141,7 +2148,7 @@ begin
         p := p + 1;
       end;
       DrawBig5ShadowText(screen, p1, e3 + 3, e4 + 22 * i + 2, ColColor(e5 and $FF), ColColor((e5 and $FF00) shl 8));
-      SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+      //SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
       i := WaitAnyKey;
       if i = SDLK_Y then
         x50[$7000] := 0
@@ -2206,18 +2213,27 @@ begin
         0:
         begin
           if (where <> 1) or ((ModVersion = 22) and (CurEvent = -1)) then
-            DrawMPic(e5 div 2, e3, e4)
+          begin
+            DrawMPic(e5 div 2, e3, e4);
+            GetPicSize(e5 div 2, @Midx[0], @MPic[0], w, h, x, y);
+          end
           else
+          begin
             DrawSPic(e5 div 2, e3, e4, 0, 0, screen.w, screen.h);
+            GetPicSize(e5 div 2, @Sidx[0], @SPic[0], w, h, x, y);
+          end;
         end;
-        1: DrawHeadPic(e5, e3, e4);
+        1: begin
+          DrawHeadPic(e5, e3, e4);
+          GetPicSize(e5 div 2, @Hidx[0], @HPic[0], w, h, x, y);
+        end;
         2:
         begin
           str := AppPath + 'pic/' + IntToStr(e5) + '.png';
           display_img(@str[1], e3, e4);
         end;
       end;
-      SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+      SDL_UpdateRect2(screen, e3 - x, e4 - y, w, h);
     end;
     42: //Change the poistion on world map.
     begin
@@ -3069,7 +3085,8 @@ begin
   end
   else if alen > 6 then
   begin
-    if ((PWord(ap)^ = $6EAB) and ((PWord(ap + 2)^ = $63AE))) or ((PWord(ap)^ = $E8A6) and ((PWord(ap + 2)^ = $F9AA))) or ((PWord(ap)^ = $46AA) and ((PWord(ap + 2)^ = $E8A4))) or ((PWord(ap)^ = $4FA5) and ((PWord(ap + 2)^ = $B0AA))) or ((PWord(ap)^ = $7DBC) and ((PWord(ap + 2)^ = $65AE))) or ((PWord(ap)^ = $71A5) and ((PWord(ap + 2)^ = $A8B0))) or ((PWord(ap)^ = $D1BD) and ((PWord(ap + 2)^ = $AFB8))) or ((PWord(ap)^ = $71A5) and ((PWord(ap + 2)^ = $C5AA))) or ((PWord(ap)^ = $D3A4) and ((PWord(ap + 2)^ = $76A5))) or ((PWord(ap)^ = $BDA4) and ((PWord(ap + 2)^ = $5DAE))) or ((PWord(ap)^ = $DABC) and ((PWord(ap + 2)^ = $A7B6))) or ((PWord(ap)^ = $43AD) and ((PWord(ap + 2)^ = $DFAB))) or ((PWord(ap)^ = $71A5) and ((PWord(ap + 2)^ = $7BAE))) or ((PWord(ap)^ = $B9A7) and ((PWord(ap + 2)^ = $43C3))) or ((PWord(ap)^ = $61B0) and ((PWord(ap + 2)^ = $D5C1))) or ((PWord(ap)^ = $74A6) and ((PWord(ap + 2)^ = $E5A4))) or ((PWord(ap)^ = $DDA9) and ((PWord(ap + 2)^ = $5BB6))) then
+    if ((PWord(ap)^ = $6EAB) and ((PWord(ap + 2)^ = $63AE))) or ((PWord(ap)^ = $E8A6) and ((PWord(ap + 2)^ = $F9AA))) or ((PWord(ap)^ = $46AA) and ((PWord(ap + 2)^ = $E8A4))) or ((PWord(ap)^ = $4FA5) and ((PWord(ap + 2)^ = $B0AA))) or ((PWord(ap)^ = $7DBC) and ((PWord(ap + 2)^ = $65AE))) or ((PWord(ap)^ = $71A5) and ((PWord(ap + 2)^ = $A8B0))) or ((PWord(ap)^ = $D1BD) and ((PWord(ap + 2)^ = $AFB8))) or ((PWord(ap)^ = $71A5) and ((PWord(ap + 2)^ = $C5AA))) or ((PWord(ap)^ = $D3A4) and ((PWord(ap + 2)^ = $76A5))) or ((PWord(ap)^ = $BDA4) and ((PWord(ap + 2)^ = $5DAE))) or ((PWord(ap)^ = $DABC) and ((PWord(ap + 2)^ = $A7B6))) or ((PWord(ap)^ = $43AD) and ((PWord(ap + 2)^ = $DFAB))) or
+      ((PWord(ap)^ = $71A5) and ((PWord(ap + 2)^ = $7BAE))) or ((PWord(ap)^ = $B9A7) and ((PWord(ap + 2)^ = $43C3))) or ((PWord(ap)^ = $61B0) and ((PWord(ap + 2)^ = $D5C1))) or ((PWord(ap)^ = $74A6) and ((PWord(ap + 2)^ = $E5A4))) or ((PWord(ap)^ = $DDA9) and ((PWord(ap + 2)^ = $5BB6))) then
     begin
       setlength(name1, 5);
       np1 := @name1[0];
