@@ -337,6 +337,7 @@ var
   i, menu, max, menup: integer;
   menuString: array [0 .. 8] of utf8string;
   str: utf8string;
+
   procedure ShowMultiMenu;
   var
     i, x, y: integer;
@@ -366,6 +367,7 @@ var
       end;
     SDL_UpdateRect2(screen, x + 30, y, 151, max * 22 + 29);
   end;
+
 begin
   Result := 0;
   max := 1;
@@ -715,6 +717,7 @@ var
   i, p, MenuStatus, menu, max, rnum, menup: integer;
   realmenu: array [0 .. 9] of integer;
   str: utf8string;
+
   procedure ShowBMenu(update: boolean = True);
   var
     i2, p2: integer;
@@ -750,6 +753,7 @@ var
     if (update) then
       SDL_UpdateRect2(screen, 100, 50, 48, max * 22 + 29);
   end;
+
 begin
   MenuStatus := $3E0;
   max := 4;
@@ -1809,6 +1813,7 @@ function SelectMagic(rnum: integer): integer;
 var
   i, p, MenuStatus, max, menu, menup: integer;
   menuString, menuEngString: array [0 .. 9] of utf8string;
+
   procedure ShowMagicMenu;
   var
     i2, p2: integer;
@@ -1837,6 +1842,7 @@ var
     end;
     SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
   end;
+
 begin
   MenuStatus := 0;
   max := 0;
@@ -3105,7 +3111,7 @@ var
   var
     i: integer;
   begin
-    LoadFreshScreen(x, y, w+1, h+1);
+    LoadFreshScreen(x, y, w + 1, h + 1);
     DrawRectangle(screen, x, y, w, h, 0, ColColor(255), 50);
     for i := 0 to amount - 1 do
     begin

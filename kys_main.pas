@@ -553,7 +553,7 @@ begin
     else
     begin
       ShowVirtualKey := 0;
-      Touch_Walk := true;
+      Touch_Walk := True;
     end;
 
     if (not FileExists(AppPath + 'resource/mmap/index.ka')) and (not FileExists(AppPath + 'resource/mmap.imz')) then
@@ -2960,9 +2960,11 @@ end;
 //通用选单, (位置(x, y), 宽度, 最大选项(编号均从0开始))
 //使用前必须设置选单使用的字符串组才有效, 字符串组不可越界使用
 function CommonMenu(x, y, w, max, default: integer; menuString: array of utf8string): integer; overload;
-procedure fn(i:integer);
-begin
-end;
+
+  procedure fn(i: integer);
+  begin
+  end;
+
 begin
   Result := CommonMenu(x, y, w, max, default, menuString, @fn);
 end;
@@ -2976,6 +2978,7 @@ end;
 function CommonMenu(x, y, w, max, default: integer; menuString: array of utf8string; fn: TPInt1): integer; overload;
 var
   menu, menup: integer;
+
   procedure ShowCommonMenu;
   var
     i: integer;
@@ -2988,6 +2991,7 @@ var
       else
         DrawShadowText(screen, menuString[i], x + 3, y + 2 + 22 * i, ColColor($5), ColColor($7));
   end;
+
 begin
   menu := default;
   RecordFreshScreen(x, y, w + 1, max * 22 + 29);
@@ -3255,8 +3259,7 @@ begin
 end;
 
 // 多行多列格子选单交互: 返回选中项序号(0-based), Esc/右键返回-1
-function CommonGridMenu(x, y, cols, cellW, maxShowRows, maxItem: integer;
-                        menuString: array of utf8string): integer;
+function CommonGridMenu(x, y, cols, cellW, maxShowRows, maxItem: integer; menuString: array of utf8string): integer;
 var
   menu, topRow, totalRows, mx, my, prevMenu, hitItem, hr, hc: integer;
 
@@ -3303,9 +3306,9 @@ begin
       begin
         prevMenu := menu;
         if event.key.key = SDLK_RIGHT then
-          if menu < maxItem then inc(menu);
+          if menu < maxItem then Inc(menu);
         if event.key.key = SDLK_LEFT then
-          if menu > 0 then dec(menu);
+          if menu > 0 then Dec(menu);
         if event.key.key = SDLK_DOWN then
           menu := min(maxItem, menu + cols);
         if event.key.key = SDLK_UP then
@@ -3353,8 +3356,7 @@ begin
         begin
           mx := round(event.button.x / (RESOLUTIONX / screen.w));
           my := round(event.button.y / (RESOLUTIONY / screen.h));
-          if (mx >= x) and (mx < x + cols * cellW) and
-             (my >= y) and (my < y + maxShowRows * 22 + 7) then
+          if (mx >= x) and (mx < x + cols * cellW) and (my >= y) and (my < y + maxShowRows * 22 + 7) then
           begin
             Result := menu;
             break;
@@ -3367,7 +3369,7 @@ begin
         begin
           if topRow + maxShowRows < totalRows then
           begin
-            inc(topRow);
+            Inc(topRow);
             if menu div cols < topRow then
             begin
               menu := topRow * cols + (menu mod cols);
@@ -3381,7 +3383,7 @@ begin
         begin
           if topRow > 0 then
           begin
-            dec(topRow);
+            Dec(topRow);
             if menu div cols >= topRow + maxShowRows then
             begin
               menu := (topRow + maxShowRows - 1) * cols + (menu mod cols);
@@ -3396,8 +3398,7 @@ begin
       begin
         mx := round(event.button.x / (RESOLUTIONX / screen.w));
         my := round(event.button.y / (RESOLUTIONY / screen.h));
-        if (mx >= x) and (mx < x + cols * cellW) and
-           (my >= y + 3) and (my < y + maxShowRows * 22 + 7) then
+        if (mx >= x) and (mx < x + cols * cellW) and (my >= y + 3) and (my < y + maxShowRows * 22 + 7) then
         begin
           hc := (mx - x) div cellW;
           hr := (my - y - 3) div 22;
@@ -3542,7 +3543,7 @@ begin
       if str <> '' then
       begin
         engstr := format(str, [Rrole[teamlist[i]].Data[list1], Rrole[teamlist[i]].Data[list2]]);
-        menuString[i] :=  cp950toutf8(format('%-8s%4s', [Rrole[teamlist[i]].Name, engstr]));
+        menuString[i] := cp950toutf8(format('%-8s%4s', [Rrole[teamlist[i]].Name, engstr]));
       end;
       Amount := Amount + 1;
     end;
@@ -3738,6 +3739,7 @@ var
   //point似乎未使用, atlu为处于左上角的物品在列表中的序号, x, y为光标位置
   //col, row为总列数和行数
   menuString: array of utf8string;
+
   procedure ShowMenuItem;
   var
     item2, i3, i12, i22, len2, len22, len32, listnum2, w2: integer;
@@ -3967,6 +3969,7 @@ var
 
     DrawItemFrame(x, y);
   end;
+
 begin
   col := 14;
   row := 5;
@@ -5973,13 +5976,18 @@ var
   tmpI: integer;
   tmpS: utf8string;
 
-  { 取 UTF-8 字串最末一个字符 }
+{ 取 UTF-8 字串最末一个字符 }
   function LastUTF8Char(const s: utf8string): utf8string;
-  var k: integer;
+  var
+    k: integer;
   begin
     k := length(s);
-    if k = 0 then begin Result := ''; exit; end;
-    while (k > 1) and ((byte(s[k]) and $C0) = $80) do dec(k);
+    if k = 0 then
+    begin
+      Result := '';
+      exit;
+    end;
+    while (k > 1) and ((byte(s[k]) and $C0) = $80) do Dec(k);
     Result := copy(s, k, length(s) - k + 1);
   end;
 
@@ -5989,8 +5997,8 @@ begin
     exit;
 
   setlength(sceneMenu, SceneAmount);
-  setlength(sceneIdx,  SceneAmount);
-  setlength(sortKey,   SceneAmount);
+  setlength(sceneIdx, SceneAmount);
+  setlength(sortKey, SceneAmount);
 
   { 建立初始顺序与排序键 }
   for i := 0 to SceneAmount - 1 do
@@ -6008,13 +6016,11 @@ begin
     tmpI := sceneIdx[i];
     tmpS := sortKey[i];
     j := i - 1;
-    while (j >= 0) and
-          ((sortKey[j] > tmpS) or
-           ((sortKey[j] = tmpS) and (sceneIdx[j] > tmpI))) do
+    while (j >= 0) and ((sortKey[j] > tmpS) or ((sortKey[j] = tmpS) and (sceneIdx[j] > tmpI))) do
     begin
       sceneIdx[j + 1] := sceneIdx[j];
       sortKey[j + 1] := sortKey[j];
-      dec(j);
+      Dec(j);
     end;
     sceneIdx[j + 1] := tmpI;
     sortKey[j + 1] := tmpS;

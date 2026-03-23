@@ -9,7 +9,6 @@ uses
   SDL3_ttf,
   SDL3_mixer,
   lua52,
-  image_loader,
   Generics.Collections;
 
 type

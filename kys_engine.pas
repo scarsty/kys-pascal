@@ -160,16 +160,16 @@ var
 
 function EnsureMixerCreated: boolean;
 var
-  spec:   TSDL_AudioSpec;
+  spec: TSDL_AudioSpec;
 begin
   Result := False;
   if gMixer <> nil then
     Exit(True);
   if not MIX_Init() then
     Exit(False);
-spec.freq := 22500;
-spec.format := SDL_AUDIO_S16;
-spec.channels := 2;
+  spec.freq := 22500;
+  spec.format := SDL_AUDIO_S16;
+  spec.channels := 2;
   gMixer := MIX_CreateMixerDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, @spec);
   Result := gMixer <> nil;
 end;
