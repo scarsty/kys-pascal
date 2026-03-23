@@ -154,31 +154,49 @@ var
   compositeTexW: integer = 0;
   compositeTexH: integer = 0;
   gMixer: MIX_Mixer = nil;
-  MusicTracks: array of MIX_Track;
-  ESoundTracks: array of MIX_Track;
-  ASoundTracks: array of MIX_Track;
+  MusicTrack: MIX_Track = nil;
+  SfxTracks: array[0..9] of MIX_Track;
+  SfxNextTrack: integer = 0;
 
 function EnsureMixerCreated: boolean;
+var
+  spec:   TSDL_AudioSpec;
 begin
   Result := False;
   if gMixer <> nil then
     Exit(True);
   if not MIX_Init() then
     Exit(False);
-  gMixer := MIX_CreateMixerDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, nil);
+spec.freq := 22500;
+spec.format := SDL_AUDIO_S16;
+spec.channels := 2;
+  gMixer := MIX_CreateMixerDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, @spec);
   Result := gMixer <> nil;
 end;
 
 function EnsureTrackForAudio(var track: MIX_Track; audio: MIX_Audio): boolean;
 begin
-  Result := False;
-  if (gMixer = nil) or (audio = nil) then
-    Exit;
-  if track = nil then
-    track := MIX_CreateTrack(gMixer);
-  if track = nil then
-    Exit;
   Result := MIX_SetTrackAudio(track, audio);
+end;
+
+function AcquireSfxTrack(audio: MIX_Audio): MIX_Track;
+var
+  idx: integer;
+begin
+  Result := nil;
+  if audio = nil then
+    Exit;
+
+  idx := SfxNextTrack;
+  Inc(SfxNextTrack);
+  if SfxNextTrack > High(SfxTracks) then
+    SfxNextTrack := Low(SfxTracks);
+
+  if not EnsureTrackForAudio(SfxTracks[idx], audio) then
+    Exit;
+
+  //MIX_StopTrack(SfxTracks[idx], 0);
+  Result := SfxTracks[idx];
 end;
 
 procedure ClearHiResGlyphCaches;
@@ -530,17 +548,16 @@ begin
   if not EnsureMixerCreated then
     Exit;
 
-  SetLength(MusicTracks, Length(Music));
-  SetLength(ESoundTracks, Length(ESound));
-  SetLength(ASoundTracks, Length(ASound));
+  MusicTrack := MIX_CreateTrack(gMixer);
+
+  for i := Low(SfxTracks) to High(SfxTracks) do
+  begin
+    SfxTracks[i] := MIX_CreateTrack(gMixer);
+  end;
+  SfxNextTrack := Low(SfxTracks);
 
   for i := low(Music) to high(Music) do
   begin
-    if MusicTracks[i] <> nil then
-    begin
-      MIX_DestroyTrack(MusicTracks[i]);
-      MusicTracks[i] := nil;
-    end;
     if Music[i] <> nil then
     begin
       MIX_DestroyAudio(Music[i]);
@@ -562,11 +579,6 @@ begin
 
   for i := low(ESound) to high(ESound) do
   begin
-    if ESoundTracks[i] <> nil then
-    begin
-      MIX_DestroyTrack(ESoundTracks[i]);
-      ESoundTracks[i] := nil;
-    end;
     if ESound[i] <> nil then
     begin
       MIX_DestroyAudio(ESound[i]);
@@ -582,11 +594,6 @@ begin
   end;
   for i := low(ASound) to high(ASound) do
   begin
-    if ASoundTracks[i] <> nil then
-    begin
-      MIX_DestroyTrack(ASoundTracks[i]);
-      ASoundTracks[i] := nil;
-    end;
     if ASound[i] <> nil then
     begin
       MIX_DestroyAudio(ASound[i]);
@@ -607,7 +614,6 @@ procedure PlayMP3(MusicNum, times: integer; frombeginning: integer = 1); overloa
 var
   loops: integer;
 begin
-  exit;
   if not EnsureMixerCreated then
     Exit;
   if times = -1 then
@@ -618,19 +624,13 @@ begin
     if (MusicNum >= low(Music)) and (MusicNum <= high(Music)) and (VOLUME > 0) then
       if Music[MusicNum] <> nil then
       begin
-        if (nowmusic >= low(MusicTracks)) and (nowmusic <= high(MusicTracks)) and (MusicTracks[nowmusic] <> nil) then
-        begin
-          MIX_StopTrack(MusicTracks[nowmusic], 0);
-          if frombeginning = 1 then
-            MIX_SetTrackPlaybackPosition(MusicTracks[nowmusic], 0);
-        end;
-
-        if not EnsureTrackForAudio(MusicTracks[MusicNum], Music[MusicNum]) then
-          Exit;
-
-        MIX_SetTrackGain(MusicTracks[MusicNum], VOLUME / 100.0);
-        MIX_SetTrackLoops(MusicTracks[MusicNum], loops);
-        MIX_PlayTrack(MusicTracks[MusicNum], 0);
+        MIX_StopTrack(MusicTrack, 0);
+        MIX_SetTrackAudio(MusicTrack, Music[MusicNum]);
+        if frombeginning = 1 then
+          MIX_SetTrackPlaybackPosition(MusicTrack, 0);
+        MIX_SetTrackGain(MusicTrack, VOLUME / 100.0);
+        MIX_SetTrackLoops(MusicTrack, loops);
+        MIX_PlayTrack(MusicTrack, 0);
         nowmusic := MusicNum;
       end;
   finally
@@ -646,11 +646,11 @@ end;
 //停止当前播放的音乐
 procedure StopMP3(frombeginning: integer = 1);
 begin
-  if (nowmusic >= low(MusicTracks)) and (nowmusic <= high(MusicTracks)) and (MusicTracks[nowmusic] <> nil) then
+  if MusicTrack <> nil then
   begin
-    MIX_StopTrack(MusicTracks[nowmusic], 0);
+    MIX_StopTrack(MusicTrack, 0);
     if frombeginning = 1 then
-      MIX_SetTrackPlaybackPosition(MusicTracks[nowmusic], 0);
+      MIX_SetTrackPlaybackPosition(MusicTrack, 0);
   end;
 
 end;
@@ -659,6 +659,7 @@ end;
 procedure PlaySoundE(SoundNum, times: integer); overload;
 var
   loops: integer;
+  track: MIX_Track;
 begin
   if times = -1 then
     loops := -1
@@ -667,12 +668,12 @@ begin
   if (SoundNum >= low(ESound)) and (SoundNum <= high(ESound)) and (VOLUME > 0) then
     if ESound[SoundNum] <> nil then
     begin
-      if not EnsureTrackForAudio(ESoundTracks[SoundNum], ESound[SoundNum]) then
+      track := AcquireSfxTrack(ESound[SoundNum]);
+      if track = nil then
         Exit;
-      MIX_StopTrack(ESoundTracks[SoundNum], 0);
-      MIX_SetTrackGain(ESoundTracks[SoundNum], VOLUMEWAV / 100.0);
-      MIX_SetTrackLoops(ESoundTracks[SoundNum], loops);
-      MIX_PlayTrack(ESoundTracks[SoundNum], 0);
+      MIX_SetTrackGain(track, VOLUMEWAV / 100.0);
+      MIX_SetTrackLoops(track, loops);
+      MIX_PlayTrack(track, 0);
     end;
 
 end;
@@ -687,6 +688,7 @@ procedure PlaySoundE(SoundNum, times, x, y, z: integer); overload;
 var
   loops: integer;
   pos: MIX_Point3D;
+  track: MIX_Track;
 begin
   if times = -1 then
     loops := -1
@@ -696,19 +698,19 @@ begin
   if (SoundNum >= low(ESound)) and (SoundNum <= high(ESound)) and (VOLUMEWAV > 0) then
     if ESound[SoundNum] <> nil then
     begin
-      if not EnsureTrackForAudio(ESoundTracks[SoundNum], ESound[SoundNum]) then
+      track := AcquireSfxTrack(ESound[SoundNum]);
+      if track = nil then
         Exit;
-      MIX_StopTrack(ESoundTracks[SoundNum], 0);
       if SOUND3D = 1 then
       begin
         pos.x := x * 100;
         pos.y := y * 100;
         pos.z := z * 100;
-        MIX_SetTrack3DPosition(ESoundTracks[SoundNum], @pos);
+        MIX_SetTrack3DPosition(track, @pos);
       end;
-      MIX_SetTrackGain(ESoundTracks[SoundNum], VOLUMEWAV / 100.0);
-      MIX_SetTrackLoops(ESoundTracks[SoundNum], loops);
-      MIX_PlayTrack(ESoundTracks[SoundNum], 0);
+      MIX_SetTrackGain(track, VOLUMEWAV / 100.0);
+      MIX_SetTrackLoops(track, loops);
+      MIX_PlayTrack(track, 0);
     end;
 
 end;
@@ -716,6 +718,7 @@ end;
 procedure PlaySoundA(SoundNum, times: integer);
 var
   loops: integer;
+  track: MIX_Track;
 begin
   if times = -1 then
     loops := -1
@@ -724,12 +727,12 @@ begin
   if (SoundNum >= low(ASound)) and (SoundNum <= high(ASound)) and (VOLUMEWAV > 0) then
     if ASound[SoundNum] <> nil then
     begin
-      if not EnsureTrackForAudio(ASoundTracks[SoundNum], ASound[SoundNum]) then
+      track := AcquireSfxTrack(ASound[SoundNum]);
+      if track = nil then
         Exit;
-      MIX_StopTrack(ASoundTracks[SoundNum], 0);
-      MIX_SetTrackGain(ASoundTracks[SoundNum], VOLUMEWAV / 100.0);
-      MIX_SetTrackLoops(ASoundTracks[SoundNum], loops);
-      MIX_PlayTrack(ASoundTracks[SoundNum], 0);
+      MIX_SetTrackGain(track, VOLUMEWAV / 100.0);
+      MIX_SetTrackLoops(track, loops);
+      MIX_PlayTrack(track, 0);
     end;
 
 end;

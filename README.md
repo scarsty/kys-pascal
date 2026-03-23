@@ -18,14 +18,14 @@ SDL3的pas文件请从<https://github.com/PascalGameDevelopment/SDL3-for-Pascal>
 
 使用Delphi社区版也可以编译，但不推荐。
 
-不在Windows下面编译则需要安装运行库，用brew（Mac），apt-get（Ubuntu）之类安装sdl3，sdl3-ttf，sdl3-image，lua等相关sdl库。
+不在Windows下面编译则需要安装运行库，用brew（Mac），apt-get（Ubuntu）之类安装sdl3，sdl3-ttf，sdl3-mixer，lua等相关sdl库。
 如果lua库不能自动安装，则需要自己编译。
 
 检查lua52.pas的开头部分指定的库文件名字，如果与现有的不同则修改。
 
 已包含Android的工程。
 
-sdl-mixer早期版本存在导致程序崩溃的bug，在最新版中似乎已经修复，但仍存在不少小的bug，故这里使用bass作为音频库。
+sdl-mixer早期版本存在导致程序崩溃的bug，在最新版中似乎已经修复。
 
 ## 字符串的处理
 
