@@ -533,12 +533,16 @@ var
   var
     id: SDL_PropertiesID;
     io: PSDL_IOStream;
+    str: utf8string;
   begin
     id := SDL_CreateProperties();
     io := SDL_IOFromFile(PChar(filename), 'rb');
     SDL_SetPointerProperty(id, MIX_PROP_AUDIO_LOAD_IOSTREAM_POINTER, io);
     SDL_SetStringProperty(id, MIX_PROP_AUDIO_DECODER_STRING, 'fluidsynth');
-    SDL_SetStringProperty(id, 'SDL_mixer.decoder.fluidsynth.soundfont_path', 'music/mid.sf2');
+    str := AppPath + 'music/mid.sf2';
+      if (not FileExists(str)) then
+    str := AppPathCommon + 'music/mid.sf2';
+    SDL_SetStringProperty(id, 'SDL_mixer.decoder.fluidsynth.soundfont_path', putf8char(str));
     Result := MIX_LoadAudioWithProperties(id);
     SDL_CloseIO(io);
     SDL_DestroyProperties(id);
@@ -613,13 +617,10 @@ end;
 procedure PlayMP3(MusicNum, times: integer; frombeginning: integer = 1); overload;
 var
   loops: integer;
+  id: SDL_PropertiesID;
 begin
   if not EnsureMixerCreated then
     Exit;
-  if times = -1 then
-    loops := -1
-  else
-    loops := 0;
   try
     if (MusicNum >= low(Music)) and (MusicNum <= high(Music)) and (VOLUME > 0) then
       if Music[MusicNum] <> nil then
@@ -630,7 +631,11 @@ begin
           MIX_SetTrackPlaybackPosition(MusicTrack, 0);
         MIX_SetTrackGain(MusicTrack, VOLUME / 100.0);
         MIX_SetTrackLoops(MusicTrack, loops);
-        MIX_PlayTrack(MusicTrack, 0);
+        id := SDL_CreateProperties();
+        SDL_SetNumberProperty(id, MIX_PROP_PLAY_FADE_IN_MILLISECONDS_NUMBER, 50);
+        SDL_SetNumberProperty(id, MIX_PROP_PLAY_LOOPS_NUMBER, -1);
+        MIX_PlayTrack(MusicTrack, id);
+        SDL_DestroyProperties(id);
         nowmusic := MusicNum;
       end;
   finally
@@ -736,107 +741,6 @@ begin
     end;
 
 end;
-
-{procedure InitialMusic;
-  var
-  i: integer;
-  str: utf8string;
-  begin
-  for i := 0 to 23 do
-  begin
-  str := AppPath + 'music/' + inttostr(i) + '.mid';
-  if FileExists(putf8char(str)) then
-  begin
-  Music[i] := Mix_LoadMUS(putf8char(str));
-  end
-  else
-  Music[i] := nil;
-  end;
-  for i := 0 to 52 do
-  begin
-  str := AppPath + formatfloat('sound/e00', i) + '.wav';
-  if FileExists(putf8char(str)) then
-  ESound[i] := Mix_LoadWav(putf8char(str))
-  else
-  ESound[i] := nil;
-  end;
-  for i := 0 to 24 do
-  begin
-  str := AppPath + formatfloat('sound/atk00', i) + '.wav';
-  if FileExists(putf8char(str)) then
-  ASound[i] := Mix_LoadWav(putf8char(str))
-  else
-  ASound[i] := nil;
-  end;
-
-  end;
-
-  //播放mp3音乐
-  procedure PlayMP3(MusicNum, times: integer); overload;
-  begin
-  if MusicNum in [Low(Music)..High(Music)] then
-  begin
-
-  if Music[MusicNum] <> nil then
-  begin
-  Mix_PlayMusic(Music[MusicNum], times);
-  end;
-  end;
-
-  end;
-
-  procedure PlayMP3(filename: putf8char; times: integer); overload;
-  begin
-  //if fileexists(filename) then
-  //begin
-  //Music := Mix_LoadMUS(filename);
-  //Mix_volumemusic(MIX_MAX_VOLUME div 3);
-  //Mix_PlayMusic(music, times);
-  //end;
-
-  end;
-
-  //停止当前播放的音乐
-  procedure StopMP3;
-  begin
-  Mix_HaltMusic;
-
-  end;
-
-  //播放eft音效
-  procedure PlaySoundE(SoundNum, times: integer); overload;
-  begin
-  if SoundNum in [Low(Esound)..High(Esound)] then
-  if Esound[SoundNum] <> nil then
-  Mix_PlayChannel(-1, Esound[SoundNum], times);
-
-  end;
-
-  procedure PlaySoundE(SoundNum: integer); overload;
-  begin
-  if SoundNum in [Low(Esound)..High(Esound)] then
-  if Esound[SoundNum] <> nil then
-  Mix_PlayChannel(-1, Esound[SoundNum], 0);
-
-  end;
-
-  procedure PlaySoundE(filename: putf8char; times: integer); overload;
-  begin
-  if fileexists(filename) then
-  begin
-  Sound := Mix_LoadWav(filename);
-  Mix_PlayChannel(-1, sound, times);
-  end;
-  end;
-
-  //播放atk音效
-  procedure PlaySoundA(SoundNum, times: integer);
-  begin
-  if SoundNum in [Low(ASound)..High(ASound)] then
-  if ASound[SoundNum] <> nil then
-  Mix_PlayChannel(-1, ASound[SoundNum], times);
-
-  end;}
 
 procedure ReadTiles;
 var
