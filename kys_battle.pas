@@ -165,11 +165,11 @@ begin
     end;
   end;
 
-    for i := 0 to BRoleAmount - 1 do
-    begin
-      path := formatfloat('fight/fight000', Rrole[Brole[i].rnum].HeadNum);
-      FPicAmount := LoadIdxGrp(path + '.idx', path + '.grp', FIdx[Rrole[Brole[i].rnum].HeadNum], FPic[Rrole[Brole[i].rnum].HeadNum]);
-    end;
+  for i := 0 to BRoleAmount - 1 do
+  begin
+    path := formatfloat('fight/fight000', Rrole[Brole[i].rnum].HeadNum);
+    FPicAmount := LoadIdxGrp(path + '.idx', path + '.grp', FIdx[Rrole[Brole[i].rnum].HeadNum], FPic[Rrole[Brole[i].rnum].HeadNum]);
+  end;
 
   BattleMainControl;
 

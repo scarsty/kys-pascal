@@ -1517,6 +1517,7 @@ begin
   x := 30;
   y := 80;
   DrawRectangleWithoutFrame(screen, 0, 0, CENTER_X * 2, CENTER_Y * 2, 0, 60);
+  UpdateScreen(screen, x, y, drawlength(str1) * 20, 22);
   for i := 1 to len + 1 do
   begin
     if str[i] = utf8char(10) then
@@ -1526,9 +1527,9 @@ begin
       str[i] := utf8char(0);
       str1 := midstr(str, p, i - p);
       DrawShadowText(screen, str1, x, y, ColColor($FF), ColColor($FF));
+      UpdateScreen(screen, x, y, drawlength(str1) * 10 + 2, 22);
       p := i + 1;
       y := y + 25;
-      UpdateScreen(screen, 0, 0, screen.w, screen.h);
     end;
     if str[i] = utf8char($2A) then
     begin
@@ -1541,7 +1542,6 @@ begin
   end;
   WaitAnyKey;
   instruct_14;
-
   i := 0;
   tempscr := SDL_LoadPNG(putf8char(AppPath + 'resource/end.png'));
   if tempscr <> nil then
@@ -1564,7 +1564,6 @@ begin
     SDL_DestroySurface(tempscr);
   end;
   WaitAnyKey;
-
 end;
 
 //Set sexual.
@@ -1596,7 +1595,7 @@ begin
   instruct_1($B9E, $6F, 0);
   if amount >= 1 then
   begin
-      menu := CommonMenu(CENTER_X - 120, 150, 105 + 10 * 10, amount - 1, menuString);
+    menu := CommonMenu(CENTER_X - 120, 150, 105 + 10 * 10, amount - 1, menuString);
     Redraw;
     if menu >= 0 then
     begin
@@ -2071,6 +2070,7 @@ begin
       w1 := length(p1) * 11;
       if (w1 > w) then w := w1;
       UpdateScreen(screen, x - 3, y - 3, w + 6, 22 * (i + 1) + 6);
+      //UpdateScreen(screen, 0, 0, screen.w, screen.h);
       //waitanykey;
     end;
     34: //Draw a rectangle as background.
@@ -2080,7 +2080,7 @@ begin
       e4 := e_GetValue(2, e1, e4);
       e5 := e_GetValue(3, e1, e5);
       DrawRectangle(screen, e2, e3, e4, e5, 0, ColColor($FF), 50);
-      //UpdateScreen(screen,e1,e2,e3+1,e4+1);
+      UpdateScreen(screen,e2,e3,e4+1,e5+1);
     end;
     35: //Pause and wait a key.
     begin
@@ -2144,7 +2144,7 @@ begin
         p := p + 1;
       end;
       DrawBig5ShadowText(screen, p1, e3 + 3, e4 + 22 * i + 2, ColColor(e5 and $FF), ColColor((e5 and $FF00) shl 8));
-      //UpdateScreen(screen, 0, 0, screen.w, screen.h);
+      UpdateScreen(screen, 0, 0, screen.w, screen.h);
       i := WaitAnyKey;
       if i = SDLK_Y then
         x50[$7000] := 0
@@ -2230,6 +2230,7 @@ begin
         end;
       end;
       UpdateScreen(screen, e3 - x, e4 - y, w, h);
+      //UpdateScreen(screen, 0, 0, screen.w, screen.h);
     end;
     42: //Change the poistion on world map.
     begin

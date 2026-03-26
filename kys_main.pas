@@ -762,6 +762,7 @@ begin
   x := 30;
   y := 80;
   DrawRectangleWithoutFrame(screen, 0, 0, CENTER_X * 2, CENTER_Y * 2, 0, 60);
+  UpdateScreen(screen, 0, 0, screen.w, screen.h);
   for i := 1 to len + 1 do
   begin
     if str[i] = utf8char(10) then
@@ -771,9 +772,9 @@ begin
       str[i] := utf8char(0);
       str1 := midstr(str, p, i - p);
       DrawShadowText(screen, str1, x, y, ColColor($FF), ColColor($FF));
+      UpdateScreen(screen, x, y, drawlength(str1) * 10+2, 22);
       p := i + 1;
       y := y + 25;
-      UpdateScreen(screen, 0, 0, screen.w, screen.h);
     end;
     if str[i] = utf8char($2A) then
     begin
@@ -787,7 +788,6 @@ begin
   WaitAnyKey;
   instruct_14;
   //instruct_13;
-
 end;
 
 //初始化主角属性
@@ -5899,7 +5899,7 @@ begin
   begin
     //lua_dofile(Lua_script, AppPath + 'script/oldevent/oldevent_' + inttostr(num));
     if IsConsole then
-      writeln('Run event with ', num, '.lua script. ');
+      kyslog('%s', ['Run event with ', num, '.lua script. ']);
     ExecScript(filename, '');
   end;
 
