@@ -44,8 +44,6 @@ procedure ReadTiles;
 function ReadFileToBuffer(p: putf8char; filename: utf8string; size, malloc: integer): putf8char;
 procedure FreeFileBuffer(var p: putf8char);
 function LoadIdxGrp(stridx, strgrp: utf8string; var idxarray: TIntArray; var grparray: TByteArray): integer;
-function LoadPNGTiles(path: utf8string; var PNGIndexArray: TPNGIndexArray; var SurfaceArray: TSurfaceArray; LoadPic: integer = 1): integer;
-procedure LoadOnePNGTile(path: utf8string; p: putf8char; filenum: integer; var PNGIndex: TPNGIndex; SurfacePointer: PPSDL_Surface; forceLoad: integer = 0);
 function LoadSurfaceFromFile(filename: utf8string): PSDL_Surface;
 function LoadSurfaceFromMem(p: putf8char; len: integer): PSDL_Surface;
 procedure FreeAllSurface;
@@ -89,7 +87,7 @@ procedure SetPNGTileBlock(PNGIndex: TPNGIndex; px, py, depth: integer; BlockImag
 
 //用于系统响应的子程
 procedure ChangeCol;
-procedure SDL_UpdateRect2(scr1: PSDL_Surface; x, y, w, h: integer);
+procedure UpdateScreen(scr1: PSDL_Surface; x, y, w, h: integer);
 procedure SDL_GetMouseState2(var x, y: integer);
 procedure ResizeWindow(w, h: integer);
 procedure SwitchFullscreen;
@@ -540,8 +538,8 @@ var
     SDL_SetPointerProperty(id, MIX_PROP_AUDIO_LOAD_IOSTREAM_POINTER, io);
     SDL_SetStringProperty(id, MIX_PROP_AUDIO_DECODER_STRING, 'fluidsynth');
     str := AppPath + 'music/mid.sf2';
-      if (not FileExists(str)) then
-    str := AppPathCommon + 'music/mid.sf2';
+    if (not FileExists(str)) then
+      str := AppPathCommon + 'music/mid.sf2';
     SDL_SetStringProperty(id, 'SDL_mixer.decoder.fluidsynth.soundfont_path', putf8char(str));
     Result := MIX_LoadAudioWithProperties(id);
     SDL_CloseIO(io);
@@ -746,38 +744,15 @@ procedure ReadTiles;
 var
   i: integer;
 begin
-  if PNG_TILE = 0 then
-  begin
-    if IsConsole then
-      writeln('Reading idx and grp files...');
-    MPicAmount := LoadIdxGrp('resource/mmap.idx', 'resource/mmap.grp', MIdx, MPic);
-    SPicAmount := LoadIdxGrp('resource/sdx', 'resource/smp', SIdx, SPic);
-    BPicAmount := LoadIdxGrp('resource/wdx', 'resource/wmp', WIdx, WPic);
-    EPicAmount := LoadIdxGrp('resource/eft.idx', 'resource/eft.grp', EIdx, EPic);
-    //LoadIdxGrp('resource/hdgrp.idx', 'resource/hdgrp.grp', HIdx, HPic);
-    CPicAmount := LoadIdxGrp('resource/cloud.idx', 'resource/cloud.grp', CIdx, CPic);
-    HPicAmount := LoadIdxGrp('resource/hdgrp.idx', 'resource/hdgrp.grp', HIdx, HPic);
-  end;
-
-  if PNG_TILE > 0 then
-  begin
-    MPicAmount := LoadPNGTiles('resource/mmap', MPNGIndex, MPNGTile, 1);
-    SPicAmount := LoadPNGTiles('resource/smap', SPNGIndex, SPNGTile, 1);
-    {for i := BeginSceneRolePic to BeginSceneRolePic + 27 do
-      LoadOnePNGTile('resource/smap', nil,i, SPNGIndex[i], @SPNGTile[0]);
-      for i := 3410 to 4102 do
-      LoadOnePNGTile('resource/smap', nil,i, SPNGIndex[i], @SPNGTile[0]);}
-    BPicAmount := LoadPNGTiles('resource/wmap', BPNGIndex, BPNGTile, 1);
-    EPicAmount := LoadPNGTiles('resource/eft', EPNGIndex, EPNGTile, 1);
-    CPicAmount := LoadPNGTiles('resource/cloud', CPNGIndex, CPNGTile, 1);
-  end;
-
-  if BIG_PNG_TILE > 0 then
-  begin
-    {MMapSurface :=  LoadSurfaceFromFile(AppPath + 'resource/bigpng/mmap.png');
-      if MMapSurface <> nil then
-      writeln('Main map loaded.');}
-  end;
+  if IsConsole then
+    writeln('Reading idx and grp files...');
+  MPicAmount := LoadIdxGrp('resource/mmap.idx', 'resource/mmap.grp', MIdx, MPic);
+  SPicAmount := LoadIdxGrp('resource/sdx', 'resource/smp', SIdx, SPic);
+  BPicAmount := LoadIdxGrp('resource/wdx', 'resource/wmp', WIdx, WPic);
+  EPicAmount := LoadIdxGrp('resource/eft.idx', 'resource/eft.grp', EIdx, EPic);
+  //LoadIdxGrp('resource/hdgrp.idx', 'resource/hdgrp.grp', HIdx, HPic);
+  CPicAmount := LoadIdxGrp('resource/cloud.idx', 'resource/cloud.grp', CIdx, CPic);
+  HPicAmount := LoadIdxGrp('resource/hdgrp.idx', 'resource/hdgrp.grp', HIdx, HPic);
 end;
 
 //读入文件到缓冲区
@@ -843,187 +818,6 @@ begin
 
   Result := tnum;
 
-end;
-
-//为了提高启动的速度, M之外的贴图均仅读入基本信息, 需要时才实际载入图, 并且游戏过程中通常不再释放资源
-function LoadPNGTiles(path: utf8string; var PNGIndexArray: TPNGIndexArray; var SurfaceArray: TSurfaceArray; LoadPic: integer = 1): integer;
-var
-  i, j, k, state, size, Count, pngoff: integer;
-  //zipFile: unzFile;
-  //info: unz_file_info;
-  offset: array of smallint;
-  p: putf8char;
-begin
-  //载入偏移值文件, 计算贴图的最大数量
-  size := 0;
-  Result := 0;
-  p := nil;
-
-  if PNG_TILE = 2 then
-  begin
-    if IsConsole then
-      writeln('Searching imz file... ', path);
-    p := ReadFileToBuffer(nil, AppPath + path + '.imz', -1, 1);
-    if p <> nil then
-    begin
-      Result := Pinteger(p)^;
-      //最大的有帧数的数量作为贴图的最大编号
-      for i := Result - 1 downto 0 do
-      begin
-        if Pinteger(p + Pinteger(p + 4 + i * 4)^ + 4)^ > 0 then
-        begin
-          Result := i + 1;
-          break;
-        end;
-      end;
-
-      //初始化贴图索引, 并计算全部帧数和
-      setlength(PNGIndexArray, Result);
-      Count := 0;
-      for i := 0 to Result - 1 do
-      begin
-        pngoff := Pinteger(p + 4 + i * 4)^;
-        with PNGIndexArray[i] do
-        begin
-          num := Count;
-          x := psmallint(p + pngoff)^;
-          y := psmallint(p + pngoff + 2)^;
-          Frame := Pinteger(p + pngoff + 4)^;
-          Count := Count + Frame;
-          CurPointer := nil;
-          Loaded := 0;
-        end;
-      end;
-    end
-    else if IsConsole then
-      writeln('Can''t find imz file.');
-  end;
-
-  if (PNG_TILE = 1) or (p = nil) then
-  begin
-    if IsConsole then
-      writeln('Searching index of png files... ', path + '/index.ka');
-    path := path + '/';
-    p := ReadFileToBuffer(nil, AppPath + path + '/index.ka', -1, 1);
-    size := StrBufSize(p);
-    setlength(offset, size div 2 + 2);
-    move(p^, offset[0], size);
-    FreeFileBuffer(p);
-
-    for i := size div 4 downto 0 do
-    begin
-      if FileExists(AppPath + path + IntToStr(i) + '.png') or FileExists(AppPath + path + IntToStr(i) + '_0.png') then
-      begin
-        Result := i + 1;
-        break;
-      end;
-    end;
-    //贴图的数量是有文件存在的最大数量
-    setlength(PNGIndexArray, Result);
-    //计算合法贴图文件的总数, 同时指定每个图的索引数据
-    Count := 0;
-    for i := 0 to Result - 1 do
-    begin
-      with PNGIndexArray[i] do
-      begin
-        num := -1;
-        Frame := 0;
-        CurPointer := nil;
-        if FileExists(AppPath + path + IntToStr(i) + '.png') then
-        begin
-          num := Count;
-          Frame := 1;
-          Count := Count + 1;
-        end
-        else
-        begin
-          k := 0;
-          while FileExists(AppPath + path + IntToStr(i) + '_' + IntToStr(k) + '.png') do
-          begin
-            k := k + 1;
-            if k = 1 then
-              num := Count;
-            Count := Count + 1;
-          end;
-          Frame := k;
-        end;
-        x := offset[i * 2];
-        y := offset[i * 2 + 1];
-        Loaded := 0;
-        UseGRP := 0;
-      end;
-    end;
-  end;
-
-  if IsConsole then
-    writeln(Result, ' index, ', Count, ' real titles. Now loading...');
-
-  setlength(SurfaceArray, Count);
-  for i := 0 to Count - 1 do
-    SurfaceArray[i] := nil;
-
-  if LoadPic = 1 then
-  begin
-    for i := 0 to Result - 1 do
-    begin
-      LoadOnePNGTile(path, p, i, PNGIndexArray[i], @SurfaceArray[0], 1);
-    end;
-  end;
-  FreeFileBuffer(p);
-
-end;
-
-procedure LoadOnePNGTile(path: utf8string; p: putf8char; filenum: integer; var PNGIndex: TPNGIndex; SurfacePointer: PPSDL_Surface; forceLoad: integer = 0);
-var
-  j, k, index, len, off: integer;
-  tempscr: PSDL_Surface;
-  frommem: boolean;
-begin
-  SDL_PollEvent(@event);
-  CheckBasicEvent;
-
-  frommem := ((PNG_TILE = 2) and (p <> nil));
-  if not frommem then
-    path := path + '/';
-  with PNGIndex do
-  begin
-    if ((Loaded = 0) or (forceLoad = 1)) and (num >= 0) and (Frame > 0) then
-    begin
-      Loaded := 1;
-      Inc(SurfacePointer, num);
-      CurPointer := SurfacePointer;
-      if Frame = 1 then
-      begin
-        if frommem then
-        begin
-          off := Pinteger(p + 4 + filenum * 4)^ + 8;
-          index := Pinteger(p + off)^;
-          len := Pinteger(p + off + 4)^;
-          SurfacePointer^ := LoadSurfaceFromMem(p + index, len);
-        end
-        else
-          SurfacePointer^ := LoadSurfaceFromFile(AppPath + path + IntToStr(filenum) + '.png');
-        if SurfacePointer^ = nil then
-          SurfacePointer^ := LoadSurfaceFromFile(AppPath + path + IntToStr(filenum) + '_0.png');
-      end;
-      if Frame > 1 then
-      begin
-        for j := 0 to Frame - 1 do
-        begin
-          if frommem then
-          begin
-            off := Pinteger(p + 4 + filenum * 4)^ + 8;
-            index := Pinteger(p + off + j * 8)^;
-            len := Pinteger(p + off + j * 8 + 4)^;
-            SurfacePointer^ := LoadSurfaceFromMem(p + index, len);
-          end
-          else
-            SurfacePointer^ := LoadSurfaceFromFile(AppPath + path + IntToStr(filenum) + '_' + IntToStr(j) + '.png');
-          Inc(SurfacePointer, 1);
-        end;
-      end;
-    end;
-  end;
 end;
 
 function LoadSurfaceFromFile(filename: utf8string): PSDL_Surface;
@@ -1145,7 +939,7 @@ begin
     dest.y := y;
     SDL_BlitSurface(Image, nil, screen, @dest);
     //MessageBox(0, putf8char(Format('BlitSurface error : %s', [SDL_GetError])), 'Error', MB_OK or MB_ICONHAND);
-    //SDL_UpdateRect2(screen, 0, 0, image.w, image.h);
+    //UpdateScreen(screen, 0, 0, image.w, image.h);
   end;
 end;
 
@@ -1614,7 +1408,7 @@ var
 begin
   DrawTextWithRectNoUpdate(sur, word, x, y, w, color1, color2);
   if ((HIRES_TEXT = 0) or (sur = screen)) then
-    SDL_UpdateRect2(screen, x, y, w + 1, 29);
+    UpdateScreen(screen, x, y, w + 1, 29);
 end;
 
 procedure DrawTextWithRectNoUpdate(sur: PSDL_Surface; constref word: utf8string; x, y, w: integer; color1, color2: uint32); overload;
@@ -1778,7 +1572,7 @@ begin
   SDL_SetRenderTarget(render, nil);
 end;
 
-procedure SDL_UpdateRect2(scr1: PSDL_Surface; x, y, w, h: integer);
+procedure UpdateScreen(scr1: PSDL_Surface; x, y, w, h: integer);
 var
   dest: TSDL_Rect;
   clearFRect: TSDL_FRect;
@@ -1875,14 +1669,14 @@ begin
     tempscr := SDL_ConvertSurface(screen, screen.format);
     SDL_BlitSurface(tempscr, nil, screen, nil);
     DrawRectangleWithoutFrame(screen, 0, 0, screen.w, screen.h, 0, 50);
-    SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+    UpdateScreen(screen, 0, 0, screen.w, screen.h);
     menuString[0] := '取消';
     menuString[1] := '確認';
     if CommonMenu(CENTER_X * 2 - 50, 2, 45, 1, menuString) = 1 then
       Quit;
     Redraw(1);
     SDL_BlitSurface(tempscr, nil, screen, nil);
-    SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+    UpdateScreen(screen, 0, 0, screen.w, screen.h);
     SDL_DestroySurface(tempscr);
     AskingQuit := False;
   end;
@@ -2175,7 +1969,7 @@ end;
 //刷新全部屏幕
 procedure UpdateAllScreen;
 begin
-  SDL_UpdateRect2(screen, 0, 0, CENTER_X * 2, CENTER_Y * 2);
+  UpdateScreen(screen, 0, 0, CENTER_X * 2, CENTER_Y * 2);
 end;
 
 //屏幕整体变半透明黑

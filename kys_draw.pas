@@ -87,17 +87,9 @@ var
   BufferIdx: TIntArray;
   BufferPic: TByteArray;
 begin
-  if PNG_TILE > 0 then
-  begin
-    if imgnum <= high(TitlePNGIndex) then
-      DrawPNGTile(TitlePNGIndex[imgnum], 0, nil, screen, px, py);
-  end;
-  if PNG_TILE = 0 then
-  begin
-    len := LoadIdxGrp('resource/title.idx', 'resource/title.grp', BufferIdx, BufferPic);
-    if imgnum < len then
-      DrawRLE8Pic(@ACol[0], imgnum, px, py, @BufferIdx[0], @BufferPic[0], nil, nil, 0, 0, 0, 0);
-  end;
+  len := LoadIdxGrp('resource/title.idx', 'resource/title.grp', BufferIdx, BufferPic);
+  if imgnum < len then
+    DrawRLE8Pic(@ACol[0], imgnum, px, py, @BufferIdx[0], @BufferPic[0], nil, nil, 0, 0, 0, 0);
 end;
 
 //显示主地图贴图
@@ -108,32 +100,8 @@ end;
 
 //显示主地图贴图
 procedure DrawMPic(num, px, py, shadow, alpha: integer; mixColor: uint32; mixAlpha: integer; Framenum: integer = -1; totalpix: integer = 0); overload;
-var
-  NeedGRP: integer;
 begin
-  if (num >= 0) and (num < MPicAmount) then
-  begin
-    NeedGRP := 0;
-    if (PNG_TILE > 0) then
-    begin
-      if MPNGIndex[num].UseGRP = 0 then
-      begin
-        if Framenum = -1 then
-          Framenum := SDL_GetTicks div 200 + random(3);
-        if (num = 1377) or (num = 1388) or (num = 1404) or (num = 1417) then
-          Framenum := SDL_GetTicks div 200;
-        //瀑布场景的闪烁需要
-        //DrawPNGTile(MPNGIndex[num], Framenum, nil, screen, px, py, shadow)
-        DrawPNGTile(MPNGIndex[num], Framenum, nil, screen, px, py, shadow, alpha, mixColor, mixAlpha, 0, nil, 0, 0, 0, 0, 0);
-      end
-      else
-        NeedGRP := 1;
-    end;
-    if (PNG_TILE = 0) or (NeedGRP = 1) then
-    begin
-      DrawRLE8Pic(@ACol[0], num, px, py, @Midx[0], @Mpic[0], nil, nil, 0, 0, 0, shadow, alpha, nil, nil, 0, 0, 0, 4096, mixColor, mixAlpha, totalpix);
-    end;
-  end;
+  DrawRLE8Pic(@ACol[0], num, px, py, @Midx[0], @Mpic[0], nil, nil, 0, 0, 0, shadow, alpha, nil, nil, 0, 0, 0, 4096, mixColor, mixAlpha, totalpix);
 end;
 
 //显示场景图片
@@ -157,12 +125,7 @@ begin
       num := 0;
       py := py - 50;
     end;
-    if PNG_TILE > 0 then
-      DrawPNGTile(SPNGIndex[num], 0, @Area, screen, px, py)
-    else
-    begin
-      DrawRLE8Pic(@ACol[0], num, px, py, @SIdx[0], @SPic[0], @Area, nil, 0, 0, 0, 0);
-    end;
+    DrawRLE8Pic(@ACol[0], num, px, py, @SIdx[0], @SPic[0], @Area, nil, 0, 0, 0, 0);
   end;
 end;
 
@@ -176,12 +139,7 @@ begin
       num := 0;
       py := py - 50;
     end;
-    if PNG_TILE > 0 then
-      DrawPNGTile(SPNGIndex[num], 0, nil, screen, px, py, shadow, alpha, mixColor, mixAlpha, depth, @BlockImg[0], ImageWidth, ImageHeight, sizeof(BlockImg[0]), BlockScreen.x, BlockScreen.y)
-    else
-    begin
-      DrawRLE8Pic(@ACol[0], num, px, py, @SIdx[0], @SPic[0], nil, nil, 0, 0, 0, shadow, alpha, @BlockImg[0], @BlockScreen, ImageWidth, ImageHeight, sizeof(BlockImg[0]), depth, mixColor, mixAlpha);
-    end;
+    DrawRLE8Pic(@ACol[0], num, px, py, @SIdx[0], @SPic[0], nil, nil, 0, 0, 0, shadow, alpha, @BlockImg[0], @BlockScreen, ImageWidth, ImageHeight, sizeof(BlockImg[0]), depth, mixColor, mixAlpha);
   end;
 
 end;
@@ -231,25 +189,12 @@ begin
       num := 0;
       py := py - 50;
     end;
-    if (PNG_TILE > 0) then
+    if needBlock <> 0 then
     begin
-      if temp <> 1 then
-        LoadOnePNGTile('resource/smap/', nil, num, SPNGIndex[num], @SPNGTile[0]);
-      DrawPNGTile(SPNGIndex[num], SDL_GetTicks div 300, @Area, pImg, px, py);
-      if needBlock <> 0 then
-      begin
-        SetPNGTileBlock(SPNGIndex[num], px, py, depth, pBlock, ImageWidth, ImageHeight, sizeof(BlockImg[0]));
-      end;
+      DrawRLE8Pic(@ACol[0], num, px, py, @SIdx[0], @SPic[0], @Area, pImg, ImageWidth, ImageHeight, sizeof(BlockImg[0]), 0, 0, pBlock, nil, 0, 0, 0, depth, 0, 0);
     end
     else
-    begin
-      if needBlock <> 0 then
-      begin
-        DrawRLE8Pic(@ACol[0], num, px, py, @SIdx[0], @SPic[0], @Area, pImg, ImageWidth, ImageHeight, sizeof(BlockImg[0]), 0, 0, pBlock, nil, 0, 0, 0, depth, 0, 0);
-      end
-      else
-        DrawRLE8Pic(@ACol[0], num, px, py, @SIdx[0], @SPic[0], @Area, pImg, ImageWidth, ImageHeight, sizeof(BlockImg[0]), 0);
-    end;
+      DrawRLE8Pic(@ACol[0], num, px, py, @SIdx[0], @SPic[0], @Area, pImg, ImageWidth, ImageHeight, sizeof(BlockImg[0]), 0);
   end;
 end;
 
@@ -361,17 +306,8 @@ procedure DrawBPic(num, px, py, shadow, alpha, depth: integer; mixColor: uint32;
 begin
   if (num > 0) and (num < BPicAmount) then
   begin
-    if PNG_TILE > 0 then
-    begin
-      //LoadOnePNGTile('resource/wmap/', num, BPNGIndex[num], @BPNGTile[0]);
-      DrawPNGTile(BPNGIndex[num], 0, nil, screen, px, py, shadow, alpha, mixColor, mixAlpha, depth, @BlockImg2[0], ImageWidth, ImageHeight, sizeof(BlockImg2[0]), BlockScreen.x, BlockScreen.y);
-    end
-    else
-    begin
-      DrawRLE8Pic(@ACol[0], num, px, py, @WIdx[0], @WPic[0], nil, nil, 0, 0, 0, shadow, alpha, @BlockImg2[0], @BlockScreen, ImageWidth, ImageHeight, sizeof(BlockImg2[0]), depth, mixColor, mixAlpha);
-    end;
+    DrawRLE8Pic(@ACol[0], num, px, py, @WIdx[0], @WPic[0], nil, nil, 0, 0, 0, shadow, alpha, @BlockImg2[0], @BlockScreen, ImageWidth, ImageHeight, sizeof(BlockImg2[0]), depth, mixColor, mixAlpha);
   end;
-
 end;
 
 //仅在某区域显示战场图
@@ -385,15 +321,7 @@ begin
     Area.y := y;
     Area.w := w;
     Area.h := h;
-    if PNG_TILE > 0 then
-    begin
-      //LoadOnePNGTile('resource/wmap/', num, BPNGIndex[num], @BPNGTile[0]);
-      DrawPNGTile(BPNGIndex[num], 0, @Area, screen, px, py);
-    end
-    else
-    begin
-      DrawRLE8Pic(@ACol[0], num, px, py, @WIdx[0], @WPic[0], @Area, nil, 0, 0, 0, shadow);
-    end;
+    DrawRLE8Pic(@ACol[0], num, px, py, @WIdx[0], @WPic[0], @Area, nil, 0, 0, 0, shadow);
   end;
 end;
 
@@ -410,25 +338,10 @@ var
 begin
   if (num > 0) and (num < BPicAmount) then
   begin
-    if PNG_TILE > 0 then
-    begin
-      LoadOnePNGTile('resource/wmap/', nil, num, BPNGIndex[num], @BPNGTile[0]);
-      if needBlock <> 0 then
-      begin
-        SetPNGTileBlock(BPNGIndex[num], px, py, depth, @BlockImg[0], ImageWidth, ImageHeight, sizeof(BlockImg[0]));
-        pImg := ImgBBuild;
-      end
-      else
-        pImg := ImgBfield;
-      DrawPNGTile(BPNGIndex[num], 0, nil, pImg, px, py);
-    end
+    if needBlock <> 0 then
+      DrawRLE8Pic(@ACol[0], num, px, py, @WIdx[0], @WPic[0], nil, ImgBBuild, ImageWidth, ImageHeight, sizeof(BlockImg2[0]), 0, 0, @BlockImg2[0], nil, 0, 0, 0, depth, 0, 0)
     else
-    begin
-      if needBlock <> 0 then
-        DrawRLE8Pic(@ACol[0], num, px, py, @WIdx[0], @WPic[0], nil, ImgBBuild, ImageWidth, ImageHeight, sizeof(BlockImg2[0]), 0, 0, @BlockImg2[0], nil, 0, 0, 0, depth, 0, 0)
-      else
-        DrawRLE8Pic(@ACol[0], num, px, py, @WIdx[0], @WPic[0], nil, ImgBfield, ImageWidth, ImageHeight, sizeof(BlockImg2[0]), 0);
-    end;
+      DrawRLE8Pic(@ACol[0], num, px, py, @WIdx[0], @WPic[0], nil, ImgBfield, ImageWidth, ImageHeight, sizeof(BlockImg2[0]), 0);
   end;
 end;
 
@@ -443,14 +356,7 @@ procedure DrawEPic(num, px, py, shadow, alpha, depth: integer; mixColor: uint32;
 begin
   if (num >= 0) and (num < EPicAmount) then
   begin
-    if PNG_TILE > 0 then
-    begin
-      DrawPNGTile(EPNGIndex[num], 0, nil, screen, px, py, shadow, alpha, mixColor, mixAlpha, depth, nil, 0, 0, 0, 0, 0);
-    end;
-    if PNG_TILE = 0 then
-    begin
-      DrawRLE8Pic(@ACol[0], num, px, py, @EIdx[0], @EPic[0], nil, nil, 0, 0, 0, shadow, alpha, nil, nil, 0, 0, 0, depth, mixColor, mixAlpha);
-    end;
+    DrawRLE8Pic(@ACol[0], num, px, py, @EIdx[0], @EPic[0], nil, nil, 0, 0, 0, shadow, alpha, nil, nil, 0, 0, 0, depth, mixColor, mixAlpha);
   end;
 end;
 
@@ -464,32 +370,14 @@ end;
 //用于画带透明度和遮挡的人物动作图片
 procedure DrawFPic(num, px, py, index, shadow, alpha, depth: integer; mixColor: uint32; mixAlpha: integer); overload;
 begin
-  case PNG_TILE of
-    1, 2:
-    begin
-      if (index >= 0) and (index < BRoleAmount) then
-        if (num >= low(FPNGIndex[index])) and (num <= high(FPNGIndex[index])) then
-          DrawPNGTile(FPNGIndex[index][num], 0, nil, screen, px, py, shadow, alpha, mixColor, mixAlpha, depth, @BlockImg2[0], ImageWidth, ImageHeight, sizeof(BlockImg2[0]), BlockScreen.x, BlockScreen.y);
-    end;
-    0:
-    begin
-      if num < FPicAmount then
-        DrawRLE8Pic(@ACol[0], num, px, py, @FIdx[index][0], @FPic[index][0], nil, nil, 0, 0, 0, shadow, alpha, @BlockImg2[0], @BlockScreen, ImageWidth, ImageHeight, sizeof(BlockImg2[0]), depth, mixColor, mixAlpha);
-    end;
-  end;
+  if num < FPicAmount then
+    DrawRLE8Pic(@ACol[0], num, px, py, @FIdx[index][0], @FPic[index][0], nil, nil, 0, 0, 0, shadow, alpha, @BlockImg2[0], @BlockScreen, ImageWidth, ImageHeight, sizeof(BlockImg2[0]), depth, mixColor, mixAlpha);
 end;
 
 //主地图上画云
 procedure DrawCPic(num, px, py, shadow, alpha: integer; mixColor: uint32; mixAlpha: integer);
 begin
-  if PNG_TILE > 0 then
-  begin
-    DrawPNGTile(CPNGIndex[num], 0, nil, screen, px, py, shadow, alpha, mixColor, mixAlpha);
-  end;
-  if PNG_TILE = 0 then
-  begin
-    DrawRLE8Pic(@ACol1[0], num, px, py, @CIdx[0], @CPic[0], nil, nil, 0, 0, 0, shadow, alpha, nil, nil, 0, 0, 0, 0, mixColor, mixAlpha);
-  end;
+  DrawRLE8Pic(@ACol1[0], num, px, py, @CIdx[0], @CPic[0], nil, nil, 0, 0, 0, shadow, alpha, nil, nil, 0, 0, 0, 0, mixColor, mixAlpha);
 end;
 
 procedure GetPicSize(num: integer; Pidx: Pinteger; Ppic: pbyte; var w, h, xs, ys: integer);
@@ -866,26 +754,10 @@ begin
           BuildArray[k].x := i1;
           BuildArray[k].y := i2;
           BuildArray[k].b := num;
-          if PNG_TILE > 0 then
-          begin
-            if MPNGIndex[num].CurPointer <> nil then
-            begin
-              if MPNGIndex[num].CurPointer^ <> nil then
-              begin
-                Width := MPNGIndex[num].CurPointer^.w;
-                Height := MPNGIndex[num].CurPointer^.h;
-                yoffset := MPNGIndex[num].y;
-                xoffset := MPNGIndex[num].y;
-              end;
-            end;
-          end
-          else
-          begin
-            Width := smallint(Mpic[MIdx[num - 1]]);
-            Height := smallint(Mpic[MIdx[num - 1] + 2]);
-            yoffset := smallint(Mpic[MIdx[num - 1] + 6]);
-            xoffset := smallint(Mpic[MIdx[num - 1] + 4]);
-          end;
+          Width := smallint(Mpic[MIdx[num - 1]]);
+          Height := smallint(Mpic[MIdx[num - 1] + 2]);
+          yoffset := smallint(Mpic[MIdx[num - 1] + 6]);
+          xoffset := smallint(Mpic[MIdx[num - 1] + 4]);
           //根据图片的宽度计算图的中点的坐标和作为排序依据
           //y坐标为第二依据
           //BuildArray[k].c := (i1 + i2) - (Width + 35) div 36 - (yoffset - Height + 1) div 9;
@@ -1169,9 +1041,7 @@ begin
     num := DData[CurScene, SData[CurScene, 3, i1, i2], 5] div 2;
     if num > 0 then
     begin
-      for i := DData[CurScene, SData[CurScene, 3, i1, i2], 7] div 2 to DData[CurScene, SData[CurScene, 3, i1, i2], 6] div 2 do
-        if (temp = 0) and (PNG_TILE > 0) then
-          LoadOnePNGTile('resource/smap/', nil, i, SPNGIndex[i], @SPNGTile[0]);
+      //for i := DData[CurScene, SData[CurScene, 3, i1, i2], 7] div 2 to DData[CurScene, SData[CurScene, 3, i1, i2], 6] div 2 do
       if SCENEAMI = 2 then
         InitialSPic(num, x, y - SData[CurScene, 4, i1, i2], x1, y1, w, h, 1, depth, temp);
     end;

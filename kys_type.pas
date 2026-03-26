@@ -256,8 +256,6 @@ var
   //字体
 
   //视频部分设置
-  PNG_TILE: integer = 1; //使用PNG贴图
-  TRY_FIND_GRP: integer = 1; //当找不到PNG贴图时, 会试图寻找GRP中的图
   BIG_PNG_TILE: integer = 0;
   FULLSCREEN: integer; //是否全屏
   RESOLUTIONX: integer = 1280;
@@ -301,14 +299,6 @@ var
   CPNGTile: TSurfaceArray;
   TitlePNGTile: TSurfaceArray;
   FPNGTile: array [0..999] of TSurfaceArray;
-
-  MPNGIndex: TPNGIndexArray;
-  SPNGIndex: TPNGIndexArray;
-  BPNGIndex: TPNGIndexArray;
-  EPNGIndex: TPNGIndexArray;
-  CPNGIndex: TPNGIndexArray;
-  TitlePNGIndex: TPNGIndexArray;
-  FPNGIndex: array [0..999] of TPNGIndexArray;
 
   MSurface: PSDL_Surface;
   SSurface: PSDL_Surface;

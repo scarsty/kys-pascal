@@ -524,8 +524,6 @@ begin
     KDEF_SCRIPT := Kys_ini.ReadInteger('system', 'KDEF_SCRIPT', 1);
     NIGHT_EFFECT := Kys_ini.ReadInteger('system', 'NIGHT_EFFECT', 0);
     //EXIT_GAME := Kys_ini.ReadInteger('system', 'EXIT_GAME', 1);
-    PNG_TILE := Kys_ini.ReadInteger('system', 'PNG_TILE', 0);
-    TRY_FIND_GRP := Kys_ini.ReadInteger('system', 'TRY_FIND_GRP', 0);
     EXPAND_GROUND := Kys_ini.ReadInteger('system', 'EXPAND_GROUND', 0);
     WMP_4_PIC := Kys_ini.ReadInteger('system', 'WMP_4_PIC', 0);
     Touch_Walk := Kys_ini.ReadInteger('system', 'TOUCH_WALK', 1) <> 0;
@@ -555,9 +553,6 @@ begin
       ShowVirtualKey := 0;
       Touch_Walk := True;
     end;
-
-    if (not FileExists(AppPath + 'resource/mmap/index.ka')) and (not FileExists(AppPath + 'resource/mmap.imz')) then
-      PNG_TILE := 0;
 
     for i := 43 to 58 do
     begin
@@ -616,14 +611,7 @@ begin
 
   where := 3;
   Redraw;
-
-  if PNG_TILE > 0 then
-  begin
-    LoadPNGTiles('resource/title', TitlePNGIndex, TitlePNGTile, 1);
-    DrawTitlePic(8, TitlePosition.x, TitlePosition.y + 20);
-  end;
-
-  SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+  UpdateScreen(screen, 0, 0, screen.w, screen.h);
 
   ReadTiles;
 
@@ -649,7 +637,7 @@ begin
   Redraw;
   DrawTitlePic(0, x, y);
   DrawTitlePic(menu + 1, x, y + menu * 20);
-  SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+  UpdateScreen(screen, 0, 0, screen.w, screen.h);
 
   //事件等待
   Selected := False;
@@ -671,7 +659,7 @@ begin
             menu := 2;
           DrawTitlePic(0, x, y);
           DrawTitlePic(menu + 1, x, y + menu * 20);
-          SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+          UpdateScreen(screen, 0, 0, screen.w, screen.h);
         end;
         //按下方向键下
         if event.key.key = SDLK_DOWN then
@@ -681,7 +669,7 @@ begin
             menu := 0;
           DrawTitlePic(0, x, y);
           DrawTitlePic(menu + 1, x, y + menu * 20);
-          SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+          UpdateScreen(screen, 0, 0, screen.w, screen.h);
         end;
       end;
       //按下鼠标(UP表示抬起按键才执行)
@@ -704,7 +692,7 @@ begin
           begin
             DrawTitlePic(0, x, y);
             DrawTitlePic(menu + 1, x, y + menu * 20);
-            SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+            UpdateScreen(screen, 0, 0, screen.w, screen.h);
           end;
         end;
       end;
@@ -718,7 +706,7 @@ begin
           if MenuLoadAtBeginning >= 0 then
           begin
             //redraw;
-            //SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+            //UpdateScreen(screen, 0, 0, screen.w, screen.h);
             CurEvent := -1; //when CurEvent=-1, Draw scene by Sx, Sy. Or by Cx, Cy.
             if where = 1 then
             begin
@@ -747,7 +735,7 @@ begin
       Redraw;
       DrawTitlePic(0, x, y);
       DrawTitlePic(menu + 1, x, y + menu * 20);
-      SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+      UpdateScreen(screen, 0, 0, screen.w, screen.h);
       Selected := False;
     end;
   end;
@@ -785,7 +773,7 @@ begin
       DrawShadowText(screen, str1, x, y, ColColor($FF), ColColor($FF));
       p := i + 1;
       y := y + 25;
-      SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+      UpdateScreen(screen, 0, 0, screen.w, screen.h);
     end;
     if str[i] = utf8char($2A) then
     begin
@@ -911,7 +899,7 @@ begin
       DrawShadowText(screen, str, CENTER_X - 273 + 10, CENTER_Y + 111, ColColor($21), ColColor($23));
       str0 := format('%4d', [Rrole[0].Aptitude]);
       DrawEngShadowText(screen, str0, CENTER_X - 273 + 110, CENTER_Y + 111, ColColor($64), ColColor($66));
-      SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+      UpdateScreen(screen, 0, 0, screen.w, screen.h);
       i := WaitAnyKey;
     until (i = SDLK_ESCAPE) or (i = SDLK_RETURN);
 
@@ -1589,7 +1577,7 @@ begin
     DrawShadowText(screen, str, 30, CENTER_Y + 111, ColColor($23), ColColor($21));
     str0 := format('%4d', [Rrole[0].Aptitude]);
     DrawEngShadowText(screen, str0, 150, CENTER_Y + 111, ColColor($66), ColColor($63));
-    SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+    UpdateScreen(screen, 0, 0, screen.w, screen.h);
 
     StartAmi;
   end;
@@ -1817,7 +1805,7 @@ begin
   walking := 0;
   Speed := 0;
   DrawMMap;
-  SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+  UpdateScreen(screen, 0, 0, screen.w, screen.h);
   //SDL_EnableKeyRepeat(50, 30);
   //StopMp3;
   //PlayMp3(16, -1);
@@ -1844,7 +1832,7 @@ begin
       ChangeCol;
       next_time2 := now + 200;
       //DrawMMap;
-      //SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+      //UpdateScreen(screen, 0, 0, screen.w, screen.h);
     end;
 
     //飘云
@@ -1861,7 +1849,7 @@ begin
       end;
       next_time3 := now + 40;
       //DrawMMap;
-      //SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+      //UpdateScreen(screen, 0, 0, screen.w, screen.h);
     end;
 
     //主角动作
@@ -2099,7 +2087,7 @@ begin
 
       //每走一步均重画屏幕, 并检测是否处于某场景入口
       Redraw;
-      SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+      UpdateScreen(screen, 0, 0, screen.w, screen.h);
       if CheckEntrance then
       begin
         walking := 0;
@@ -2110,7 +2098,7 @@ begin
         if MMAPAMI = 0 then
         begin
           Redraw;
-          SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+          UpdateScreen(screen, 0, 0, screen.w, screen.h);
         end;
       end;
 
@@ -2140,7 +2128,7 @@ begin
           else
           DrawMPic(2001, pos.x, pos.y, 0, 50, 0, 0);
           end;}
-        SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+        UpdateScreen(screen, 0, 0, screen.w, screen.h);
       end;
       SDL_Delay(40); //静止时只需刷新率与最频繁的动态效果相同即可
     end
@@ -2298,7 +2286,7 @@ begin
     CurSceneRolePic := 3445;
     CurEvent := BEGIN_EVENT;
     CallEvent(BEGIN_EVENT);
-    SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+    UpdateScreen(screen, 0, 0, screen.w, screen.h);
     CurEvent := -1;
   end;
 
@@ -2361,7 +2349,7 @@ begin
       AmiCount := AmiCount + 1;
       ChangeCol;
       //DrawScene;
-      //SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+      //UpdateScreen(screen, 0, 0, screen.w, screen.h);
     end;
 
     //检查是否位于出口, 如是则退出
@@ -2505,7 +2493,7 @@ begin
               PlayMP3(Rscene[CurScene].ExitMusic, -1);
             end;
             Redraw;
-            SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+            UpdateScreen(screen, 0, 0, screen.w, screen.h);
             exit;
           end;
         end;
@@ -2656,7 +2644,7 @@ begin
         end;
       end;
       Redraw;
-      SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+      UpdateScreen(screen, 0, 0, screen.w, screen.h);
       CheckEvent3;
       //SDL_Delay(WALK_SPEED2);
     end;
@@ -2686,7 +2674,7 @@ begin
               end;}
           end;
         end;
-        SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+        UpdateScreen(screen, 0, 0, screen.w, screen.h);
       end;
       SDL_Delay(40);
     end
@@ -2700,7 +2688,7 @@ begin
   instruct_14; //黑屏
 
   //ReDraw;
-  //SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+  //UpdateScreen(screen, 0, 0, screen.w, screen.h);
   //if SCENEAMI = 2 then
   //SDL_KillThread(UpDate);
   if exitscenemusicnum > 0 then
@@ -2864,7 +2852,7 @@ procedure ShowSceneName(snum: integer);
 var
   scenename: utf8string;
 begin
-  SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+  UpdateScreen(screen, 0, 0, screen.w, screen.h);
   //显示场景名
   if snum >= 0 then
   begin
@@ -2996,7 +2984,7 @@ begin
   menu := default;
   RecordFreshScreen(x, y, w + 1, max * 22 + 29);
   ShowCommonMenu;
-  SDL_UpdateRect2(screen, x, y, w + 1, max * 22 + 29);
+  UpdateScreen(screen, x, y, w + 1, max * 22 + 29);
   fn(menu);
   while (SDL_WaitEvent(@event)) do
   begin
@@ -3010,7 +2998,7 @@ begin
           if menu > max then
             menu := 0;
           ShowCommonMenu;
-          SDL_UpdateRect2(screen, x, y, w + 1, max * 22 + 29);
+          UpdateScreen(screen, x, y, w + 1, max * 22 + 29);
           fn(menu);
         end;
         if (event.key.key = SDLK_UP) then
@@ -3019,7 +3007,7 @@ begin
           if menu < 0 then
             menu := max;
           ShowCommonMenu;
-          SDL_UpdateRect2(screen, x, y, w + 1, max * 22 + 29);
+          UpdateScreen(screen, x, y, w + 1, max * 22 + 29);
           fn(menu);
         end;
         if ((event.key.key = SDLK_ESCAPE)) {and (where <= 2)} then
@@ -3059,7 +3047,7 @@ begin
           if menup <> menu then
           begin
             ShowCommonMenu;
-            SDL_UpdateRect2(screen, x, y, w + 1, max * 22 + 29);
+            UpdateScreen(screen, x, y, w + 1, max * 22 + 29);
             fn(menu);
           end;
         end;
@@ -3098,7 +3086,7 @@ begin
   //DrawMMap;
   RecordFreshScreen(x, y, w + 1, max * 22 + 29);
   ShowCommonScrollMenu;
-  SDL_UpdateRect2(screen, x, y, w + 1, maxshow * 22 + 29);
+  UpdateScreen(screen, x, y, w + 1, maxshow * 22 + 29);
   while (SDL_WaitEvent(@event)) do
   begin
     CheckBasicEvent;
@@ -3118,7 +3106,7 @@ begin
             menutop := 0;
           end;
           ShowCommonScrollMenu;
-          SDL_UpdateRect2(screen, x, y, w + 1, maxshow * 22 + 29);
+          UpdateScreen(screen, x, y, w + 1, maxshow * 22 + 29);
         end;
         if (event.key.key = SDLK_UP) then
         begin
@@ -3133,7 +3121,7 @@ begin
             menutop := menu - maxshow + 1;
           end;
           ShowCommonScrollMenu;
-          SDL_UpdateRect2(screen, x, y, w + 1, maxshow * 22 + 29);
+          UpdateScreen(screen, x, y, w + 1, maxshow * 22 + 29);
         end;
         if (event.key.key = SDLK_PAGEDOWN) then
         begin
@@ -3148,7 +3136,7 @@ begin
             menutop := max - maxshow + 1;
           end;
           ShowCommonScrollMenu;
-          SDL_UpdateRect2(screen, x, y, w + 1, maxshow * 22 + 29);
+          UpdateScreen(screen, x, y, w + 1, maxshow * 22 + 29);
         end;
         if (event.key.key = SDLK_PAGEUP) then
         begin
@@ -3163,20 +3151,20 @@ begin
             menutop := 0;
           end;
           ShowCommonScrollMenu;
-          SDL_UpdateRect2(screen, x, y, w + 1, maxshow * 22 + 29);
+          UpdateScreen(screen, x, y, w + 1, maxshow * 22 + 29);
         end;
         if ((event.key.key = SDLK_ESCAPE)) and (where <= 2) then
         begin
           Result := -1;
           //ReDraw;
-          //SDL_UpdateRect2(screen, x, y, w + 1, maxshow * 22 + 29);
+          //UpdateScreen(screen, x, y, w + 1, maxshow * 22 + 29);
           break;
         end;
         if (event.key.key = SDLK_RETURN) or (event.key.key = SDLK_SPACE) then
         begin
           Result := menu;
           //Redraw;
-          //SDL_UpdateRect2(screen, x, y, w + 1, maxshow * 22 + 29);
+          //UpdateScreen(screen, x, y, w + 1, maxshow * 22 + 29);
           break;
         end;
       end;
@@ -3186,7 +3174,7 @@ begin
         begin
           Result := -1;
           //ReDraw;
-          //SDL_UpdateRect2(screen, x, y, w + 1, maxshow * 22 + 29);
+          //UpdateScreen(screen, x, y, w + 1, maxshow * 22 + 29);
           break;
         end;
         if (event.button.button = SDL_BUTTON_LEFT) then
@@ -3195,7 +3183,7 @@ begin
           begin
             Result := menu;
             //Redraw;
-            //SDL_UpdateRect2(screen, x, y, w + 1, maxshow * 22 + 29);
+            //UpdateScreen(screen, x, y, w + 1, maxshow * 22 + 29);
             break;
           end;
         end;
@@ -3215,7 +3203,7 @@ begin
             menutop := 0;
           end;
           ShowCommonScrollMenu;
-          SDL_UpdateRect2(screen, x, y, w + 1, maxshow * 22 + 29);
+          UpdateScreen(screen, x, y, w + 1, maxshow * 22 + 29);
         end;
         if (event.wheel.y > 0) then
         begin
@@ -3230,7 +3218,7 @@ begin
             menutop := menu - maxshow + 1;
           end;
           ShowCommonScrollMenu;
-          SDL_UpdateRect2(screen, x, y, w + 1, maxshow * 22 + 29);
+          UpdateScreen(screen, x, y, w + 1, maxshow * 22 + 29);
         end;
       end;
       SDL_EVENT_MOUSE_MOTION:
@@ -3246,7 +3234,7 @@ begin
           if menup <> menu then
           begin
             ShowCommonScrollMenu;
-            SDL_UpdateRect2(screen, x, y, w + 1, maxshow * 22 + 29);
+            UpdateScreen(screen, x, y, w + 1, maxshow * 22 + 29);
           end;
         end;
       end;
@@ -3296,7 +3284,7 @@ begin
 
   RecordFreshScreen(x, y, cols * cellW + 1, maxShowRows * 22 + 7);
   ShowCommonGridMenu;
-  SDL_UpdateRect2(screen, x, y, cols * cellW + 1, maxShowRows * 22 + 7);
+  UpdateScreen(screen, x, y, cols * cellW + 1, maxShowRows * 22 + 7);
 
   while SDL_WaitEvent(@event) do
   begin
@@ -3332,7 +3320,7 @@ begin
         if prevMenu <> menu then
         begin
           ShowCommonGridMenu;
-          SDL_UpdateRect2(screen, x, y, cols * cellW + 1, maxShowRows * 22 + 7);
+          UpdateScreen(screen, x, y, cols * cellW + 1, maxShowRows * 22 + 7);
         end;
         if (event.key.key = SDLK_ESCAPE) and (where <= 2) then
         begin
@@ -3377,7 +3365,7 @@ begin
             end;
           end;
           ShowCommonGridMenu;
-          SDL_UpdateRect2(screen, x, y, cols * cellW + 1, maxShowRows * 22 + 7);
+          UpdateScreen(screen, x, y, cols * cellW + 1, maxShowRows * 22 + 7);
         end;
         if event.wheel.y > 0 then
         begin
@@ -3391,7 +3379,7 @@ begin
             end;
           end;
           ShowCommonGridMenu;
-          SDL_UpdateRect2(screen, x, y, cols * cellW + 1, maxShowRows * 22 + 7);
+          UpdateScreen(screen, x, y, cols * cellW + 1, maxShowRows * 22 + 7);
         end;
       end;
       SDL_EVENT_MOUSE_MOTION:
@@ -3410,7 +3398,7 @@ begin
             if menu <> prevMenu then
             begin
               ShowCommonGridMenu;
-              SDL_UpdateRect2(screen, x, y, cols * cellW + 1, maxShowRows * 22 + 7);
+              UpdateScreen(screen, x, y, cols * cellW + 1, maxShowRows * 22 + 7);
             end;
           end;
         end;
@@ -3450,7 +3438,7 @@ begin
   //DrawMMap;
   RecordFreshScreen(x, y, w + 1, 29);
   ShowCommonMenu2;
-  SDL_UpdateRect2(screen, x, y, w + 1, 29);
+  UpdateScreen(screen, x, y, w + 1, 29);
   while (SDL_WaitEvent(@event)) do
   begin
     CheckBasicEvent;
@@ -3464,20 +3452,20 @@ begin
           else
             menu := 1;
           ShowCommonMenu2;
-          SDL_UpdateRect2(screen, x, y, w + 1, 29);
+          UpdateScreen(screen, x, y, w + 1, 29);
         end;
         if ((event.key.key = SDLK_ESCAPE)) and (where <= 2) then
         begin
           Result := -1;
           //ReDraw;
-          //SDL_UpdateRect2(screen, x, y, w + 1, 29);
+          //UpdateScreen(screen, x, y, w + 1, 29);
           break;
         end;
         if (event.key.key = SDLK_RETURN) or (event.key.key = SDLK_SPACE) then
         begin
           Result := menu;
           //Redraw;
-          //SDL_UpdateRect2(screen, x, y, w + 1, 29);
+          //UpdateScreen(screen, x, y, w + 1, 29);
           break;
         end;
       end;
@@ -3487,7 +3475,7 @@ begin
         begin
           Result := -1;
           //ReDraw;
-          //SDL_UpdateRect2(screen, x, y, w + 1, 29);
+          //UpdateScreen(screen, x, y, w + 1, 29);
           break;
         end;
         if (event.button.button = SDL_BUTTON_LEFT) then
@@ -3496,7 +3484,7 @@ begin
           begin
             Result := menu;
             //Redraw;
-            //SDL_UpdateRect2(screen, x, y, w + 1, 29);
+            //UpdateScreen(screen, x, y, w + 1, 29);
             break;
           end;
         end;
@@ -3514,7 +3502,7 @@ begin
           if menup <> menu then
           begin
             ShowCommonMenu2;
-            SDL_UpdateRect2(screen, x, y, w + 1, 29);
+            UpdateScreen(screen, x, y, w + 1, 29);
           end;
         end;
       end;
@@ -3595,14 +3583,14 @@ begin
           else
             i1 := 0;
           Redraw;
-          SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+          UpdateScreen(screen, 0, 0, screen.w, screen.h);
           if i1 <> 0 then
             break;
         end
         else
         begin
           DrawTextWithRect('子場景不可傳送!', 80, 30, 172, ColColor($21), ColColor($23));
-          //SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+          //UpdateScreen(screen, 0, 0, screen.w, screen.h);
           waitanykey;
         end;
       end;
@@ -3619,19 +3607,19 @@ begin
           //ReFreshScreen;
           CallEvent(1092);
           Redraw;
-          SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+          UpdateScreen(screen, 0, 0, screen.w, screen.h);
         end
         else
           MenuStatus;
       end;
     end;
     Redraw;
-    SDL_UpdateRect2(screen, 80, 0, screen.w - 80, screen.h);
+    UpdateScreen(screen, 80, 0, screen.w - 80, screen.h);
     if (where = 3) then
       break;
   end;
   Redraw;
-  SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+  UpdateScreen(screen, 0, 0, screen.w, screen.h);
   NeedRefreshScene := 1;
 end;
 
@@ -3669,7 +3657,7 @@ begin
       //drawtext(screen, @word[i][1], 11, 32 + 22 * i, colcolor($7));
       DrawShadowText(screen, word[i], 30, 32 + 22 * i, ColColor($5), ColColor($7));
     end;
-  SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+  UpdateScreen(screen, 0, 0, screen.w, screen.h);
 
 end;
 
@@ -3683,7 +3671,7 @@ begin
   DrawTextWithRect(screen, str, 80, 30, 132, ColColor($21), ColColor($23));
   menu := SelectOneTeamMember(80, 65, '%4d', 46, 0);
   //ShowMenu(0);
-  //SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+  //UpdateScreen(screen, 0, 0, screen.w, screen.h);
   if menu >= 0 then
   begin
     role1 := teamlist[menu];
@@ -3698,7 +3686,7 @@ begin
   end;
   //waitanykey;
   //ReFreshScreen;
-  //SDL_UpdateRect2(screen,0,0,screen.w,screen.h);
+  //UpdateScreen(screen,0,0,screen.w,screen.h);
 
 end;
 
@@ -3712,7 +3700,7 @@ begin
   DrawTextWithRect(screen, str, 80, 30, 132, ColColor($21), ColColor($23));
   menu := SelectOneTeamMember(80, 65, '%4d', 48, 0);
   //ShowMenu(1);
-  //SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+  //UpdateScreen(screen, 0, 0, screen.w, screen.h);
   if menu >= 0 then
   begin
     role1 := teamlist[menu];
@@ -3728,7 +3716,7 @@ begin
   //waitanykey;
   //ReFreshScreen;
   //showmenu(1);
-  //SDL_UpdateRect2(screen,0,0,screen.w,screen.h);
+  //UpdateScreen(screen,0,0,screen.w,screen.h);
 
 end;
 
@@ -4037,7 +4025,7 @@ begin
       iamount := ReadItemList(i);
       atlu := 0;
       ShowMenuItem;
-      SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+      UpdateScreen(screen, 0, 0, screen.w, screen.h);
       while (SDL_WaitEvent(@event)) do
       begin
         CheckBasicEvent;
@@ -4056,7 +4044,7 @@ begin
                 y := row - 1;
               end;
               ShowMenuItem;
-              SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+              UpdateScreen(screen, 0, 0, screen.w, screen.h);
             end;
             if (event.key.key = SDLK_UP) then
             begin
@@ -4068,7 +4056,7 @@ begin
                   atlu := atlu - col;
               end;
               ShowMenuItem;
-              SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+              UpdateScreen(screen, 0, 0, screen.w, screen.h);
             end;
             if (event.key.key = SDLK_PAGEDOWN) then
             begin
@@ -4084,7 +4072,7 @@ begin
                   y := row - 1;
               end;
               ShowMenuItem;
-              SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+              UpdateScreen(screen, 0, 0, screen.w, screen.h);
             end;
             if (event.key.key = SDLK_PAGEUP) then
             begin
@@ -4098,7 +4086,7 @@ begin
                   y := 0;
               end;
               ShowMenuItem;
-              SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+              UpdateScreen(screen, 0, 0, screen.w, screen.h);
             end;
             if (event.key.key = SDLK_RIGHT) then
             begin
@@ -4106,7 +4094,7 @@ begin
               if x >= col then
                 x := 0;
               ShowMenuItem;
-              SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+              UpdateScreen(screen, 0, 0, screen.w, screen.h);
             end;
             if (event.key.key = SDLK_LEFT) then
             begin
@@ -4114,14 +4102,14 @@ begin
               if x < 0 then
                 x := col - 1;
               ShowMenuItem;
-              SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+              UpdateScreen(screen, 0, 0, screen.w, screen.h);
             end;
             if (event.key.key = SDLK_ESCAPE) then
             begin
               //ReDraw;
               //ShowMenu(2);
               Result := False;
-              //SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+              //UpdateScreen(screen, 0, 0, screen.w, screen.h);
               break;
             end;
             if (event.key.key = SDLK_RETURN) or (event.key.key = SDLK_SPACE) then
@@ -4132,7 +4120,7 @@ begin
                 UseItem(CurItem);
               //ShowMenu(2);
               Result := True;
-              //SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+              //UpdateScreen(screen, 0, 0, screen.w, screen.h);
               break;
             end;
           end;
@@ -4143,7 +4131,7 @@ begin
               //ReDraw;
               //ShowMenu(2);
               Result := False;
-              //SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+              //UpdateScreen(screen, 0, 0, screen.w, screen.h);
               break;
             end;
             if (event.button.button = SDL_BUTTON_LEFT) and (CellPhone = 0) then
@@ -4156,7 +4144,7 @@ begin
                   UseItem(CurItem);
                 //ShowMenu(2);
                 Result := True;
-                //SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+                //UpdateScreen(screen, 0, 0, screen.w, screen.h);
                 break;
               end;
             end;
@@ -4175,7 +4163,7 @@ begin
                 y := row - 1;
               end;
               ShowMenuItem;
-              SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+              UpdateScreen(screen, 0, 0, screen.w, screen.h);
             end;
             if (event.wheel.y > 0) then
             begin
@@ -4187,7 +4175,7 @@ begin
                   atlu := atlu - col;
               end;
               ShowMenuItem;
-              SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+              UpdateScreen(screen, 0, 0, screen.w, screen.h);
             end;
           end;
           SDL_EVENT_MOUSE_MOTION:
@@ -4210,7 +4198,7 @@ begin
               if (x <> xp) or (y <> yp) then
               begin
                 ShowMenuItem;
-                SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+                UpdateScreen(screen, 0, 0, screen.w, screen.h);
               end;
             end;
             if (round(event.button.x / (RESOLUTIONX / screen.w)) >= 110) and (round(event.button.x / (RESOLUTIONX / screen.w)) < 496) and (round(event.button.y / (RESOLUTIONY / screen.h)) > 308) then
@@ -4219,14 +4207,14 @@ begin
               if (ItemList[atlu + col * row] >= 0) then
                 atlu := atlu + col;
               ShowMenuItem;
-              SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+              UpdateScreen(screen, 0, 0, screen.w, screen.h);
             end;
             if (round(event.button.x / (RESOLUTIONX / screen.w)) >= 110) and (round(event.button.x / (RESOLUTIONX / screen.w)) < 496) and (round(event.button.y / (RESOLUTIONY / screen.h)) < 90) then
             begin
               if atlu > 0 then
                 atlu := atlu - col;
               ShowMenuItem;
-              SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+              UpdateScreen(screen, 0, 0, screen.w, screen.h);
             end;
           end;
         end;
@@ -4237,7 +4225,7 @@ begin
       break;
     ShowMenu(2);
   end;
-  //SDL_UpdateRect2(screen,0,0,screen.w,screen.h);
+  //UpdateScreen(screen,0,0,screen.w,screen.h);
 
 end;
 
@@ -4349,7 +4337,7 @@ begin
         str1 := cp950toutf8(@Ritem[inum].Name);
         DrawTextWithRect(screen, str, 80, 30, length(str1) * 22 + 80, ColColor($21), ColColor($23));
         DrawShadowText(screen, str1, 160, 32, ColColor($64), ColColor($66));
-        SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+        UpdateScreen(screen, 0, 0, screen.w, screen.h);
         menu := SelectOneTeamMember(80, 65, '', 0, 0);
         if menu >= 0 then
         begin
@@ -4372,7 +4360,7 @@ begin
             DrawTextWithRect(screen, str, 80, 230, 205, ColColor($64), ColColor($66));
             WaitAnyKey;
             Redraw;
-            //SDL_UpdateRect2(screen,0,0,screen.w,screen.h);
+            //UpdateScreen(screen,0,0,screen.w,screen.h);
           end;
         end;
       end;
@@ -4397,7 +4385,7 @@ begin
         str1 := cp950toutf8(@Ritem[inum].Name);
         DrawTextWithRect(screen, str, 80, 30, length(str1) * 22 + 80, ColColor($21), ColColor($23));
         DrawShadowText(screen, str1, 160, 32, ColColor($64), ColColor($66));
-        SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+        UpdateScreen(screen, 0, 0, screen.w, screen.h);
         menu := SelectOneTeamMember(80, 65, '', 0, 0);
         if menu >= 0 then
         begin
@@ -4419,7 +4407,7 @@ begin
             DrawTextWithRect(screen, str, 80, 230, 205, ColColor($64), ColColor($66));
             WaitAnyKey;
             Redraw;
-            //SDL_UpdateRect2(screen,0,0,screen.w,screen.h);
+            //UpdateScreen(screen,0,0,screen.w,screen.h);
           end;
         end;
       end;
@@ -4432,7 +4420,7 @@ begin
         str1 := cp950toutf8(@Ritem[inum].Name);
         DrawTextWithRect(screen, str, 80, 30, length(str1) * 22 + 80, ColColor($21), ColColor($23));
         DrawShadowText(screen, str1, 160, 32, ColColor($64), ColColor($66));
-        SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+        UpdateScreen(screen, 0, 0, screen.w, screen.h);
         menu := SelectOneTeamMember(80, 65, '', 0, 0);
       end;
       if menu >= 0 then
@@ -4544,7 +4532,7 @@ begin
   str := '查看隊員狀態';
   Redraw;
   RecordFreshScreen(0, 0, screen.w, screen.h);
-  SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+  UpdateScreen(screen, 0, 0, screen.w, screen.h);
   DrawTextWithRect(screen, str, 10, 30, 132, ColColor($21), ColColor($23));
   setlength(menuString, 6);
   Amount := 0;
@@ -4560,14 +4548,14 @@ begin
 
   menu := CommonMenu(10, 65, 85, Amount - 1, 0, menuString, @ShowStatusByTeam);
   Redraw;
-  SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+  UpdateScreen(screen, 0, 0, screen.w, screen.h);
   //menu := SelectOneTeamMember(27, 65, '%3d', 15, 0);
   {if menu >= 0 then
     begin
     ShowStatus(TeamList[menu]);
     waitanykey;
     redraw;
-    SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+    UpdateScreen(screen, 0, 0, screen.w, screen.h);
     end;}
 
 end;
@@ -4836,9 +4824,9 @@ begin
     DrawEngShadowText(screen, str, x + 380, y + 282, ColColor($64), ColColor($66));
   end;
   if where = 2 then
-    SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h)
+    UpdateScreen(screen, 0, 0, screen.w, screen.h)
   else if where <> 3 then
-    SDL_UpdateRect2(screen, x, y, 536, 316);
+    UpdateScreen(screen, x, y, 536, 316);
 
 end;
 
@@ -4936,7 +4924,7 @@ begin
   DrawEngShadowText(screen, str, x + 50, y + 149, ColColor($5), ColColor($7));
 
   //if not ((HIRES_TEXT <> 0) and (HIRES_BATCH_DRAW <> 0)) then
-  //  SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+  //  UpdateScreen(screen, 0, 0, screen.w, screen.h);
 end;
 
 //离队选单
@@ -4960,7 +4948,7 @@ begin
           Redraw;
           CallEvent(BEGIN_LEAVE_EVENT + i * 2);
           //Redraw;
-          SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+          UpdateScreen(screen, 0, 0, screen.w, screen.h);
           //SDL_EnableKeyRepeat(0, 10);
           break;
         end;
@@ -4973,7 +4961,7 @@ begin
     WaitAnyKey;
   end;
   Redraw;
-  SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+  UpdateScreen(screen, 0, 0, screen.w, screen.h);
 end;
 
 //系统选单
@@ -5010,7 +4998,7 @@ begin
       break;
     Redraw;
     ShowMenu(6);
-    SDL_UpdateRect2(screen, 133, 0, screen.w - 133, screen.h);
+    UpdateScreen(screen, 133, 0, screen.w - 133, screen.h);
   end;
 
 end;
@@ -5055,7 +5043,7 @@ begin
     Redraw(1);
     if nowwhere = 1 then
       ShowSceneName(CurScene);
-    SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+    UpdateScreen(screen, 0, 0, screen.w, screen.h);
   end;
   //edraw;
   ShowMenu(6);
@@ -5069,7 +5057,7 @@ var
   filename: utf8string;
 begin
   Redraw;
-  SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+  UpdateScreen(screen, 0, 0, screen.w, screen.h);
   //setlength(menustring, 6);
   //setlength(Menuengstring, 0);
   menuString[0] := '載入進度一';
@@ -5099,7 +5087,7 @@ begin
     //where := 0;
     instruct_14;
     //Redraw;
-    //SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+    //UpdateScreen(screen, 0, 0, screen.w, screen.h);
   end;
   Result := menu;
 end;
@@ -5214,7 +5202,7 @@ begin
     word := format('%4d', [minushurt]);
     DrawEngShadowText(screen, word, 220, 150, ColColor($64), ColColor($66));
     ShowSimpleStatus(role2, 350, 50);
-    SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+    UpdateScreen(screen, 0, 0, screen.w, screen.h);
     WaitAnyKey;
     Redraw;
   end;
@@ -5243,7 +5231,7 @@ begin
     word := format('%4d', [minuspoi]);
     DrawEngShadowText(screen, word, 220, 125, ColColor($64), ColColor($66));
     ShowSimpleStatus(role2, 350, 50);
-    SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+    UpdateScreen(screen, 0, 0, screen.w, screen.h);
     WaitAnyKey;
     Redraw;
   end;
@@ -5487,7 +5475,7 @@ begin
     if twoline = 1 then
       x := 440;
     ShowSimpleStatus(rnum, x, 50);
-    SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+    UpdateScreen(screen, 0, 0, screen.w, screen.h);
   end;
 
 end;
@@ -5929,7 +5917,7 @@ begin
   if MMAPAMI * SCENEAMI = 0 then
   begin
     Redraw;
-    SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+    UpdateScreen(screen, 0, 0, screen.w, screen.h);
   end;
 
 end;
@@ -6063,7 +6051,7 @@ begin
   else
   begin
     DrawTextWithRect('此場景目前不可進入!', 80, 30, 192, ColColor($21), ColColor($23));
-    SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+    UpdateScreen(screen, 0, 0, screen.w, screen.h);
     waitanykey;
   end;
 end;

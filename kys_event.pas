@@ -127,7 +127,7 @@ begin
     NeedRefreshScene := 0;
   end;
   Redraw;
-  //SDL_UpdateRect2(screen,0,0,screen.w,screen.h);
+  //UpdateScreen(screen,0,0,screen.w,screen.h);
   //EndAmi;
 end;
 
@@ -272,7 +272,7 @@ begin
     l := l + 1;
     if (l >= 4) and (i < length(Lines) - 1) then
     begin
-      SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+      UpdateScreen(screen, 0, 0, screen.w, screen.h);
       repeat
         key := WaitAnyKey;
       until (key <> SDLK_LEFT) and (key <> SDLK_RIGHT) and (key <> SDLK_UP) and (key <> SDLK_DOWN);
@@ -283,12 +283,12 @@ begin
       l := 0;
     end;
   end;
-  SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+  UpdateScreen(screen, 0, 0, screen.w, screen.h);
   repeat
     key := WaitAnyKey;
   until (key <> SDLK_LEFT) and (key <> SDLK_RIGHT) and (key <> SDLK_UP) and (key <> SDLK_DOWN);
   Redraw;
-  //SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+  //UpdateScreen(screen, 0, 0, screen.w, screen.h);
 end;
 
 procedure instruct_1(talknum, headnum, dismode: integer);
@@ -323,10 +323,10 @@ begin
   DrawShadowText(screen, word, x - 80, 150, ColColor($64), ColColor($66));
   word := format(' %5d', [amount]);
   DrawEngShadowText(screen, word, x - 0, 150, ColColor($64), ColColor($66));
-  SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+  UpdateScreen(screen, 0, 0, screen.w, screen.h);
   WaitAnyKey;
   Redraw;
-  SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+  UpdateScreen(screen, 0, 0, screen.w, screen.h);
 
 end;
 
@@ -430,7 +430,7 @@ begin
     begin
     InitialScene(1);
     Redraw;
-    //SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+    //UpdateScreen(screen, 0, 0, screen.w, screen.h);
     end;}
   if (list[0] = CurScene) and (preEventPic <> DData[list[0], list[1], 5]) then
   begin
@@ -465,7 +465,7 @@ begin
   else
     Result := jump2;
   Redraw;
-  SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+  UpdateScreen(screen, 0, 0, screen.w, screen.h);
 end;
 
 //战斗
@@ -499,7 +499,7 @@ begin
   else
     Result := jump2;
   Redraw;
-  SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+  UpdateScreen(screen, 0, 0, screen.w, screen.h);
 
 end;
 
@@ -549,7 +549,7 @@ begin
   else
     Result := jump2;
   Redraw;
-  SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+  UpdateScreen(screen, 0, 0, screen.w, screen.h);
 
 end;
 
@@ -593,7 +593,7 @@ begin
     //Sdl_Delay(5);
     Redraw;
     DrawRectangleWithoutFrame(screen, 0, 0, screen.w, screen.h, 0, 100 - i * 20);
-    SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+    UpdateScreen(screen, 0, 0, screen.w, screen.h);
   end;
 end;
 
@@ -607,7 +607,7 @@ begin
     //Redraw;
     //Sdl_Delay(2);
     DrawRectangleWithoutFrame(screen, 0, 0, screen.w, screen.h, 0, i * 20);
-    SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+    UpdateScreen(screen, 0, 0, screen.w, screen.h);
   end;
 end;
 
@@ -623,7 +623,7 @@ begin
   DrawShadowText(screen, str, CENTER_X - 120, 340, ColColor(255), ColColor(255));
   str := ' 地球上又多了一失蹤人口';
   DrawShadowText(screen, str, CENTER_X - 110, 370, ColColor(255), ColColor(255));
-  SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+  UpdateScreen(screen, 0, 0, screen.w, screen.h);
   WaitAnyKey;
 end;
 
@@ -756,7 +756,7 @@ begin
       DrawSceneWithoutRole(y1, i);
       //showmessage(inttostr(i));
       DrawRoleOnScene(y1, i);
-      SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+      UpdateScreen(screen, 0, 0, screen.w, screen.h);
       i := i + s;
       //showmessage(inttostr(s*(x2-i)));
       if (s * (x2 - i) < 0) then
@@ -773,7 +773,7 @@ begin
       //showmessage(inttostr(i));
       DrawRoleOnScene(i, x2);
       //Redraw;
-      SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+      UpdateScreen(screen, 0, 0, screen.w, screen.h);
       i := i + s;
       if (s * (y2 - i) < 0) then
         break;
@@ -817,7 +817,7 @@ begin
       SDL_Delay(20);
       //DData[CurScene, CurEvent, 5] := -1;
       DrawScene;
-      SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+      UpdateScreen(screen, 0, 0, screen.w, screen.h);
       i := i + 1;
       if i > endpic then
         break;
@@ -836,7 +836,7 @@ begin
       InitialScene(1);
       SDL_Delay(20);
       DrawScene;
-      SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+      UpdateScreen(screen, 0, 0, screen.w, screen.h);
       i := i + 1;
       if i > endpic then
         break;
@@ -891,7 +891,7 @@ begin
         SStep := 1;
       CurSceneRolePic := BEGIN_WALKPIC + SFace * 7 + SStep;
       DrawRoleOnScene(Sx, Sy);
-      SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+      UpdateScreen(screen, 0, 0, screen.w, screen.h);
       Sy := Sy + s;
       if s * (x2 - Sy) < 0 then
         break;
@@ -913,7 +913,7 @@ begin
         SStep := 1;
       CurSceneRolePic := BEGIN_WALKPIC + SFace * 7 + SStep;
       DrawRoleOnScene(Sx, Sy);
-      SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+      UpdateScreen(screen, 0, 0, screen.w, screen.h);
       Sx := Sx + s;
       if s * (y2 - Sx) < 0 then
         break;
@@ -926,7 +926,7 @@ begin
   CurSceneRolePic := 2501 + SFace * 7 + SStep;
   DrawSceneWithoutRole(Sx, Sy);
   DrawRoleOnScene(Sx, Sy);
-  SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+  UpdateScreen(screen, 0, 0, screen.w, screen.h);
 end;
 
 function instruct_31(moneynum, jump1, jump2: integer): integer;
@@ -999,7 +999,7 @@ begin
     DrawShadowText(screen, word, CENTER_X - 70, 125, ColColor($5), ColColor($7));
     DrawBig5ShadowText(screen, @Rrole[rnum].Name, CENTER_X - 70, 100, ColColor($21), ColColor($23));
     DrawBig5ShadowText(screen, @Rmagic[magicnum].Name, CENTER_X - 70, 150, ColColor($64), ColColor($66));
-    SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+    UpdateScreen(screen, 0, 0, screen.w, screen.h);
     WaitAnyKey;
     Redraw;
   end;
@@ -1026,7 +1026,7 @@ begin
     DrawBig5ShadowText(screen, @Rrole[rnum].Name, CENTER_X - 70, 100, ColColor($21), ColColor($23));
     word := format('%3d', [iq]);
     DrawEngShadowText(screen, word, CENTER_X + 30, 125, ColColor($64), ColColor($66));
-    SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+    UpdateScreen(screen, 0, 0, screen.w, screen.h);
     WaitAnyKey;
     Redraw;
   end;
@@ -1192,7 +1192,7 @@ begin
     SDL_Delay(20);
     //DrawSceneWithoutRole(Sx, Sy);
     DrawScene;
-    SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+    UpdateScreen(screen, 0, 0, screen.w, screen.h);
     i := i + 1;
     if i > endpic1 - beginpic1 then
       break;
@@ -1221,7 +1221,7 @@ begin
     //writeln(1);
     //DrawSceneWithoutRole(Sx, Sy);
     DrawScene;
-    SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+    UpdateScreen(screen, 0, 0, screen.w, screen.h);
     i := i + 1;
     if i > endpic1 - beginpic1 then
       break;
@@ -1240,7 +1240,7 @@ begin
   DrawBig5ShadowText(screen, @Rrole[rnum].Name, CENTER_X - 70, 100, ColColor($21), ColColor($23));
   word := format('%4d', [speed]);
   DrawEngShadowText(screen, word, CENTER_X + 20, 125, ColColor($64), ColColor($66));
-  SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+  UpdateScreen(screen, 0, 0, screen.w, screen.h);
   WaitAnyKey;
   Redraw;
 end;
@@ -1257,7 +1257,7 @@ begin
   DrawBig5ShadowText(screen, @Rrole[rnum].Name, CENTER_X - 70, 100, ColColor($21), ColColor($23));
   word := format('%4d', [mp]);
   DrawEngShadowText(screen, word, CENTER_X + 20, 125, ColColor($64), ColColor($66));
-  SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+  UpdateScreen(screen, 0, 0, screen.w, screen.h);
   WaitAnyKey;
   Redraw;
 end;
@@ -1273,7 +1273,7 @@ begin
   DrawBig5ShadowText(screen, @Rrole[rnum].Name, CENTER_X - 70, 100, ColColor($21), ColColor($23));
   word := format('%4d', [Attack]);
   DrawEngShadowText(screen, word, CENTER_X + 20, 125, ColColor($64), ColColor($66));
-  SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+  UpdateScreen(screen, 0, 0, screen.w, screen.h);
   WaitAnyKey;
   Redraw;
 end;
@@ -1290,7 +1290,7 @@ begin
   DrawBig5ShadowText(screen, @Rrole[rnum].Name, CENTER_X - 70, 100, ColColor($21), ColColor($23));
   word := format('%4d', [hp]);
   DrawEngShadowText(screen, word[1], CENTER_X + 20, 125, ColColor($64), ColColor($66));
-  SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+  UpdateScreen(screen, 0, 0, screen.w, screen.h);
   WaitAnyKey;
   Redraw;
 end;
@@ -1337,7 +1337,7 @@ begin
   DrawShadowText(screen, word, CENTER_X - 105, 100, ColColor($5), ColColor($7));
   word := format('%3d', [Rrole[0].Ethics]);
   DrawEngShadowText(screen, word, CENTER_X + 65, 100, ColColor($64), ColColor($66));
-  SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+  UpdateScreen(screen, 0, 0, screen.w, screen.h);
   WaitAnyKey;
   Redraw;
 end;
@@ -1351,7 +1351,7 @@ begin
   DrawShadowText(screen, word, CENTER_X - 105, 100, ColColor($5), ColColor($7));
   word := format('%3d', [Rrole[0].Repute]);
   DrawEngShadowText(screen, word, CENTER_X + 65, 100, ColColor($64), ColColor($66));
-  SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+  UpdateScreen(screen, 0, 0, screen.w, screen.h);
   WaitAnyKey;
   Redraw;
 end;
@@ -1405,7 +1405,7 @@ begin
     sdl_delay(20);
     DrawSceneByCenter(Sx,Sy);
     DrawScene;
-    SDL_UpdateRect2(screen,0,0,screen.w,screen.h);
+    UpdateScreen(screen,0,0,screen.w,screen.h);
     end;}
   instruct_27(-1, 3832 * 2, 3844 * 2);
   instruct_44e(2, 3845 * 2, 3873 * 2, 3, 3874 * 2, 4, 3903 * 2);
@@ -1528,7 +1528,7 @@ begin
       DrawShadowText(screen, str1, x, y, ColColor($FF), ColColor($FF));
       p := i + 1;
       y := y + 25;
-      SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+      UpdateScreen(screen, 0, 0, screen.w, screen.h);
     end;
     if str[i] = utf8char($2A) then
     begin
@@ -1554,7 +1554,7 @@ begin
         dest.x := center_x - tempscr.w div 2;
         dest.y := i;
         SDL_BlitSurface(tempscr, nil, screen, @dest);
-        SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+        UpdateScreen(screen, 0, 0, screen.w, screen.h);
         SDL_Delay(20);
       end;
       i := i - 1;
@@ -1873,7 +1873,7 @@ begin
       //if e2=CurScene then DData[CurScene, [e3,e4]:=e5;
       //InitialScene;
       //Redraw;
-      //SDL_UpdateRect2(screen,0,0,screen.w,screen.h);
+      //UpdateScreen(screen,0,0,screen.w,screen.h);
     end;
     22:
     begin
@@ -1893,7 +1893,7 @@ begin
       //if e2=CurScene then SData[CurScene, 3, e5,e4]:=e6;;
       //InitialScene;
       //Redraw;
-      //SDL_UpdateRect2(screen,0,0,screen.w,screen.h);
+      //UpdateScreen(screen,0,0,screen.w,screen.h);
     end;
     24:
     begin
@@ -1939,7 +1939,7 @@ begin
         end;
       end;
       //redraw;
-      SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+      UpdateScreen(screen, 0, 0, screen.w, screen.h);
     end;
     26:
     begin
@@ -2070,7 +2070,7 @@ begin
       DrawBig5ShadowText(screen, p1, e3 - 2, e4 + 22 * i - 3, ColColor(e5 and $FF), ColColor((e5 and $FF00) shl 8));
       w1 := length(p1) * 11;
       if (w1 > w) then w := w1;
-      SDL_UpdateRect2(screen, x - 3, y - 3, w + 6, 22 * (i + 1) + 6);
+      UpdateScreen(screen, x - 3, y - 3, w + 6, 22 * (i + 1) + 6);
       //waitanykey;
     end;
     34: //Draw a rectangle as background.
@@ -2080,7 +2080,7 @@ begin
       e4 := e_GetValue(2, e1, e4);
       e5 := e_GetValue(3, e1, e5);
       DrawRectangle(screen, e2, e3, e4, e5, 0, ColColor($FF), 50);
-      //SDL_UpdateRect2(screen,e1,e2,e3+1,e4+1);
+      //UpdateScreen(screen,e1,e2,e3+1,e4+1);
     end;
     35: //Pause and wait a key.
     begin
@@ -2144,7 +2144,7 @@ begin
         p := p + 1;
       end;
       DrawBig5ShadowText(screen, p1, e3 + 3, e4 + 22 * i + 2, ColColor(e5 and $FF), ColColor((e5 and $FF00) shl 8));
-      //SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+      //UpdateScreen(screen, 0, 0, screen.w, screen.h);
       i := WaitAnyKey;
       if i = SDLK_Y then
         x50[$7000] := 0
@@ -2229,7 +2229,7 @@ begin
           display_img(@str[1], e3, e4);
         end;
       end;
-      SDL_UpdateRect2(screen, e3 - x, e4 - y, w, h);
+      UpdateScreen(screen, e3 - x, e4 - y, w, h);
     end;
     42: //Change the poistion on world map.
     begin
@@ -2393,7 +2393,7 @@ begin
     DrawShadowText(screen, word, CENTER_X - 90, 125, ColColor($5), ColColor($7));
     DrawBig5ShadowText(screen, @Rrole[rnum].Name, CENTER_X - 90, 100, ColColor($21), ColColor($23));
     DrawBig5ShadowText(screen, @Rmagic[newmagicnum].Name, CENTER_X - 90, 150, ColColor($64), ColColor($66));
-    SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+    UpdateScreen(screen, 0, 0, screen.w, screen.h);
     WaitAnyKey;
     Redraw;
   end;
@@ -3251,7 +3251,7 @@ begin
         end
         else if words[0] = $4040 then //@@等待击键
         begin
-          SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+          UpdateScreen(screen, 0, 0, screen.w, screen.h);
           k := WaitAnyKey;
           while (k = SDLK_RIGHT) or (k = SDLK_LEFT) or (k = SDLK_UP) or (k = SDLK_DOWN) do
           begin
@@ -3278,7 +3278,7 @@ begin
               Inc(r1);
               if r1 = row then
               begin
-                SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+                UpdateScreen(screen, 0, 0, screen.w, screen.h);
                 k := WaitAnyKey;
                 while (k = SDLK_RIGHT) or (k = SDLK_LEFT) or (k = SDLK_UP) or (k = SDLK_DOWN) do
                 begin
@@ -3325,7 +3325,7 @@ begin
       else
         break;
     end;
-    SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+    UpdateScreen(screen, 0, 0, screen.w, screen.h);
     k := WaitAnyKey;
     while (k = SDLK_RIGHT) or (k = SDLK_LEFT) or (k = SDLK_UP) or (k = SDLK_DOWN) do
     begin
@@ -3522,7 +3522,7 @@ begin
     str2 := str;
     if (i mod 16 < 8) then str2 := str2 + '_';
     DrawTextWithRect(str2, x, y, w, ColColor($66), ColColor($63));
-    //SDL_UpdateRect2(screen, x, y, w, h);
+    //UpdateScreen(screen, x, y, w, h);
     SDL_PollEvent(@event);
     CheckBasicEvent;
     case event.type_ of

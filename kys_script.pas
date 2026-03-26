@@ -654,7 +654,7 @@ begin
   y := lua_tointeger(L, 3);
   str := ' ' + lua_tostring(L, 1);
   DrawShadowText(screen, str, x, y, ColColor(5), ColColor(7));
-  SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+  UpdateScreen(screen, 0, 0, screen.w, screen.h);
   Result := 0;
 
 end;
@@ -671,7 +671,7 @@ begin
   w := drawlength(str);
   DrawRectangle(screen, x, y - 2, w * 10 + 5, h * 22 + 5, 0, ColColor(255), 30);
   DrawShadowText(screen, str, x + 3, y, ColColor(5), ColColor(7));
-  SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+  UpdateScreen(screen, 0, 0, screen.w, screen.h);
   i := waitanykey();
   lua_pushinteger(L, i);
   Result := 1;

@@ -165,30 +165,11 @@ begin
     end;
   end;
 
-  if PNG_TILE = 0 then
-  begin
     for i := 0 to BRoleAmount - 1 do
     begin
       path := formatfloat('fight/fight000', Rrole[Brole[i].rnum].HeadNum);
       FPicAmount := LoadIdxGrp(path + '.idx', path + '.grp', FIdx[Rrole[Brole[i].rnum].HeadNum], FPic[Rrole[Brole[i].rnum].HeadNum]);
     end;
-  end;
-
-  if PNG_TILE > 0 then
-  begin
-    for i := 0 to BRoleAmount - 1 do
-    begin
-      path := formatfloat('resource/fight/fight000', Rrole[Brole[i].rnum].HeadNum);
-      LoadPNGTiles(path, FPNGIndex[Rrole[Brole[i].rnum].HeadNum],
-        FPNGTile[Rrole[Brole[i].rnum].HeadNum], 1);
-      for j := 0 to 3 do
-      begin
-        num := BEGIN_BATTLE_ROLE_PIC + Rrole[Brole[i].rnum].HeadNum * 4 + j;
-        LoadOnePNGTile('resource/wmap/', nil, num, BPNGIndex[num], @BPNGTile[0]);
-      end;
-      Brole[i].BHead := i;
-    end;
-  end;
 
   BattleMainControl;
 
@@ -203,7 +184,7 @@ begin
     CheckBook;
   end;
 
-  SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+  UpdateScreen(screen, 0, 0, screen.w, screen.h);
 
   //释放额外贴图
   if SEMIREAL = 1 then
@@ -213,18 +194,6 @@ begin
       //SDL_DestroySurface(BHead[i]);
     end;
     setlength(BHead, 0);
-  end;
-
-  if PNG_TILE = 1 then
-  begin
-    for i := 0 to BRoleAmount - 1 do
-    begin
-      for j := low(FPNGTile[i]) to high(FPNGTile[i]) do
-      begin
-        SDL_DestroySurface(FPNGTile[i][j]);
-        FPNGIndex[i][j].CurPointer := nil;
-      end;
-    end;
   end;
 
   if Rscene[CurScene].EntranceMusic >= 0 then
@@ -365,7 +334,7 @@ var
           DrawShadowText(screen, str1, x + 133, y + 3 + 22 * i,
             ColColor($21), ColColor($23));
       end;
-    SDL_UpdateRect2(screen, x + 30, y, 151, max * 22 + 29);
+    UpdateScreen(screen, x + 30, y, 151, max * 22 + 29);
   end;
 
 begin
@@ -518,7 +487,7 @@ begin
           break;
         LoadFreshScreen(0, 0, screen.w, screen.h);
         DrawProgress;
-        SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+        UpdateScreen(screen, 0, 0, screen.w, screen.h);
         SDL_Delay(delaytime);
         CheckBasicEvent;
       end;
@@ -751,7 +720,7 @@ var
       end;
     end;
     if (update) then
-      SDL_UpdateRect2(screen, 100, 50, 48, max * 22 + 29);
+      UpdateScreen(screen, 100, 50, 48, max * 22 + 29);
   end;
 
 begin
@@ -818,7 +787,7 @@ begin
   DrawTextWithRectNoUpdate(screen, str, 160, 50, DrawLength(str) * 10 + 6, ColColor($21), ColColor($23));
   RecordFreshScreen(0, 0, screen.w, screen.h);
   ShowBMenu(False);
-  SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+  UpdateScreen(screen, 0, 0, screen.w, screen.h);
   while (SDL_WaitEvent(@event)) do
   begin
     CheckBasicEvent;
@@ -1064,7 +1033,7 @@ begin
       Inc(a);
       Dec(Brole[bnum].Step);
       Redraw;
-      SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+      UpdateScreen(screen, 0, 0, screen.w, screen.h);
       SDL_Delay(BATTLE_SPEED);
     end;
 
@@ -1086,7 +1055,7 @@ begin
   Redraw;
   SetAminationPosition(AreaType, step, AreaRange);
   DrawBFieldWithCursor(step);
-  SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+  UpdateScreen(screen, 0, 0, screen.w, screen.h);
   while (SDL_WaitEvent(@event)) do
   begin
     CheckBasicEvent;
@@ -1154,7 +1123,7 @@ begin
     DrawBFieldWithCursor(step);
     if Bfield[2, Ax, Ay] >= 0 then
       ShowSimpleStatus(Brole[Bfield[2, Ax, Ay]].rnum, CENTER_X + 100, 50);
-    SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+    UpdateScreen(screen, 0, 0, screen.w, screen.h);
   end;
   BattleSelecting := False;
 end;
@@ -1279,7 +1248,7 @@ begin
 
   str := '選擇攻擊方向';
   DrawTextWithRect(screen, str, 280, 200, 125, ColColor($23), ColColor($21));
-  SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+  UpdateScreen(screen, 0, 0, screen.w, screen.h);
   Result := False;
   while (SDL_WaitEvent(@event)) do
   begin
@@ -1354,7 +1323,7 @@ begin
     end;
     SetAminationPosition(1, step);
     DrawBFieldWithCursor(-1);
-    SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+    UpdateScreen(screen, 0, 0, screen.w, screen.h);
   end;
   BattleSelecting := False;
 end;
@@ -1741,7 +1710,7 @@ begin
           SetAminationPosition(Rmagic[mnum].AttAreaType,
             Rmagic[mnum].MoveDistance[level - 1], Rmagic[mnum].AttDistance[level - 1]);
           DrawBFieldWithCursor(-1);
-          SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+          UpdateScreen(screen, 0, 0, screen.w, screen.h);
           i1 := 0;
           while (i1 <> SDLK_RETURN) and (i1 <> SDLK_SPACE) and (i1 <> SDLK_ESCAPE) do
           begin
@@ -1803,7 +1772,7 @@ begin
     str := CP950ToUtf8(@Ritem[mnum].Name);
   l := drawlength(str);
   DrawTextWithRectNoUpdate(screen, str, CENTER_X - l * 5, CENTER_Y - 150, l * 10 + 7, ColColor($14), ColColor($16));
-  SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+  UpdateScreen(screen, 0, 0, screen.w, screen.h);
   SDL_Delay(500);
 
 end;
@@ -1840,7 +1809,7 @@ var
         p2 := p2 + 1;
       end;
     end;
-    SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+    UpdateScreen(screen, 0, 0, screen.w, screen.h);
   end;
 
 begin
@@ -1859,10 +1828,10 @@ begin
   max := max - 1;
 
   Redraw;
-  SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+  UpdateScreen(screen, 0, 0, screen.w, screen.h);
   menu := 0;
   ShowMagicMenu;
-  //SDL_UpdateRect2(screen,0,0,screen.w,screen.h);
+  //UpdateScreen(screen,0,0,screen.w,screen.h);
   Result := 0;
   while (SDL_WaitEvent(@event)) do
   begin
@@ -2044,7 +2013,7 @@ begin
   {for i := beginpic to endpic do
     begin
     DrawBFieldWithEft(i);
-    SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+    UpdateScreen(screen, 0, 0, screen.w, screen.h);
     sdl_delay(20);
     end;}
     i := beginpic;
@@ -2052,7 +2021,7 @@ begin
     begin
       CheckBasicEvent;
       DrawBFieldWithEft(i, beginpic, endpic, min, bnum, forteam, 1, $FFFFFFFF);
-      SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+      UpdateScreen(screen, 0, 0, screen.w, screen.h);
       SDL_Delay(BATTLE_SPEED);
       i := i + 1;
       if i > endpic + max - min then
@@ -2305,7 +2274,7 @@ begin
       //showmessage(word[i]);
     end;
     SDL_Delay(BATTLE_SPEED);
-    SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+    UpdateScreen(screen, 0, 0, screen.w, screen.h);
     i1 := i1 + 1;
     if i1 > 10 then
       break;
@@ -2394,7 +2363,7 @@ begin
       //bmount
     end;
   end;
-  SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+  UpdateScreen(screen, 0, 0, screen.w, screen.h);
   //sdl_delay(1000);
   for i := 0 to BRoleAmount - 1 do
     if Brole[i].Dead = 0 then
@@ -2499,7 +2468,7 @@ begin
       DrawShadowText(screen, str, 103, 237, ColColor($23), ColColor($21));
       str := format('%5d', [Brole[i].ExpGot + basicvalue]);
       DrawEngShadowText(screen, str, 188, 237, ColColor($66), ColColor($64));
-      SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+      UpdateScreen(screen, 0, 0, screen.w, screen.h);
       WaitAnyKey;
     end;
 
@@ -2658,7 +2627,7 @@ begin
         EatOneItem(rnum, inum);
         waitanykey;
         redraw;
-        SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+        UpdateScreen(screen, 0, 0, screen.w, screen.h);
 
         if mnum > 0 then
         instruct_33(rnum, mnum, 1);
@@ -2815,7 +2784,7 @@ begin
       DrawBFieldWithAction(bnum, i);
       if (i = spic) and (mnum >= 0) then
         PlaySoundA(Rmagic[mnum].SoundNum, 0);
-      SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+      UpdateScreen(screen, 0, 0, screen.w, screen.h);
       SDL_Delay(BATTLE_SPEED);
       i := i + 1;
       if i > endpic then
@@ -3130,7 +3099,7 @@ var
       DrawShadowText(str, x + 3, y + 3 + 22 * amount, ColColor($64), ColColor($66))
     else
       DrawShadowText(str, x + 3, y + 3 + 22 * amount, ColColor($21), ColColor($23));
-    SDL_UpdateRect2(screen, x, y, w + 1, h + 1);
+    UpdateScreen(screen, x, y, w + 1, h + 1);
   end;
 
 begin
@@ -3679,7 +3648,7 @@ begin
     else
       inum := RItemList[p].Number;
     Redraw;
-    SDL_UpdateRect2(screen, 0, 0, screen.w, screen.h);
+    UpdateScreen(screen, 0, 0, screen.w, screen.h);
     EatOneItem(rnum, inum);
     if Brole[bnum].Team <> 0 then
       instruct_41(rnum, Rrole[rnum].TakingItem[p], -1)
