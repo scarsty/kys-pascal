@@ -1368,8 +1368,7 @@ end;
 //显示英文阴影文字
 procedure DrawEngShadowText(sur: PSDL_Surface; constref word: utf8string; x_pos, y_pos: integer; color1, color2: uint32);
 begin
-  DrawEngText(sur, word, x_pos + 1, y_pos, color2);
-  DrawEngText(sur, word, x_pos, y_pos, color1);
+  DrawShadowText(sur, word, x_pos, y_pos, color1, color2);
 end;
 
 //显示big5文字
