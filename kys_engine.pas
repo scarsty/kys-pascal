@@ -1,4 +1,4 @@
-﻿unit kys_engine;
+unit kys_engine;
 
 //{$MODE Delphi}
 
@@ -148,6 +148,8 @@ var
   FontHR, EngFontHR: PTTF_Font;
   FontHRSize, EngFontHRSize: integer;
   fonts_hr_tex: TDictionary<integer, PSDL_Texture>;
+  CachedImage: PSDL_Surface = nil;
+  CachedImageName: utf8string = '';
   HiResTextRenderOk: boolean = False;
   compositeTexW: integer = 0;
   compositeTexH: integer = 0;
@@ -202,11 +204,11 @@ var
   pairSurf: TPair<integer, PSDL_Surface>;
   pairTex: TPair<integer, PSDL_Texture>;
 begin
-  if fonts_hr <> nil then
+  if FontsHr <> nil then
   begin
-    for pairSurf in fonts_hr do
+    for pairSurf in FontsHr do
       SDL_DestroySurface(pairSurf.Value);
-    fonts_hr.Clear;
+    FontsHr.Clear;
   end;
 
   if fonts_hr_tex <> nil then
@@ -227,17 +229,17 @@ begin
   glyphW := 0;
   glyphH := 0;
 
-  if fonts_hr = nil then
-    fonts_hr := TDictionary<integer, PSDL_Surface>.Create;
+  if FontsHr = nil then
+    FontsHr := TDictionary<integer, PSDL_Surface>.Create;
   if fonts_hr_tex = nil then
     fonts_hr_tex := TDictionary<integer, PSDL_Texture>.Create;
 
   textSurf := nil;
-  if not fonts_hr.TryGetValue(k, textSurf) then
+  if not FontsHr.TryGetValue(k, textSurf) then
   begin
     textSurf := TTF_RenderText_blended(fontObj, pText, textLen, tempcolor);
     if textSurf <> nil then
-      fonts_hr.Add(k, textSurf)
+      FontsHr.Add(k, textSurf)
     else
       exit;
   end;
@@ -297,8 +299,8 @@ begin
 
   if fonts_hr_tex = nil then
     fonts_hr_tex := TDictionary<integer, PSDL_Texture>.Create;
-  if fonts_hr = nil then
-    fonts_hr := TDictionary<integer, PSDL_Surface>.Create;
+  if FontsHr = nil then
+    FontsHr := TDictionary<integer, PSDL_Surface>.Create;
 
   if needResetCache then
   begin
@@ -517,7 +519,7 @@ begin
     SDL_EVENT_FINGER_MOTION:
       if CellPhone = 0 then
         Result := False;
-    SDL_EVENT_DID_ENTER_FOREGROUND: PlayMP3(nowmusic, -1, 0);
+    SDL_EVENT_DID_ENTER_FOREGROUND: PlayMP3(NowMusic, -1, 0);
     SDL_EVENT_DID_ENTER_BACKGROUND: StopMP3();
   end;
 end;
@@ -619,6 +621,10 @@ var
 begin
   if not EnsureMixerCreated then
     Exit;
+  if times = -1 then
+    loops := -1
+  else
+    loops := 0;
   try
     if (MusicNum >= low(Music)) and (MusicNum <= high(Music)) and (VOLUME > 0) then
       if Music[MusicNum] <> nil then
@@ -631,10 +637,10 @@ begin
         MIX_SetTrackLoops(MusicTrack, loops);
         id := SDL_CreateProperties();
         SDL_SetNumberProperty(id, MIX_PROP_PLAY_FADE_IN_MILLISECONDS_NUMBER, 50);
-        SDL_SetNumberProperty(id, MIX_PROP_PLAY_LOOPS_NUMBER, -1);
+        SDL_SetNumberProperty(id, MIX_PROP_PLAY_LOOPS_NUMBER, loops);
         MIX_PlayTrack(MusicTrack, id);
         SDL_DestroyProperties(id);
-        nowmusic := MusicNum;
+        NowMusic := MusicNum;
       end;
   finally
 
@@ -862,6 +868,12 @@ begin
     TTF_CloseFont(EngFontHR);
     EngFontHR := nil;
   end;
+  if CachedImage <> nil then
+  begin
+    SDL_DestroySurface(CachedImage);
+    CachedImage := nil;
+    CachedImageName := '';
+  end;
   for i := 0 to high(MPNGTile) do
     SDL_DestroySurface(MPNGTile[i]);
   for i := 0 to high(SPNGTile) do
@@ -922,22 +934,22 @@ var
 begin
   if FileExists(file_name) {*Converted from FileExists*} then
   begin
-    if ImageName <> file_name then
+    if CachedImageName <> file_name then
     begin
-      SDL_DestroySurface(Image);
-      Image := SDL_LoadPNG(file_name);
-      ImageName := file_name;
+      SDL_DestroySurface(CachedImage);
+      CachedImage := SDL_LoadPNG(file_name);
+      CachedImageName := file_name;
     end;
-    if (Image = nil) then
+    if (CachedImage = nil) then
     begin
       //MessageBox(0, putf8char(Format('Couldn''t load %s : %s', [file_name, SDL_GetError])), 'Error', MB_OK or MB_ICONHAND);
       exit;
     end;
-    if (x < 0) then x := CENTER_X - image.w div 2;
-    if (y < 0) then y := CENTER_Y - image.h div 2;
+    if (x < 0) then x := CENTER_X - CachedImage.w div 2;
+    if (y < 0) then y := CENTER_Y - CachedImage.h div 2;
     dest.x := x;
     dest.y := y;
-    SDL_BlitSurface(Image, nil, screen, @dest);
+    SDL_BlitSurface(CachedImage, nil, screen, @dest);
     //MessageBox(0, putf8char(Format('BlitSurface error : %s', [SDL_GetError])), 'Error', MB_OK or MB_ICONHAND);
     //UpdateScreen(screen, 0, 0, image.w, image.h);
   end;
@@ -1099,7 +1111,7 @@ begin
                   begin
                     pixdepth := psmallint(BlockImageW + ((x + blockx) * heightW + y + blocky) * sizeW)^;
                     curdepth := depth;
-                    //if where = 1 then
+                    //if Where = 1 then
                     //curdepth := depth - (w - xs - 1) div 18;
                     //处理过宽的图片, 仅画图时使用, 事实上该遮挡值只用来画主角, 起作用的唯一机会是拔金蛇剑时
                     if pixdepth >= curdepth then
@@ -1267,7 +1279,7 @@ begin
       if not fonts.ContainsKey(k) then
       begin
         kyslog('%s(%d)', [midstr(word, i, 1), fonts.Count], False);
-        fonts.add(k, TTF_RenderText_blended(engfont, @word0[1], 1, tempcolor));
+        fonts.add(k, TTF_RenderText_blended(EnglishFont, @word0[1], 1, tempcolor));
       end;
       Text := fonts.Items[k];
       dest.x := x_pos;
@@ -1289,7 +1301,7 @@ begin
       if not fonts.ContainsKey(k) then
       begin
         kyslog('%s(%d)', [midstr(word, i, 2), fonts.Count], False);
-        fonts.add(k, TTF_RenderText_blended(font, @word0[1], 2, tempcolor));
+        fonts.add(k, TTF_RenderText_blended(ChineseFont, @word0[1], 2, tempcolor));
       end;
       got := fonts.TryGetValue(k, Text);
       dest.x := x_pos;
@@ -1311,7 +1323,7 @@ begin
       if not fonts.ContainsKey(k) then
       begin
         kyslog('%s(%d)', [midstr(word, i, 3), fonts.Count], False);
-        fonts.add(k, TTF_RenderText_blended(font, @word0[1], 3, tempcolor));
+        fonts.add(k, TTF_RenderText_blended(ChineseFont, @word0[1], 3, tempcolor));
       end;
       got := fonts.TryGetValue(k, Text);
       dest.x := x_pos;
@@ -1489,10 +1501,10 @@ begin
   now := SDL_GetTicks;
   if (NIGHT_EFFECT = 1) then
   begin
-    now_time := now_time + 0.3;
-    if now_time > 1440 then
-      now_time := 0;
-    p := now_time / 1440;
+    NowTime := NowTime + 0.3;
+    if NowTime > 1440 then
+      NowTime := 0;
+    p := NowTime / 1440;
     //writeln(p);
     if p > 0.5 then
       p := 1 - p;
@@ -1806,7 +1818,7 @@ begin
       ResizeWindow(event.window.data1, event.window.data2);
       UpdateAllScreen;
     end;
-    SDL_EVENT_DID_ENTER_FOREGROUND: PlayMP3(nowmusic, -1, 0);
+    SDL_EVENT_DID_ENTER_FOREGROUND: PlayMP3(NowMusic, -1, 0);
     SDL_EVENT_DID_ENTER_BACKGROUND: StopMP3(0);
     {SDL_EVENT_MOUSE_BUTTON_DOWN:
       if (CellPhone = 1) and (event.button.button = SDL_BUTTON_LEFT) then
@@ -1871,7 +1883,7 @@ begin
           showVirtualKey := not showVirtualKey;
         end
         //手机在战场仅有确认键有用
-        else if (where = 2) and (BattleSelecting) then
+        else if (Where = 2) and (BattleSelecting) then
         begin
           event.button.button := 0;
         end;
@@ -1879,7 +1891,7 @@ begin
         if FingerCount >= 1 then
           event.button.button := 0;
       end;
-      if (where = 2) and ((event.key.key = SDLK_ESCAPE) or (event.button.button = SDL_BUTTON_RIGHT)) then
+      if (Where = 2) and ((event.key.key = SDLK_ESCAPE) or (event.button.button = SDL_BUTTON_RIGHT)) then
       begin
         for i := 0 to BRoleAmount - 1 do
         begin

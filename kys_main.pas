@@ -198,14 +198,18 @@ begin
   TTF_Init();
   str := AppPath + CHINESE_FONT;
   if (not fileexists(str)) then str := AppPathCommon + CHINESE_FONT;
-  font := TTF_OpenFont(putf8char(str), CHINESE_FONT_SIZE);
+  ChineseFont := TTF_OpenFont(putf8char(str), CHINESE_FONT_SIZE);
 
   str := AppPath + ENGLISH_FONT;
   if (not fileexists(str)) then str := AppPathCommon + ENGLISH_FONT;
-  engfont := TTF_OpenFont(putf8char(str), ENGLISH_FONT_SIZE);
+  EnglishFont := TTF_OpenFont(putf8char(str), ENGLISH_FONT_SIZE);
 
   //此处测试中文字体的空格宽度
-  Text := TTF_RenderText_solid(font, @word[0], 1, tempcolor);
+  tempcolor.r := 255;
+  tempcolor.g := 255;
+  tempcolor.b := 255;
+  tempcolor.a := 255;
+  Text := TTF_RenderText_solid(ChineseFont, @word[0], 1, tempcolor);
   //writeln(SDL_geterror());
   //writeln(text.w);
   CHNFONT_SPACEWIDTH := Text.w;
@@ -215,9 +219,6 @@ begin
   //初始化音频系统
   //SDL_Init(SDL_INIT_AUDIO);
   //Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, 2, 16384);
-  SoundFlag := 0;
-  if SOUND3D = 1 then
-    SoundFlag := 0;
   MIX_Init;
 
   //初始化视频系统
@@ -323,17 +324,17 @@ begin
     fonts.Free;
     fonts := nil;
   end;
-  if fonts_hr <> nil then
+  if FontsHr <> nil then
   begin
-    for pair0 in fonts_hr do
+    for pair0 in FontsHr do
       SDL_DestroySurface(pair0.Value);
-    fonts_hr.Free;
-    fonts_hr := nil;
+    FontsHr.Free;
+    FontsHr := nil;
   end;
   FreeAllSurface;
   DestroyScript;
-  TTF_CloseFont(font);
-  TTF_CloseFont(engfont);
+  TTF_CloseFont(ChineseFont);
+  TTF_CloseFont(EnglishFont);
   TTF_Quit;
   SDL_DestroyMutex(mutex);
   SDL_Quit;
@@ -526,7 +527,7 @@ begin
     //EXIT_GAME := Kys_ini.ReadInteger('system', 'EXIT_GAME', 1);
     EXPAND_GROUND := Kys_ini.ReadInteger('system', 'EXPAND_GROUND', 0);
     WMP_4_PIC := Kys_ini.ReadInteger('system', 'WMP_4_PIC', 0);
-    Touch_Walk := Kys_ini.ReadInteger('system', 'TOUCH_WALK', 1) <> 0;
+    TouchWalk := Kys_ini.ReadInteger('system', 'TOUCH_WALK', 1) <> 0;
     RENDERER := Kys_ini.ReadInteger('system', 'RENDERER', 0);
     EXP_RATE := Kys_ini.ReadFloat('system', 'EXP_RATE', 1.0);
     if CellPhone <> 0 then
@@ -551,7 +552,7 @@ begin
     else
     begin
       ShowVirtualKey := 0;
-      Touch_Walk := True;
+      TouchWalk := True;
     end;
 
     for i := 43 to 58 do
@@ -590,7 +591,7 @@ begin
   setlength(HeadSurface, 999);
   setlength(ItemSurface, 999);
   fonts := TDictionary<integer, PSDL_Surface>.Create;
-  fonts_hr := TDictionary<integer, PSDL_Surface>.Create;
+  FontsHr := TDictionary<integer, PSDL_Surface>.Create;
 
   cct2s := simplecc_create();
   simplecc_load1(cct2s, checkFileName('cc/TSCharacters.txt'));
@@ -609,21 +610,21 @@ var
 begin
   PlayMP3(StartMusic, -1);
 
-  where := 3;
+  Where := 3;
   Redraw;
   UpdateScreen(screen, 0, 0, screen.w, screen.h);
 
   ReadTiles;
 
-  begin_time := random(1440);
-  now_time := begin_time;
+  BeginTime := random(1440);
+  NowTime := BeginTime;
 
   for i1 := 0 to 479 do
     for i2 := 0 to 479 do
       Entrance[i1, i2] := -1;
 
   //SDL_EnableKeyRepeat(0, 10);
-  MStep := 0;
+  MainMapStep := 0;
   FULLSCREEN := 0;
   menu := 0;
   setlength(Cloud, CLOUD_AMOUNT);
@@ -708,7 +709,7 @@ begin
             //redraw;
             //UpdateScreen(screen, 0, 0, screen.w, screen.h);
             CurEvent := -1; //when CurEvent=-1, Draw scene by Sx, Sy. Or by Cx, Cy.
-            if where = 1 then
+            if Where = 1 then
             begin
               WalkInScene(0);
             end;
@@ -726,7 +727,7 @@ begin
             if CurScene >= 0 then
               WalkInScene(1)
             else
-              where := 0;
+              Where := 0;
             Walk;
             //menu := -1;
           end;
@@ -808,7 +809,7 @@ begin
   //str := form1.edit1.text;
   str1 := '請輸入主角之姓名';
   //name := InputBox('Enter name', str1, '我是主角');
-  where := 3;
+  Where := 3;
   Redraw;
   tempname := '我是主角';
   homename := '主角的家';
@@ -1072,7 +1073,7 @@ begin
         Rrole[0].Magic[4] := 172;
         Rrole[0].Magic[5] := 94;
 
-        //rrole[0].AttTwice := 1;
+        //Rrole[0].AttTwice := 1;
       end;
 
       if input_name = '鳳凰' then
@@ -1405,8 +1406,8 @@ begin
 
         Rrole[0].Aptitude := 100;
         Rrole[0].Ethics := 90;
-        //rrole[0].Magic[0] := 62;
-        //rrole[0].MagLevel[0] := 800;
+        //Rrole[0].Magic[0] := 62;
+        //Rrole[0].MagLevel[0] := 800;
 
         //rmagic[62].Attack[9] := 2000;
 
@@ -1442,8 +1443,8 @@ begin
 
         Rrole[0].Aptitude := 100;
 
-        //rrole[0].Magic[0] := 62;
-        //rrole[0].MagLevel[0] := 800;
+        //Rrole[0].Magic[0] := 62;
+        //Rrole[0].MagLevel[0] := 800;
 
         //rmagic[62].Attack[9] := 2000;
 
@@ -1610,7 +1611,7 @@ begin
   FileSeek(grp, 0, 0);
 
   FileRead(grp, Inship, 2);
-  FileRead(grp, UseLess1, 2);
+  FileRead(grp, SavedSceneIndex, 2);
   FileRead(grp, My, 2);
   FileRead(grp, Mx, 2);
   FileRead(grp, Sy, 2);
@@ -1647,16 +1648,16 @@ begin
     if (Rscene[i].MainEntranceX2 >= 0) and (Rscene[i].MainEntranceX2 < 480) and (Rscene[i].MainEntranceY2 >= 0) and (Rscene[i].MainEntranceY2 < 480) then
       Entrance[Rscene[i].MainEntranceX2, Rscene[i].MainEntranceY2] := i;
   end;
-  //showmessage(inttostr(useless1));
-  if UseLess1 > 0 then
+  //showmessage(inttostr(SavedSceneIndex));
+  if SavedSceneIndex > 0 then
   begin
-    CurScene := UseLess1 - 1;
-    where := 1;
+    CurScene := SavedSceneIndex - 1;
+    Where := 1;
   end
   else
   begin
     CurScene := -1;
-    where := 0;
+    Where := 0;
   end;
 
   filename := 's' + IntToStr(num);
@@ -1698,12 +1699,12 @@ begin
   FileSeek(grp, 0, 0);
   FileWrite(grp, Inship, 2);
 
-  if where = 1 then
-    UseLess1 := CurScene + 1
+  if Where = 1 then
+    SavedSceneIndex := CurScene + 1
   else
-    UseLess1 := 0;
+    SavedSceneIndex := 0;
 
-  FileWrite(grp, UseLess1, 2);
+  FileWrite(grp, SavedSceneIndex, 2);
   FileWrite(grp, My, 2);
   FileWrite(grp, Mx, 2);
   FileWrite(grp, Sy, 2);
@@ -1786,13 +1787,13 @@ end;
 procedure Walk;
 var
   word: array [0 .. 10] of uint16;
-  x, y, walking, Speed, Mx1, My1, Mx2, My2, i, i1, i2, stillcount, axp, ayp: integer;
+  x, y, walking, Speed, Mx1, My1, Mx2, My2, i, i1, i2, MainMapStillcount, axp, ayp: integer;
   axp1, ayp1, gotoEntrance, minstep, step, drawed: integer;
   now, next_time, next_time2, next_time3: uint32;
   keystate: putf8char;
   pos: Tposition;
 begin
-  if where >= 3 then
+  if Where >= 3 then
     exit;
   next_time := SDL_GetTicks;
   next_time2 := SDL_GetTicks;
@@ -1801,7 +1802,7 @@ begin
   Mx1 := 0;
   Mx2 := 0;
 
-  where := 0;
+  Where := 0;
   walking := 0;
   Speed := 0;
   DrawMMap;
@@ -1809,8 +1810,8 @@ begin
   //SDL_EnableKeyRepeat(50, 30);
   //StopMp3;
   //PlayMp3(16, -1);
-  still := 0;
-  stillcount := 0;
+  MainMapStill := 0;
+  MainMapStillcount := 0;
 
   //ExecScript('test.txt');
   //事件轮询(并非等待)
@@ -1818,7 +1819,7 @@ begin
   begin
     SDL_PollEvent(@event);
     //如果当前处于标题画面, 则退出, 用于战斗失败
-    if where >= 3 then
+    if Where >= 3 then
     begin
       break;
     end;
@@ -1827,7 +1828,7 @@ begin
     now := SDL_GetTicks;
 
     //闪烁效果
-    if (integer(now - next_time2) > 0) {and (still =  1)} then
+    if (integer(now - next_time2) > 0) {and (MainMapStill = 1)} then
     begin
       ChangeCol;
       next_time2 := now + 200;
@@ -1853,19 +1854,19 @@ begin
     end;
 
     //主角动作
-    if (integer(now - next_time) > 0) and (where = 0) then
+    if (integer(now - next_time) > 0) and (Where = 0) then
     begin
       if (walking = 0) then
-        stillcount := stillcount + 1
+        MainMapStillcount := MainMapStillcount + 1
       else
-        stillcount := 0;
+        MainMapStillcount := 0;
 
-      if stillcount >= 10 then
+      if MainMapStillcount >= 10 then
       begin
-        still := 1;
-        MStep := MStep + 1;
-        if MStep > 6 then
-          MStep := 1;
+        MainMapStill := 1;
+        MainMapStep := MainMapStep + 1;
+        if MainMapStep > 6 then
+          MainMapStep := 1;
       end;
       next_time := now + 320;
     end;
@@ -1950,13 +1951,13 @@ begin
           nowstep := -1;
           walking := 0;
         end;
-        if (event.button.button = SDL_BUTTON_LEFT) and Touch_walk then
+        if (event.button.button = SDL_BUTTON_LEFT) and TouchWalk then
         begin
           walking := 2;
           GetMousePosition(axp, ayp, Mx, My);
           if (ayp >= 0) and (ayp <= 479) and (axp >= 0) and (axp <= 479) {and canWalk(axp, ayp)} then
           begin
-            FillChar(Fway[0, 0], sizeof(Fway), -1);
+            FillChar(PathCost[0, 0], sizeof(PathCost), $FF);
             FindWay(Mx, My);
             gotoEntrance := -1;
             if (Buildy[axp, ayp] > 0) and (Entrance[axp, ayp] < 0) then
@@ -1986,7 +1987,7 @@ begin
                   2: ayp1 := ayp - 1;
                   3: axp1 := axp + 1;
                 end;
-                step := Fway[axp1, ayp1];
+                step := PathCost[axp1, ayp1];
                 if (step >= 0) and (minstep > step) then
                 begin
                   gotoEntrance := i;
@@ -2006,7 +2007,7 @@ begin
             end;
             FindWay(Mx, My);
             Moveman(Mx, My, axp, ayp);
-            nowstep := Fway[axp, ayp] - 1;
+            nowstep := PathCost[axp, ayp] - 1;
           end
           else
           begin
@@ -2019,8 +2020,8 @@ begin
     //如果主角正在行走, 则移动主角
     if walking > 0 then
     begin
-      still := 0;
-      stillcount := 0;
+      MainMapStill := 0;
+      MainMapStillcount := 0;
       case walking of
         1:
         begin
@@ -2035,9 +2036,9 @@ begin
               2: My1 := My1 - 1;
               3: Mx1 := Mx1 + 1;
             end;
-            MStep := MStep + 1;
-            if MStep >= 7 then
-              MStep := 1;
+            MainMapStep := MainMapStep + 1;
+            if MainMapStep >= 7 then
+              MainMapStep := 1;
             if CanWalk(Mx1, My1) = True then
             begin
               Mx := Mx1;
@@ -2058,7 +2059,7 @@ begin
           end
           else
           begin
-            still := 0;
+            MainMapStill := 0;
             if sign(linex[nowstep] - Mx) < 0 then
               Mface := 0
             else if sign(linex[nowstep] - Mx) > 0 then
@@ -2068,10 +2069,10 @@ begin
             else
               Mface := 2;
 
-            MStep := MStep + 1;
+            MainMapStep := MainMapStep + 1;
 
-            if MStep >= 7 then
-              MStep := 1;
+            if MainMapStep >= 7 then
+              MainMapStep := 1;
             if (abs(Mx - linex[nowstep]) + abs(My - liney[nowstep]) = 1) and CanWalk(linex[nowstep], liney[nowstep]) then
             begin
               Mx := linex[nowstep];
@@ -2091,9 +2092,9 @@ begin
       if CheckEntrance then
       begin
         walking := 0;
-        MStep := 0;
-        still := 0;
-        stillcount := 0;
+        MainMapStep := 0;
+        MainMapStill := 0;
+        MainMapStillcount := 0;
         Speed := 0;
         if MMAPAMI = 0 then
         begin
@@ -2105,7 +2106,7 @@ begin
       //SDL_Delay(WALK_SPEED);
     end;
 
-    if where = 1 then
+    if Where = 1 then
     begin
       WalkInScene(0);
     end;
@@ -2230,9 +2231,9 @@ begin
   Result := 200;
   //while True do
   begin
-    if (where = 1) and (CurEvent < 0) and (not LoadingScene) and (NeedRefreshScene <> 0) then
+    if (Where = 1) and (CurEvent < 0) and (not LoadingScene) and (NeedRefreshScene <> 0) then
       InitialScene(2);
-    //if (where < 1) or (where > 2) then
+    //if (Where < 1) or (Where > 2) then
     //break;
   end;
 
@@ -2244,7 +2245,7 @@ end;
 function WalkInScene(Open: integer): integer;
 var
   grp, idx, offset, just, i1, i2, x, y, haveAmi, preface, drawed: integer;
-  Sx1, Sy1, s, i, walking, Prescene, stillcount, Speed, axp, ayp, gotoevent, minstep, axp1, ayp1, step: integer;
+  Sx1, Sy1, s, i, walking, Prescene, MainMapStillcount, Speed, axp, ayp, gotoevent, minstep, axp1, ayp1, step: integer;
   filename: utf8string;
   scenename: utf8string;
   now, next_time, next_time2: uint32;
@@ -2257,13 +2258,13 @@ begin
   //LockScene := false;
   next_time := SDL_GetTicks;
 
-  where := 1;
+  Where := 1;
   walking := 0; //为0表示静止, 为1表示键盘行走, 为2表示鼠标行走
   just := 0;
   CurEvent := -1;
   AmiCount := 0;
   Speed := 0;
-  stillcount := 0;
+  MainMapStillcount := 0;
 
   exitscenemusicnum := Rscene[CurScene].ExitMusic;
 
@@ -2283,7 +2284,7 @@ begin
     Sy := BEGIN_Sy;
     Cx := Sx;
     Cy := Sy;
-    CurSceneRolePic := 3445;
+    SceneRolePic := 3445;
     CurEvent := BEGIN_EVENT;
     CallEvent(BEGIN_EVENT);
     UpdateScreen(screen, 0, 0, screen.w, screen.h);
@@ -2301,7 +2302,7 @@ begin
   //UpDate := SDL_CreateThread(@UpdateSceneAmi, nil, nil);
   while (SDL_PollEvent(@event)) or True do
   begin
-    if where <> 1 then
+    if Where <> 1 then
     begin
       break;
     end;
@@ -2336,13 +2337,13 @@ begin
       end;
 
       if walking = 0 then
-        stillcount := stillcount + 1
+        MainMapStillcount := MainMapStillcount + 1
       else
-        stillcount := 0;
-      if stillcount >= 20 then
+        MainMapStillcount := 0;
+      if MainMapStillcount >= 20 then
       begin
         SStep := 0;
-        stillcount := 0;
+        MainMapStillcount := 0;
       end;
 
       next_time := now + 200;
@@ -2355,7 +2356,7 @@ begin
     //检查是否位于出口, 如是则退出
     if (((Sx = Rscene[CurScene].ExitX[0]) and (Sy = Rscene[CurScene].ExitY[0])) or ((Sx = Rscene[CurScene].ExitX[1]) and (Sy = Rscene[CurScene].ExitY[1])) or ((Sx = Rscene[CurScene].ExitX[2]) and (Sy = Rscene[CurScene].ExitY[2]))) then
     begin
-      where := 0;
+      Where := 0;
       Result := -1;
       break;
     end;
@@ -2485,7 +2486,7 @@ begin
           nowstep := 0;
           walking := 0;
           Speed := 0;
-          if where = 0 then
+          if Where = 0 then
           begin
             if (CurScene >= 0) and (Rscene[CurScene].ExitMusic >= 0) then
             begin
@@ -2501,7 +2502,7 @@ begin
         begin
           CheckEvent1;
         end;
-        if (event.button.button = SDL_BUTTON_LEFT) and Touch_Walk then
+        if (event.button.button = SDL_BUTTON_LEFT) and TouchWalk then
         begin
           if walking = 0 then
           begin
@@ -2509,7 +2510,7 @@ begin
             GetMousePosition(axp, ayp, Sx, Sy, Sdata[CurScene, 4, Sx, Sy]);
             if (ayp in [0 .. 63]) and (axp in [0 .. 63]) then
             begin
-              FillChar(Fway[0, 0], sizeof(Fway), -1);
+              FillChar(PathCost[0, 0], sizeof(PathCost), $FF);
               FindWay(Sx, Sy);
               gotoevent := -1;
               if (Sdata[CurScene, 3, axp, ayp] >= 0) then
@@ -2542,7 +2543,7 @@ begin
                         2: ayp1 := ayp - 1;
                         3: axp1 := axp + 1;
                       end;
-                      step := Fway[axp1, ayp1];
+                      step := PathCost[axp1, ayp1];
                       if (step >= 0) and (minstep > step) then
                       begin
                         gotoevent := i;
@@ -2563,7 +2564,7 @@ begin
                 end;
               end;
               Moveman(Sx, Sy, axp, ayp);
-              nowstep := Fway[axp, ayp] - 1;
+              nowstep := PathCost[axp, ayp] - 1;
             end
             else
             begin
@@ -2584,7 +2585,7 @@ begin
         1:
         begin
           Speed := Speed + 1;
-          stillcount := 0;
+          MainMapStillcount := 0;
           if (Speed = 1) or (Speed >= 5) then
           begin
             Sx1 := Sx;
@@ -2724,14 +2725,14 @@ begin
   Xlist[0] := x1;
   Ylist[0] := y1;
   steplist[0] := 0;
-  Fway[x1, y1] := 0;
+  PathCost[x1, y1] := 0;
   while curgrid < totalgrid do
   begin
     curX := Xlist[curgrid];
     curY := Ylist[curgrid];
     curstep := steplist[curgrid];
     //判断当前点四周格子的状况
-    case where of
+    case Where of
       1:
       begin
         for i := 1 to 4 do
@@ -2740,7 +2741,7 @@ begin
           nextY := curY + Yinc[i];
           if (nextX < 0) or (nextX > 63) or (nextY < 0) or (nextY > 63) then
             Bgrid[i] := 3//越界
-          else if Fway[nextX, nextY] >= 0 then
+          else if PathCost[nextX, nextY] >= 0 then
             Bgrid[i] := 2//已走过
           else if not CanWalkInScene(curX, curY, nextX, nextY) then
             Bgrid[i] := 1//阻碍
@@ -2758,7 +2759,7 @@ begin
             Bgrid[i] := 3//越界
           else if (Entrance[nextX, nextY] >= 0) then
             Bgrid[i] := 6//入口
-          else if Fway[nextX, nextY] >= 0 then
+          else if PathCost[nextX, nextY] >= 0 then
             Bgrid[i] := 2//已走过
           else if Buildx[nextX, nextY] > 0 then
             Bgrid[i] := 1//阻碍
@@ -2801,14 +2802,14 @@ begin
         Xlist[totalgrid] := curX + Xinc[i];
         Ylist[totalgrid] := curY + Yinc[i];
         steplist[totalgrid] := curstep + 1;
-        Fway[Xlist[totalgrid], Ylist[totalgrid]] := steplist[totalgrid];
+        PathCost[Xlist[totalgrid], Ylist[totalgrid]] := steplist[totalgrid];   
         totalgrid := totalgrid + 1;
         if totalgrid > 4096 then
           exit;
       end;
     end;
     curgrid := curgrid + 1;
-    if (where = 0) and (curX - Mx > 22) and (curY - My > 22) then
+    if (Where = 0) and (curX - Mx > 22) and (curY - My > 22) then
       break;
   end;
 
@@ -2819,7 +2820,7 @@ var
   s, i, i1, i2, a, tempx, tx1, tx2, ty1, ty2, tempy: integer;
   Xinc, Yinc, dir: array [1 .. 4] of integer;
 begin
-  if Fway[x2, y2] > 0 then
+  if PathCost[x2, y2] > 0 then
   begin
     Xinc[1] := 0;
     Xinc[2] := 1;
@@ -2831,13 +2832,13 @@ begin
     Yinc[4] := 1;
     linex[0] := x2;
     liney[0] := y2;
-    for a := 1 to Fway[x2, y2] do
+    for a := 1 to PathCost[x2, y2] do
     begin
       for i := 1 to 4 do
       begin
         tempx := linex[a - 1] + Xinc[i];
         tempy := liney[a - 1] + Yinc[i];
-        if (tempx >= 0) and (tempy >= 0) and (Fway[tempx, tempy] = Fway[linex[a - 1], liney[a - 1]] - 1) then
+        if (tempx >= 0) and (tempy >= 0) and (PathCost[tempx, tempy] = PathCost[linex[a - 1], liney[a - 1]] - 1) then
         begin
           linex[a] := tempx;
           liney[a] := tempy;
@@ -3010,12 +3011,12 @@ begin
           UpdateScreen(screen, x, y, w + 1, max * 22 + 29);
           fn(menu);
         end;
-        if ((event.key.key = SDLK_ESCAPE)) {and (where <= 2)} then
+        if ((event.key.key = SDLK_ESCAPE)) {and (Where <= 2)} then
         begin
           Result := -1;
           break;
         end;
-        if ((event.key.key = SDLK_RETURN) or (event.key.key = SDLK_SPACE)) {and (where <= 2)} then
+        if ((event.key.key = SDLK_RETURN) or (event.key.key = SDLK_SPACE)) {and (Where <= 2)} then
         begin
           Result := menu;
           break;
@@ -3023,12 +3024,12 @@ begin
       end;
       SDL_EVENT_MOUSE_BUTTON_UP:
       begin
-        if (event.button.button = SDL_BUTTON_LEFT) {and (where <= 2)} then
+        if (event.button.button = SDL_BUTTON_LEFT) {and (Where <= 2)} then
         begin
           Result := menu;
           break;
         end;
-        if (event.button.button = SDL_BUTTON_RIGHT) {and (where <= 2)} then
+        if (event.button.button = SDL_BUTTON_RIGHT) {and (Where <= 2)} then
         begin
           Result := -1;
           break;
@@ -3153,7 +3154,7 @@ begin
           ShowCommonScrollMenu;
           UpdateScreen(screen, x, y, w + 1, maxshow * 22 + 29);
         end;
-        if ((event.key.key = SDLK_ESCAPE)) and (where <= 2) then
+        if ((event.key.key = SDLK_ESCAPE)) and (Where <= 2) then
         begin
           Result := -1;
           //ReDraw;
@@ -3170,7 +3171,7 @@ begin
       end;
       SDL_EVENT_MOUSE_BUTTON_UP:
       begin
-        if (event.button.button = SDL_BUTTON_RIGHT) and (where <= 2) then
+        if (event.button.button = SDL_BUTTON_RIGHT) and (Where <= 2) then
         begin
           Result := -1;
           //ReDraw;
@@ -3322,7 +3323,7 @@ begin
           ShowCommonGridMenu;
           UpdateScreen(screen, x, y, cols * cellW + 1, maxShowRows * 22 + 7);
         end;
-        if (event.key.key = SDLK_ESCAPE) and (where <= 2) then
+        if (event.key.key = SDLK_ESCAPE) and (Where <= 2) then
         begin
           Result := -1;
           break;
@@ -3335,7 +3336,7 @@ begin
       end;
       SDL_EVENT_MOUSE_BUTTON_UP:
       begin
-        if (event.button.button = SDL_BUTTON_RIGHT) and (where <= 2) then
+        if (event.button.button = SDL_BUTTON_RIGHT) and (Where <= 2) then
         begin
           Result := -1;
           break;
@@ -3454,7 +3455,7 @@ begin
           ShowCommonMenu2;
           UpdateScreen(screen, x, y, w + 1, 29);
         end;
-        if ((event.key.key = SDLK_ESCAPE)) and (where <= 2) then
+        if ((event.key.key = SDLK_ESCAPE)) and (Where <= 2) then
         begin
           Result := -1;
           //ReDraw;
@@ -3471,7 +3472,7 @@ begin
       end;
       SDL_EVENT_MOUSE_BUTTON_UP:
       begin
-        if (event.button.button = SDL_BUTTON_RIGHT) and (where <= 2) then
+        if (event.button.button = SDL_BUTTON_RIGHT) and (Where <= 2) then
         begin
           Result := -1;
           //ReDraw;
@@ -3571,7 +3572,7 @@ begin
       2: MenuItem;
       5:
       begin
-        if where = 0 then
+        if Where = 0 then
         begin
           transportMenu[0] := '地圖';
           transportMenu[1] := '列表';
@@ -3615,7 +3616,7 @@ begin
     end;
     Redraw;
     UpdateScreen(screen, 80, 0, screen.w - 80, screen.h);
-    if (where = 3) then
+    if (Where = 3) then
       break;
   end;
   Redraw;
@@ -3638,7 +3639,7 @@ begin
   word[5] := '傳送';
   if MODVersion = 22 then
     word[4] := '特殊';
-  if where = 0 then
+  if Where = 0 then
     max := 6
   else
     max := 6;
@@ -3964,7 +3965,7 @@ begin
   x := 0;
   y := 0;
   w := col * 42 + 8;
-  case where of
+  case Where of
     0, 1:
     begin
       max := 6;
@@ -3995,7 +3996,7 @@ begin
   begin
     menu := CommonMenu(xm, ym, 87, max, menu, menuString);
 
-    case where of
+    case Where of
       0, 1:
       begin
         if menu = 0 then
@@ -4116,7 +4117,7 @@ begin
             begin
               //ReDraw;
               CurItem := RItemlist[ItemList[(y * col + x + atlu)]].Number;
-              if (where <> 2) and (CurItem >= 0) and (ItemList[(y * col + x + atlu)] >= 0) then
+              if (Where <> 2) and (CurItem >= 0) and (ItemList[(y * col + x + atlu)] >= 0) then
                 UseItem(CurItem);
               //ShowMenu(2);
               Result := True;
@@ -4140,7 +4141,7 @@ begin
               begin
                 //ReDraw;
                 CurItem := RItemlist[ItemList[(y * col + x + atlu)]].Number;
-                if (where <> 2) and (CurItem >= 0) and (ItemList[(y * col + x + atlu)] >= 0) then
+                if (Where <> 2) and (CurItem >= 0) and (ItemList[(y * col + x + atlu)] >= 0) then
                   UseItem(CurItem);
                 //ShowMenu(2);
                 Result := True;
@@ -4221,7 +4222,7 @@ begin
       end;
     end;
     Redraw;
-    if where = 2 then
+    if Where = 2 then
       break;
     ShowMenu(2);
   end;
@@ -4292,7 +4293,7 @@ begin
         CallEvent(Ritem[inum].UnKnow7)
       else
       begin
-        if where = 1 then
+        if Where = 1 then
         begin
           x := Sx;
           y := Sy;
@@ -4399,7 +4400,7 @@ begin
             Rrole[rnum].PracticeBook := inum;
             Ritem[inum].User := rnum;
             {if (inum in [78, 93]) then
-              rrole[rnum].Sexual := 2;}
+              Rrole[rnum].Sexual := 2;}
           end
           else
           begin
@@ -4414,7 +4415,7 @@ begin
     end;
     3: //药品
     begin
-      if where <> 2 then
+      if Where <> 2 then
       begin
         str := '誰要服用';
         str1 := cp950toutf8(@Ritem[inum].Name);
@@ -4434,7 +4435,7 @@ begin
     end;
     4: //不处理暗器类物品
     begin
-      //if where<>3 then break;
+      //if Where<>3 then break;
     end;
   end;
 
@@ -4632,7 +4633,7 @@ begin
   p[9] := 53;
   p[10] := 54;
 
-  if where <= 2 then
+  if Where <= 2 then
     LoadFreshScreen(0, 0, screen.w, screen.h);
 
   DrawRectangle(screen, x, y, 525, 315, 0, ColColor(255), 50);
@@ -4823,9 +4824,9 @@ begin
       str := format('%5d/=', [uint16(Rrole[rnum].ExpForBook)]);
     DrawEngShadowText(screen, str, x + 380, y + 282, ColColor($64), ColColor($66));
   end;
-  if where = 2 then
+  if Where = 2 then
     UpdateScreen(screen, 0, 0, screen.w, screen.h)
-  else if where <> 3 then
+  else if Where <> 3 then
     UpdateScreen(screen, x, y, 536, 316);
 
 end;
@@ -4933,7 +4934,7 @@ var
   str: utf8string;
   i, menu: integer;
 begin
-  if (where = 0) or (MODVersion = 22) then
+  if (Where = 0) or (MODVersion = 22) then
   begin
     str := '要求誰離隊？';
     if MODVersion = 22 then
@@ -4994,7 +4995,7 @@ begin
         SDL_SetWindowFullscreen(window, fs);
       end;
     end;
-    if where = 3 then
+    if Where = 3 then
       break;
     Redraw;
     ShowMenu(6);
@@ -5010,7 +5011,7 @@ var
   menuString: array [0 .. 10] of utf8string;
   filename: utf8string;
 begin
-  nowwhere := where;
+  nowwhere := Where;
   menuString[0] := '進度一';
   menuString[1] := '進度二';
   menuString[2] := '進度三';
@@ -5034,7 +5035,7 @@ begin
   if menu >= 0 then
   begin
     LoadR(menu + 1);
-    if where = 1 then
+    if Where = 1 then
     begin
       InitialScene;
       //Redraw;
@@ -5084,7 +5085,7 @@ begin
   if menu >= 0 then
   begin
     LoadR(menu + 1);
-    //where := 0;
+    //Where := 0;
     instruct_14;
     //Redraw;
     //UpdateScreen(screen, 0, 0, screen.w, screen.h);
@@ -5141,7 +5142,7 @@ begin
   menu := CommonMenu(133, 30, 45, 2, menuString);
   if menu = 1 then
   begin
-    where := 3;
+    Where := 3;
     //instruct_14;
     exit;
     //Quit;
@@ -5188,7 +5189,7 @@ begin
   Rrole[role2].CurrentHP := Rrole[role2].CurrentHP + addlife;
   Result := addlife;
 
-  if where <> 2 then
+  if Where <> 2 then
   begin
     Redraw;
     DrawRectangle(screen, 115, 98, 155, 76, 0, ColColor(255), 30);
@@ -5221,7 +5222,7 @@ begin
   Rrole[role2].Poison := Rrole[role2].Poison - minuspoi;
   Result := minuspoi;
 
-  if where <> 2 then
+  if Where <> 2 then
   begin
     Redraw;
     DrawRectangle(screen, 115, 98, 155, 51, 0, ColColor(255), 30);
@@ -5501,9 +5502,9 @@ begin
     k[51] := 56;  k[62] := 57;  k[35] := 58;  k[26] := 59;  k[63] := 60;  k[10] := 61;  k[29] := 62;  k[41] := 63;
     k[19] := 64;  k[54] := 65;  k[64] := 66;  k[3] := 67;}
   SStep := 0;
-  CurSceneRolePic := BEGIN_WALKPIC + SFace * 7;
+  SceneRolePic := BEGIN_WALKPIC + SFace * 7;
   //redraw;
-  //tempPic := CurSceneRolePic;
+  //tempPic := SceneRolePic;
   //SDL_EnableKeyRepeat(0, 10);
 
   NeedRefreshScene := 0;
@@ -5897,7 +5898,7 @@ begin
   end
   else
   begin
-    //lua_dofile(Lua_script, AppPath + 'script/oldevent/oldevent_' + inttostr(num));
+    //lua_dofile(lua_script, AppPath + 'script/oldevent/oldevent_' + inttostr(num));
     if IsConsole then
       kyslog('%s', ['Run event with ', num, '.lua script. ']);
     ExecScript(filename, '');
@@ -5905,15 +5906,15 @@ begin
 
   //event.key.key := 0;
   //event.button.button := 0;
-  //CurSceneRolePic := tempPic;;
-  //CurSceneRolePic := 2500 + SFace * 7 + 1;
+  //SceneRolePic := tempPic;;
+  //SceneRolePic := 2500 + SFace * 7 + 1;
   //事件执行完之后不刷新场景, 是因为有可能在事件本身包含另一事件, 避免频繁刷新
   if NeedRefreshScene = 1 then
   begin
     InitialScene(0);
   end;
   NeedRefreshScene := 1;
-  //if where <> 2 then CurEvent := -1;
+  //if Where <> 2 then CurEvent := -1;
   if MMAPAMI * SCENEAMI = 0 then
   begin
     Redraw;
@@ -6129,7 +6130,7 @@ begin
         if (event.key.key = SDLK_UP) then
         begin
         end;
-        if ((event.key.key = SDLK_ESCAPE)) {and (where <= 2)} then
+        if ((event.key.key = SDLK_ESCAPE)) {and (Where <= 2)} then
         begin
           break;
         end;
@@ -6140,7 +6141,7 @@ begin
       end;
       SDL_EVENT_MOUSE_BUTTON_UP:
       begin
-        if (event.button.button = SDL_BUTTON_RIGHT) {and (where <= 2)} then
+        if (event.button.button = SDL_BUTTON_RIGHT) {and (Where <= 2)} then
         begin
           break;
         end;

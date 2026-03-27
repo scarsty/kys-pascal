@@ -1,4 +1,4 @@
-﻿unit kys_script;
+unit kys_script;
 
 //{$MODE Delphi}
 
@@ -482,11 +482,11 @@ var
 begin
   n := lua_gettop(L);
   Result := lua52.lua_tointeger(L, pos);
-  //writeln(n, pos, p5032pos, p5032value);
-  if ((pos < 0) and (n + pos + 1 = p5032pos)) or ((pos > 0) and (pos = p5032pos)) then
+  //writeln(n, pos, Script5032Pos, Script5032Value);
+  if ((pos < 0) and (n + pos + 1 = Script5032Pos)) or ((pos > 0) and (pos = Script5032Pos)) then
   begin
-    Result := p5032value;
-    p5032pos := -100;
+    Result := Script5032Value;
+    Script5032Pos := -100;
   end;
 end;
 
@@ -1472,7 +1472,7 @@ end;
 //强制设置战斗结果
 function ForceBattleResult(L: Plua_state): integer; cdecl;
 begin
-  Bstatus := lua_tointeger(L, -1);
+  BattleResult := lua_tointeger(L, -1);
   Result := 0;
 end;
 

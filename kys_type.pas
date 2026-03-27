@@ -1,4 +1,4 @@
-﻿unit kys_type;
+unit kys_type;
 
 //{$MODE delphi}
 
@@ -216,7 +216,7 @@ var
 
   Earth, Surface, Building, BuildX, BuildY, Entrance: array [0 .. 479, 0 .. 479] of smallint;
   //主地图数据
-  InShip, Useless1, Mx, My, Sx, Sy, MFace, ShipX, ShipY, ShipX1, ShipY1, ShipFace: smallint;
+  InShip, SavedSceneIndex, Mx, My, Sx, Sy, MFace, ShipX, ShipY, ShipX1, ShipY1, ShipFace: smallint;
   TeamList: array [0 .. 5] of smallint;
   RItemList: array of TItemList;
   Rrole: array [0 .. 2031] of TRole;
@@ -249,13 +249,7 @@ var
   MatchList: array [0 .. 99, 0 .. 2] of smallint;
   //各类列表, 前四个从文件读入
 
-  //SDL使用的主要数据
-  event: TSDL_Event;
-  //事件
-  Font, EngFont: PTTF_Font;
-  //字体
-
-  //视频部分设置
+  //图像与界面设置
   BIG_PNG_TILE: integer = 0;
   FULLSCREEN: integer; //是否全屏
   RESOLUTIONX: integer = 1280;
@@ -266,6 +260,10 @@ var
   HIRES_TEXT: integer = 1;
   //文字独立高分辨率渲染开关: 0-关闭, 1-开启
   WMP_4_PIC: integer = 0; //战场人物的静止贴图使用WMP中的图片，否则直接从fight中计算
+
+  //SDL运行时对象
+  event: TSDL_Event;
+  ChineseFont, EnglishFont: PTTF_Font;
 
   ScreenFlag: uint32;
   screen, prescreen, freshscreen: PSDL_Surface;
@@ -306,30 +304,28 @@ var
   ItemSurface: array of PSDL_Surface;
 
   fonts: TDictionary<integer, PSDL_Surface>;
-  fonts_hr: TDictionary<integer, PSDL_Surface>;
+  FontsHr: TDictionary<integer, PSDL_Surface>;
 
-  //音频部分设置
+  //音频资源与播放状态
   VOLUME, VOLUMEWAV, SOUND3D: integer; //音乐音量 音效音量 是否启用3D音效
-  SoundFlag: longword;
-
   Music: array of MIX_Audio;
   ESound: array of MIX_Audio;
   ASound: array of MIX_Audio;
 
   StartMusic: integer;
   ExitSceneMusicNum: integer; //离开场景的音乐
-  nowmusic: integer = -1; //正在播放的音乐
+  NowMusic: integer = -1; //正在播放的音乐
   //MusicName: utf8string;
 
-  //事件和脚本部分
+  //事件和脚本状态
   x50: array [0 .. $7FFF] of smallint;
   //扩充指令50所使用的变量
   KDEF_SCRIPT: integer = 0; //使用脚本处理事件
   lua_script: Plua_state; //lua脚本
-  p5032pos: integer = -100; //脚本用于处理50 32使用
-  p5032value: integer = -1;
+  Script5032Pos: integer = -100; //脚本用于处理50 32使用
+  Script5032Value: integer = -1;
 
-  CurSceneRolePic: integer;
+  SceneRolePic: integer;
   //主角场景内当前贴图编号, 引入该常量主要用途是25指令事件号为-1的情况
   NeedRefreshScene: integer = 1; //是否需要刷新场景, 用于事件中和副线程
 
@@ -347,26 +343,25 @@ var
   NIGHT_EFFECT: integer = 0; //是否使用白昼和黑夜效果
   EXIT_GAME: integer = 1; //退出时的提问方式
 
-  //其他
-  mutex: PSDL_Mutex;
-  ChangeColorList: array [0 .. 1, 0 .. 20] of uint32; //替换色表, 无用
-  AskingQuit: boolean = False; //是否正在提问退出
-  begin_time: integer; //游戏开始时间, 单位为分钟, 0~1439
-  now_time: real;
-  LoadingScene: boolean = False; //是否正在载入场景
-
   //游戏开场时的设置
   TitlePosition: TPosition;
   OpenPicPosition: TPosition;
 
-  //游戏内部运行时使用的数据
-  MStep, Still: integer;
+  //游戏运行时状态
+  mutex: PSDL_Mutex;
+  ChangeColorList: array [0 .. 1, 0 .. 20] of uint32; //替换色表, 无用
+  AskingQuit: boolean = False; //是否正在提问退出
+  BeginTime: integer; //游戏开始时间, 单位为分钟, 0~1439
+  NowTime: real;
+  LoadingScene: boolean = False; //是否正在载入场景
+
+  MainMapStep, MainMapStill: integer;
   //主地图步数, 是否处于静止
   Cx, Cy, SFace, SStep: integer;
   //场景内坐标, 场景中心点, 方向, 步数
   CurScene, CurEvent, CurItem, CurrentBattle, Where: integer;
   //当前场景, 事件(在场景中的事件号), 使用物品, 战斗
-  //where: 0-主地图, 1-场景, 2-战场, 3-开头画面
+  //Where: 0-主地图, 1-场景, 2-战场, 3-开头画面
   SaveNum: integer;
   //存档号, 未使用
   Brole: array [0 .. 99] of TBattleRole;
@@ -378,13 +373,13 @@ var
   //AutoMode: array of integer;
   Bx, By, Ax, Ay: integer;
   //当前人物坐标, 选择目标的坐标
-  Bstatus: integer;
+  BattleResult: integer;
   //战斗状态, 0-继续, 1-胜利, 2-失败
 
   //寻路使用的变量表
   linex, liney: array [0 .. 480 * 480 - 1] of smallint;
   nowstep: integer;
-  Fway: array [0 .. 479, 0 .. 479] of integer;
+  PathCost: array [0 .. 479, 0 .. 479] of integer;
 
   ItemList: array [0 .. 500] of smallint; //物品显示使用的列表
 
@@ -399,7 +394,6 @@ var
   CHNFONT_SPACEWIDTH: integer;
 
   //手柄控制相关
-  joy: PSDL_Joystick;
   JOY_RETURN, JOY_ESCAPE, JOY_LEFT, JOY_RIGHT, JOY_UP, JOY_DOWN, JOY_MOUSE_LEFT: uint32;
   JOY_AXIS_DELAY: uint32;
 
@@ -417,12 +411,9 @@ var
   VirtualKeyValue: uint32 = 0;
   VirtualCrossX: integer = 150;
   VirtualCrossY: integer = 250;
-  VIrtualKeySize: integer = 60;
+  VirtualKeySize: integer = 60;
 
   VirtualAX, VirtualAY, VirtualBX, VirtualBY: integer;
-
-  Image: PSDL_Surface;   //标题
-  ImageName: utf8string;
 
   SkipTalk: integer = 0;
 
@@ -435,10 +426,8 @@ var
   //经验倍率
   EXP_RATE: real = 1;
 
-  //是否触摸走路
-  Touch_Walk: boolean = True;
-
-  //渲染器
+  //输入与渲染附加设置
+  TouchWalk: boolean = True;
   RENDERER: integer = 0;
 
 const

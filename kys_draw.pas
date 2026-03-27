@@ -1,4 +1,4 @@
-﻿unit kys_draw;
+unit kys_draw;
 
 //{$mode delphi}
 
@@ -101,7 +101,7 @@ end;
 //显示主地图贴图
 procedure DrawMPic(num, px, py, shadow, alpha: integer; mixColor: uint32; mixAlpha: integer; Framenum: integer = -1; totalpix: integer = 0); overload;
 begin
-  DrawRLE8Pic(@ACol[0], num, px, py, @Midx[0], @Mpic[0], nil, nil, 0, 0, 0, shadow, alpha, nil, nil, 0, 0, 0, 4096, mixColor, mixAlpha, totalpix);
+  DrawRLE8Pic(@ACol[0], num, px, py, @MIdx[0], @MPic[0], nil, nil, 0, 0, 0, shadow, alpha, nil, nil, 0, 0, 0, 4096, mixColor, mixAlpha, totalpix);
 end;
 
 //显示场景图片
@@ -416,7 +416,7 @@ end;
 procedure Redraw(WriteFresh: integer = 0);
 begin
   //ClearQueuedHiResText;
-  case where of
+  case Where of
     0: DrawMMap;
     1: DrawScene;
     2: DrawBField;
@@ -522,12 +522,12 @@ end;
   //如在水面上则绘制船的贴图
   if (i1 = Mx) and (i2 = My) then
   if (InShip = 0) then
-  if still = 0 then
-  DrawMPic(2501 + MFace * 7 + MStep, CENTER_X, CENTER_Y)
+  if MainMapStill = 0 then
+  DrawMPic(2501 + MFace * 7 + MainMapStep, CENTER_X, CENTER_Y)
   else
-  DrawMPic(2528 + Mface * 6 + MStep, CENTER_X, CENTER_Y)
+  DrawMPic(2528 + Mface * 6 + MainMapStep, CENTER_X, CENTER_Y)
   else
-  DrawMPic(3714 + MFace * 4 + (MStep + 1) div 2, CENTER_X, CENTER_Y);
+  DrawMPic(3714 + MFace * 4 + (MainMapStep + 1) div 2, CENTER_X, CENTER_Y);
   if (temp[i1, i2] > 0) and (buildx[i1, i2] = i2) then
   begin
   DrawMPic(building[i1, i2] div 2, pos.x, pos.y);
@@ -625,12 +625,12 @@ end;
   temp[i1, i2] := k;
   tempindex[i1, i2] := k;
   if InShip = 0 then
-  if still = 0 then
-  BuildingPic[k] := 2501 + MFace * 7 + MStep
+  if MainMapStill = 0 then
+  BuildingPic[k] := 2501 + MFace * 7 + MainMapStep
   else
-  BuildingPic[k] := 2528 + Mface * 6 + MStep
+  BuildingPic[k] := 2528 + Mface * 6 + MainMapStep
   else
-  BuildingPic[k] := 3714 + MFace * 4 + (MStep + 1) div 2;
+  BuildingPic[k] := 3714 + MFace * 4 + (MainMapStep + 1) div 2;
   k := k + 1;
   end;
   end;
@@ -742,22 +742,22 @@ begin
         if (i1 = Mx) and (i2 = My) then
         begin
           if (InShip = 0) then
-            if still = 0 then
-              num := 2501 + MFace * 7 + MStep
+            if MainMapStill = 0 then
+              num := 2501 + MFace * 7 + MainMapStep
             else
-              num := 2528 + Mface * 6 + MStep
+              num := 2528 + Mface * 6 + MainMapStep
           else
-            num := 3715 + MFace * 4 + (MStep + 1) div 2;
+            num := 3715 + MFace * 4 + (MainMapStep + 1) div 2;
         end;
         if (num > 0) and (num < MPicAmount) then
         begin
           BuildArray[k].x := i1;
           BuildArray[k].y := i2;
           BuildArray[k].b := num;
-          Width := smallint(Mpic[MIdx[num - 1]]);
-          Height := smallint(Mpic[MIdx[num - 1] + 2]);
-          yoffset := smallint(Mpic[MIdx[num - 1] + 6]);
-          xoffset := smallint(Mpic[MIdx[num - 1] + 4]);
+          Width := smallint(MPic[MIdx[num - 1]]);
+          Height := smallint(MPic[MIdx[num - 1] + 2]);
+          yoffset := smallint(MPic[MIdx[num - 1] + 6]);
+          xoffset := smallint(MPic[MIdx[num - 1] + 4]);
           //根据图片的宽度计算图的中点的坐标和作为排序依据
           //y坐标为第二依据
           //BuildArray[k].c := (i1 + i2) - (Width + 35) div 36 - (yoffset - Height + 1) div 9;
@@ -793,7 +793,7 @@ begin
   DrawVirtualKey;
   //if NIGHT_EFFECT = 1 then
   //begin
-  //  str := format('%.2d:%.2d', [round(now_time / 60), round(now_time) mod 24]);
+  //  str := format('%.2d:%.2d', [round(NowTime / 60), round(NowTime) mod 24]);
   //  DrawShadowText(screen, str, 20, CENTER_Y*2 - 40, ColColor($FF), ColColor($FF));
   //end;
 end;
@@ -809,7 +809,7 @@ begin
   if (CurEvent < 0) then
   begin
     DrawSceneWithoutRole(Sx, Sy);
-    CurSceneRolePic := BEGIN_WALKPIC + SFace * 7 + SStep;
+    SceneRolePic := BEGIN_WALKPIC + SFace * 7 + SStep;
     DrawRoleOnScene(Sx, Sy);
   end
   else
@@ -844,7 +844,7 @@ var
   pos: TPosition;
 begin
   pos := GetPositionOnScreen(Sx, Sy, x, y);
-  DrawSPic(CurSceneRolePic, pos.x, pos.y - SData[CurScene, 4, Sx, Sy], 0, 100, CalBlock(Sx, Sy), 0, 0);
+  DrawSPic(SceneRolePic, pos.x, pos.y - SData[CurScene, 4, Sx, Sy], 0, 100, CalBlock(Sx, Sy), 0, 0);
 
 end;
 
@@ -860,7 +860,7 @@ begin
     for i1 := 0 to 63 do
       for i2 := 0 to 63 do
       begin
-        case where of
+        case Where of
           1: ExGround[i1, i2] := SData[CurScene, 0, i1, i2];
           2: ExGround[i1, i2] := Bfield[0, i1, i2];
         end;
@@ -894,7 +894,7 @@ begin
       begin
         CalPosOnImage(i1, i2, x, y);
         num := ExGround[i1, i2] div 2;
-        case where of
+        case Where of
           1: InitialSPic(num, x, y, 0, 0, ImageWidth, ImageHeight, 0, 0, 0);
           2: InitialBPic(num, x, y, 0, 0);
         end;
@@ -943,7 +943,7 @@ begin
     h := screen.h;
   end;
 
-  if (Visible > 0) and (where = 1) then
+  if (Visible > 0) and (Where = 1) then
     onback := 1
   else
     onback := 0;
@@ -969,7 +969,7 @@ begin
     end;
   end;
 
-  if (Visible > 0) and (where = 1) and (x1 >= 0) and (y1 >= 0) then
+  if (Visible > 0) and (Where = 1) and (x1 >= 0) and (y1 >= 0) then
   begin
     //遮挡值仅更新主角附近的即可
     CalPosOnImage(Sx, Sy, x, y);
@@ -1188,7 +1188,7 @@ procedure InitialBFieldImage;
 var
   sumi, i1, i2: integer;
 begin
-  FillChar(BlockImg2[0], sizeof(BlockImg2[0]) * length(BlockImg2), -1);
+  FillChar(BlockImg2[0], sizeof(BlockImg2[0]) * length(BlockImg2), $FF);
   SDL_FillSurfaceRect(ImgBField, nil, $ff000000);
   SDL_FillSurfaceRect(ImgBBuild, nil, 1);
   ExpandGroundOnImg();

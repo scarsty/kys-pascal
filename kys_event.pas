@@ -1,4 +1,4 @@
-﻿unit kys_event;
+unit kys_event;
 
 //{$MODE Delphi}
 
@@ -219,6 +219,8 @@ begin
   p := 1;
   i := 1;
   l := 0;
+  Lines := nil;
+  Lines2 := nil;
   while i <= len do
   begin
     if (talkstr[i] = #$2A) then
@@ -813,7 +815,7 @@ begin
     while SDL_PollEvent(@event) or True do
     begin
       CheckBasicEvent;
-      CurSceneRolePic := i div 2;
+      SceneRolePic := i div 2;
       SDL_Delay(20);
       //DData[CurScene, CurEvent, 5] := -1;
       DrawScene;
@@ -889,7 +891,7 @@ begin
       SStep := SStep + 1;
       if SStep >= 7 then
         SStep := 1;
-      CurSceneRolePic := BEGIN_WALKPIC + SFace * 7 + SStep;
+      SceneRolePic := BEGIN_WALKPIC + SFace * 7 + SStep;
       DrawRoleOnScene(Sx, Sy);
       UpdateScreen(screen, 0, 0, screen.w, screen.h);
       Sy := Sy + s;
@@ -911,7 +913,7 @@ begin
       SStep := SStep + 1;
       if SStep >= 7 then
         SStep := 1;
-      CurSceneRolePic := BEGIN_WALKPIC + SFace * 7 + SStep;
+      SceneRolePic := BEGIN_WALKPIC + SFace * 7 + SStep;
       DrawRoleOnScene(Sx, Sy);
       UpdateScreen(screen, 0, 0, screen.w, screen.h);
       Sx := Sx + s;
@@ -923,7 +925,7 @@ begin
   SStep := 0;
   Cx := Sx;
   Cy := Sy;
-  CurSceneRolePic := 2501 + SFace * 7 + SStep;
+  SceneRolePic := 2501 + SFace * 7 + SStep;
   DrawSceneWithoutRole(Sx, Sy);
   DrawRoleOnScene(Sx, Sy);
   UpdateScreen(screen, 0, 0, screen.w, screen.h);
@@ -1108,7 +1110,7 @@ end;
 procedure instruct_40(director: integer);
 begin
   Sface := director;
-  CurSceneRolePic := 2500 + SFace * 7 + 1;
+  SceneRolePic := 2500 + SFace * 7 + 1;
   DrawScene;
 end;
 
@@ -1488,9 +1490,9 @@ var
   i: integer;
   str: utf8string;
 begin
-  CurSceneRolePic := -1;
+  SceneRolePic := -1;
   instruct_44(enum1, beginpic1, endpic1, enum2, beginpic2, endpic2);
-  where := 3;
+  Where := 3;
   Redraw;
   EndAmi;
   //display_img('end.png', 0, 0);
@@ -1516,6 +1518,7 @@ begin
   p := 1;
   x := 30;
   y := 80;
+  str1 := '';
   DrawRectangleWithoutFrame(screen, 0, 0, CENTER_X * 2, CENTER_Y * 2, 0, 60);
   UpdateScreen(screen, x, y, drawlength(str1) * 20, 22);
   for i := 1 to len + 1 do
@@ -1912,9 +1915,9 @@ begin
       case t1 of
         $1D295A: Sx := e5;
         $1D295C: Sy := e5;
-        //$1D2956: Cx := e5;
-        //$1D2958: Cy := e5;
-        //$0544f2:
+        // addr 1D2956: Cx := e5;
+        // addr 1D2958: Cy := e5;
+        // addr 0544f2:
       end;
       case i of
         $18FE2C:
@@ -1951,8 +1954,8 @@ begin
         $1D295C: x50[e5] := Sy;
         $1C0B88: x50[e5] := Mx;
         $1C0B8C: x50[e5] := My;
-        //$1D2956: x50[e5] := Cx;
-        //$1D2958: x50[e5] := Cy;
+        // addr 1D2956: x50[e5] := Cx;
+        // addr 1D2958: x50[e5] := Cy;
         $05B53A: x50[e5] := 1;
         $0544F2: x50[e5] := Sface;
         $1E6ED6: x50[e5] := x50[28100];
@@ -2035,8 +2038,8 @@ begin
     begin
       e3 := e_GetValue(0, e1, e3);
       Result := 655360 * (e3 + 1) + x50[e2];
-      p5032pos := e3;
-      p5032value := x50[e2];
+      Script5032Pos := e3;
+      Script5032Value := x50[e2];
       //showmessage(inttostr(result));
     end;
     33: //Draw a string.
@@ -2796,7 +2799,7 @@ begin
       //检查是否等待按键
       if midstr(talkstr, I, length(WaitAnyKeyCode)) = WaitAnyKeyCode then
       begin
-        Inc(I, length(TempStr));
+        Inc(I, length(WaitAnyKeyCode));
         //updateallscreen;
         WaitAnyKey;
         Continue;
@@ -3262,9 +3265,9 @@ begin
         else if (words[0] = $2626) or (words[0] = $2525) or (words[0] = $2424) then
         begin
           case words[0] of
-            $2626: np3 := ap; //&&显示姓名
-            $2525: np3 := np2; //%%显示名
-            $2424: np3 := np1; //$$显示姓
+            $2626: np3 := ap; // &&显示姓名
+            $2525: np3 := np2; // %%显示名
+            $2424: np3 := np1; // 显示姓
           end;
           i := 0;
           while (PWord(np3 + i)^ shr 8 <> 0) and (PWord(np3 + i)^ shl 8 <> 0) do
@@ -3516,6 +3519,7 @@ begin
   r.h := h;
   SDL_StartTextInput(window);
   SDL_SetTextInputArea(window, @r, 0);
+  i := 0;
   while True do
   begin
     i := i + 1;

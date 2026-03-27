@@ -1,4 +1,4 @@
-﻿unit kys_battle;
+unit kys_battle;
 
 //{$MODE Delphi}
 
@@ -84,16 +84,16 @@ procedure calcross(var Mx1, My1, Ax1, Ay1, tempmaxhurt: integer; curX, curY, bnu
 procedure NearestMove(var Mx1, My1: integer; bnum: integer);
 procedure NearestMoveByPro(var Mx1, My1, Ax1, Ay1: integer; bnum, TeamMate, KeepDis, Prolist, MaxMinPro: integer; mode: integer);
 
-var
-  movetable: array of TPosition;
-  maxdelaypicnum: integer;
-
 implementation
 
 uses
   kys_event,
   kys_engine,
   kys_draw;
+
+var
+  movetable: array of TPosition;
+  maxdelaypicnum: integer;
 
 //Battle.
 //战斗, 返回值为是否胜利
@@ -102,7 +102,7 @@ var
   i, j, num, SelectTeamList, x, y, PreMusic: integer;
   path: utf8string;
 begin
-  Bstatus := 0;
+  BattleResult := 0;
   CurrentBattle := battlenum;
   BattleRound := 1;
   if InitialBField then
@@ -134,9 +134,9 @@ begin
   Where := 2;
   InitialBFieldImage; //初始化场景
 
-  PreMusic := nowmusic;
+  PreMusic := NowMusic;
   StopMP3;
-  PlayMP3(warsta.MusicNum, -1);
+  PlayMP3(WarSta.MusicNum, -1);
 
   //Setlength(AutoMode, BRoleAmount);
   for i := 0 to BRoleAmount - 1 do
@@ -177,7 +177,7 @@ begin
   event.key.key := 0;
   event.button.button := 0;
 
-  if (bstatus = 1) or ((bstatus = 2) and (getexp <> 0)) then
+  if (BattleResult = 1) or ((BattleResult = 2) and (getexp <> 0)) then
   begin
     AddExp;
     CheckLevelUp;
@@ -205,7 +205,7 @@ begin
     PlayMP3(PreMusic, -1);
 
   Where := 1;
-  if bstatus = 1 then
+  if BattleResult = 1 then
     Result := True
   else
     Result := False;
@@ -448,7 +448,7 @@ begin
   Bx := Brole[0].X;
   By := Brole[0].Y;
 
-  while BStatus = 0 do
+  while BattleResult = 0 do
   begin
     CalMoveAbility; //计算移动能力
     if SEMIREAL = 0 then
@@ -496,7 +496,7 @@ begin
     if SEMIREAL = 0 then
       i := 0;
 
-    while ((i < BRoleAmount) and (Bstatus = 0)) do
+    while ((i < BRoleAmount) and (BattleResult = 0)) do
     begin
       while (SDL_PollEvent(@event) or True) do
       begin
@@ -578,7 +578,7 @@ begin
 
       ClearDeadRolePic;
       Redraw;
-      Bstatus := BattleStatus;
+      BattleResult := BattleStatus;
 
       if Brole[i].Acted = 1 then
       begin
@@ -1616,7 +1616,7 @@ var
 begin
   if mode = 0 then
   begin
-    FillChar(Bfield[3, 0, 0], sizeof(Bfield[3]), -1);
+    FillChar(Bfield[3, 0, 0], sizeof(Bfield[3]), $FF);
     FillChar(Bfield[7, 0, 0], sizeof(Bfield[7]), 0); //第7层标记敌人身旁的位置
     if Brole[bnum].Acted = 0 then
       FillChar(Bfield[6, 0, 0], sizeof(Bfield[6]), 0);
@@ -3673,7 +3673,7 @@ begin
   Ax1 := -1;
   Ay1 := -1;
   tempmaxhurt := -1;
-  FillChar(aimHurt[0, 0], sizeof(aimHurt), -1);
+  FillChar(aimHurt[0, 0], sizeof(aimHurt), $FF);
   AttAreaType := Rmagic[mnum].AttAreaType;
   distance := Rmagic[mnum].MoveDistance[level - 1];
   range := Rmagic[mnum].AttDistance[level - 1];
