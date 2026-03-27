@@ -973,6 +973,19 @@ begin
   Result := (px - xs + w >= xx) and (px - xs < xx + xw) and (py - ys + h >= yy) and (py - ys < yy + yh);
 end;
 
+function BlendByteByPercent(src, dst: byte; percent: integer): byte; inline;
+begin
+  Result := (percent * src + (100 - percent) * dst) div 100;
+end;
+
+procedure BlendRGBAByPercent(var r, g, b, a: byte; srcR, srcG, srcB, srcA: byte; percent: integer); inline;
+begin
+  r := BlendByteByPercent(srcR, r, percent);
+  g := BlendByteByPercent(srcG, g, percent);
+  b := BlendByteByPercent(srcB, b, percent);
+  a := BlendByteByPercent(srcA, a, percent);
+end;
+
 //RLE8图片绘制子程, 所有相关子程均对此封装. 最后一个参数为亮度, 仅在绘制战场选择对方时使用
 procedure DrawRLE8Pic(colorPanel: putf8char; num, px, py: integer; Pidx: Pinteger; Ppic: pbyte; RectArea: putf8char; Image: PSDL_Surface; widthI, heightI, sizeI: integer; shadow: integer); overload;
 begin
@@ -1010,6 +1023,8 @@ var
   l, l1, ix, iy, pixdepth, curdepth, alpha1: integer;
   pix, colorin: uint32;
   pix1, pix2, pix3, pix4, color1, color2, color3, color4: byte;
+  mixColor1, mixColor2, mixColor3, mixColor4: byte;
+  hasMixColor: boolean;
   area: TSDL_Rect;
   total: integer = 0;
 begin
@@ -1052,6 +1067,11 @@ begin
     blockx := Pinteger(BlockPosition)^;
     blocky := Pinteger(BlockPosition + 4)^;
   end;
+
+  hasMixColor := (Image = screen) and (mixAlpha <> 0);
+  if hasMixColor then
+    SDL_GetRGBA(mixColor, SDL_GetPixelFormatDetails(screen.format), SDL_GetSurfacePalette(screen), @mixColor1, @mixColor2, @mixColor3, @mixColor4);
+
   alpha1 := (alpha shr 8) and $FF;
   if ((w > 1) or (h > 1)) and (px - xs + w >= area.x) and (px - xs < area.x + area.w) and (py - ys + h >= area.y) and (py - ys < area.y + area.h) then
   begin
@@ -1088,15 +1108,8 @@ begin
             //pix := sdl_maprgba(screen.format, pix1, pix2, pix3, pix4);
             if Image = screen then
             begin
-              if mixAlpha <> 0 then
-              begin
-                SDL_GetRGBA(mixColor, SDL_GetPixelFormatDetails(screen.format), SDL_GetSurfacePalette(screen), @color1, @color2, @color3, @color4);
-                pix1 := (mixAlpha * color1 + (100 - mixAlpha) * pix1) div 100;
-                pix2 := (mixAlpha * color2 + (100 - mixAlpha) * pix2) div 100;
-                pix3 := (mixAlpha * color3 + (100 - mixAlpha) * pix3) div 100;
-                pix4 := (mixAlpha * color4 + (100 - mixAlpha) * pix4) div 100;
-                //pix := pix1 + pix2 shl 8 + pix3 shl 16 + pix4 shl 24;
-              end;
+              if hasMixColor then
+                BlendRGBAByPercent(pix1, pix2, pix3, pix4, mixColor1, mixColor2, mixColor3, mixColor4, mixAlpha);
               if (alpha <> 0) then
               begin
                 if (BlockImageW = nil) then
@@ -1126,37 +1139,13 @@ begin
                 begin
                   colorin := GetPixel(screen, x, y);
                   SDL_GetRGBA(colorin, SDL_GetPixelFormatDetails(screen.format), SDL_GetSurfacePalette(screen), @color1, @color2, @color3, @color4);
-                  //pix1 := pix and $FF;
-                  //color1 := colorin and $FF;
-                  //pix2 := pix shr 8 and $FF;
-                  //color2 := colorin shr 8 and $FF;
-                  //pix3 := pix shr 16 and $FF;
-                  //color3 := colorin shr 16 and $FF;
-                  //pix4 := pix shr 24 and $FF;
-                  //color4 := colorin shr 24 and $FF;
-                  pix1 := (alpha * color1 + (100 - alpha) * pix1) div 100;
-                  pix2 := (alpha * color2 + (100 - alpha) * pix2) div 100;
-                  pix3 := (alpha * color3 + (100 - alpha) * pix3) div 100;
-                  pix4 := (alpha * color4 + (100 - alpha) * pix4) div 100;
-                  //pix := pix1 + pix2 shl 8 + pix3 shl 16 + pix4 shl 24;
+                  BlendRGBAByPercent(pix1, pix2, pix3, pix4, color1, color2, color3, color4, alpha);
                 end;
                 if (isAlpha = 0) and (alpha1 > 0) and (alpha1 <= 100) then
                 begin
                   colorin := GetPixel(screen, x, y);
                   SDL_GetRGBA(colorin, SDL_GetPixelFormatDetails(screen.format), SDL_GetSurfacePalette(screen), @color1, @color2, @color3, @color4);
-                  //pix1 := pix and $FF;
-                  //color1 := colorin and $FF;
-                  //pix2 := pix shr 8 and $FF;
-                  //color2 := colorin shr 8 and $FF;
-                  //pix3 := pix shr 16 and $FF;
-                  //color3 := colorin shr 16 and $FF;
-                  //pix4 := pix shr 24 and $FF;
-                  //color4 := colorin shr 24 and $FF;
-                  pix1 := (alpha1 * color1 + (100 - alpha1) * pix1) div 100;
-                  pix2 := (alpha1 * color2 + (100 - alpha1) * pix2) div 100;
-                  pix3 := (alpha1 * color3 + (100 - alpha1) * pix3) div 100;
-                  pix4 := (alpha1 * color4 + (100 - alpha1) * pix4) div 100;
-                  //pix := pix1 + pix2 shl 8 + pix3 shl 16 + pix4 shl 24;
+                  BlendRGBAByPercent(pix1, pix2, pix3, pix4, color1, color2, color3, color4, alpha1);
                 end;
               end;
               pix := SDL_MapSurfaceRGBA(screen, pix1, pix2, pix3, 255);
