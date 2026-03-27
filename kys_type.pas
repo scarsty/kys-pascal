@@ -1,4 +1,6 @@
-unit kys_type;
+﻿unit kys_type;
+
+{$codepage utf8}
 
 //{$MODE delphi}
 

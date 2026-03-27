@@ -1,5 +1,7 @@
 ﻿unit kys_main;
 
+{$codepage utf8}
+
 {$IFDEF fpc}
 //{$MODE Delphi}
 {$ELSE}

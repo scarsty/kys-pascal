@@ -1,4 +1,6 @@
-unit kys_event;
+﻿unit kys_event;
+
+{$codepage utf8}
 
 //{$MODE Delphi}
 

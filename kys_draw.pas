@@ -1,4 +1,4 @@
-unit kys_draw;
+﻿unit kys_draw;
 
 //{$mode delphi}
 

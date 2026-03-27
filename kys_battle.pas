@@ -1,4 +1,6 @@
-unit kys_battle;
+﻿unit kys_battle;
+
+{$codepage utf8}
 
 //{$MODE Delphi}
 

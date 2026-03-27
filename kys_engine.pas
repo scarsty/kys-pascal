@@ -1,4 +1,6 @@
-unit kys_engine;
+﻿unit kys_engine;
+
+{$codepage utf8}
 
 //{$MODE Delphi}
 
