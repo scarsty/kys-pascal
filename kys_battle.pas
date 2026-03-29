@@ -722,7 +722,7 @@ var
       end;
     end;
     if (update) then
-      UpdateScreen(screen, 100, 50, 48, max * 22 + 29);
+      UpdateScreen(screen, 100, 50, 47, max * 22 + 29);
   end;
 
 begin
@@ -1099,25 +1099,28 @@ begin
       end;
       SDL_EVENT_MOUSE_BUTTON_UP:
       begin
-        if (event.button.button = SDL_BUTTON_LEFT) then
-        begin
-          Result := True;
-          break;
-        end;
         if (event.button.button = SDL_BUTTON_RIGHT) then
         begin
           Result := False;
           break;
         end;
+        if TouchWalk and (event.button.button = SDL_BUTTON_LEFT) then
+        begin
+          Result := True;
+          break;
+        end;
       end;
       SDL_EVENT_MOUSE_MOTION:
       begin
-        Axp := (-round(event.button.x / (RESOLUTIONX / screen.w)) + CENTER_X + 2 * round(event.button.y / (RESOLUTIONY / screen.h)) - 2 * CENTER_Y + 18) div 36 + Bx;
-        Ayp := (round(event.button.x / (RESOLUTIONX / screen.w)) - CENTER_X + 2 * round(event.button.y / (RESOLUTIONY / screen.h)) - 2 * CENTER_Y + 18) div 36 + By;
-        if (abs(Axp - Bx) + abs(Ayp - By) <= step) and (Bfield[3, Axp, Ayp] >= 0) then
+        if TouchWalk then
         begin
-          Ax := Axp;
-          Ay := Ayp;
+          Axp := (-round(event.button.x / (RESOLUTIONX / screen.w)) + CENTER_X + 2 * round(event.button.y / (RESOLUTIONY / screen.h)) - 2 * CENTER_Y + 18) div 36 + Bx;
+          Ayp := (round(event.button.x / (RESOLUTIONX / screen.w)) - CENTER_X + 2 * round(event.button.y / (RESOLUTIONY / screen.h)) - 2 * CENTER_Y + 18) div 36 + By;
+          if (abs(Axp - Bx) + abs(Ayp - By) <= step) and (Bfield[3, Axp, Ayp] >= 0) then
+          begin
+            Ax := Axp;
+            Ay := Ayp;
+          end;
         end;
       end;
     end;
@@ -1299,7 +1302,7 @@ begin
           Result := False;
           break;
         end;
-        if (event.button.button = SDL_BUTTON_LEFT) then
+        if TouchWalk and (event.button.button = SDL_BUTTON_LEFT) then
         begin
           if (Ax <> Bx) or (Ay <> By) then
           begin
@@ -1310,17 +1313,20 @@ begin
       end;
       SDL_EVENT_MOUSE_MOTION:
       begin
-        //按照所点击位置设置方向
-        Ax := Bx;
-        Ay := By;
-        if (round(event.button.x / (RESOLUTIONX / screen.w)) < CENTER_X) and (round(event.button.y / (RESOLUTIONY / screen.h)) < CENTER_Y) then
-          Ay := By - 1;
-        if (round(event.button.x / (RESOLUTIONX / screen.w)) < CENTER_X) and (round(event.button.y / (RESOLUTIONY / screen.h)) >= CENTER_Y) then
-          Ax := Bx + 1;
-        if (round(event.button.x / (RESOLUTIONX / screen.w)) >= CENTER_X) and (round(event.button.y / (RESOLUTIONY / screen.h)) < CENTER_Y) then
-          Ax := Bx - 1;
-        if (round(event.button.x / (RESOLUTIONX / screen.w)) >= CENTER_X) and (round(event.button.y / (RESOLUTIONY / screen.h)) >= CENTER_Y) then
-          Ay := By + 1;
+        if TouchWalk then
+        begin
+          //按照所点击位置设置方向
+          Ax := Bx;
+          Ay := By;
+          if (round(event.button.x / (RESOLUTIONX / screen.w)) < CENTER_X) and (round(event.button.y / (RESOLUTIONY / screen.h)) < CENTER_Y) then
+            Ay := By - 1;
+          if (round(event.button.x / (RESOLUTIONX / screen.w)) < CENTER_X) and (round(event.button.y / (RESOLUTIONY / screen.h)) >= CENTER_Y) then
+            Ax := Bx + 1;
+          if (round(event.button.x / (RESOLUTIONX / screen.w)) >= CENTER_X) and (round(event.button.y / (RESOLUTIONY / screen.h)) < CENTER_Y) then
+            Ax := Bx - 1;
+          if (round(event.button.x / (RESOLUTIONX / screen.w)) >= CENTER_X) and (round(event.button.y / (RESOLUTIONY / screen.h)) >= CENTER_Y) then
+            Ay := By + 1;
+        end;
       end;
     end;
     SetAminationPosition(1, step);

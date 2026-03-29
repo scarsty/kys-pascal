@@ -775,7 +775,7 @@ begin
       str[i] := utf8char(0);
       str1 := midstr(str, p, i - p);
       DrawShadowText(screen, str1, x, y, ColColor($FF), ColColor($FF));
-      UpdateScreen(screen, x, y, drawlength(str1) * 10+2, 22);
+      UpdateScreen(screen, x, y, drawlength(str1) * 10 + 2, 22);
       p := i + 1;
       y := y + 25;
     end;
@@ -2804,7 +2804,7 @@ begin
         Xlist[totalgrid] := curX + Xinc[i];
         Ylist[totalgrid] := curY + Yinc[i];
         steplist[totalgrid] := curstep + 1;
-        PathCost[Xlist[totalgrid], Ylist[totalgrid]] := steplist[totalgrid];   
+        PathCost[Xlist[totalgrid], Ylist[totalgrid]] := steplist[totalgrid];
         totalgrid := totalgrid + 1;
         if totalgrid > 4096 then
           exit;
@@ -3253,6 +3253,8 @@ end;
 function CommonGridMenu(x, y, cols, cellW, maxShowRows, maxItem: integer; menuString: array of utf8string): integer;
 var
   menu, topRow, totalRows, mx, my, prevMenu, hitItem, hr, hc: integer;
+  currentkey: TSDL_KeyCode;
+  keycount: integer;
 
   procedure ShowCommonGridMenu;
   var
@@ -3289,13 +3291,67 @@ begin
   ShowCommonGridMenu;
   UpdateScreen(screen, x, y, cols * cellW + 1, maxShowRows * 22 + 7);
 
-  while SDL_WaitEvent(@event) do
+  currentkey := 0;
+  while True do
   begin
-    CheckBasicEvent;
-    case event.type_ of
-      SDL_EVENT_KEY_UP:
+    if (currentkey > 0) then
+    begin
+      if keycount > 0 then
       begin
         prevMenu := menu;
+        if currentkey = SDLK_RIGHT then
+          if menu < maxItem then Inc(menu);
+        if currentkey = SDLK_LEFT then
+          if menu > 0 then Dec(menu);
+        if currentkey = SDLK_DOWN then
+          menu := min(maxItem, menu + cols);
+        if currentkey = SDLK_UP then
+          menu := max(0, menu - cols);
+        if menu div cols < topRow then
+          topRow := menu div cols;
+        if menu div cols >= topRow + maxShowRows then
+          topRow := menu div cols - maxShowRows + 1;
+      end;
+      if prevMenu <> menu then
+      begin
+        ShowCommonGridMenu;
+        UpdateScreen(screen, x, y, cols * cellW + 1, maxShowRows * 22 + 7);
+      end;
+      SDL_Delay(100);
+      keycount := keycount + 1;
+    end;
+
+    if not SDL_PollEvent(@event) then continue;
+    CheckBasicEvent;
+    case event.type_ of
+      SDL_EVENT_KEY_DOWN:
+      begin
+        kyslog('%d', [currentkey]);
+        {prevMenu := menu;
+        if event.key.key = SDLK_RIGHT then
+          if menu < maxItem then Inc(menu);
+        if event.key.key = SDLK_LEFT then
+          if menu > 0 then Dec(menu);
+        if event.key.key = SDLK_DOWN then
+          menu := min(maxItem, menu + cols);
+        if event.key.key = SDLK_UP then
+          menu := max(0, menu - cols);
+        if menu div cols < topRow then
+          topRow := menu div cols;
+        if menu div cols >= topRow + maxShowRows then
+          topRow := menu div cols - maxShowRows + 1;
+        if prevMenu <> menu then
+        begin
+          ShowCommonGridMenu;
+          UpdateScreen(screen, x, y, cols * cellW + 1, maxShowRows * 22 + 7);
+        end;}
+        currentkey := event.key.key;
+        keycount := 0;
+      end;
+      SDL_EVENT_KEY_UP:
+      begin
+        currentkey := 0;
+        {prevMenu := menu;
         if event.key.key = SDLK_RIGHT then
           if menu < maxItem then Inc(menu);
         if event.key.key = SDLK_LEFT then
@@ -3324,7 +3380,7 @@ begin
         begin
           ShowCommonGridMenu;
           UpdateScreen(screen, x, y, cols * cellW + 1, maxShowRows * 22 + 7);
-        end;
+        end;}
         if (event.key.key = SDLK_ESCAPE) and (Where <= 2) then
         begin
           Result := -1;
@@ -3343,7 +3399,7 @@ begin
           Result := -1;
           break;
         end;
-        if event.button.button = SDL_BUTTON_LEFT then
+        if TouchWalk and (event.button.button = SDL_BUTTON_LEFT) then
         begin
           mx := round(event.button.x / (RESOLUTIONX / screen.w));
           my := round(event.button.y / (RESOLUTIONY / screen.h));
@@ -3356,7 +3412,7 @@ begin
       end;
       SDL_EVENT_MOUSE_WHEEL:
       begin
-        if event.wheel.y < 0 then
+        if TouchWalk and (event.wheel.y < 0) then
         begin
           if topRow + maxShowRows < totalRows then
           begin
@@ -3370,7 +3426,7 @@ begin
           ShowCommonGridMenu;
           UpdateScreen(screen, x, y, cols * cellW + 1, maxShowRows * 22 + 7);
         end;
-        if event.wheel.y > 0 then
+        if TouchWalk and (event.wheel.y > 0) then
         begin
           if topRow > 0 then
           begin
@@ -3387,21 +3443,24 @@ begin
       end;
       SDL_EVENT_MOUSE_MOTION:
       begin
-        mx := round(event.button.x / (RESOLUTIONX / screen.w));
-        my := round(event.button.y / (RESOLUTIONY / screen.h));
-        if (mx >= x) and (mx < x + cols * cellW) and (my >= y + 3) and (my < y + maxShowRows * 22 + 7) then
+        if TouchWalk then
         begin
-          hc := (mx - x) div cellW;
-          hr := (my - y - 3) div 22;
-          hitItem := (topRow + hr) * cols + hc;
-          if (hitItem >= 0) and (hitItem <= maxItem) then
+          mx := round(event.button.x / (RESOLUTIONX / screen.w));
+          my := round(event.button.y / (RESOLUTIONY / screen.h));
+          if (mx >= x) and (mx < x + cols * cellW) and (my >= y + 3) and (my < y + maxShowRows * 22 + 7) then
           begin
-            prevMenu := menu;
-            menu := hitItem;
-            if menu <> prevMenu then
+            hc := (mx - x) div cellW;
+            hr := (my - y - 3) div 22;
+            hitItem := (topRow + hr) * cols + hc;
+            if (hitItem >= 0) and (hitItem <= maxItem) then
             begin
-              ShowCommonGridMenu;
-              UpdateScreen(screen, x, y, cols * cellW + 1, maxShowRows * 22 + 7);
+              prevMenu := menu;
+              menu := hitItem;
+              if menu <> prevMenu then
+              begin
+                ShowCommonGridMenu;
+                UpdateScreen(screen, x, y, cols * cellW + 1, maxShowRows * 22 + 7);
+              end;
             end;
           end;
         end;
@@ -4137,7 +4196,7 @@ begin
               //UpdateScreen(screen, 0, 0, screen.w, screen.h);
               break;
             end;
-            if (event.button.button = SDL_BUTTON_LEFT) and (CellPhone = 0) then
+            if TouchWalk and (event.button.button = SDL_BUTTON_LEFT) and (CellPhone = 0) then
             begin
               if (round(event.button.x / (RESOLUTIONX / screen.w)) >= 110) and (round(event.button.x / (RESOLUTIONX / screen.w)) < 496) and (round(event.button.y / (RESOLUTIONY / screen.h)) > 90) and (round(event.button.y / (RESOLUTIONY / screen.h)) < 308) then
               begin
@@ -4154,7 +4213,7 @@ begin
           end;
           SDL_EVENT_MOUSE_WHEEL:
           begin
-            if (event.wheel.y < 0) then
+            if TouchWalk and (event.wheel.y < 0) then
             begin
               y := y + 1;
               if y < 0 then
@@ -4168,7 +4227,7 @@ begin
               ShowMenuItem;
               UpdateScreen(screen, 0, 0, screen.w, screen.h);
             end;
-            if (event.wheel.y > 0) then
+            if TouchWalk and (event.wheel.y > 0) then
             begin
               y := y - 1;
               if y < 0 then
@@ -4183,7 +4242,7 @@ begin
           end;
           SDL_EVENT_MOUSE_MOTION:
           begin
-            if (round(event.button.x / (RESOLUTIONX / screen.w)) >= 110) and (round(event.button.x / (RESOLUTIONX / screen.w)) < 110 + w) and (round(event.button.y / (RESOLUTIONY / screen.h)) > 90) and (round(event.button.y / (RESOLUTIONY / screen.h)) < 308) then
+            if TouchWalk and (round(event.button.x / (RESOLUTIONX / screen.w)) >= 110) and (round(event.button.x / (RESOLUTIONX / screen.w)) < 110 + w) and (round(event.button.y / (RESOLUTIONY / screen.h)) > 90) and (round(event.button.y / (RESOLUTIONY / screen.h)) < 308) then
             begin
               xp := x;
               yp := y;
@@ -4826,9 +4885,7 @@ begin
       str := format('%5d/=', [uint16(Rrole[rnum].ExpForBook)]);
     DrawEngShadowText(screen, str, x + 380, y + 282, ColColor($64), ColColor($66));
   end;
-  if Where = 2 then
-    UpdateScreen(screen, 0, 0, screen.w, screen.h)
-  else if Where <> 3 then
+  if Where <> 3 then
     UpdateScreen(screen, x, y, 536, 316);
 
 end;
