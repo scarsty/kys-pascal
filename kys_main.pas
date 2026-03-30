@@ -53,6 +53,7 @@ uses
   SDL3_mixer,
   iniFiles,
   Generics.Collections,
+  fileinfo,
   simplecc;
 
 //程序重要子程
@@ -350,11 +351,22 @@ procedure SetMODVersion;
 var
   filename: utf8string;
   Kys_ini: TIniFile;
+  FileVerInfo: TFileVersionInfo;
 begin
   setlength(Music, 200);
   setlength(Esound, 300);
   setlength(Asound, 200);
   StartMusic := 16;
+  {FileVerInfo := TFileVersionInfo.Create(nil);
+  try
+    FileVerInfo.FileName := ParamStr(0);
+    FileVerInfo.ReadFileInfo;
+    kyslog('%s', [FileVerInfo.FileName]);
+    versionstr := FileVerInfo.VersionStrings.Values['FileVersion'];
+    kyslog('%s', [versionstr]);
+  finally
+    FileVerInfo.Free;
+  end;}
   TitleString := 'All Heros in Kam Yung''s Stories - Replicated Edition';
   OpenPicPosition.x := -1;
   OpenPicPosition.y := -1;
@@ -459,7 +471,6 @@ begin
   finally
     Kys_ini.Free;
   end;
-
 end;
 
 //读取必须的文件
@@ -3290,68 +3301,13 @@ begin
   RecordFreshScreen(x, y, cols * cellW + 1, maxShowRows * 22 + 7);
   ShowCommonGridMenu;
   UpdateScreen(screen, x, y, cols * cellW + 1, maxShowRows * 22 + 7);
-
-  currentkey := 0;
-  while True do
+  while SDL_WaitEvent(@event) do
   begin
-    if (currentkey > 0) then
-    begin
-      if keycount > 0 then
-      begin
-        prevMenu := menu;
-        if currentkey = SDLK_RIGHT then
-          if menu < maxItem then Inc(menu);
-        if currentkey = SDLK_LEFT then
-          if menu > 0 then Dec(menu);
-        if currentkey = SDLK_DOWN then
-          menu := min(maxItem, menu + cols);
-        if currentkey = SDLK_UP then
-          menu := max(0, menu - cols);
-        if menu div cols < topRow then
-          topRow := menu div cols;
-        if menu div cols >= topRow + maxShowRows then
-          topRow := menu div cols - maxShowRows + 1;
-      end;
-      if prevMenu <> menu then
-      begin
-        ShowCommonGridMenu;
-        UpdateScreen(screen, x, y, cols * cellW + 1, maxShowRows * 22 + 7);
-      end;
-      SDL_Delay(100);
-      keycount := keycount + 1;
-    end;
-
-    if not SDL_PollEvent(@event) then continue;
     CheckBasicEvent;
     case event.type_ of
-      SDL_EVENT_KEY_DOWN:
-      begin
-        kyslog('%d', [currentkey]);
-        {prevMenu := menu;
-        if event.key.key = SDLK_RIGHT then
-          if menu < maxItem then Inc(menu);
-        if event.key.key = SDLK_LEFT then
-          if menu > 0 then Dec(menu);
-        if event.key.key = SDLK_DOWN then
-          menu := min(maxItem, menu + cols);
-        if event.key.key = SDLK_UP then
-          menu := max(0, menu - cols);
-        if menu div cols < topRow then
-          topRow := menu div cols;
-        if menu div cols >= topRow + maxShowRows then
-          topRow := menu div cols - maxShowRows + 1;
-        if prevMenu <> menu then
-        begin
-          ShowCommonGridMenu;
-          UpdateScreen(screen, x, y, cols * cellW + 1, maxShowRows * 22 + 7);
-        end;}
-        currentkey := event.key.key;
-        keycount := 0;
-      end;
       SDL_EVENT_KEY_UP:
       begin
-        currentkey := 0;
-        {prevMenu := menu;
+        prevMenu := menu;
         if event.key.key = SDLK_RIGHT then
           if menu < maxItem then Inc(menu);
         if event.key.key = SDLK_LEFT then
@@ -3380,7 +3336,17 @@ begin
         begin
           ShowCommonGridMenu;
           UpdateScreen(screen, x, y, cols * cellW + 1, maxShowRows * 22 + 7);
-        end;}
+        end;
+        if (event.key.key = SDLK_ESCAPE) and (Where <= 2) then
+        begin
+          Result := -1;
+          break;
+        end;
+        if (event.key.key = SDLK_RETURN) or (event.key.key = SDLK_SPACE) then
+        begin
+          Result := menu;
+          break;
+        end;
         if (event.key.key = SDLK_ESCAPE) and (Where <= 2) then
         begin
           Result := -1;
@@ -4242,41 +4208,44 @@ begin
           end;
           SDL_EVENT_MOUSE_MOTION:
           begin
-            if TouchWalk and (round(event.button.x / (RESOLUTIONX / screen.w)) >= 110) and (round(event.button.x / (RESOLUTIONX / screen.w)) < 110 + w) and (round(event.button.y / (RESOLUTIONY / screen.h)) > 90) and (round(event.button.y / (RESOLUTIONY / screen.h)) < 308) then
+            if TouchWalk then
             begin
-              xp := x;
-              yp := y;
-              x := (round(event.button.x / (RESOLUTIONX / screen.w)) - 115) div 42;
-              y := (round(event.button.y / (RESOLUTIONY / screen.h)) - 95) div 42;
-              if x >= col then
-                x := col - 1;
-              if y >= row then
-                y := row - 1;
-              if x < 0 then
-                x := 0;
-              if y < 0 then
-                y := 0;
-              //鼠标移动时仅在x, y发生变化时才重画
-              if (x <> xp) or (y <> yp) then
+              if (round(event.button.x / (RESOLUTIONX / screen.w)) >= 110) and (round(event.button.x / (RESOLUTIONX / screen.w)) < 110 + w) and (round(event.button.y / (RESOLUTIONY / screen.h)) > 90) and (round(event.button.y / (RESOLUTIONY / screen.h)) < 308) then
               begin
+                xp := x;
+                yp := y;
+                x := (round(event.button.x / (RESOLUTIONX / screen.w)) - 115) div 42;
+                y := (round(event.button.y / (RESOLUTIONY / screen.h)) - 95) div 42;
+                if x >= col then
+                  x := col - 1;
+                if y >= row then
+                  y := row - 1;
+                if x < 0 then
+                  x := 0;
+                if y < 0 then
+                  y := 0;
+                //鼠标移动时仅在x, y发生变化时才重画
+                if (x <> xp) or (y <> yp) then
+                begin
+                  ShowMenuItem;
+                  UpdateScreen(screen, 0, 0, screen.w, screen.h);
+                end;
+              end;
+              if (round(event.button.x / (RESOLUTIONX / screen.w)) >= 110) and (round(event.button.x / (RESOLUTIONX / screen.w)) < 496) and (round(event.button.y / (RESOLUTIONY / screen.h)) > 308) then
+              begin
+                //atlu := atlu+col;
+                if (ItemList[atlu + col * row] >= 0) then
+                  atlu := atlu + col;
                 ShowMenuItem;
                 UpdateScreen(screen, 0, 0, screen.w, screen.h);
               end;
-            end;
-            if (round(event.button.x / (RESOLUTIONX / screen.w)) >= 110) and (round(event.button.x / (RESOLUTIONX / screen.w)) < 496) and (round(event.button.y / (RESOLUTIONY / screen.h)) > 308) then
-            begin
-              //atlu := atlu+col;
-              if (ItemList[atlu + col * row] >= 0) then
-                atlu := atlu + col;
-              ShowMenuItem;
-              UpdateScreen(screen, 0, 0, screen.w, screen.h);
-            end;
-            if (round(event.button.x / (RESOLUTIONX / screen.w)) >= 110) and (round(event.button.x / (RESOLUTIONX / screen.w)) < 496) and (round(event.button.y / (RESOLUTIONY / screen.h)) < 90) then
-            begin
-              if atlu > 0 then
-                atlu := atlu - col;
-              ShowMenuItem;
-              UpdateScreen(screen, 0, 0, screen.w, screen.h);
+              if (round(event.button.x / (RESOLUTIONX / screen.w)) >= 110) and (round(event.button.x / (RESOLUTIONX / screen.w)) < 496) and (round(event.button.y / (RESOLUTIONY / screen.h)) < 90) then
+              begin
+                if atlu > 0 then
+                  atlu := atlu - col;
+                ShowMenuItem;
+                UpdateScreen(screen, 0, 0, screen.w, screen.h);
+              end;
             end;
           end;
         end;

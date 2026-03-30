@@ -424,6 +424,9 @@ begin
     begin
       SDL_FillSurfaceRect(screen, nil, $ff000000);
       display_img(putf8char(AppPath + 'resource/open.png'), OpenPicPosition.x, OpenPicPosition.y);
+      //DrawShadowText(screen, VersionStr, 5, CENTER_Y * 2 - 22, ColColor($64), ColColor($66));
+      //DrawShadowText(screen, 'AppPath: ' + GetCurrentDir, 5, CENTER_Y * 2 - 44, ColColor($64), ColColor($66));
+      //DrawShadowText(screen, TitleString, 5, CENTER_Y * 2 - 22, ColColor($64), ColColor($66));
       DrawVirtualKey;
     end;
     4:

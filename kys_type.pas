@@ -163,6 +163,7 @@ var
 
   //初始值
   TitleString: utf8string;
+  VersionStr: utf8string = 'Build version: ';
 
   CHINESE_FONT: putf8char = 'resource/chinese.ttf';
   CHINESE_FONT_SIZE: integer = 20;
