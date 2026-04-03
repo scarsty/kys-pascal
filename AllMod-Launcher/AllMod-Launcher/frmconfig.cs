@@ -287,7 +287,7 @@ namespace pig3config
         private void configIniValueAll(int i)
         {
             configIniValue(i, "system", "SMOOTH");
-            configIniValue(i, "system", "GLHR");
+            configIniValue(i, "system", "RENDERER");
             //configIniValue(i, "system", "sw_surface");
             //configIniValue(i, "system", "sw_output");
 

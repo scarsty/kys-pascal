@@ -272,8 +272,9 @@ begin
   end;
 
   //SDL_WM_SetCaption(putf8char(TitleString), 's.weyl');
-  SDL_SetHint(SDL_HINT_RENDER_DRIVER, 'direct3d,vulkan,direct3d12,direct3d11,opengl');
+  SDL_SetHint(SDL_HINT_RENDER_DRIVER, 'direct3d,opengl,direct3d12,direct3d11');
   render := SDL_CreateRenderer(window, render_str);
+  kyslog('%s', [SDL_GetRendererName(render)]);
   screen := SDL_CreateSurface(CENTER_X * 2, CENTER_Y * 2, SDL_GetPixelFormatForMasks(32, Rmask, Gmask, Bmask, Amask));
   screenTex := SDL_CreateTexture(render, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, CENTER_X * 2, CENTER_Y * 2);
   //prescreen := SDL_CreateRGBSurface(ScreenFlag, CENTER_X * 2, CENTER_Y * 2, 32, RMask, GMask, BMask, 0);
