@@ -8,6 +8,7 @@
 #include "kys_event.h"
 #include "kys_battle.h"
 #include "kys_type.h"
+#include "filefunc.h"
 
 #include <SDL3/SDL.h>
 #include <cstdio>
@@ -940,14 +941,8 @@ void DestroyScript() {
 }
 
 int ExecScript(const std::string& filename, const std::string& functionname) {
-    FILE* f = fopen(filename.c_str(), "rb");
-    if (!f) return 0;
-    fseek(f, 0, SEEK_END);
-    int len = (int)ftell(f);
-    fseek(f, 0, SEEK_SET);
-    std::string script(len, 0);
-    fread(&script[0], 1, len, f);
-    fclose(f);
+    std::string script = filefunc::readFileToString(filename);
+    if (script.empty()) return 0;
     return ExecScriptString(script, functionname);
 }
 

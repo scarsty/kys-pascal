@@ -10,12 +10,14 @@
 #include "kys_battle.h"
 #include "kys_script.h"
 #include "kys_type.h"
+#include "filefunc.h"
 
 #include <SDL3/SDL.h>
 #include <cstdio>
 #include <cstring>
 #include <cstdlib>
 #include <cmath>
+#include <format>
 #include <string>
 #include <vector>
 #include <algorithm>
@@ -116,7 +118,7 @@ void instruct_2(int inum, int amount) {
     DrawBig5ShadowText(screen, Ritem[inum].Name, x - 80, 125, ColColor(0x05), ColColor(0x07));
     word = "數量";
     DrawShadowText(screen, word, x - 80, 150, ColColor(0x64), ColColor(0x66));
-    char buf[32]; snprintf(buf, sizeof(buf), " %5d", amount);
+    auto buf = std::format(" {:5d}", amount);
     DrawEngShadowText(screen, buf, x, 150, ColColor(0x64), ColColor(0x66));
     UpdateScreen(screen, 0, 0, screen->w, screen->h);
     WaitAnyKey();
@@ -422,7 +424,7 @@ void instruct_34(int rnum, int iq) {
         DrawRectangle(screen, CENTER_X - 75, 98, 145, 51, 0, ColColor(255), 50);
         DrawShadowText(screen, "資質增加", CENTER_X - 70, 125, ColColor(0x05), ColColor(0x07));
         DrawBig5ShadowText(screen, Rrole[rnum].Name, CENTER_X - 70, 100, ColColor(0x21), ColColor(0x23));
-        char buf[16]; snprintf(buf, sizeof(buf), "%3d", iq);
+        auto buf = std::format("{:3d}", iq);
         DrawEngShadowText(screen, buf, CENTER_X + 30, 125, ColColor(0x64), ColColor(0x66));
         UpdateScreen(screen, 0, 0, screen->w, screen->h);
         WaitAnyKey(); Redraw();
@@ -531,7 +533,7 @@ void instruct_45(int rnum, int speed) {
     DrawRectangle(screen, CENTER_X - 75, 98, 145, 51, 0, ColColor(255), 50);
     DrawShadowText(screen, "輕功增加", CENTER_X - 70, 125, ColColor(0x05), ColColor(0x07));
     DrawBig5ShadowText(screen, Rrole[rnum].Name, CENTER_X - 70, 100, ColColor(0x21), ColColor(0x23));
-    char buf[16]; snprintf(buf, sizeof(buf), "%4d", speed);
+    auto buf = std::format("{:4d}", speed);
     DrawEngShadowText(screen, buf, CENTER_X + 20, 125, ColColor(0x64), ColColor(0x66));
     UpdateScreen(screen, 0, 0, screen->w, screen->h); WaitAnyKey(); Redraw();
 }
@@ -541,7 +543,7 @@ void instruct_46(int rnum, int mp) {
     DrawRectangle(screen, CENTER_X - 75, 98, 145, 51, 0, ColColor(255), 50);
     DrawShadowText(screen, "內力增加", CENTER_X - 70, 125, ColColor(0x05), ColColor(0x07));
     DrawBig5ShadowText(screen, Rrole[rnum].Name, CENTER_X - 70, 100, ColColor(0x21), ColColor(0x23));
-    char buf[16]; snprintf(buf, sizeof(buf), "%4d", mp);
+    auto buf = std::format("{:4d}", mp);
     DrawEngShadowText(screen, buf, CENTER_X + 20, 125, ColColor(0x64), ColColor(0x66));
     UpdateScreen(screen, 0, 0, screen->w, screen->h); WaitAnyKey(); Redraw();
 }
@@ -551,7 +553,7 @@ void instruct_47(int rnum, int Attack) {
     DrawRectangle(screen, CENTER_X - 75, 98, 145, 51, 0, ColColor(255), 50);
     DrawShadowText(screen, "武力增加", CENTER_X - 70, 125, ColColor(0x05), ColColor(0x07));
     DrawBig5ShadowText(screen, Rrole[rnum].Name, CENTER_X - 70, 100, ColColor(0x21), ColColor(0x23));
-    char buf[16]; snprintf(buf, sizeof(buf), "%4d", Attack);
+    auto buf = std::format("{:4d}", Attack);
     DrawEngShadowText(screen, buf, CENTER_X + 20, 125, ColColor(0x64), ColColor(0x66));
     UpdateScreen(screen, 0, 0, screen->w, screen->h); WaitAnyKey(); Redraw();
 }
@@ -561,7 +563,7 @@ void instruct_48(int rnum, int hp) {
     DrawRectangle(screen, CENTER_X - 75, 98, 145, 51, 0, ColColor(255), 50);
     DrawShadowText(screen, "生命增加", CENTER_X - 70, 125, ColColor(0x05), ColColor(0x07));
     DrawBig5ShadowText(screen, Rrole[rnum].Name, CENTER_X - 70, 100, ColColor(0x21), ColColor(0x23));
-    char buf[16]; snprintf(buf, sizeof(buf), "%4d", hp);
+    auto buf = std::format("{:4d}", hp);
     DrawEngShadowText(screen, buf, CENTER_X + 20, 125, ColColor(0x64), ColColor(0x66));
     UpdateScreen(screen, 0, 0, screen->w, screen->h); WaitAnyKey(); Redraw();
 }
@@ -582,7 +584,7 @@ void instruct_51() { instruct_1(SOFTSTAR_BEGIN_TALK + rand() % SOFTSTAR_NUM_TALK
 void instruct_52() {
     DrawRectangle(screen, CENTER_X - 110, 98, 220, 26, 0, ColColor(255), 50);
     DrawShadowText(screen, "你的品德指數為：", CENTER_X - 105, 100, ColColor(0x05), ColColor(0x07));
-    char buf[16]; snprintf(buf, sizeof(buf), "%3d", Rrole[0].Ethics);
+    auto buf = std::format("{:3d}", Rrole[0].Ethics);
     DrawEngShadowText(screen, buf, CENTER_X + 65, 100, ColColor(0x64), ColColor(0x66));
     UpdateScreen(screen, 0, 0, screen->w, screen->h); WaitAnyKey(); Redraw();
 }
@@ -590,7 +592,7 @@ void instruct_52() {
 void instruct_53() {
     DrawRectangle(screen, CENTER_X - 110, 98, 220, 26, 0, ColColor(255), 50);
     DrawShadowText(screen, "你的聲望指數為：", CENTER_X - 105, 100, ColColor(0x05), ColColor(0x07));
-    char buf[16]; snprintf(buf, sizeof(buf), "%3d", Rrole[0].Repute);
+    auto buf = std::format("{:3d}", Rrole[0].Repute);
     DrawEngShadowText(screen, buf, CENTER_X + 65, 100, ColColor(0x64), ColColor(0x66));
     UpdateScreen(screen, 0, 0, screen->w, screen->h); WaitAnyKey(); Redraw();
 }
@@ -657,10 +659,9 @@ void EndAmi() {
     instruct_14(); Redraw();
     // 读取 end.txt 并逐行显示
     std::string fn = AppPath + "list/end.txt";
-    FILE* f = fopen(fn.c_str(), "rb");
-    if (!f) return;
-    fseek(f, 0, SEEK_END); int len = (int)ftell(f); fseek(f, 0, SEEK_SET);
-    std::string str(len, 0); fread(&str[0], 1, len, f); fclose(f);
+    std::string str = filefunc::readFileToString(fn);
+    if (str.empty()) return;
+    int len = (int)str.size();
     int x = 30, y = 80;
     DrawRectangleWithoutFrame(screen, 0, 0, CENTER_X * 2, CENTER_Y * 2, 0, 60);
     std::string line;
@@ -690,7 +691,7 @@ void instruct_64() {
     int list[5]; std::string menuStr[5];
     for (int i = 0; i < 5; i++) {
         if (RShop[shopnum].Amount[i] > 0) {
-            char buf[64]; snprintf(buf, sizeof(buf), "%-20s%5d", cp950toutf8(Ritem[RShop[shopnum].Item[i]].Name).c_str(), RShop[shopnum].Price[i]);
+            auto buf = std::format("{:<20s}{:5d}", cp950toutf8(Ritem[RShop[shopnum].Item[i]].Name), RShop[shopnum].Price[i]);
             menuStr[amount] = buf; list[amount] = i; amount++;
         }
     }
@@ -1427,9 +1428,9 @@ int EnterNumber(int MinValue, int MaxValue, int x, int y, int Default) {
         Button[i].w = 25;
         Button[i].h = 23;
     }
-    str[10] = "  \xC2\xB1"; // ± in UTF-8
+    str[10] = "  ±";
     Button[10].x = x + 20;  Button[10].y = y + 140; Button[10].w = 60; Button[10].h = 23;
-    str[11] = "\xE2\x86\x90"; // ← in UTF-8
+    str[11] = "←";
     Button[11].x = x + 125; Button[11].y = y + 50;  Button[11].w = 35; Button[11].h = 23;
     str[12] = "AC";
     Button[12].x = x + 125; Button[12].y = y + 80;  Button[12].w = 35; Button[12].h = 23;
@@ -1447,9 +1448,7 @@ int EnterNumber(int MinValue, int MaxValue, int x, int y, int Default) {
     RecordFreshScreen(x, y, 181, 181);
 
     // 显示范围提示
-    char rangebuf[64];
-    snprintf(rangebuf, sizeof(rangebuf), "%d~%d", MinValue, MaxValue);
-    std::string strv(rangebuf);
+    auto strv = std::format("{}~{}", MinValue, MaxValue);
     DrawTextWithRect(strv, x, y - 35, DrawLength(strv) * 10 + 7, ColColor(0x21), ColColor(0x27));
 
     int menu = -1;
@@ -1501,9 +1500,8 @@ int EnterNumber(int MinValue, int MaxValue, int x, int y, int Default) {
         // 刷新界面
         if (Value != pvalue || menu != pmenu) {
             LoadFreshScreen(x, y, 181, 181);
-            char vbuf[16];
-            snprintf(vbuf, sizeof(vbuf), "%6d", Value);
-            DrawShadowText(screen, std::string(vbuf), x + 80, y + 10, ColColor(0x64), ColColor(0x66));
+            auto vbuf = std::format("{:6d}", Value);
+            DrawShadowText(screen, vbuf, x + 80, y + 10, ColColor(0x64), ColColor(0x66));
             if (menu >= 0 && menu <= highButton) {
                 DrawRectangle(screen, Button[menu].x, Button[menu].y, Button[menu].w, Button[menu].h,
                               ColColor(rand() % 20), ColColor(255), 50);
@@ -1540,9 +1538,7 @@ int EnterNumber(int MinValue, int MaxValue, int x, int y, int Default) {
     if (Result != Value) {
         Redraw();
         UpdateAllScreen();
-        char msgbuf[64];
-        snprintf(msgbuf, sizeof(msgbuf), "%s%d%s", "\xE4\xBE\x9D\xE6\x93\x9A\xE7\xAF\x84\xE5\x9C\x8D\xE8\x87\xAA\xE5\x8B\x95\xE8\xAA\xBF\xE6\x95\xB4\xE7\x82\xBA", Result, "\xEF\xBC\x81"); // 依據範圍自動調整為...！
-        std::string msg(msgbuf);
+        auto msg = std::format("依據範圍自動調整為{}！", Result);
         DrawTextWithRect(msg, x, y, DrawLength(msg) * 10 + 7, ColColor(0x64), ColColor(0x66));
         WaitAnyKey();
     }

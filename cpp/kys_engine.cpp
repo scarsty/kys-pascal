@@ -8,6 +8,7 @@
 #include "kys_main.h"
 #include "PotConv.h"
 #include "SimpleCC.h"
+#include "filefunc.h"
 
 #include <SDL3/SDL.h>
 #include <SDL3_ttf/SDL_ttf.h>
@@ -19,6 +20,7 @@
 #include <cstring>
 #include <cmath>
 #include <algorithm>
+#include <format>
 #include <map>
 #include <vector>
 #include <string>
@@ -99,15 +101,11 @@ void InitialMusic() {
     for (int i = 0; i < (int)Music.size(); i++) {
         if (Music[i]) { MIX_DestroyAudio(Music[i]); Music[i] = nullptr; }
         std::string str = AppPath + "music/" + std::to_string(i) + ".mp3";
-        FILE* f = fopen(str.c_str(), "rb");
-        if (f) {
-            fclose(f);
+        if (filefunc::fileExist(str)) {
             Music[i] = MIX_LoadAudio(nullptr, str.c_str(), false);
         } else {
             str = AppPath + "music/" + std::to_string(i) + ".mid";
-            f = fopen(str.c_str(), "rb");
-            if (f) {
-                fclose(f);
+            if (filefunc::fileExist(str)) {
                 // MIDI loading with FluidSynth soundfont
                 SDL_IOStream* io = SDL_IOFromFile(str.c_str(), "rb");
                 if (io) {
@@ -116,9 +114,7 @@ void InitialMusic() {
                     SDL_SetBooleanProperty(id, MIX_PROP_AUDIO_LOAD_CLOSEIO_BOOLEAN, true);
                     SDL_SetStringProperty(id, MIX_PROP_AUDIO_DECODER_STRING, "fluidsynth");
                     std::string sf2 = AppPath + "music/mid.sf2";
-                    f = fopen(sf2.c_str(), "rb");
-                    if (!f) sf2 = AppPathCommon + "music/mid.sf2";
-                    else fclose(f);
+                    if (!filefunc::fileExist(sf2)) sf2 = AppPathCommon + "music/mid.sf2";
                     SDL_SetStringProperty(id, "SDL_mixer.decoder.fluidsynth.soundfont_path", sf2.c_str());
                     Music[i] = MIX_LoadAudioWithProperties(id);
                     SDL_DestroyProperties(id);
@@ -131,12 +127,8 @@ void InitialMusic() {
     }
     for (int i = 0; i < (int)ESound.size(); i++) {
         if (ESound[i]) { MIX_DestroyAudio(ESound[i]); ESound[i] = nullptr; }
-        char buf[64];
-        snprintf(buf, sizeof(buf), "sound/e%02d.wav", i);
-        std::string str = AppPath + buf;
-        FILE* f = fopen(str.c_str(), "rb");
-        if (f) {
-            fclose(f);
+        std::string str = AppPath + std::format("sound/e{:02d}.wav", i);
+        if (filefunc::fileExist(str)) {
             ESound[i] = MIX_LoadAudio(nullptr, str.c_str(), false);
         } else {
             ESound[i] = nullptr;
@@ -144,12 +136,8 @@ void InitialMusic() {
     }
     for (int i = 0; i < (int)ASound.size(); i++) {
         if (ASound[i]) { MIX_DestroyAudio(ASound[i]); ASound[i] = nullptr; }
-        char buf[64];
-        snprintf(buf, sizeof(buf), "sound/atk%02d.wav", i);
-        std::string str = AppPath + buf;
-        FILE* f = fopen(str.c_str(), "rb");
-        if (f) {
-            fclose(f);
+        std::string str = AppPath + std::format("sound/atk{:02d}.wav", i);
+        if (filefunc::fileExist(str)) {
             ASound[i] = MIX_LoadAudio(nullptr, str.c_str(), false);
         } else {
             ASound[i] = nullptr;
@@ -268,25 +256,10 @@ void FreeFileBuffer(char*& p) {
 
 int LoadIdxGrp(const std::string& stridx, const std::string& strgrp,
                std::vector<int>& idxarray, std::vector<uint8_t>& grparray) {
-    FILE* f = fopen(stridx.c_str(), "rb");
-    if (!f) return 0;
-    fseek(f, 0, SEEK_END);
-    int len = (int)ftell(f);
-    fseek(f, 0, SEEK_SET);
-    int count = len / 4;
-    idxarray.resize(count);
-    fread(idxarray.data(), 4, count, f);
-    fclose(f);
-
-    f = fopen(strgrp.c_str(), "rb");
-    if (!f) return count;
-    fseek(f, 0, SEEK_END);
-    len = (int)ftell(f);
-    fseek(f, 0, SEEK_SET);
-    grparray.resize(len);
-    fread(grparray.data(), 1, len, f);
-    fclose(f);
-    return count;
+    filefunc::readFileToVector(stridx, idxarray);
+    if (idxarray.empty()) return 0;
+    filefunc::readFileToVector(strgrp, grparray);
+    return (int)idxarray.size();
 }
 
 SDL_Surface* LoadSurfaceFromFile(const std::string& filename) {
@@ -338,14 +311,9 @@ void ReadTiles() {
 
     // 战斗图
     for (int i = 0; i < 1000; i++) {
-        char buf[128];
-        snprintf(buf, sizeof(buf), "fight/fight%03d.idx", i);
-        std::string fidx = path + buf;
-        snprintf(buf, sizeof(buf), "fight/fight%03d.grp", i);
-        std::string fgrp = path + buf;
-        FILE* f = fopen(fidx.c_str(), "rb");
-        if (f) {
-            fclose(f);
+        std::string fidx = path + std::format("fight/fight{:03d}.idx", i);
+        std::string fgrp = path + std::format("fight/fight{:03d}.grp", i);
+        if (filefunc::fileExist(fidx)) {
             LoadIdxGrp(fidx, fgrp, FIdx[i], FPic[i]);
         }
     }
@@ -1062,7 +1030,7 @@ void QuitConfirm() {
     SDL_BlitSurface(tempscr, nullptr, screen, nullptr);
     DrawRectangleWithoutFrame(screen, 0, 0, screen->w, screen->h, 0, 50);
     UpdateScreen(screen, 0, 0, screen->w, screen->h);
-    std::string menuStr[2] = {"\xe5\x8f\x96\xe6\xb6\x88", "\xe7\xa2\xba\xe8\xaa\x8d"}; // 取消, 確認
+    std::string menuStr[2] = {"取消", "確認"};
     if (CommonMenu(CENTER_X * 2 - 50, 2, 45, 1, menuStr) == 1)
         Quit();
     Redraw();

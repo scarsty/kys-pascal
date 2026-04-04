@@ -20,6 +20,7 @@
 #include <cstdlib>
 #include <cmath>
 #include <ctime>
+#include <format>
 #include <string>
 #include <vector>
 #include <algorithm>
@@ -274,9 +275,8 @@ void ReadFiles() {
         TouchWalk = 1;
     }
 
-    char keybuf[32];
     for (int i = 0; i < 16; i++) {
-        snprintf(keybuf, sizeof(keybuf), "MaxProList%d", 43 + i);
+        auto keybuf = std::format("MaxProList{}", 43 + i);
         MaxProList[i] = ini.getInt("constant", keybuf, 100);
     }
     if (LIFE_HURT == 0) LIFE_HURT = 1;
@@ -489,15 +489,355 @@ bool InitialRole() {
             Redraw();
             ShowStatus(0);
             DrawShadowText(screen, str, CENTER_X - 273 + 10, CENTER_Y + 111, ColColor(0x21), ColColor(0x23));
-            char buf[32]; snprintf(buf, sizeof(buf), "%4d", Rrole[0].Aptitude);
+            auto buf = std::format("{:4d}", Rrole[0].Aptitude);
             DrawEngShadowText(screen, buf, CENTER_X - 273 + 110, CENTER_Y + 111, ColColor(0x64), ColColor(0x66));
             UpdateScreen(screen, 0, 0, screen->w, screen->h);
             key = WaitAnyKey();
         } while (key != SDLK_ESCAPE && key != SDLK_RETURN);
 
+        // 特殊名字处理
+        if (MODVersion == 0 || MODVersion == 100) {
+            if (input_name == "TXDX尊使") {
+                Rrole[0].MaxHP = 50; Rrole[0].CurrentHP = 50;
+                Rrole[0].MaxMP = 50; Rrole[0].CurrentMP = 50;
+                Rrole[0].MPType = 2; Rrole[0].IncLife = 10;
+                Rrole[0].Attack = 30; Rrole[0].Speed = 30;
+                Rrole[0].Defence = 30; Rrole[0].Medcine = 30;
+                Rrole[0].UsePoi = 30; Rrole[0].MedPoi = 30;
+                Rrole[0].Fist = 30; Rrole[0].Sword = 30;
+                Rrole[0].Knife = 30; Rrole[0].Unusual = 30;
+                Rrole[0].HidWeapon = 30;
+                Rrole[0].Aptitude = 100;
+                Rrole[0].Magic[0] = 62; Rrole[0].MagLevel[0] = 800;
+                Rmagic[62].Attack[9] = 2000;
+                Ritem[93].Magic = 26;
+                Ritem[66].OnlyPracRole = -1;
+                Ritem[79].OnlyPracRole = -1;
+                instruct_32(82, 1);
+                instruct_32(74, 1);
+            }
+            Rrole[13].Magic[1] = 91;
+        }
+
+        if (MODVersion == 22) {
+            if (input_name == "k小邪") {
+                Rrole[0].MaxHP = 50; Rrole[0].CurrentHP = 50;
+                Rrole[0].MaxMP = 50; Rrole[0].CurrentMP = 50;
+                Rrole[0].MPType = 2; Rrole[0].IncLife = 10;
+                Rrole[0].Attack = 150; Rrole[0].Speed = 150;
+                Rrole[0].Defence = 130; Rrole[0].Medcine = 130;
+                Rrole[0].UsePoi = 130; Rrole[0].MedPoi = 130;
+                Rrole[0].Fist = 130; Rrole[0].Sword = 130;
+                Rrole[0].Knife = 130; Rrole[0].Unusual = 130;
+                Rrole[0].HidWeapon = 130;
+                Rrole[0].Aptitude = 100; Rrole[0].Knowledge = 85;
+                Rrole[0].Magic[0] = 94; Rrole[0].MagLevel[0] = 850;
+                Rrole[0].Magic[1] = 93;
+                Rrole[0].AttPoi = 0;
+            }
+            if (input_name == "龍吟星落") {
+                Rrole[0].MaxHP = 150; Rrole[0].CurrentHP = 120;
+                Rrole[0].MaxMP = 150; Rrole[0].CurrentMP = 220;
+                Rrole[0].MPType = 2; Rrole[0].IncLife = 10;
+                Rrole[0].Attack = 130; Rrole[0].Speed = 130;
+                Rrole[0].Defence = 130; Rrole[0].Medcine = 130;
+                Rrole[0].UsePoi = 130; Rrole[0].MedPoi = 130;
+                Rrole[0].Fist = 130; Rrole[0].Sword = 130;
+                Rrole[0].Knife = 130; Rrole[0].Unusual = 130;
+                Rrole[0].HidWeapon = 130;
+                Rrole[0].Aptitude = 100; Rrole[0].Knowledge = 0;
+                Rrole[0].Magic[0] = 168; Rrole[0].Magic[1] = 169;
+                Rrole[0].Magic[2] = 170; Rrole[0].Magic[3] = 171;
+                Rrole[0].Magic[4] = 172;
+            }
+            if (input_name == "小隨") {
+                Rrole[0].MaxHP = 150; Rrole[0].CurrentHP = 120;
+                Rrole[0].MaxMP = 150; Rrole[0].CurrentMP = 220;
+                Rrole[0].MPType = 2; Rrole[0].IncLife = 10;
+                Rrole[0].Attack = 130; Rrole[0].Speed = 130;
+                Rrole[0].Defence = 130; Rrole[0].Medcine = 130;
+                Rrole[0].UsePoi = 130; Rrole[0].MedPoi = 130;
+                Rrole[0].Fist = 130; Rrole[0].Sword = 130;
+                Rrole[0].Knife = 130; Rrole[0].Unusual = 130;
+                Rrole[0].HidWeapon = 130;
+                Rrole[0].Aptitude = 100; Rrole[0].Knowledge = 0;
+                Rrole[0].Magic[0] = 94; Rrole[0].MagLevel[0] = 850;
+                Rrole[0].AttTwice = 1;
+            }
+            if (input_name == "破大俠") {
+                Rrole[0].MaxHP = 1150; Rrole[0].CurrentHP = 1120;
+                Rrole[0].MaxMP = 1150; Rrole[0].CurrentMP = 1220;
+                Rrole[0].MPType = 2; Rrole[0].IncLife = 10;
+                Rrole[0].Attack = 230; Rrole[0].Speed = 230;
+                Rrole[0].Defence = 230; Rrole[0].Medcine = 230;
+                Rrole[0].UsePoi = 230; Rrole[0].MedPoi = 230;
+                Rrole[0].Fist = 230; Rrole[0].Sword = 230;
+                Rrole[0].Knife = 230; Rrole[0].Unusual = 230;
+                Rrole[0].HidWeapon = 230;
+                Rrole[0].Aptitude = 100; Rrole[0].Knowledge = 100;
+                Rrole[0].Magic[0] = 168; Rrole[0].Magic[1] = 169;
+                Rrole[0].Magic[2] = 170; Rrole[0].Magic[3] = 171;
+                Rrole[0].Magic[4] = 172; Rrole[0].Magic[5] = 94;
+            }
+            if (input_name == "鳳凰") {
+                Rrole[0].MaxHP = 250; Rrole[0].CurrentHP = 50;
+                Rrole[0].MaxMP = 250; Rrole[0].CurrentMP = 50;
+                Rrole[0].MPType = 2; Rrole[0].IncLife = 10;
+                Rrole[0].Aptitude = 100;
+                for (int i = 1; i <= 14; i++) {
+                    Rrole[i].MaxHP = 500; Rrole[i].CurrentHP = 500;
+                    Rrole[i].MaxMP = 500; Rrole[i].CurrentMP = 500;
+                    Rrole[i].MPType = 2; Rrole[i].IncLife = 30;
+                    Rrole[i].Attack = 300; Rrole[i].Speed = 100;
+                    Rrole[i].Defence = 130; Rrole[i].Medcine = 130;
+                    Rrole[i].UsePoi = 130; Rrole[i].MedPoi = 130;
+                    Rrole[i].Fist = 130; Rrole[i].Sword = 130;
+                    Rrole[i].Knife = 130; Rrole[i].Unusual = 130;
+                    Rrole[i].HidWeapon = 130;
+                    Rrole[i].Aptitude = 100;
+                }
+            }
+        }
+
+        if (MODVersion == 23) {
+            if (input_name == "小小豬") {
+                Rrole[0].MaxHP = 10; Rrole[0].CurrentHP = 10;
+                Rrole[0].MaxMP = 50; Rrole[0].CurrentMP = 50;
+                Rrole[0].MPType = 2; Rrole[0].IncLife = 10;
+                Rrole[0].Attack = 10; Rrole[0].Speed = 10;
+                Rrole[0].Defence = 30; Rrole[0].Medcine = 30;
+                Rrole[0].UsePoi = 30; Rrole[0].MedPoi = 30;
+                Rrole[0].Fist = 30; Rrole[0].Sword = 30;
+                Rrole[0].Knife = 30; Rrole[0].Unusual = 30;
+                Rrole[0].HidWeapon = 30;
+                Rrole[0].Aptitude = 100; Rrole[0].Knowledge = 0;
+                Rrole[0].Magic[0] = 27; Rrole[0].MagLevel[0] = 850;
+                Rrole[0].Magic[1] = 37; Rrole[0].MagLevel[1] = 850;
+                Rrole[0].Magic[2] = 94; Rrole[0].MagLevel[2] = 850;
+                Rrole[0].Magic[3] = 62; Rrole[0].MagLevel[3] = 850;
+                Rrole[0].AttPoi = 0;
+            }
+            if (input_name == "k小邪") {
+                Rrole[0].MaxHP = 150; Rrole[0].CurrentHP = 120;
+                Rrole[0].MaxMP = 150; Rrole[0].CurrentMP = 220;
+                Rrole[0].MPType = 2; Rrole[0].IncLife = 10;
+                Rrole[0].Attack = 30; Rrole[0].Speed = 30;
+                Rrole[0].Defence = 30; Rrole[0].Medcine = 30;
+                Rrole[0].UsePoi = 30; Rrole[0].MedPoi = 30;
+                Rrole[0].Fist = 30; Rrole[0].Sword = 30;
+                Rrole[0].Knife = 30; Rrole[0].Unusual = 30;
+                Rrole[0].HidWeapon = 30;
+                Rrole[0].Aptitude = 100; Rrole[0].Knowledge = 0;
+                Rrole[0].Magic[0] = 27; Rrole[0].MagLevel[0] = 850;
+                Rrole[0].AttPoi = 70;
+                Rrole[0].Magic[1] = 15;
+                for (int i = 0; i <= 9; i++) {
+                    Rmagic[15].Attack[i] = 1400;
+                    Rmagic[16].Attack[i] = 1400;
+                    Rmagic[17].Attack[i] = 1000;
+                    Rmagic[15].AttDistance[i] = 6;
+                    Rmagic[16].AttDistance[i] = 4;
+                    Rmagic[17].AttDistance[i] = 8;
+                }
+            }
+            if (input_name == "南宮夢") {
+                Rrole[0].MaxHP = 500; Rrole[0].CurrentHP = 500;
+                Rrole[0].MaxMP = 500; Rrole[0].CurrentMP = 500;
+                Rrole[0].MPType = 2; Rrole[0].IncLife = 10;
+                Rrole[0].Attack = 70; Rrole[0].Speed = 90;
+                Rrole[0].Defence = 30; Rrole[0].Medcine = 30;
+                Rrole[0].UsePoi = 30; Rrole[0].MedPoi = 30;
+                Rrole[0].Fist = 30; Rrole[0].Sword = 60;
+                Rrole[0].Knife = 30; Rrole[0].Unusual = 30;
+                Rrole[0].HidWeapon = 30;
+                Rrole[0].Aptitude = 100; Rrole[0].Knowledge = 0;
+                Rrole[0].Magic[0] = 37; Rrole[0].MagLevel[0] = 890;
+                Rmagic[37].AttAreaType = 3;
+                Rmagic[37].MoveDistance[9] = 4;
+                Rmagic[37].AttDistance[9] = 4;
+            }
+            if (input_name == "游客") {
+                Rrole[0].MaxHP = 50; Rrole[0].CurrentHP = 50;
+                Rrole[0].MaxMP = 50; Rrole[0].CurrentMP = 50;
+                Rrole[0].MPType = 2; Rrole[0].IncLife = 10;
+                Rrole[0].Attack = 30; Rrole[0].Speed = 30;
+                Rrole[0].Defence = 30; Rrole[0].Medcine = 30;
+                Rrole[0].UsePoi = 30; Rrole[0].MedPoi = 30;
+                Rrole[0].Fist = 30; Rrole[0].Sword = 30;
+                Rrole[0].Knife = 30; Rrole[0].Unusual = 30;
+                Rrole[0].HidWeapon = 30;
+                Rrole[0].Aptitude = 100; Rrole[0].Knowledge = 0;
+                Rrole[0].Magic[0] = 94; Rrole[0].MagLevel[0] = 850;
+                Rrole[0].AttTwice = 1;
+            }
+            if (input_name == "飛蟲王") {
+                Rrole[0].MaxHP = 50; Rrole[0].CurrentHP = 50;
+                Rrole[0].MaxMP = 50; Rrole[0].CurrentMP = 50;
+                Rrole[0].MPType = 2; Rrole[0].IncLife = 10;
+                Rrole[0].Attack = 30; Rrole[0].Speed = 30;
+                Rrole[0].Defence = 30; Rrole[0].Medcine = 30;
+                Rrole[0].UsePoi = 30; Rrole[0].MedPoi = 30;
+                Rrole[0].Fist = 30; Rrole[0].Sword = 30;
+                Rrole[0].Knife = 30; Rrole[0].Unusual = 30;
+                Rrole[0].HidWeapon = 30;
+                Rrole[0].Aptitude = 100; Rrole[0].Knowledge = 60;
+                Rrole[0].Magic[0] = 62; Rrole[0].MagLevel[0] = 850;
+                Rrole[0].AttPoi = 95;
+            }
+            if (input_name == "破劍式") {
+                Rrole[0].MaxHP = 499; Rrole[0].CurrentHP = 499;
+                Rrole[0].MaxMP = 499; Rrole[0].CurrentMP = 499;
+                Rrole[0].MPType = 2; Rrole[0].IncLife = 5;
+                Rrole[0].Attack = 90; Rrole[0].Speed = 90;
+                Rrole[0].Defence = 90; Rrole[0].Medcine = 90;
+                Rrole[0].UsePoi = 90; Rrole[0].MedPoi = 90;
+                Rrole[0].Fist = 90; Rrole[0].Sword = 90;
+                Rrole[0].Knife = 90; Rrole[0].Unusual = 90;
+                Rrole[0].HidWeapon = 90;
+                Rrole[0].Aptitude = 100; Rrole[0].Knowledge = 0;
+                Rrole[0].Magic[0] = 27; Rrole[0].MagLevel[0] = 899;
+                Rrole[0].Magic[1] = 37; Rrole[0].MagLevel[1] = 899;
+                Rrole[0].Magic[2] = 94; Rrole[0].MagLevel[2] = 899;
+                Rrole[0].Magic[3] = 62; Rrole[0].MagLevel[3] = 899;
+                Rrole[0].AttPoi = 90;
+            }
+            if (input_name == "9523") {
+                Rrole[0].MPType = 2; Rrole[0].IncLife = 10;
+                Rrole[0].Attack = 10; Rrole[0].Speed = 10;
+                Rrole[0].Defence = 30; Rrole[0].Medcine = 30;
+                Rrole[0].UsePoi = 30; Rrole[0].MedPoi = 30;
+                Rrole[0].Fist = 30; Rrole[0].Sword = 30;
+                Rrole[0].Knife = 30; Rrole[0].Unusual = 30;
+                Rrole[0].HidWeapon = 30;
+                Rrole[0].Aptitude = 100;
+                for (int i = 0; i <= 9; i++) {
+                    Rmagic[15].Attack[i] = 1400;
+                    Rmagic[16].Attack[i] = 1400;
+                    Rmagic[17].Attack[i] = 1000;
+                    Rmagic[15].AttDistance[i] = 6;
+                    Rmagic[16].AttDistance[i] = 4;
+                    Rmagic[17].AttDistance[i] = 8;
+                }
+                Rrole[0].Magic[0] = 15;
+                Rrole[0].Magic[1] = 16;
+                Rrole[0].Magic[2] = 17;
+            }
+            if (input_name == "鳳凰ice") {
+                Rrole[0].MPType = 2; Rrole[0].IncLife = 10;
+                Rrole[0].Aptitude = 100;
+                for (int i = 0; i < 100; i++) {
+                    if (LeaveList[i] > 0) {
+                        Rrole[LeaveList[i]].IncLife = 30;
+                        Rrole[LeaveList[i]].MPType = 2;
+                        Rrole[LeaveList[i]].Attack = 90;
+                        Rrole[LeaveList[i]].Aptitude = 95;
+                    }
+                }
+            }
+            Rrole[401] = Rrole[0];
+            Rrole[402] = Rrole[0];
+            Rrole[403] = Rrole[0];
+            Rrole[404] = Rrole[0];
+        }
+
+        if (MODVersion == 11) {
+            if (input_name == "小小豬") {
+                Rrole[0].MaxHP = 50; Rrole[0].CurrentHP = 50;
+                Rrole[0].MaxMP = 50; Rrole[0].CurrentMP = 50;
+                Rrole[0].MPType = 2; Rrole[0].IncLife = 10;
+                Rrole[0].Attack = 30; Rrole[0].Speed = 30;
+                Rrole[0].Defence = 30; Rrole[0].Medcine = 30;
+                Rrole[0].UsePoi = 30; Rrole[0].MedPoi = 30;
+                Rrole[0].Fist = 30; Rrole[0].Sword = 30;
+                Rrole[0].Knife = 30; Rrole[0].Unusual = 30;
+                Rrole[0].HidWeapon = 30;
+                Rrole[0].Aptitude = 100;
+                Rrole[0].Ethics = 90;
+            }
+            if (input_name == "晴空飛雪") {
+                Rrole[0].MaxHP = 50; Rrole[0].CurrentHP = 50;
+                Rrole[0].MaxMP = 50; Rrole[0].CurrentMP = 50;
+                Rrole[0].MPType = 2; Rrole[0].IncLife = 10;
+                Rrole[0].Attack = 30; Rrole[0].Speed = 30;
+                Rrole[0].Defence = 30; Rrole[0].Medcine = 30;
+                Rrole[0].UsePoi = 30; Rrole[0].MedPoi = 30;
+                Rrole[0].Fist = 30; Rrole[0].Sword = 30;
+                Rrole[0].Knife = 30; Rrole[0].Unusual = 30;
+                Rrole[0].HidWeapon = 30;
+                Rrole[0].Aptitude = 100;
+                instruct_32(19, 10000);
+            }
+        }
+
+        if (MODVersion == 12) {
+            if (input_name == "小小豬") {
+                Rrole[0].MaxHP = 50; Rrole[0].CurrentHP = 50;
+                Rrole[0].MaxMP = 50; Rrole[0].CurrentMP = 50;
+                Rrole[0].MPType = 2; Rrole[0].IncLife = 10;
+                Rrole[0].Attack = 30; Rrole[0].Speed = 30;
+                Rrole[0].Defence = 30; Rrole[0].Medcine = 30;
+                Rrole[0].UsePoi = 30; Rrole[0].MedPoi = 30;
+                Rrole[0].Fist = 30; Rrole[0].Sword = 30;
+                Rrole[0].Knife = 30; Rrole[0].Unusual = 30;
+                Rrole[0].HidWeapon = 30;
+                Rrole[0].Aptitude = 100;
+            }
+            if (input_name == "見賢思齊") {
+                Rrole[0].MaxHP = 50; Rrole[0].CurrentHP = 50;
+                Rrole[0].MaxMP = 50; Rrole[0].CurrentMP = 50;
+                Rrole[0].MPType = 2; Rrole[0].IncLife = 10;
+                Rrole[0].Attack = 60; Rrole[0].Speed = 30;
+                Rrole[0].Defence = 60; Rrole[0].Medcine = 30;
+                Rrole[0].UsePoi = 30; Rrole[0].MedPoi = 30;
+                Rrole[0].Fist = 30; Rrole[0].Sword = 30;
+                Rrole[0].Knife = 30; Rrole[0].Unusual = 30;
+                Rrole[0].HidWeapon = 30;
+                Rrole[0].Aptitude = 45;
+            }
+        }
+
+        if (MODVersion == 31) {
+            if (input_name == "南宮夢") {
+                Rrole[0].MaxHP = 50; Rrole[0].CurrentHP = 50;
+                Rrole[0].MaxMP = 50; Rrole[0].CurrentMP = 50;
+                Rrole[0].MPType = 2; Rrole[0].IncLife = 10;
+                Rrole[0].Attack = 300; Rrole[0].Speed = 30;
+                Rrole[0].Defence = 300; Rrole[0].Medcine = 300;
+                Rrole[0].UsePoi = 30; Rrole[0].MedPoi = 30;
+                Rrole[0].Fist = 30; Rrole[0].Sword = 300;
+                Rrole[0].Knife = 30; Rrole[0].Unusual = 30;
+                Rrole[0].HidWeapon = 300;
+                Rrole[0].Aptitude = 100;
+                Rrole[0].Ethics = 95;
+            }
+        }
+
+        if (MODVersion == 41) {
+            if (input_name == "leo") {
+                Rrole[0].MaxHP = 50; Rrole[0].CurrentHP = 50;
+                Rrole[0].MaxMP = 50; Rrole[0].CurrentMP = 50;
+                Rrole[0].MPType = 2; Rrole[0].IncLife = 10;
+                Rrole[0].Attack = 30; Rrole[0].Speed = 30;
+                Rrole[0].Defence = 30; Rrole[0].Medcine = 30;
+                Rrole[0].UsePoi = 30; Rrole[0].MedPoi = 30;
+                Rrole[0].Fist = 30; Rrole[0].Sword = 30;
+                Rrole[0].Knife = 30; Rrole[0].Unusual = 30;
+                Rrole[0].HidWeapon = 30;
+                Rrole[0].Aptitude = 100;
+            }
+        }
+
+        if (MODVersion == 21) {
+            if (input_name == "古天奇" || input_name == "青狼火花") {
+                Rrole[0].MPType = 2;
+                Rrole[0].IncLife = 20;
+                Rrole[0].Aptitude = 100;
+            }
+        }
+
         ShowStatus(0);
         DrawShadowText(screen, str, 30, CENTER_Y + 111, ColColor(0x23), ColColor(0x21));
-        char buf[32]; snprintf(buf, sizeof(buf), "%4d", Rrole[0].Aptitude);
+        auto buf = std::format("{:4d}", Rrole[0].Aptitude);
         DrawEngShadowText(screen, buf, 150, CENTER_Y + 111, ColColor(0x66), ColColor(0x63));
         UpdateScreen(screen, 0, 0, screen->w, screen->h);
 
@@ -2058,8 +2398,7 @@ bool MenuItem() {
                     item2 = RItemList[listnum2].Number;
 
                 if (listnum2 >= 0 && listnum2 < MAX_ITEM_AMOUNT && RItemList[listnum2].Amount > 0) {
-                    char buf[32];
-                    snprintf(buf, sizeof(buf), "%5d", RItemList[listnum2].Amount);
+                    auto buf = std::format("{:5d}", RItemList[listnum2].Amount);
                     DrawEngShadowText(screen, buf, 110 + w2 - 80, 32, ColColor(0x64), ColColor(0x66));
 
                     std::string itemName = cp950toutf8(Ritem[item2].Name);
@@ -2079,7 +2418,7 @@ bool MenuItem() {
                     }
                     if (item2 == COMPASS_ID) {
                         DrawShadowText(screen, "你的位置：", 207, 315, ColColor(0x21), ColColor(0x23));
-                        snprintf(buf, sizeof(buf), "%3d, %3d", My, Mx);
+                        buf = std::format("{:3d}, {:3d}", My, Mx);
                         DrawEngShadowText(screen, buf, 317, 315, ColColor(0x64), ColColor(0x66));
                     }
                 }
@@ -2120,15 +2459,15 @@ bool MenuItem() {
                     int i12 = 0;
                     for (int i3 = 0; i3 <= 22; i3++) {
                         if (p22[i3] == 1) {
-                            char buf2[32];
+                            std::string buf2;
                             if (i3 == 4) {
                                 switch (Ritem[item2].ChangeMPType) {
-                                    case 0: snprintf(buf2, sizeof(buf2), "    陰"); break;
-                                    case 1: snprintf(buf2, sizeof(buf2), "    陽"); break;
-                                    case 2: snprintf(buf2, sizeof(buf2), "  調和"); break;
+                                    case 0: buf2 = "    陰"; break;
+                                    case 1: buf2 = "    陽"; break;
+                                    case 2: buf2 = "  調和"; break;
                                 }
                             } else {
-                                snprintf(buf2, sizeof(buf2), "%6d", Ritem[item2].Data[45 + i3]);
+                                buf2 = std::format("{:6d}", Ritem[item2].Data[45 + i3]);
                             }
                             uint32_t c1, c2;
                             if (i3 == 0 || i3 == 5) { c1 = ColColor(0x10); c2 = ColColor(0x13); }
@@ -2142,15 +2481,15 @@ bool MenuItem() {
                     i12 = 0;
                     for (int i3 = 0; i3 <= 12; i3++) {
                         if (p32[i3] == 1) {
-                            char buf2[32];
+                            std::string buf2;
                             if (i3 == 0) {
                                 switch (Ritem[item2].NeedMPType) {
-                                    case 0: snprintf(buf2, sizeof(buf2), "    陰"); break;
-                                    case 1: snprintf(buf2, sizeof(buf2), "    陽"); break;
-                                    case 2: snprintf(buf2, sizeof(buf2), "  調和"); break;
+                                    case 0: buf2 = "    陰"; break;
+                                    case 1: buf2 = "    陽"; break;
+                                    case 2: buf2 = "  調和"; break;
                                 }
                             } else {
-                                snprintf(buf2, sizeof(buf2), "%6d", Ritem[item2].Data[69 + i3]);
+                                buf2 = std::format("{:6d}", Ritem[item2].Data[69 + i3]);
                             }
                             uint32_t c1, c2;
                             if (i3 == 1) { c1 = ColColor(0x10); c2 = ColColor(0x13); }
@@ -2572,24 +2911,24 @@ void ShowStatus(int rnum, int x, int y) {
         addspeed += Ritem[Rrole[rnum].Equip[1]].AddSpeed;
     }
 
-    char buf[64];
+    std::string buf;
     // 右列属性值
-    snprintf(buf, sizeof(buf), "%4d", Rrole[rnum].Attack + addatk);
+    buf = std::format("{:4d}", Rrole[rnum].Attack + addatk);
     DrawEngShadowText(screen, buf, x + 280, y + 5 + 21 * 0, ColColor(0x5), ColColor(0x7));
-    snprintf(buf, sizeof(buf), "%4d", Rrole[rnum].Defence + adddef);
+    buf = std::format("{:4d}", Rrole[rnum].Defence + adddef);
     DrawEngShadowText(screen, buf, x + 280, y + 5 + 21 * 1, ColColor(0x5), ColColor(0x7));
-    snprintf(buf, sizeof(buf), "%4d", Rrole[rnum].Speed + addspeed);
+    buf = std::format("{:4d}", Rrole[rnum].Speed + addspeed);
     DrawEngShadowText(screen, buf, x + 280, y + 5 + 21 * 2, ColColor(0x5), ColColor(0x7));
     // 医疗~暗器
     int pdata[] = {43, 45, 44, 46, 47, 48, 50, 51, 52, 53, 54};
     for (int i = 0; i < 11; i++) {
         if (i < 3) continue; // 攻防轻功已画
-        snprintf(buf, sizeof(buf), "%4d", Rrole[rnum].Data[pdata[i]]);
+        buf = std::format("{:4d}", Rrole[rnum].Data[pdata[i]]);
         DrawEngShadowText(screen, buf, x + 280, y + 5 + 21 * i, ColColor(0x5), ColColor(0x7));
     }
 
     // 左列属性值
-    snprintf(buf, sizeof(buf), "%4d", Rrole[rnum].Level);
+    buf = std::format("{:4d}", Rrole[rnum].Level);
     DrawEngShadowText(screen, buf, x + 90, y + 110, ColColor(0x5), ColColor(0x7));
 
     // 生命 - 受伤程度影响CurrentHP颜色
@@ -2597,36 +2936,36 @@ void ShowStatus(int rnum, int x, int y) {
     if (Rrole[rnum].Hurt >= 67) { color1 = ColColor(0x14); color2 = ColColor(0x16); }
     else if (Rrole[rnum].Hurt >= 34) { color1 = ColColor(0xE); color2 = ColColor(0x10); }
     else { color1 = ColColor(0x7); color2 = ColColor(0x5); }
-    snprintf(buf, sizeof(buf), "%4d", Rrole[rnum].CurrentHP);
+    buf = std::format("{:4d}", Rrole[rnum].CurrentHP);
     DrawEngShadowText(screen, buf, x + 60, y + 131, color1, color2);
     DrawEngShadowText(screen, "/", x + 100, y + 131, ColColor(0x64), ColColor(0x66));
     // MaxHP - 中毒程度影响颜色
     if (Rrole[rnum].Poison >= 67) { color1 = ColColor(0x35); color2 = ColColor(0x37); }
     else if (Rrole[rnum].Poison >= 34) { color1 = ColColor(0x30); color2 = ColColor(0x32); }
     else { color1 = ColColor(0x21); color2 = ColColor(0x23); }
-    snprintf(buf, sizeof(buf), "%4d", Rrole[rnum].MaxHP);
+    buf = std::format("{:4d}", Rrole[rnum].MaxHP);
     DrawEngShadowText(screen, buf, x + 110, y + 131, color1, color2);
 
     // 内力 - 依据内力性质使用颜色
     if (Rrole[rnum].MPType == 0) { color1 = ColColor(0x50); color2 = ColColor(0x4E); }
     else if (Rrole[rnum].MPType == 1) { color1 = ColColor(0x5); color2 = ColColor(0x7); }
     else { color1 = ColColor(0x64); color2 = ColColor(0x66); }
-    snprintf(buf, sizeof(buf), "%4d/%4d", Rrole[rnum].CurrentMP, Rrole[rnum].MaxMP);
+    buf = std::format("{:4d}/{:4d}", Rrole[rnum].CurrentMP, Rrole[rnum].MaxMP);
     DrawEngShadowText(screen, buf, x + 60, y + 152, color1, color2);
 
     // 体力/上限
-    snprintf(buf, sizeof(buf), "%4d/%4d", Rrole[rnum].PhyPower, MAX_PHYSICAL_POWER);
+    buf = std::format("{:4d}/{:4d}", Rrole[rnum].PhyPower, MAX_PHYSICAL_POWER);
     DrawEngShadowText(screen, buf, x + 60, y + 173, ColColor(0x5), ColColor(0x7));
 
     // 经验
-    snprintf(buf, sizeof(buf), "%5d", (uint16_t)Rrole[rnum].Exp);
+    buf = std::format("{:5d}", (uint16_t)Rrole[rnum].Exp);
     DrawEngShadowText(screen, buf, x + 100, y + 194, ColColor(0x5), ColColor(0x7));
     // 升级所需经验
     int lvl = Rrole[rnum].Level;
     if (lvl >= 1 && lvl <= 100)
-        snprintf(buf, sizeof(buf), "%5d", (uint16_t)LevelUpList[lvl - 1]);
+        buf = std::format("{:5d}", (uint16_t)LevelUpList[lvl - 1]);
     else
-        snprintf(buf, sizeof(buf), "    -");
+        buf = "    -";
     DrawEngShadowText(screen, buf, x + 100, y + 215, ColColor(0x5), ColColor(0x7));
 
     // 武功列表
@@ -2634,17 +2973,17 @@ void ShowStatus(int rnum, int x, int y) {
         if (Rrole[rnum].Magic[i] > 0 && Rrole[rnum].Magic[i] < 999) {
             std::string mname = cp950toutf8(Rmagic[Rrole[rnum].Magic[i]].Name);
             DrawShadowText(screen, mname, x + 360, y + 26 + 21 * i, ColColor(0x5), ColColor(0x7));
-            snprintf(buf, sizeof(buf), "%4d", Rrole[rnum].MagLevel[i] / 100 + 1);
+            buf = std::format("{:4d}", Rrole[rnum].MagLevel[i] / 100 + 1);
             DrawEngShadowText(screen, buf, x + 470, y + 26 + 21 * i, ColColor(0x64), ColColor(0x66));
         }
     }
 
     // 受伤/中毒
     DrawShadowText(screen, strs[20], x + 10, y + 280, ColColor(0x21), ColColor(0x23));
-    snprintf(buf, sizeof(buf), "%4d", Rrole[rnum].Hurt);
+    buf = std::format("{:4d}", Rrole[rnum].Hurt);
     DrawEngShadowText(screen, buf, x + 90, y + 280, ColColor(0x10), ColColor(0x13));
     DrawShadowText(screen, strs[21], x + 10, y + 296, ColColor(0x21), ColColor(0x23));
-    snprintf(buf, sizeof(buf), "%4d", Rrole[rnum].Poison);
+    buf = std::format("{:4d}", Rrole[rnum].Poison);
     DrawEngShadowText(screen, buf, x + 90, y + 296, ColColor(0x10), ColColor(0x13));
 
     // 装备物品 / 修炼物品
@@ -2670,9 +3009,9 @@ void ShowStatus(int rnum, int x, int y) {
         int needexp = mlevel * Ritem[Rrole[rnum].PracticeBook].NeedExp * (7 - Rrole[rnum].Aptitude / 15);
         DrawBig5ShadowText(screen, Ritem[Rrole[rnum].PracticeBook].Name, x + 370, y + 261, ColColor(0x5), ColColor(0x7));
         if (mlevel == 10)
-            snprintf(buf, sizeof(buf), "%5d/=", (uint16_t)Rrole[rnum].ExpForBook);
+            buf = std::format("{:5d}/=", (uint16_t)Rrole[rnum].ExpForBook);
         else
-            snprintf(buf, sizeof(buf), "%5d/%5d", (uint16_t)Rrole[rnum].ExpForBook, needexp);
+            buf = std::format("{:5d}/{:5d}", (uint16_t)Rrole[rnum].ExpForBook, needexp);
         DrawEngShadowText(screen, buf, x + 380, y + 282, ColColor(0x64), ColColor(0x66));
     }
 
@@ -2681,9 +3020,7 @@ void ShowStatus(int rnum, int x, int y) {
 
 void ShowSimpleStatus(int rnum, int x, int y) {
     // 匹配Pascal版简易状态显示
-    std::string strs[4] = {"\xe7\xad\x89\xe7\xb4\x9a", "\xe7\x94\x9f\xe5\x91\xbd",
-                            "\xe5\x85\xa7\xe5\x8a\x9b", "\xe9\xab\x94\xe5\x8a\x9b"};
-    // 等級, 生命, 內力, 體力
+    std::string strs[4] = {"等級", "生命", "內力", "體力"};
 
     DrawRectangle(screen, x, y, 145, 173, 0, ColColor(255), 50);
     DrawHeadPic(Rrole[rnum].HeadNum, x + 50, y + 63);
@@ -2692,8 +3029,8 @@ void ShowSimpleStatus(int rnum, int x, int y) {
     for (int i = 0; i <= 3; i++)
         DrawShadowText(screen, strs[i], x + 3, y + 86 + 21 * i, ColColor(0x21), ColColor(0x23));
 
-    char buf[32];
-    snprintf(buf, sizeof(buf), "%9d", Rrole[rnum].Level);
+    std::string buf;
+    buf = std::format("{:9d}", Rrole[rnum].Level);
     DrawEngShadowText(screen, buf, x + 50, y + 86, ColColor(0x5), ColColor(0x7));
 
     // HP颜色: 轻伤黄, 重伤红, 正常白
@@ -2701,24 +3038,24 @@ void ShowSimpleStatus(int rnum, int x, int y) {
     if (Rrole[rnum].Hurt >= 67) { c1 = ColColor(0x14); c2 = ColColor(0x16); }
     else if (Rrole[rnum].Hurt >= 34) { c1 = ColColor(0xE); c2 = ColColor(0x10); }
     else { c1 = ColColor(0x5); c2 = ColColor(0x7); }
-    snprintf(buf, sizeof(buf), "%4d", Rrole[rnum].CurrentHP);
+    buf = std::format("{:4d}", Rrole[rnum].CurrentHP);
     DrawEngShadowText(screen, buf, x + 50, y + 107, c1, c2);
     DrawEngShadowText(screen, "/", x + 90, y + 107, ColColor(0x64), ColColor(0x66));
     // MaxHP颜色: 中毒绿, 重毒暗绿, 正常暗
     if (Rrole[rnum].Poison >= 67) { c1 = ColColor(0x35); c2 = ColColor(0x37); }
     else if (Rrole[rnum].Poison >= 34) { c1 = ColColor(0x30); c2 = ColColor(0x32); }
     else { c1 = ColColor(0x21); c2 = ColColor(0x23); }
-    snprintf(buf, sizeof(buf), "%4d", Rrole[rnum].MaxHP);
+    buf = std::format("{:4d}", Rrole[rnum].MaxHP);
     DrawEngShadowText(screen, buf, x + 100, y + 107, c1, c2);
 
     // MP颜色: 内力属性
     if (Rrole[rnum].MPType == 0) { c1 = ColColor(0x50); c2 = ColColor(0x4E); }
     else if (Rrole[rnum].MPType == 1) { c1 = ColColor(0x5); c2 = ColColor(0x7); }
     else { c1 = ColColor(0x64); c2 = ColColor(0x66); }
-    snprintf(buf, sizeof(buf), "%4d/%4d", Rrole[rnum].CurrentMP, Rrole[rnum].MaxMP);
+    buf = std::format("{:4d}/{:4d}", Rrole[rnum].CurrentMP, Rrole[rnum].MaxMP);
     DrawEngShadowText(screen, buf, x + 50, y + 128, c1, c2);
 
-    snprintf(buf, sizeof(buf), "%9d", Rrole[rnum].PhyPower);
+    buf = std::format("{:9d}", Rrole[rnum].PhyPower);
     DrawEngShadowText(screen, buf, x + 50, y + 149, ColColor(0x5), ColColor(0x7));
 }
 
@@ -2750,11 +3087,9 @@ static std::string GetFileDateStr(const std::string& filename) {
     if (_stat(filename.c_str(), &st) == 0) {
         struct tm t;
         localtime_s(&t, &st.st_mtime);
-        char buf[32];
-        snprintf(buf, sizeof(buf), "%04d-%02d-%02d %02d:%02d:%02d",
+        return std::format("{:04d}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}",
                  t.tm_year + 1900, t.tm_mon + 1, t.tm_mday,
                  t.tm_hour, t.tm_min, t.tm_sec);
-        return buf;
     }
     return "-------------------";
 }
@@ -2852,10 +3187,10 @@ int EffectMedcine(int role1, int role2) {
         DrawRectangle(screen, 115, 98, 155, 76, 0, ColColor(255), 30);
         DrawBig5ShadowText(screen, Rrole[role2].Name, 120, 100, ColColor(0x21), ColColor(0x23));
         DrawShadowText(screen, "增加生命", 120, 125, ColColor(0x05), ColColor(0x07));
-        char buf[32]; snprintf(buf, sizeof(buf), "%4d", addlife);
+        auto buf = std::format("{:4d}", addlife);
         DrawEngShadowText(screen, buf, 220, 125, ColColor(0x64), ColColor(0x66));
         DrawShadowText(screen, "減少受傷", 120, 150, ColColor(0x05), ColColor(0x07));
-        snprintf(buf, sizeof(buf), "%4d", minushurt);
+        buf = std::format("{:4d}", minushurt);
         DrawEngShadowText(screen, buf, 220, 150, ColColor(0x64), ColColor(0x66));
         ShowSimpleStatus(role2, 350, 50);
         UpdateScreen(screen, 0, 0, screen->w, screen->h);
@@ -2876,7 +3211,7 @@ int EffectMedPoison(int role1, int role2) {
         DrawRectangle(screen, 115, 98, 155, 51, 0, ColColor(255), 30);
         DrawShadowText(screen, "減少中毒", 120, 125, ColColor(0x05), ColColor(0x07));
         DrawBig5ShadowText(screen, Rrole[role2].Name, 120, 100, ColColor(0x21), ColColor(0x23));
-        char buf[32]; snprintf(buf, sizeof(buf), "%4d", minuspoi);
+        auto buf = std::format("{:4d}", minuspoi);
         DrawEngShadowText(screen, buf, 220, 125, ColColor(0x64), ColColor(0x66));
         ShowSimpleStatus(role2, 350, 50);
         UpdateScreen(screen, 0, 0, screen->w, screen->h);
@@ -2972,30 +3307,30 @@ int EatOneItem(int rnum, int inum, int times, int display) {
     if (display != 0) {
         // 属性名称
         std::string word[24] = {
-            "\xe5\xa2\x9e\xe5\x8a\xa0\xe7\x94\x9f\xe5\x91\xbd",           // 增加生命
-            "\xe5\xa2\x9e\xe5\x8a\xa0\xe7\x94\x9f\xe5\x91\xbd\xe6\x9c\x80\xe5\xa4\xa7\xe5\x80\xbc", // 增加生命最大值
-            "\xe4\xb8\xad\xe6\xaf\x92\xe7\xa8\x8b\xe5\xba\xa6",           // 中毒程度
-            "\xe5\xa2\x9e\xe5\x8a\xa0\xe9\xab\x94\xe5\x8a\x9b",           // 增加體力
-            "\xe5\x85\xa7\xe5\x8a\x9b\xe9\x96\x80\xe8\xb7\xaf\xe9\x99\xb0\xe9\x99\xbd\xe5\x90\x88\xe4\xb8\x80", // 內力門路陰陽合一
-            "\xe5\xa2\x9e\xe5\x8a\xa0\xe5\x85\xa7\xe5\x8a\x9b",           // 增加內力
-            "\xe5\xa2\x9e\xe5\x8a\xa0\xe5\x85\xa7\xe5\x8a\x9b\xe6\x9c\x80\xe5\xa4\xa7\xe5\x80\xbc", // 增加內力最大值
-            "\xe5\xa2\x9e\xe5\x8a\xa0\xe6\x94\xbb\xe6\x93\x8a\xe5\x8a\x9b", // 增加攻擊力
-            "\xe5\xa2\x9e\xe5\x8a\xa0\xe8\xbc\x95\xe5\x8a\x9f",           // 增加輕功
-            "\xe5\xa2\x9e\xe5\x8a\xa0\xe9\x98\xb2\xe7\xa6\xa6\xe5\x8a\x9b", // 增加防禦力
-            "\xe5\xa2\x9e\xe5\x8a\xa0\xe9\x86\xab\xe7\x99\x82\xe8\x83\xbd\xe5\x8a\x9b", // 增加醫療能力
-            "\xe5\xa2\x9e\xe5\x8a\xa0\xe7\x94\xa8\xe6\xaf\x92\xe8\x83\xbd\xe5\x8a\x9b", // 增加用毒能力
-            "\xe5\xa2\x9e\xe5\x8a\xa0\xe8\xa7\xa3\xe6\xaf\x92\xe8\x83\xbd\xe5\x8a\x9b", // 增加解毒能力
-            "\xe5\xa2\x9e\xe5\x8a\xa0\xe6\x8a\x97\xe6\xaf\x92\xe8\x83\xbd\xe5\x8a\x9b", // 增加抗毒能力
-            "\xe5\xa2\x9e\xe5\x8a\xa0\xe6\x8b\xb3\xe6\x8e\x8c\xe8\x83\xbd\xe5\x8a\x9b", // 增加拳掌能力
-            "\xe5\xa2\x9e\xe5\x8a\xa0\xe5\xbe\xa1\xe5\x8a\x8d\xe8\x83\xbd\xe5\x8a\x9b", // 增加御劍能力
-            "\xe5\xa2\x9e\xe5\x8a\xa0\xe8\x80\x8d\xe5\x88\x80\xe8\x83\xbd\xe5\x8a\x9b", // 增加耍刀能力
-            "\xe5\xa2\x9e\xe5\x8a\xa0\xe7\x89\xb9\xe6\xae\x8a\xe5\x85\xb5\xe5\x99\xa8", // 增加特殊兵器
-            "\xe5\xa2\x9e\xe5\x8a\xa0\xe6\x9a\x97\xe5\x99\xa8\xe6\x8a\x80\xe5\xb7\xa7", // 增加暗器技巧
-            "\xe5\xa2\x9e\xe5\x8a\xa0\xe6\xad\xa6\xe5\xad\xb8\xe5\xb8\xb8\xe8\xad\x98", // 增加武學常識
-            "\xe5\xa2\x9e\xe5\x8a\xa0\xe5\x93\x81\xe5\xbe\xb7\xe6\x8c\x87\xe6\x95\xb8", // 增加品德指數
-            "\xe7\xbf\x92\xe5\xbe\x97\xe5\xb7\xa6\xe5\x8f\xb3\xe4\xba\x92\xe6\x90\x8f", // 習得左右互搏
-            "\xe5\xa2\x9e\xe5\x8a\xa0\xe6\x94\xbb\xe6\x93\x8a\xe5\xb8\xb6\xe6\xaf\x92", // 增加攻擊帶毒
-            "\xe5\x8f\x97\xe5\x82\xb7\xe7\xa8\x8b\xe5\xba\xa6"            // 受傷程度
+            "增加生命",
+            "增加生命最大值",
+            "中毒程度",
+            "增加體力",
+            "內力門路陰陽合一",
+            "增加內力",
+            "增加內力最大值",
+            "增加攻擊力",
+            "增加輕功",
+            "增加防禦力",
+            "增加醫療能力",
+            "增加用毒能力",
+            "增加解毒能力",
+            "增加抗毒能力",
+            "增加拳掌能力",
+            "增加御劍能力",
+            "增加耍刀能力",
+            "增加特殊兵器",
+            "增加暗器技巧",
+            "增加武學常識",
+            "增加品德指數",
+            "習得左右互搏",
+            "增加攻擊帶毒",
+            "受傷程度"
         };
 
         // 显示"服用"或"練成N次"
@@ -3004,10 +3339,9 @@ int EatOneItem(int rnum, int inum, int times, int display) {
         DrawRectangle(screen, 100, 70, nameW, 25, 0, ColColor(255), 50);
         std::string headerStr;
         if (Ritem[inum].ItemType == 2) {
-            char tbuf[32]; snprintf(tbuf, sizeof(tbuf), "\xe7\xb7\xb4\xe6\x88\x90%d\xe6\xac\xa1", Result); // 練成%d次
-            headerStr = tbuf;
+            headerStr = std::format("練成{}次", Result);
         } else {
-            headerStr = "\xe6\x9c\x8d\xe7\x94\xa8"; // 服用
+            headerStr = "服用";
         }
         DrawShadowText(screen, headerStr, 103, 72, ColColor(0x21), ColColor(0x23));
         DrawBig5ShadowText(screen, Ritem[inum].Name, 193, 72, ColColor(0x64), ColColor(0x66));
@@ -3024,7 +3358,7 @@ int EatOneItem(int rnum, int inum, int times, int display) {
         if (twoline == 0) x2 = 83; else x2 = 3;
         DrawBig5ShadowText(screen, (const char*)&Rrole[rnum].Data[4], x2 + 20, 102, ColColor(0x21), ColColor(0x23));
         if (p == 0) {
-            DrawShadowText(screen, "\xe6\x9c\xaa\xe5\xa2\x9e\xe5\x8a\xa0\xe5\xb1\xac\xe6\x80\xa7", 183, 102, ColColor(5), ColColor(7)); // 未增加屬性
+            DrawShadowText(screen, "未增加屬性", 183, 102, ColColor(5), ColColor(7));
         }
 
         // 逐一应用并显示属性
@@ -3040,7 +3374,7 @@ int EatOneItem(int rnum, int inum, int times, int display) {
             if (i != 4 && i != 21 && addvalue[i] != 0) {
                 Rrole[rnum].Data[rolelist[i]] += addvalue[i];
                 DrawShadowText(screen, word[i], 103 + xoff, 124 + yoff + p * 22, ColColor(5), ColColor(7));
-                char vbuf[16]; snprintf(vbuf, sizeof(vbuf), "%4d", addvalue[i]);
+                auto vbuf = std::format("{:4d}", addvalue[i]);
                 DrawEngShadowText(screen, vbuf, 243 + xoff, 124 + yoff + p * 22, ColColor(0x64), ColColor(0x66));
                 p++;
             }
@@ -3088,12 +3422,10 @@ void CallEvent(int num) {
     NeedRefreshScene = 0;
 
     // 优先尝试lua脚本
-    char buf[128];
-    snprintf(buf, sizeof(buf), "script/event/ka%d.lua", num);
-    std::string scriptFile = AppPath + buf;
+    auto scriptBuf = std::format("script/event/ka{}.lua", num);
+    std::string scriptFile = AppPath + scriptBuf;
     if (KDEF_SCRIPT != 0) {
-        FILE* tf = fopen(scriptFile.c_str(), "rb");
-        if (tf) { fclose(tf); ExecScript(scriptFile, ""); goto event_end; }
+        if (filefunc::fileExist(scriptFile)) { ExecScript(scriptFile, ""); goto event_end; }
     }
 
     // kdef二进制指令分发
@@ -3325,8 +3657,7 @@ int TeleportByList() {
         sceneIdx[i] = i;
         std::string nameStr = cp950toutf8(Rscene[i].Name);
         if (DrawLength(nameStr) <= 0) {
-            char buf[32]; snprintf(buf, sizeof(buf), "場景%d", i);
-            nameStr = buf;
+            nameStr = std::format("場景{}", i);
         }
         // 取最后一个UTF-8字符
         int k = (int)nameStr.size();
@@ -3357,8 +3688,7 @@ int TeleportByList() {
         int sc = sceneIdx[i];
         std::string nameStr = cp950toutf8(Rscene[sc].Name);
         if (DrawLength(nameStr) <= 0) {
-            char buf[32]; snprintf(buf, sizeof(buf), "場景%d", sc);
-            nameStr = buf;
+            nameStr = std::format("場景{}", sc);
         }
         sceneMenu[i] = nameStr;
     }
@@ -3395,15 +3725,10 @@ void StartAmi() {
     instruct_14();
     Redraw();
     std::string filepath = AppPath + "list/start.txt";
-    FILE* f = fopen(filepath.c_str(), "rb");
-    if (!f) return;
-    fseek(f, 0, SEEK_END);
-    int len = (int)ftell(f);
-    fseek(f, 0, SEEK_SET);
-    std::string str(len + 1, '\0');
-    fread(&str[0], 1, len, f);
-    str[len] = '\r';
-    fclose(f);
+    std::string str = filefunc::readFileToString(filepath);
+    if (str.empty()) return;
+    int len = (int)str.size();
+    str.push_back('\r');
 
     int x = 30, y = 80;
     DrawRectangleWithoutFrame(screen, 0, 0, CENTER_X * 2, CENTER_Y * 2, 0, 60);

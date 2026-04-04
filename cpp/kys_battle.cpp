@@ -14,6 +14,7 @@
 #include <cstring>
 #include <cstdlib>
 #include <cmath>
+#include <format>
 #include <string>
 #include <vector>
 #include <algorithm>
@@ -68,8 +69,7 @@ bool Battle(int battlenum, int getexp) {
         for (int i = 0; i < BRoleAmount; i++) {
             int hn = Rrole[Brole[i].rnum].HeadNum;
             if (!HeadSurface[hn]) {
-                char path[256];
-                snprintf(path, sizeof(path), "%shead/%d.png", AppPath.c_str(), hn);
+                auto path = std::format("{}head/{}.png", AppPath, hn);
                 HeadSurface[hn] = LoadSurfaceFromFile(path);
             }
             BHead[i] = HeadSurface[hn];
@@ -84,10 +84,8 @@ bool Battle(int battlenum, int getexp) {
     }
 
     for (int i = 0; i < BRoleAmount; i++) {
-        char path[256];
         int hn = Rrole[Brole[i].rnum].HeadNum;
-        snprintf(path, sizeof(path), "fight/fight%03d", hn);
-        std::string sp(path);
+        auto sp = std::format("fight/fight{:03d}", hn);
         FPicAmount = LoadIdxGrp(sp + ".idx", sp + ".grp", FIdx[hn], FPic[hn]);
     }
 
@@ -400,7 +398,7 @@ int BattleMenu(int bnum) {
     int menu = 0;
     Redraw();
     ShowSimpleStatus(Brole[bnum].rnum, CENTER_X + 100, 50);
-    char buf[32]; snprintf(buf, sizeof(buf), "回合%d", BattleRound);
+    auto buf = std::format("回合{}", BattleRound);
     std::string s(buf);
     DrawTextWithRect(screen, s, 160, 50, DrawLength(s) * 10 + 6, ColColor(0x21), ColColor(0x23));
     RecordFreshScreen(0, 0, screen->w, screen->h);
@@ -807,9 +805,7 @@ int SelectMagic(int rnum) {
         if (Rrole[rnum].Magic[i] > 0) {
             menuStatus |= (1 << i);
             menuString[i] = cp950toutf8(Rmagic[Rrole[rnum].Magic[i]].Name);
-            char buf[16];
-            snprintf(buf, sizeof(buf), "%3d", Rrole[rnum].MagLevel[i] / 100 + 1);
-            menuEngString[i] = buf;
+            menuEngString[i] = std::format("{:3d}", Rrole[rnum].MagLevel[i] / 100 + 1);
             maxMenu++;
         }
     }
@@ -1253,9 +1249,8 @@ void AddExp() {
             DrawRectangle(screen, 100, 235, 145, 25, 0, ColColor(255), 50);
             std::string str = "得經驗";
             DrawShadowText(screen, str, 103, 237, ColColor(0x23), ColColor(0x21));
-            char buf[16];
-            snprintf(buf, sizeof(buf), "%5d", Brole[i].ExpGot + basicvalue);
-            DrawEngShadowText(screen, std::string(buf), 188, 237, ColColor(0x66), ColColor(0x64));
+            auto buf2 = std::format("{:5d}", Brole[i].ExpGot + basicvalue);
+            DrawEngShadowText(screen, buf2, 188, 237, ColColor(0x66), ColColor(0x64));
             UpdateScreen(screen, 0, 0, screen->w, screen->h);
             WaitAnyKey();
         }
