@@ -2546,7 +2546,7 @@ void ShowStatus(int rnum, int x, int y) {
     DrawRectangle(screen, x, y, 525, 315, 0, ColColor(255), 50);
 
     DrawHeadPic(Rrole[rnum].HeadNum, x + 60, y + 80);
-    std::string Name = cp950toutf8(Rrole[rnum].Name, 10);
+    std::string Name = cp950toutf8(Rrole[rnum].Name, 5);
     DrawShadowText(screen, Name, x + 88 - DrawLength(Name) * 5, y + 85, ColColor(0x66), ColColor(0x63));
 
     for (int i = 0; i <= 5; i++)
@@ -2682,7 +2682,7 @@ void ShowSimpleStatus(int rnum, int x, int y) {
 
     DrawRectangle(screen, x, y, 145, 173, 0, ColColor(255), 50);
     DrawHeadPic(Rrole[rnum].HeadNum, x + 50, y + 63);
-    std::string Name = cp950toutf8(Rrole[rnum].Name, 10);
+    std::string Name = cp950toutf8(Rrole[rnum].Name, 5);
     DrawShadowText(screen, Name, x + 80 - DrawLength(Name) * 5, y + 65, ColColor(0x64), ColColor(0x66));
     for (int i = 0; i <= 3; i++)
         DrawShadowText(screen, strs[i], x + 3, y + 86 + 21 * i, ColColor(0x21), ColColor(0x23));
@@ -2829,18 +2829,56 @@ void MenuQuit() {
 // ---- 使用物品效果 ----
 
 int EffectMedcine(int role1, int role2) {
-    int heal = Rrole[role1].Medcine * MED_LIFE;
-    Rrole[role2].CurrentHP += heal;
-    if (Rrole[role2].CurrentHP > Rrole[role2].MaxHP)
-        Rrole[role2].CurrentHP = Rrole[role2].MaxHP;
-    return heal;
+    int addlife = Rrole[role1].Medcine * MED_LIFE * (10 - Rrole[role2].Hurt / 15) / 10;
+    if (Rrole[role2].Hurt - Rrole[role1].Medcine > 20)
+        addlife = 0;
+    int minushurt = addlife / LIFE_HURT;
+    if (minushurt > Rrole[role2].Hurt)
+        minushurt = Rrole[role2].Hurt;
+    Rrole[role2].Hurt -= minushurt;
+    if (Rrole[role2].Hurt < 0)
+        Rrole[role2].Hurt = 0;
+    if (addlife > Rrole[role2].MaxHP - Rrole[role2].CurrentHP)
+        addlife = Rrole[role2].MaxHP - Rrole[role2].CurrentHP;
+    Rrole[role2].CurrentHP += addlife;
+
+    if (Where != 2) {
+        Redraw();
+        DrawRectangle(screen, 115, 98, 155, 76, 0, ColColor(255), 30);
+        DrawBig5ShadowText(screen, Rrole[role2].Name, 120, 100, ColColor(0x21), ColColor(0x23));
+        DrawShadowText(screen, "增加生命", 120, 125, ColColor(0x05), ColColor(0x07));
+        char buf[32]; snprintf(buf, sizeof(buf), "%4d", addlife);
+        DrawEngShadowText(screen, buf, 220, 125, ColColor(0x64), ColColor(0x66));
+        DrawShadowText(screen, "減少受傷", 120, 150, ColColor(0x05), ColColor(0x07));
+        snprintf(buf, sizeof(buf), "%4d", minushurt);
+        DrawEngShadowText(screen, buf, 220, 150, ColColor(0x64), ColColor(0x66));
+        ShowSimpleStatus(role2, 350, 50);
+        UpdateScreen(screen, 0, 0, screen->w, screen->h);
+        WaitAnyKey();
+        Redraw();
+    }
+    return addlife;
 }
 
 int EffectMedPoison(int role1, int role2) {
-    int cure = Rrole[role1].MedPoi;
-    Rrole[role2].Poison -= cure;
-    if (Rrole[role2].Poison < 0) Rrole[role2].Poison = 0;
-    return cure;
+    int minuspoi = Rrole[role1].MedPoi;
+    if (minuspoi > Rrole[role2].Poison)
+        minuspoi = Rrole[role2].Poison;
+    Rrole[role2].Poison -= minuspoi;
+
+    if (Where != 2) {
+        Redraw();
+        DrawRectangle(screen, 115, 98, 155, 51, 0, ColColor(255), 30);
+        DrawShadowText(screen, "減少中毒", 120, 125, ColColor(0x05), ColColor(0x07));
+        DrawBig5ShadowText(screen, Rrole[role2].Name, 120, 100, ColColor(0x21), ColColor(0x23));
+        char buf[32]; snprintf(buf, sizeof(buf), "%4d", minuspoi);
+        DrawEngShadowText(screen, buf, 220, 125, ColColor(0x64), ColColor(0x66));
+        ShowSimpleStatus(role2, 350, 50);
+        UpdateScreen(screen, 0, 0, screen->w, screen->h);
+        WaitAnyKey();
+        Redraw();
+    }
+    return minuspoi;
 }
 
 int EatOneItem(int rnum, int inum, int times, int display) {

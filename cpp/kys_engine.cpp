@@ -99,12 +99,34 @@ void InitialMusic() {
     for (int i = 0; i < (int)Music.size(); i++) {
         if (Music[i]) { MIX_DestroyAudio(Music[i]); Music[i] = nullptr; }
         std::string str = AppPath + "music/" + std::to_string(i) + ".mp3";
-        if (SDL_IOFromFile(str.c_str(), "rb")) {
-            Music[i] = MIX_LoadAudio(gMixer, str.c_str(), false);
+        FILE* f = fopen(str.c_str(), "rb");
+        if (f) {
+            fclose(f);
+            Music[i] = MIX_LoadAudio(nullptr, str.c_str(), false);
         } else {
             str = AppPath + "music/" + std::to_string(i) + ".mid";
-            // midi loading with fluidsynth would go here
-            Music[i] = nullptr;
+            f = fopen(str.c_str(), "rb");
+            if (f) {
+                fclose(f);
+                // MIDI loading with FluidSynth soundfont
+                SDL_IOStream* io = SDL_IOFromFile(str.c_str(), "rb");
+                if (io) {
+                    SDL_PropertiesID id = SDL_CreateProperties();
+                    SDL_SetPointerProperty(id, MIX_PROP_AUDIO_LOAD_IOSTREAM_POINTER, io);
+                    SDL_SetBooleanProperty(id, MIX_PROP_AUDIO_LOAD_CLOSEIO_BOOLEAN, true);
+                    SDL_SetStringProperty(id, MIX_PROP_AUDIO_DECODER_STRING, "fluidsynth");
+                    std::string sf2 = AppPath + "music/mid.sf2";
+                    f = fopen(sf2.c_str(), "rb");
+                    if (!f) sf2 = AppPathCommon + "music/mid.sf2";
+                    else fclose(f);
+                    SDL_SetStringProperty(id, "SDL_mixer.decoder.fluidsynth.soundfont_path", sf2.c_str());
+                    Music[i] = MIX_LoadAudioWithProperties(id);
+                    SDL_DestroyProperties(id);
+                    // io is closed by MIX_LoadAudioWithProperties due to closeio=true
+                }
+            } else {
+                Music[i] = nullptr;
+            }
         }
     }
     for (int i = 0; i < (int)ESound.size(); i++) {
@@ -115,7 +137,7 @@ void InitialMusic() {
         FILE* f = fopen(str.c_str(), "rb");
         if (f) {
             fclose(f);
-            ESound[i] = MIX_LoadAudio(gMixer, str.c_str(), false);
+            ESound[i] = MIX_LoadAudio(nullptr, str.c_str(), false);
         } else {
             ESound[i] = nullptr;
         }
@@ -123,28 +145,50 @@ void InitialMusic() {
 }
 
 void PlayMP3(int MusicNum, int times, int frombeginning) {
+    if (!EnsureMixerCreated()) return;
     if (!MusicTrack) return;
     if (MusicNum < 0 || MusicNum >= (int)Music.size()) return;
+    if (VOLUME <= 0) return;
     if (!Music[MusicNum]) return;
-    NowMusic = MusicNum;
+    int loops = (times == -1) ? -1 : 0;
+    MIX_StopTrack(MusicTrack, 0);
     MIX_SetTrackAudio(MusicTrack, Music[MusicNum]);
+    if (frombeginning == 1)
+        MIX_SetTrackPlaybackPosition(MusicTrack, 0);
     MIX_SetTrackGain(MusicTrack, (float)VOLUME / 100.0f);
-    if (times == -1) MIX_SetTrackLoops(MusicTrack, -1); else MIX_SetTrackLoops(MusicTrack, times);
-    MIX_PlayTrack(MusicTrack, 0);
+    MIX_SetTrackLoops(MusicTrack, loops);
+    SDL_PropertiesID id = SDL_CreateProperties();
+    SDL_SetNumberProperty(id, MIX_PROP_PLAY_FADE_IN_MILLISECONDS_NUMBER, 50);
+    SDL_SetNumberProperty(id, MIX_PROP_PLAY_LOOPS_NUMBER, loops);
+    MIX_PlayTrack(MusicTrack, id);
+    SDL_DestroyProperties(id);
+    NowMusic = MusicNum;
 }
 
 void PlayMP3(const char* filename, int times) {
+    if (!EnsureMixerCreated()) return;
     if (!MusicTrack) return;
-    MIX_Audio* audio = MIX_LoadAudio(gMixer, filename, false);
+    if (VOLUME <= 0) return;
+    MIX_Audio* audio = MIX_LoadAudio(nullptr, filename, false);
     if (!audio) return;
+    MIX_StopTrack(MusicTrack, 0);
     MIX_SetTrackAudio(MusicTrack, audio);
     MIX_SetTrackGain(MusicTrack, (float)VOLUME / 100.0f);
-    if (times == -1) MIX_SetTrackLoops(MusicTrack, -1);
-    MIX_PlayTrack(MusicTrack, 0);
+    int loops = (times == -1) ? -1 : 0;
+    MIX_SetTrackLoops(MusicTrack, loops);
+    SDL_PropertiesID id = SDL_CreateProperties();
+    SDL_SetNumberProperty(id, MIX_PROP_PLAY_FADE_IN_MILLISECONDS_NUMBER, 50);
+    SDL_SetNumberProperty(id, MIX_PROP_PLAY_LOOPS_NUMBER, loops);
+    MIX_PlayTrack(MusicTrack, id);
+    SDL_DestroyProperties(id);
 }
 
 void StopMP3(int frombeginning) {
-    if (MusicTrack) MIX_StopTrack(MusicTrack, 0);
+    if (MusicTrack) {
+        MIX_StopTrack(MusicTrack, 0);
+        if (frombeginning == 1)
+            MIX_SetTrackPlaybackPosition(MusicTrack, 0);
+    }
 }
 
 void PlaySoundE(int SoundNum, int times) {
@@ -310,6 +354,8 @@ void display_img(const char* file_name, int x, int y) {
         CachedImageName = name;
     }
     if (!img) return;
+    if (x < 0) x = CENTER_X - img->w / 2;
+    if (y < 0) y = CENTER_Y - img->h / 2;
     SDL_Rect dst = {x, y, img->w, img->h};
     SDL_BlitSurface(img, nullptr, screen, &dst);
 }
@@ -621,7 +667,7 @@ std::string cp950toutf8(const char* str, int len) {
     if (!str) return "";
     int slen = (len < 0) ? (int)strlen(str) : len;
     if (slen == 0) return "";
-    return PotConv::cp950toutf8(std::string(str, slen));
+    return PotConv::cp950toutf8(std::string(str));    //这里暂时不处理len参数了，后续如果有需要再加上
 }
 
 std::string utf8tocp950(const std::string& str) {

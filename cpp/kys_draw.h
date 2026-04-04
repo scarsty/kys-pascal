@@ -27,8 +27,10 @@ void DrawBPic(int num, int px, int py, int shadow, int alpha, uint32_t mixColor,
 void DrawBPic(int num, int px, int py, int shadow, int alpha, int depth, uint32_t mixColor, int mixAlpha);
 void InitialBPic(int num, int px, int py, SDL_Surface* img, int widthI, int heightI, char* blockW, int widthW, int heightW, int depth, uint32_t mixColor = 0, int mixAlpha = 0);
 void DrawEPic(int num, int px, int py);
+void DrawEPic(int num, int px, int py, int shadow, int alpha, int depth, uint32_t mixColor, int mixAlpha);
 void DrawFPic(int headnum, int num, int px, int py, int shadow, int alpha);
 void DrawFPic(int headnum, int num, int px, int py, int shadow, int alpha, uint32_t mixColor, int mixAlpha);
+void DrawFPic(int headnum, int num, int px, int py, int shadow, int alpha, int depth, uint32_t mixColor, int mixAlpha);
 void DrawCPic(int num, int px, int py, int shadow, int alpha);
 void DrawCPic(int num, int px, int py, int shadow, int alpha, uint32_t mixColor, int mixAlpha);
 
@@ -63,13 +65,13 @@ void DrawBfieldWithoutRole();
 void DrawRoleOnBfield(int x, int y, uint32_t mixColor = 0, int mixAlpha = 0, int alpha_ = 75);
 void InitialBFieldImage();
 void InitialBFieldPosition(int x, int y);
-void LoadBfieldPart(int cx, int cy);
-void LoadBFieldPart2(int cx, int cy);
-void DrawBFieldWithCursor(int bnum);
-void DrawBFieldWithEft(int bnum, int eftnum);
-void DrawBFieldWithEft(int bnum, int eftnum, int frame);
-void DrawBFieldWithEft(int bnum, int eftnum, int frame, int allframe);
-void DrawBFieldWithAction(int bnum, int actionnum);
+void LoadBfieldPart(int cx, int cy, int noBuild = 0);
+void LoadBFieldPart2(int x, int y, int alpha);
+void DrawBFieldWithCursor(int step);
+void DrawBFieldWithEft(int Epicnum);
+void DrawBFieldWithEft(int Epicnum, int beginpic, int endpic, int bnum, uint32_t mixColor);
+void DrawBFieldWithEft(int Epicnum, int beginpic, int endpic, int curlevel, int bnum, int forteam, int flash, uint32_t mixColor);
+void DrawBFieldWithAction(int bnum, int Apicnum);
 
 // 云、进度条、虚拟按键
 void DrawClouds();

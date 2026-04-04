@@ -1171,8 +1171,235 @@ std::string ReplaceStr(const std::string& S, const std::string& Srch, const std:
 }
 
 void NewTalk(int headnum, int talknum, int namenum, int place, int showhead, int color, int frame, const std::string& content, const std::string& disname) {
-    std::string talkstr = content.empty() ? ReadTalk(talknum) : content;
-    talk_1(talkstr, headnum, place);
+    const int RowSpacing = 25;
+    const int ColSpacing = 20;
+    const int MaxRow = 5;
+    const int ExpressionMin = 412;
+    const int ExpressionMax = 429;
+    const std::string FullNameCode = "&&";
+    const std::string SurNameCode = "$$";
+    const std::string GivenNameCode = "%%";
+    const std::string WaitAnyKeyCode = "@@";
+    const std::string DelayCode = "##";
+    const std::string NextLineCode = "**";
+    const std::string ChangeColorCode = "^";
+
+    int MaxCol = 25;
+    MaxCol = (int)((CENTER_X * 2 - (768 - MaxCol * ColSpacing)) / ColSpacing);
+
+    int Frame_X = 50;
+    int Frame_Y = CENTER_Y * 2 - 180;
+    int Talk_X = Frame_X + 50;
+    int Talk_Y = Frame_Y + 35;
+    int Talk_W = MaxCol;
+    int Talk_H = MaxRow;
+    int Name_X = Talk_X;
+    int Name_Y = Frame_Y + 7;
+    int Head_X = 30, Head_Y = CENTER_Y * 2 - 120;
+
+    if (place > 2) place = 5 - place;
+    if (place == 0) {
+        Head_X = 30; Head_Y = CENTER_Y * 2 - 120;
+    } else if (place == 1) {
+        Head_X = CENTER_X * 2 - 200; Head_Y = CENTER_Y * 2 - 120;
+        Talk_X = 30; Name_X = Talk_X; Name_Y = Frame_Y + 7;
+    } else if (place == 2) {
+        Talk_X = Frame_X + 70;
+    }
+
+    // 特殊颜色值
+    switch (color) {
+        case 0: color = 28515; break; case 1: color = 28421; break;
+        case 2: color = 28435; break; case 3: color = 28563; break;
+        case 4: color = 28466; break; case 5: color = 28450; break;
+    }
+    uint8_t ForeGroundCol = color & 0xFF;
+    uint8_t BackGroundCol = (color & 0xFF00) >> 8;
+
+    // 读取对话内容
+    std::string TalkStr;
+    if (content.empty()) {
+        if (talknum >= 0) {
+            TalkStr = ReadTalk(talknum);
+        } else {
+            if (-talknum >= 0 && -talknum <= 32767)
+                TalkStr = std::string((const char*)&x50[-talknum]);
+            else
+                TalkStr = "";
+        }
+    } else {
+        TalkStr = content;
+    }
+    TalkStr = " " + TalkStr;
+
+    // 读取名字
+    std::string NameStr;
+    if (disname.empty()) {
+        if (namenum > 0) {
+            NameStr = ReadTalk(namenum);
+        }
+        int HeadNumR = headnum;
+        if (headnum >= ExpressionMin && headnum <= ExpressionMax)
+            HeadNumR = 0;
+        if (namenum == -2) {
+            for (int i = 0; i < (int)(sizeof(Rrole)/sizeof(Rrole[0])); i++) {
+                if (Rrole[i].HeadNum == HeadNumR || (i == 0 && HeadNumR == 0)) {
+                    NameStr = cp950toutf8(Rrole[i].Name, 20);
+                    break;
+                }
+            }
+        }
+        if (namenum == -1 || namenum == 0)
+            NameStr = "";
+    } else {
+        NameStr = disname;
+    }
+
+    // 分析主角名字并替换
+    std::string FullNameStr = cp950toutf8(Rrole[0].Name, 20);
+    if (TalkStr.find(FullNameCode) != std::string::npos) {
+        std::string result;
+        size_t pos = 0, found;
+        while ((found = TalkStr.find(FullNameCode, pos)) != std::string::npos) {
+            result += TalkStr.substr(pos, found - pos) + FullNameStr;
+            pos = found + FullNameCode.size();
+        }
+        result += TalkStr.substr(pos);
+        TalkStr = result;
+    }
+    // $$ 和 %% 替换 (SurName/GivenName 暂为空)
+    {
+        std::string result;
+        size_t pos = 0, found;
+        while ((found = TalkStr.find(SurNameCode, pos)) != std::string::npos) {
+            result += TalkStr.substr(pos, found - pos);
+            pos = found + SurNameCode.size();
+        }
+        result += TalkStr.substr(pos);
+        TalkStr = result;
+    }
+    {
+        std::string result;
+        size_t pos = 0, found;
+        while ((found = TalkStr.find(GivenNameCode, pos)) != std::string::npos) {
+            result += TalkStr.substr(pos, found - pos);
+            pos = found + GivenNameCode.size();
+        }
+        result += TalkStr.substr(pos);
+        TalkStr = result;
+    }
+
+    // 显示对话
+    Redraw();
+    uint32_t DrawForeGroundCol = ColColor(ForeGroundCol);
+    uint32_t DrawBackGroundCol = ColColor(BackGroundCol);
+    int len = (int)TalkStr.size();
+    int I = 0; // 0-based index in C++
+    CleanKeyValue();
+    while (true) {
+        Redraw();
+        DrawRectangleWithoutFrame(screen, 0, Frame_Y, CENTER_X * 2, 170, 0, 40);
+        if (showhead == 0 && headnum >= 0)
+            DrawHeadPic(headnum, Head_X, Head_Y);
+        if (!NameStr.empty() || showhead != 0)
+            DrawShadowText(screen, NameStr, Name_X, Name_Y, ColColor(5), ColColor(7));
+        UpdateAllScreen();
+
+        int ix = 0, iy = 0;
+        bool skipSync = false;
+        while (SDL_WaitEvent(&event)) {
+            CheckBasicEvent();
+            // ESC / 右键 - 跳过
+            if ((event.type == SDL_EVENT_KEY_UP && event.key.key == SDLK_ESCAPE) ||
+                (event.type == SDL_EVENT_MOUSE_BUTTON_UP && event.button.button == SDL_BUTTON_RIGHT)) {
+                skipSync = true; SkipTalk = 1; break;
+            }
+            // Enter/Space/左键 - 加速
+            if ((event.type == SDL_EVENT_KEY_UP && (event.key.key == SDLK_RETURN || event.key.key == SDLK_SPACE)) ||
+                (event.type == SDL_EVENT_MOUSE_BUTTON_UP && event.button.button == SDL_BUTTON_LEFT)) {
+                skipSync = true; SkipTalk = 0;
+            }
+            if (!(ix < Talk_W && iy < Talk_H && I < len)) break;
+
+            // 检查@@等待按键
+            if (I + 1 < len && TalkStr.substr(I, 2) == WaitAnyKeyCode) {
+                I += 2; WaitAnyKey(); continue;
+            }
+            // 检查##延时
+            if (I + 1 < len && TalkStr.substr(I, 2) == DelayCode) {
+                I += 2; SDL_Delay(500); continue;
+            }
+            // 检查**换行
+            if (I + 1 < len && TalkStr.substr(I, 2) == NextLineCode) {
+                iy++; ix = 0; I += 2;
+                if (iy >= Talk_H) {
+                    if (I < len) WaitAnyKey();
+                    break;
+                }
+                continue;
+            }
+            // 检查颜色更换 ^0-^5
+            bool changed = false;
+            for (int i2 = 0; i2 <= 5; i2++) {
+                char code[3] = {'^', (char)('0' + i2), 0};
+                if (I + 1 < len && TalkStr.substr(I, 2) == code) {
+                    DrawBackGroundCol = ColColor(0x6F);
+                    switch (i2) {
+                        case 0: DrawForeGroundCol = ColColor(0x63); break;
+                        case 1: DrawForeGroundCol = ColColor(0x05); break;
+                        case 2: DrawForeGroundCol = ColColor(0x13); break;
+                        case 3: DrawForeGroundCol = ColColor(0x93); break;
+                        case 4: DrawForeGroundCol = ColColor(0x32); break;
+                        case 5: DrawForeGroundCol = ColColor(0x22); break;
+                    }
+                    I += 2; changed = true; break;
+                }
+            }
+            if (changed) continue;
+            // 检查^^ 恢复默认颜色
+            if (I + 1 < len && TalkStr.substr(I, 2) == "^^") {
+                DrawBackGroundCol = ColColor(BackGroundCol);
+                DrawForeGroundCol = ColColor(ForeGroundCol);
+                I += 2; continue;
+            }
+            // 写字符
+            if (I < len) {
+                int len_utf8 = utf8follow(TalkStr[I]);
+                std::string tempstr = TalkStr.substr(I, len_utf8);
+                int xtemp = Talk_X + ColSpacing * ix;
+                if ((uint8_t)tempstr[0] < 0x80)
+                    xtemp += 5;
+                DrawShadowText(screen, tempstr, xtemp, Talk_Y + RowSpacing * iy, DrawForeGroundCol, DrawBackGroundCol);
+                I += len_utf8;
+            }
+            if (!skipSync && SkipTalk == 0) {
+                SDL_Delay(5);
+                UpdateAllScreen();
+            }
+            ix++;
+            if (ix >= Talk_W || iy >= Talk_H) {
+                ix = 0; iy++;
+                if (iy >= Talk_H) {
+                    if (I < len) {
+                        UpdateAllScreen();
+                        if (SkipTalk == 0) {
+                            WaitAnyKey();
+                            if (skipSync) WaitAnyKey();
+                            skipSync = false;
+                        }
+                    }
+                    UpdateAllScreen();
+                    break;
+                }
+            }
+        }
+        if (I >= len) break;
+    }
+    UpdateAllScreen();
+    if (SkipTalk == 0) {
+        WaitAnyKey();
+        if (false) WaitAnyKey(); // skipSync is local, already handled
+    }
 }
 
 int EnterNumber(int MinValue, int MaxValue, int x, int y, int Default) {

@@ -200,16 +200,33 @@ void DrawEPic(int num, int px, int py) {
                 nullptr, nullptr, 0, 0, 0, 0, 0);
 }
 
+void DrawEPic(int num, int px, int py, int shadow, int alpha, int depth, uint32_t mixColor, int mixAlpha) {
+    if (num < 0 || num >= EPicAmount) return;
+    DrawRLE8Pic((const char*)ACol, num, px, py, EIdx.data(), EPic.data(),
+                nullptr, screen, screen->w, screen->h, screen->pitch,
+                shadow, alpha,
+                (char*)BlockImg2.data(), (const char*)&BlockScreen,
+                ImageWidth, ImageHeight, sizeof(int16_t),
+                depth, mixColor, mixAlpha);
+}
+
 void DrawFPic(int headnum, int num, int px, int py, int shadow, int alpha) {
-    DrawFPic(headnum, num, px, py, shadow, alpha, 0, 0);
+    DrawFPic(headnum, num, px, py, shadow, alpha, 0, 0, 0);
 }
 
 void DrawFPic(int headnum, int num, int px, int py, int shadow, int alpha, uint32_t mixColor, int mixAlpha) {
+    DrawFPic(headnum, num, px, py, shadow, alpha, 0, mixColor, mixAlpha);
+}
+
+void DrawFPic(int headnum, int num, int px, int py, int shadow, int alpha, int depth, uint32_t mixColor, int mixAlpha) {
     if (headnum < 0 || headnum >= 1000) return;
     if (FPic[headnum].empty()) return;
     DrawRLE8Pic((const char*)ACol, num, px, py, FIdx[headnum].data(), FPic[headnum].data(),
                 nullptr, screen, screen->w, screen->h, screen->pitch,
-                shadow, alpha, nullptr, nullptr, 0, 0, 0, 0, mixColor, mixAlpha);
+                shadow, alpha,
+                (char*)BlockImg2.data(), (const char*)&BlockScreen,
+                ImageWidth, ImageHeight, sizeof(int16_t),
+                depth, mixColor, mixAlpha);
 }
 
 void DrawCPic(int num, int px, int py, int shadow, int alpha) {
@@ -243,8 +260,15 @@ void Redraw() {
         case 0: DrawMMap(); break;
         case 1: DrawScene(); break;
         case 2: DrawBField(); break;
-        case 3: display_img("resource/open.png", 0, 0); break;
-        case 4: display_img("resource/end.png", 0, 0); break;
+        case 3:
+            SDL_FillSurfaceRect(screen, nullptr, 0xff000000);
+            display_img("resource/open.png", OpenPicPosition.x, OpenPicPosition.y);
+            DrawVirtualKey();
+            break;
+        case 4:
+            SDL_FillSurfaceRect(screen, nullptr, 0xff000000);
+            display_img("resource/dead.png", OpenPicPosition.x, OpenPicPosition.y);
+            break;
     }
 }
 
@@ -592,20 +616,34 @@ void DrawRoleOnBfield(int x, int y, uint32_t mixColor, int mixAlpha, int alpha_)
     int depth = CalBlock(x, y);
     int rnum = Brole[roleIdx].rnum;
     int headnum = Rrole[rnum].HeadNum;
-    // Pascal: HeadNum * 4 + Face + BEGIN_BATTLE_ROLE_PIC
-    int pic = BEGIN_BATTLE_ROLE_PIC + headnum * 4 + Brole[roleIdx].Face;
-    DrawBPic(pic, pos.x, pos.y, 0, alpha_, depth, mixColor, mixAlpha);
+    if (WMP_4_PIC != 0) {
+        int pic = BEGIN_BATTLE_ROLE_PIC + headnum * 4 + Brole[roleIdx].Face;
+        DrawBPic(pic, pos.x, pos.y, 0, alpha_, depth, mixColor, mixAlpha);
+    } else {
+        int num = 0;
+        for (int i = 0; i < 5; i++) {
+            if (Rrole[rnum].AmiFrameNum[i] > 0) {
+                num = Brole[roleIdx].Face * Rrole[rnum].AmiFrameNum[i];
+                break;
+            }
+        }
+        DrawFPic(headnum, num, pos.x, pos.y, 0, alpha_, depth, mixColor, mixAlpha);
+    }
 }
 
 void InitialBFieldImage() {
     if (!ImgBField) return;
     SDL_FillSurfaceRect(ImgBField, nullptr, 0);
+    if (ImgBBuild) SDL_FillSurfaceRect(ImgBBuild, nullptr, SDL_MapSurfaceRGBA(ImgBBuild, 0, 0, 0, 1));
     if (!BlockImg2.empty())
         memset(BlockImg2.data(), 0, BlockImg2.size() * sizeof(int16_t));
 
-    for (int y = 0; y < 64; y++) {
-        for (int x = 0; x < 64; x++) {
-            InitialBFieldPosition(x, y);
+    // Pascal: diagonal order for sumi=0..126, i1=63 downto 0, i2=sumi-i1
+    for (int sumi = 0; sumi <= 126; sumi++) {
+        for (int i1 = 63; i1 >= 0; i1--) {
+            int i2 = sumi - i1;
+            if (i2 >= 0 && i2 <= 63)
+                InitialBFieldPosition(i1, i2);
         }
     }
 }
@@ -619,12 +657,13 @@ void InitialBFieldPosition(int x, int y) {
     int buildPic = BField[1][x][y] / 2;
     if (buildPic > 0) {
         int depth = x + y;
-        InitialBPic(buildPic, pos.x, pos.y, ImgBField, ImageWidth, ImageHeight,
+        // Pascal: buildings go to ImgBBuild (needBlock=1)
+        InitialBPic(buildPic, pos.x, pos.y, ImgBBuild, ImageWidth, ImageHeight,
                      (char*)BlockImg2.data(), ImageWidth, ImageHeight, depth);
     }
 }
 
-void LoadBfieldPart(int cx, int cy) {
+void LoadBfieldPart(int cx, int cy, int noBuild) {
     if (!ImgBField || !screen) return;
     TPosition lt = CalLTPosOnImageByCenter(cx, cy);
     BlockScreen.x = lt.x;
@@ -632,49 +671,162 @@ void LoadBfieldPart(int cx, int cy) {
     SDL_Rect src = {lt.x, lt.y, CENTER_X * 2, CENTER_Y * 2};
     SDL_Rect dst = {0, 0, CENTER_X * 2, CENTER_Y * 2};
     SDL_BlitSurface(ImgBField, &src, screen, &dst);
+    if (noBuild == 0)
+        LoadBFieldPart2(lt.x, lt.y, 0);
 }
 
-void LoadBFieldPart2(int cx, int cy) {
-    LoadBfieldPart(cx, cy);
+void LoadBFieldPart2(int x, int y, int alpha) {
+    if (!ImgBBuild || !screen) return;
+    SDL_Rect src = {x, y, CENTER_X * 2, CENTER_Y * 2};
+    SDL_Rect dst = {0, 0, CENTER_X * 2, CENTER_Y * 2};
+    SDL_SetSurfaceAlphaMod(ImgBBuild, 255 - alpha * 255 / 100);
+    SDL_BlitSurface(ImgBBuild, &src, screen, &dst);
 }
 
-void DrawBFieldWithCursor(int bnum) {
-    DrawBField();
-    // 绘制选择光标
-    TPosition pos = GetPositionOnScreen(Ax - Bx, Ay - By, CENTER_X, CENTER_Y);
-    DrawRectangle(screen, pos.x - 16, pos.y - 8, 36, 18, ColColor(0x50), ColColor(0xFF), 30);
-}
-
-void DrawBFieldWithEft(int bnum, int eftnum) {
-    DrawBFieldWithEft(bnum, eftnum, 0, 0);
-}
-
-void DrawBFieldWithEft(int bnum, int eftnum, int frame) {
-    DrawBFieldWithEft(bnum, eftnum, frame, 0);
-}
-
-void DrawBFieldWithEft(int bnum, int eftnum, int frame, int allframe) {
-    DrawBField();
-    // 绘制特效层
-    for (int x = 0; x < 64; x++) {
-        for (int y = 0; y < 64; y++) {
-            if (BField[4][x][y] > 0) {
-                TPosition pos = GetPositionOnScreen(x - Bx, y - By, CENTER_X, CENTER_Y);
-                int eft = eftnum + frame;
-                DrawEPic(eft, pos.x, pos.y);
+void DrawBFieldWithCursor(int step) {
+    // Pascal: LoadBfieldPart(x, y, 1) — ground only, no buildings
+    TPosition lt = CalLTPosOnImageByCenter(Bx, By);
+    int x = lt.x, y = lt.y;
+    // Blit ground without building layer
+    if (ImgBField && screen) {
+        BlockScreen.x = x;
+        BlockScreen.y = y;
+        SDL_Rect src = {x, y, CENTER_X * 2, CENTER_Y * 2};
+        SDL_Rect dst = {0, 0, CENTER_X * 2, CENTER_Y * 2};
+        SDL_BlitSurface(ImgBField, &src, screen, &dst);
+    }
+    // Dim the entire screen
+    TransBlackScreen();
+    // Draw ground tiles: BField[4]>0 gets shadow=1 (highlight), BField[3]>=0 in step range gets shadow=0
+    for (int i1 = 0; i1 <= 63; i1++) {
+        for (int i2 = 0; i2 <= 63; i2++) {
+            if (BField[0][i1][i2] > 0) {
+                TPosition pos = GetPositionOnScreen(i1, i2, Bx, By);
+                if (BField[4][i1][i2] > 0) {
+                    DrawBPic(BField[0][i1][i2] / 2, pos.x, pos.y, 1);
+                } else if (BField[3][i1][i2] >= 0 && abs(i1 - Bx) + abs(i2 - By) <= step) {
+                    DrawBPic(BField[0][i1][i2] / 2, pos.x, pos.y, 0);
+                }
             }
         }
     }
+    // Overlay building layer with alpha
+    LoadBFieldPart2(x, y, 35);
+    // Draw roles with highlight for enemies in BField[4] area
+    for (int i1 = 0; i1 <= 63; i1++) {
+        for (int i2 = 0; i2 <= 63; i2++) {
+            int bnum2 = BField[2][i1][i2];
+            if (bnum2 >= 0 && Brole[bnum2].Dead == 0) {
+                uint32_t mixcolor = 0;
+                int mixalpha = 0;
+                if (Brole[bnum2].Team != Brole[BField[2][Bx][By]].Team && BField[4][i1][i2] > 0) {
+                    mixcolor = 0xFFFFFFFF;
+                    mixalpha = 20;
+                }
+                TPosition pos = GetPositionOnScreen(i1, i2, Bx, By);
+                int depth = CalBlock(i1, i2);
+                int rnum = Brole[bnum2].rnum;
+                int headnum = Rrole[rnum].HeadNum;
+                if (WMP_4_PIC != 0) {
+                    DrawBPic(headnum * 4 + Brole[bnum2].Face + BEGIN_BATTLE_ROLE_PIC,
+                             pos.x, pos.y, 0, 75, depth, mixcolor, mixalpha);
+                } else {
+                    int num = 0;
+                    for (int i = 0; i < 5; i++) {
+                        if (Rrole[rnum].AmiFrameNum[i] > 0) {
+                            num = Brole[bnum2].Face * Rrole[rnum].AmiFrameNum[i];
+                            break;
+                        }
+                    }
+                    DrawFPic(headnum, num, pos.x, pos.y, 0, 75, depth, mixcolor, mixalpha);
+                }
+            }
+        }
+    }
+    DrawProgress();
+    DrawVirtualKey();
 }
 
-void DrawBFieldWithAction(int bnum, int actionnum) {
-    DrawBField();
-    // 绘制动作动画
-    if (bnum < 0 || bnum >= BRoleAmount) return;
-    int rnum = Brole[bnum].rnum;
-    int headnum = Rrole[rnum].HeadNum;
-    TPosition pos = GetPositionOnScreen(Brole[bnum].X - Bx, Brole[bnum].Y - By, CENTER_X, CENTER_Y);
-    DrawFPic(headnum, actionnum, pos.x, pos.y, 0, 0);
+// Pascal overload 1: 简单效果 DrawBFieldWithEft(Epicnum)
+void DrawBFieldWithEft(int Epicnum) {
+    DrawBfieldWithoutRole();
+    for (int i1 = 0; i1 <= 63; i1++) {
+        for (int i2 = 0; i2 <= 63; i2++) {
+            TPosition pos = GetPositionOnScreen(i1, i2, Bx, By);
+            if (BField[2][i1][i2] >= 0 && Brole[BField[2][i1][i2]].Dead == 0)
+                DrawRoleOnBfield(i1, i2);
+            if (BField[4][i1][i2] > 0)
+                DrawEPic(Epicnum, pos.x, pos.y, 0, 25, 0, 0, 0);
+        }
+    }
+    DrawProgress();
+}
+
+// Pascal overload 2: 带帧范围 DrawBFieldWithEft(Epicnum, beginpic, endpic, bnum, mixColor)
+void DrawBFieldWithEft(int Epicnum, int beginpic, int endpic, int bnum, uint32_t mixColor) {
+    DrawBfieldWithoutRole();
+    for (int i1 = 0; i1 <= 63; i1++) {
+        for (int i2 = 0; i2 <= 63; i2++) {
+            TPosition pos = GetPositionOnScreen(i1, i2, Bx, By);
+            if (BField[2][i1][i2] >= 0 && Brole[BField[2][i1][i2]].Dead == 0)
+                DrawRoleOnBfield(i1, i2, 0, 50);
+            if (BField[4][i1][i2] > 0) {
+                int eft = Epicnum - BField[4][i1][i2] + 1;
+                if (eft >= beginpic && eft <= endpic)
+                    DrawEPic(eft, pos.x, pos.y, 0, 25, 0, 0, 0);
+            }
+        }
+    }
+    DrawProgress();
+}
+
+// Pascal overload 3: 完整效果 DrawBFieldWithEft(Epicnum, beginpic, endpic, curlevel, bnum, forteam, flash, mixColor)
+void DrawBFieldWithEft(int Epicnum, int beginpic, int endpic, int curlevel, int bnum, int forteam, int flash, uint32_t mixColor) {
+    DrawBfieldWithoutRole();
+    for (int i1 = 0; i1 <= 63; i1++) {
+        for (int i2 = 0; i2 <= 63; i2++) {
+            TPosition pos = GetPositionOnScreen(i1, i2, Bx, By);
+            int k = BField[2][i1][i2];
+            if (k >= 0 && Brole[k].Dead == 0) {
+                int curflash = 0;
+                if (BField[4][Brole[k].X][Brole[k].Y] > 0) {
+                    if (forteam == 0) {
+                        if (Brole[bnum].Team != Brole[k].Team) curflash = 1;
+                    } else {
+                        if (Brole[bnum].Team == Brole[k].Team) curflash = 1;
+                    }
+                }
+                // 行动人物保持最后一帧
+                if (bnum == k && Brole[bnum].Pic > 0)
+                    DrawFPic(Rrole[Brole[bnum].rnum].HeadNum, Brole[bnum].Pic, pos.x, pos.y, 0, 75, CalBlock(i1, i2), mixColor, curflash * (10 + rand() % 40));
+                else
+                    DrawRoleOnBfield(i1, i2, mixColor, curflash * (10 + rand() % 40));
+            }
+            if (BField[4][i1][i2] > 0) {
+                int eft = Epicnum + curlevel - BField[4][i1][i2];
+                if (eft >= beginpic && eft <= endpic)
+                    DrawEPic(eft, pos.x, pos.y, 0, 25, CalBlock(i1, i2), 0, 0);
+            }
+        }
+    }
+    DrawProgress();
+}
+
+// 画带人物动作的战场
+void DrawBFieldWithAction(int bnum, int Apicnum) {
+    DrawBfieldWithoutRole();
+    for (int i1 = 0; i1 <= 63; i1++) {
+        for (int i2 = 0; i2 <= 63; i2++) {
+            if (BField[2][i1][i2] >= 0 && Brole[BField[2][i1][i2]].Dead == 0 && BField[2][i1][i2] != bnum) {
+                DrawRoleOnBfield(i1, i2);
+            }
+            if (BField[2][i1][i2] == bnum) {
+                TPosition pos = GetPositionOnScreen(i1, i2, Bx, By);
+                DrawFPic(Rrole[Brole[bnum].rnum].HeadNum, Apicnum, pos.x, pos.y, 0, 75, CalBlock(i1, i2), 0, 0);
+            }
+        }
+    }
+    DrawProgress();
 }
 
 // ---- 云、进度条、虚拟按键 ----
