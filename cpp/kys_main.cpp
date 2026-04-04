@@ -23,6 +23,7 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <sys/stat.h>
 
 #ifdef _WIN32
 #define NOMINMAX
@@ -31,6 +32,7 @@
 
 static int signof(int x) { return (x > 0) ? 1 : (x < 0) ? -1 : 0; }
 
+int AutoLoadSave = 0; // --autoload N: 自动读取进度N (1-11)
 
 // ---- 实现 ----
 
@@ -324,6 +326,19 @@ void Start() {
     DrawTitlePic(0, x, y);
     DrawTitlePic(menu + 1, x, y + menu * 20);
     UpdateScreen(screen, 0, 0, screen->w, screen->h);
+
+    // --autoload N: 自动读取进度并进入游戏
+    if (AutoLoadSave > 0 && AutoLoadSave <= 11) {
+        LoadR(AutoLoadSave);
+        CurEvent = -1;
+        if (Where == 1) WalkInScene(0);
+        Walk();
+        AutoLoadSave = 0;
+        Redraw();
+        DrawTitlePic(0, x, y);
+        DrawTitlePic(menu + 1, x, y + menu * 20);
+        UpdateScreen(screen, 0, 0, screen->w, screen->h);
+    }
 
     bool selected = false;
     while (SDL_WaitEvent(&event)) {
@@ -1719,6 +1734,100 @@ scroll_done:
     return result;
 }
 
+int CommonGridMenu(int x, int y, int cols, int cellW, int maxShowRows, int maxItem, const std::string menuString[]) {
+    if (maxItem < 0) return -1;
+    int menu = 0, topRow = 0;
+    int totalRows = (maxItem + cols) / cols;
+    int areaW = cols * cellW + 1;
+    int areaH = maxShowRows * 22 + 7;
+
+    auto ShowGrid = [&]() {
+        LoadFreshScreen(x, y, areaW, areaH);
+        DrawRectangle(screen, x, y, cols * cellW, maxShowRows * 22 + 6, 0, ColColor(255), 50);
+        for (int r = 0; r < maxShowRows; r++) {
+            for (int c = 0; c < cols; c++) {
+                int idx = (topRow + r) * cols + c;
+                if (idx > maxItem) continue;
+                if (idx == menu)
+                    DrawShadowText(screen, menuString[idx], x + 3 + c * cellW, y + 3 + 22 * r, ColColor(0x64), ColColor(0x66));
+                else
+                    DrawShadowText(screen, menuString[idx], x + 3 + c * cellW, y + 3 + 22 * r, ColColor(0x5), ColColor(0x7));
+            }
+        }
+    };
+
+    RecordFreshScreen(x, y, areaW, areaH);
+    ShowGrid();
+    UpdateScreen(screen, x, y, areaW, areaH);
+
+    while (SDL_WaitEvent(&event)) {
+        CheckBasicEvent();
+        switch (event.type) {
+            case SDL_EVENT_KEY_UP: {
+                int prev = menu;
+                if (event.key.key == SDLK_RIGHT && menu < maxItem) menu++;
+                if (event.key.key == SDLK_LEFT && menu > 0) menu--;
+                if (event.key.key == SDLK_DOWN) menu = std::min(maxItem, menu + cols);
+                if (event.key.key == SDLK_UP) menu = std::max(0, menu - cols);
+                if (event.key.key == SDLK_PAGEDOWN) {
+                    menu = std::min(maxItem, menu + cols * maxShowRows);
+                    topRow += maxShowRows;
+                    if (topRow > std::max(0, totalRows - maxShowRows))
+                        topRow = std::max(0, totalRows - maxShowRows);
+                }
+                if (event.key.key == SDLK_PAGEUP) {
+                    menu = std::max(0, menu - cols * maxShowRows);
+                    topRow = std::max(0, topRow - maxShowRows);
+                }
+                if (menu / cols < topRow) topRow = menu / cols;
+                if (menu / cols >= topRow + maxShowRows) topRow = menu / cols - maxShowRows + 1;
+                if (prev != menu) { ShowGrid(); UpdateScreen(screen, x, y, areaW, areaH); }
+                if (event.key.key == SDLK_ESCAPE) { event.key.key = 0; event.button.button = 0; return -1; }
+                if (event.key.key == SDLK_RETURN || event.key.key == SDLK_SPACE) { event.key.key = 0; event.button.button = 0; return menu; }
+                break;
+            }
+            case SDL_EVENT_MOUSE_BUTTON_UP:
+                if (event.button.button == SDL_BUTTON_RIGHT) { event.key.key = 0; event.button.button = 0; return -1; }
+                if (event.button.button == SDL_BUTTON_LEFT) {
+                    int mx2, my2; SDL_GetMouseState2(mx2, my2);
+                    if (mx2 >= x && mx2 < x + cols * cellW && my2 >= y && my2 < y + areaH) {
+                        event.key.key = 0; event.button.button = 0;
+                        return menu;
+                    }
+                }
+                break;
+            case SDL_EVENT_MOUSE_WHEEL:
+                if (event.wheel.y < 0 && topRow + maxShowRows < totalRows) {
+                    topRow++;
+                    if (menu / cols < topRow) { menu = topRow * cols + (menu % cols); if (menu > maxItem) menu = maxItem; }
+                    ShowGrid(); UpdateScreen(screen, x, y, areaW, areaH);
+                }
+                if (event.wheel.y > 0 && topRow > 0) {
+                    topRow--;
+                    if (menu / cols >= topRow + maxShowRows) { menu = (topRow + maxShowRows - 1) * cols + (menu % cols); if (menu > maxItem) menu = maxItem; }
+                    ShowGrid(); UpdateScreen(screen, x, y, areaW, areaH);
+                }
+                break;
+            case SDL_EVENT_MOUSE_MOTION: {
+                int mx2, my2; SDL_GetMouseState2(mx2, my2);
+                if (mx2 >= x && mx2 < x + cols * cellW && my2 >= y + 3 && my2 < y + areaH) {
+                    int hc = (mx2 - x) / cellW;
+                    int hr = (my2 - y - 3) / 22;
+                    int hit = (topRow + hr) * cols + hc;
+                    if (hit >= 0 && hit <= maxItem && hit != menu) {
+                        menu = hit;
+                        ShowGrid(); UpdateScreen(screen, x, y, areaW, areaH);
+                    }
+                }
+                break;
+            }
+        }
+    }
+    event.key.key = 0;
+    event.button.button = 0;
+    return -1;
+}
+
 // 严格按Pascal版: 返回team INDEX (0-5), 不是role编号
 int SelectOneTeamMember(int x, int y, const std::string& str, int list1, int list2) {
     std::string menuString[6];
@@ -2053,7 +2162,6 @@ bool MenuItem() {
             ShowMenuItem();
             UpdateScreen(screen, 0, 0, screen->w, screen->h);
 
-            SDL_Event event;
             bool done = false;
             bool result = false;
             while (!done && SDL_WaitEvent(&event)) {
@@ -2129,8 +2237,8 @@ bool MenuItem() {
                             result = false; done = true;
                         }
                         if (event.button.button == SDL_BUTTON_LEFT) {
-                            int mx = (int)(event.button.x / (RESOLUTIONX / screen->w));
-                            int my = (int)(event.button.y / (RESOLUTIONY / screen->h));
+                            int mx = (int)(event.button.x / ((float)RESOLUTIONX / screen->w));
+                            int my = (int)(event.button.y / ((float)RESOLUTIONY / screen->h));
                             if (mx >= 110 && mx < 110 + w && my > 90 && my < 308) {
                                 int sel_idx = y * col + x + atlu;
                                 if (ItemList[sel_idx] >= 0) {
@@ -2160,8 +2268,8 @@ bool MenuItem() {
                         }
                         break;
                     case SDL_EVENT_MOUSE_MOTION: {
-                        int mx = (int)(event.motion.x / (RESOLUTIONX / screen->w));
-                        int my = (int)(event.motion.y / (RESOLUTIONY / screen->h));
+                        int mx = (int)(event.motion.x / ((float)RESOLUTIONX / screen->w));
+                        int my = (int)(event.motion.y / ((float)RESOLUTIONY / screen->h));
                         if (mx >= 110 && mx < 110 + w && my > 90 && my < 308) {
                             int xp = x, yp = y;
                             x = (mx - 115) / 42;
@@ -2522,35 +2630,69 @@ int MenuSystem() {
     return sel;
 }
 
-void MenuLoad() {
-    std::string menuStr[10];
-    for (int i = 0; i < 10; i++) {
-        char buf[32]; snprintf(buf, sizeof(buf), " 進度 %d", i);
-        menuStr[i] = buf;
+static std::string GetFileDateStr(const std::string& filename) {
+    struct _stat st;
+    if (_stat(filename.c_str(), &st) == 0) {
+        struct tm t;
+        localtime_s(&t, &st.st_mtime);
+        char buf[32];
+        snprintf(buf, sizeof(buf), "%04d-%02d-%02d %02d:%02d:%02d",
+                 t.tm_year + 1900, t.tm_mon + 1, t.tm_mday,
+                 t.tm_hour, t.tm_min, t.tm_sec);
+        return buf;
     }
-    int sel = CommonMenu(CENTER_X - 50, CENTER_Y - 120, 100, 9, menuStr);
-    if (sel >= 0) LoadR(sel);
+    return "-------------------";
+}
+
+void MenuLoad() {
+    const char* names[] = {"進度一","進度二","進度三","進度四","進度五",
+                           "進度六","進度七","進度八","進度九","進度十","自動檔"};
+    int nowwhere = Where;
+    std::string menuStr[11];
+    for (int i = 0; i < 11; i++) {
+        std::string filename = AppPath + "save/r" + std::to_string(i + 1) + ".grp";
+        menuStr[i] = std::string(names[i]) + " " + GetFileDateStr(filename);
+    }
+    int sel = CommonMenu(133, 30, 267, 10, menuStr);
+    if (sel >= 0) {
+        LoadR(sel + 1);
+        if (Where == 1) InitialScene();
+        Redraw();
+        if (nowwhere == 1) ShowSceneName(CurScene);
+        UpdateScreen(screen, 0, 0, screen->w, screen->h);
+    }
+    ShowMenu(6);
 }
 
 int MenuLoadAtBeginning() {
-    std::string menuStr[10];
-    for (int i = 0; i < 10; i++) {
-        char buf[32]; snprintf(buf, sizeof(buf), " 進度 %d", i);
-        menuStr[i] = buf;
+    const char* names[] = {"載入進度一","載入進度二","載入進度三","載入進度四","載入進度五",
+                           "載入進度六","載入進度七","載入進度八","載入進度九","載入進度十","載入自動檔"};
+    Redraw();
+    UpdateScreen(screen, 0, 0, screen->w, screen->h);
+    std::string menuStr[11];
+    for (int i = 0; i < 11; i++) {
+        std::string filename = AppPath + "save/r" + std::to_string(i + 1) + ".grp";
+        menuStr[i] = std::string(names[i]) + " " + GetFileDateStr(filename);
     }
-    int sel = CommonMenu(CENTER_X - 50, CENTER_Y - 120, 100, 9, menuStr);
-    if (sel >= 0) LoadR(sel);
+    int sel = CommonMenu(CENTER_X - 150, CENTER_Y - 100, 307, 10, menuStr);
+    if (sel >= 0) {
+        LoadR(sel + 1);
+        instruct_14();
+    }
     return sel;
 }
 
 void MenuSave() {
+    const char* names[] = {"進度一","進度二","進度三","進度四","進度五",
+                           "進度六","進度七","進度八","進度九","進度十"};
     std::string menuStr[10];
     for (int i = 0; i < 10; i++) {
-        char buf[32]; snprintf(buf, sizeof(buf), " 進度 %d", i);
-        menuStr[i] = buf;
+        std::string filename = AppPath + "save/r" + std::to_string(i + 1) + ".grp";
+        menuStr[i] = std::string(names[i]) + " " + GetFileDateStr(filename);
     }
-    int sel = CommonMenu(CENTER_X - 50, CENTER_Y - 120, 100, 9, menuStr);
-    if (sel >= 0) SaveR(sel);
+    int sel = CommonMenu(133, 30, 267, 9, menuStr);
+    if (sel >= 0) SaveR(sel + 1);
+    ShowMenu(6);
 }
 
 void MenuQuit() {
@@ -2741,8 +2883,175 @@ bool IsCave(int snum) {
     return false;
 }
 
-int teleport() { return 0; }
-int TeleportByList() { return 0; }
+int teleport() {
+    Redraw();
+    DrawRectangleWithoutFrame(screen, 0, 0, screen->w, screen->h, 0xFF000000, 50);
+    // 绘制小地图：每个地块绘制一个像素
+    for (int x = 0; x < 480; x++) {
+        for (int y = 0; y < 480; y++) {
+            int x1 = CENTER_X - (x - y);
+            int y1 = (x + y) / 2;
+            if (x1 >= 0 && x1 < screen->w && y1 + 18 >= 0 && y1 + 18 < screen->h) {
+                int tile = Earth[x][y] / 2;
+                uint32_t color;
+                if (tile >= 306 && tile <= 335) color = SDL_MapSurfaceRGB(screen, 60, 100, 200);
+                else if (tile >= 253 && tile <= 305) color = SDL_MapSurfaceRGB(screen, 100, 140, 60);
+                else if (tile >= 200 && tile <= 252) color = SDL_MapSurfaceRGB(screen, 160, 140, 100);
+                else color = SDL_MapSurfaceRGB(screen, 80, 160, 80);
+                PutPixel(screen, x1, y1 + 18, color);
+            }
+        }
+    }
+    RecordFreshScreen(0, 0, screen->w, screen->h);
+
+    int result = 0;
+    while (SDL_WaitEvent(&event)) {
+        // drawtelemap: 绘制场景标记点
+        LoadFreshScreen(0, 0, screen->w, screen->h);
+        int mx2, my2;
+        SDL_GetMouseState2(mx2, my2);
+        int hoverScene = -1;
+        int hx = 0, hy = 0;
+        for (int i = 0; i < SceneAmount; i++) {
+            int sx = Rscene[i].MainEntranceX1;
+            int sy = Rscene[i].MainEntranceY1;
+            if (sx > 0 && sy > 0) {
+                int dx = CENTER_X - (sx - sy);
+                int dy = (sx + sy) / 2;
+                DrawRectangleWithoutFrame(screen, dx, dy, 5, 5, 0xFFFFFFFF, 50);
+                if (InRegion(mx2, my2, dx, dy, 5, 5)) {
+                    hoverScene = i;
+                    hx = dx; hy = dy;
+                }
+            }
+        }
+        // 绘制当前位置红点
+        int px = CENTER_X - (Mx - My);
+        int py = (Mx + My) / 2;
+        DrawRectangleWithoutFrame(screen, px, py, 5, 5, 0xFFFF0000, 50);
+        // 高亮悬停场景
+        if (hoverScene >= 0) {
+            DrawRectangleWithoutFrame(screen, hx, hy, 5, 5, 0xFFFFFFFF, 50);
+            std::string name = cp950toutf8(Rscene[hoverScene].Name);
+            DrawTextWithRect(screen, name, hx + 7, hy - 5, -1, ColColor(5), ColColor(7));
+        }
+        SDL_Delay(16);
+        UpdateAllScreen();
+
+        CheckBasicEvent();
+        switch (event.type) {
+            case SDL_EVENT_KEY_UP:
+                if (event.key.key == SDLK_ESCAPE) goto teleport_done;
+                if (event.key.key == SDLK_RETURN || event.key.key == SDLK_SPACE) goto teleport_done;
+                break;
+            case SDL_EVENT_MOUSE_BUTTON_UP:
+                if (event.button.button == SDL_BUTTON_RIGHT) goto teleport_done;
+                if (event.button.button == SDL_BUTTON_LEFT) {
+                    SDL_GetMouseState2(mx2, my2);
+                    int tx = (my2 * 2 - mx2 + CENTER_X) / 2;
+                    int ty = my2 * 2 - tx;
+                    if (InRegion(tx, ty, 0, 0, 480, 480)) {
+                        Mx = tx; My = ty;
+                        result = 1;
+                        if (hoverScene >= 0) {
+                            if (CheckCanEnter(hoverScene)) {
+                                instruct_14();
+                                CurScene = hoverScene;
+                                SStep = 0;
+                                Sx = Rscene[CurScene].EntranceX;
+                                Sy = Rscene[CurScene].EntranceY;
+                                SaveR(11);
+                                WalkInScene(0);
+                            }
+                        }
+                        event.key.key = 0;
+                        event.button.button = 0;
+                        goto teleport_done;
+                    }
+                }
+                break;
+        }
+    }
+teleport_done:
+    return result;
+}
+
+int TeleportByList() {
+    if (SceneAmount <= 0) return 0;
+
+    std::vector<std::string> sceneMenu(SceneAmount);
+    std::vector<int> sceneIdx(SceneAmount);
+    std::vector<std::string> sortKey(SceneAmount);
+
+    // 提取场景名称和排序键（末字符）
+    for (int i = 0; i < SceneAmount; i++) {
+        sceneIdx[i] = i;
+        std::string nameStr = cp950toutf8(Rscene[i].Name);
+        if (DrawLength(nameStr) <= 0) {
+            char buf[32]; snprintf(buf, sizeof(buf), "場景%d", i);
+            nameStr = buf;
+        }
+        // 取最后一个UTF-8字符
+        int k = (int)nameStr.size();
+        if (k > 0) {
+            k--;
+            while (k > 0 && ((unsigned char)nameStr[k] & 0xC0) == 0x80) k--;
+            sortKey[i] = nameStr.substr(k);
+        }
+        sceneMenu[i] = nameStr; // 先存名字
+    }
+
+    // 插入排序（按末字符+编号）
+    for (int i = 1; i < SceneAmount; i++) {
+        int tmpI = sceneIdx[i];
+        std::string tmpS = sortKey[i];
+        int j = i - 1;
+        while (j >= 0 && (sortKey[j] > tmpS || (sortKey[j] == tmpS && sceneIdx[j] > tmpI))) {
+            sceneIdx[j + 1] = sceneIdx[j];
+            sortKey[j + 1] = sortKey[j];
+            j--;
+        }
+        sceneIdx[j + 1] = tmpI;
+        sortKey[j + 1] = tmpS;
+    }
+
+    // 重建菜单字符串（排序后）
+    for (int i = 0; i < SceneAmount; i++) {
+        int sc = sceneIdx[i];
+        std::string nameStr = cp950toutf8(Rscene[sc].Name);
+        if (DrawLength(nameStr) <= 0) {
+            char buf[32]; snprintf(buf, sizeof(buf), "場景%d", sc);
+            nameStr = buf;
+        }
+        sceneMenu[i] = nameStr;
+    }
+
+    Redraw();
+    DrawTextWithRect(screen, "傳送列表", 80, 30, 640, ColColor(0x21), ColColor(0x23));
+    int menu = CommonGridMenu(80, 60, 5, 128, 16, SceneAmount - 1, sceneMenu.data());
+    if (menu < 0) return 0;
+
+    int scene = sceneIdx[menu];
+    if (CheckCanEnter(scene)) {
+        instruct_14();
+        CurScene = scene;
+        SStep = 0;
+        Sx = Rscene[CurScene].EntranceX;
+        Sy = Rscene[CurScene].EntranceY;
+        if (Rscene[scene].MainEntranceX1 > 0 && Rscene[scene].MainEntranceY1 > 0) {
+            Mx = Rscene[scene].MainEntranceX1;
+            My = Rscene[scene].MainEntranceY1;
+        }
+        SaveR(11);
+        WalkInScene(0);
+        return 1;
+    } else {
+        DrawTextWithRect("此場景目前不可進入!", 80, 30, 192, ColColor(0x21), ColColor(0x23));
+        UpdateScreen(screen, 0, 0, screen->w, screen->h);
+        WaitAnyKey();
+    }
+    return 0;
+}
 
 // StartAmi: 显示开场文字(list/start.txt)
 void StartAmi() {

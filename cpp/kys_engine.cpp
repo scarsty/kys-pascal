@@ -876,13 +876,10 @@ void SDL_GetMouseState2(int& x, int& y) {
 }
 
 void GetMousePosition(int& x, int& y, int x0, int y0, int yp) {
-    int mx, my;
-    SDL_GetMouseState2(mx, my);
-    // 屏幕坐标→游戏坐标
-    mx -= x0;
-    my -= y0;
-    x = (my / 9 - mx / 18) / 2;
-    y = (mx / 18 + my / 9) / 2;
+    int x1, y1;
+    SDL_GetMouseState2(x1, y1);
+    x = (-x1 + CENTER_X + 2 * (y1 + yp) - 2 * CENTER_Y + 18) / 36 + x0;
+    y = (x1 - CENTER_X + 2 * (y1 + yp) - 2 * CENTER_Y + 18) / 36 + y0;
 }
 
 bool MouseInRegion(int x, int y, int w, int h) {
