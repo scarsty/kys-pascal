@@ -257,6 +257,7 @@ void ReadTiles() {
     CPicAmount = (int)CIdx.size();
     LoadIdxGrp(path + "resource/hdgrp.idx", path + "resource/hdgrp.grp", HIdx, HPic);
     HPicAmount = (int)HIdx.size();
+    LoadIdxGrp(path + "resource/title.idx", path + "resource/title.grp", TitleIdx, TitlePic);
     LoadIdxGrp(path + "resource/talk.idx", path + "resource/talk.grp", TIdx, TDef);
     LoadIdxGrp(path + "resource/kdef.idx", path + "resource/kdef.grp", KIdx, KDef);
 
@@ -382,7 +383,21 @@ void DrawRLE8Pic(const char* colorPanel, int num, int px, int py,
                 nullptr, nullptr, 0, 0, 0, 0, 0, 0, 0);
 }
 
-// 完整RLE8解码绘制
+// 完整RLE8解码绘制 - 严格按照Pascal版逻辑实现
+// colorPanel: 调色板指针 (每色3字节)
+// num, px, py: 图片编号和绘制位置
+// Pidx, Ppic: 图片索引和数据
+// RectArea: 绘制范围矩形(4个int), nullptr表示全屏
+// Image: 目标表面, nullptr则画到screen
+// widthI, heightI, sizeI: 映像尺寸和单位大小
+// shadow: 亮度调整(加到乘数4上)
+// alpha: 透明度(低8位为未遮挡alpha, 高8位为被遮挡alpha)
+// BlockImageW: 深度映像, 写入depth用于遮挡
+// BlockPosition: 遮挡偏移(2个int: blockx, blocky)
+// widthW, heightW, sizeW: BlockImageW尺寸
+// depth: 绘图优先级/深度
+// mixColor, mixAlpha: 混合颜色和混合度
+// totalpix: 最大绘制像素数, 0表示不限制
 void DrawRLE8Pic(const char* colorPanel, int num, int px, int py,
                  const int* Pidx, const uint8_t* Ppic,
                  const char* RectArea, SDL_Surface* Image,
@@ -394,142 +409,176 @@ void DrawRLE8Pic(const char* colorPanel, int num, int px, int py,
     if (!Pidx || !Ppic) return;
     if (num < 0) return;
 
-    int offset = (num == 0) ? 0 : Pidx[num - 1];
-    const uint8_t* p = Ppic + offset;
+    // 计算数据偏移
+    int offset = 0;
+    if (num != 0) {
+        offset = Pidx[num - 1];
+    }
 
-    // RLE8 头部: w(2bytes), h(2bytes), xs(2bytes), ys(2bytes)
-    int w = *(int16_t*)(p);
-    int h = *(int16_t*)(p + 2);
-    int xs = *(int16_t*)(p + 4);
-    int ys = *(int16_t*)(p + 6);
-    p += 8;
+    const uint8_t* data = Ppic + offset;
 
-    int drawX = px - xs;
-    int drawY = py - ys;
+    // RLE8头部: w(2), h(2), xs(2), ys(2)
+    int16_t w = *(const int16_t*)(data);
+    int16_t h = *(const int16_t*)(data + 2);
+    int16_t xs = *(const int16_t*)(data + 4);
+    int16_t ys = *(const int16_t*)(data + 6);
+    data += 8;
 
-    SDL_Surface* target = Image ? Image : screen;
-    if (!target) return;
+    int pixdepth = 0;
+    int curdepth = 0;
+    int total = 0;
 
-    int targetW = Image ? widthI : target->w;
-    int targetH = Image ? heightI : target->h;
+    if (Image == nullptr)
+        Image = screen;
+    if (!Image) return;
 
-    // 裁剪检查
-    if (drawX + w <= 0 || drawX >= targetW || drawY + h <= 0 || drawY >= targetH) return;
+    // 确定绘制区域
+    SDL_Rect area;
+    if (RectArea != nullptr) {
+        area = *(const SDL_Rect*)RectArea;
+    } else {
+        area.x = 0;
+        area.y = 0;
+        area.w = Image->w;
+        area.h = Image->h;
+    }
 
-    SDL_LockSurface(target);
-    uint32_t* targetPixels = (uint32_t*)target->pixels;
-    int targetPitch = target->pitch / 4;
+    // 读取遮挡偏移
+    int blockx = 0, blocky = 0;
+    if (BlockPosition != nullptr) {
+        blockx = *(const int*)(BlockPosition);
+        blocky = *(const int*)(BlockPosition + 4);
+    }
+
+    // 预解析混合色
+    bool hasMixColor = (Image == screen) && (mixAlpha != 0);
+    uint8_t mixColor1 = 0, mixColor2 = 0, mixColor3 = 0, mixColor4 = 0;
+    if (hasMixColor) {
+        SDL_GetRGBA(mixColor, SDL_GetPixelFormatDetails(screen->format),
+                    SDL_GetSurfacePalette(screen),
+                    &mixColor1, &mixColor2, &mixColor3, &mixColor4);
+    }
+
+    int alpha1 = (alpha >> 8) & 0xFF;
+
+    // 边界检查
+    if ((w <= 1 && h <= 1) ||
+        (px - xs + w < area.x) || (px - xs >= area.x + area.w) ||
+        (py - ys + h < area.y) || (py - ys >= area.y + area.h)) {
+        return;
+    }
 
     const uint8_t* colPanel = (const uint8_t*)colorPanel;
 
-    for (int row = 0; row < h; row++) {
-        int len = *(int16_t*)p; p += 2;
-        const uint8_t* rowEnd = p + len;
-        int col = 0;
-        while (p < rowEnd) {
-            uint8_t b = *p++;
-            if (b & 0x80) {
-                // 跳过 (b & 0x7F) 个像素
-                col += (b & 0x7F);
-            } else if (b & 0x40) {
-                // 重复下一个颜色 (b & 0x3F) 次
-                int count = b & 0x3F;
-                uint8_t colorIdx = *p++;
-                for (int k = 0; k < count; k++) {
-                    int tx = drawX + col + k;
-                    int ty = drawY + row;
-                    if (tx >= 0 && tx < targetW && ty >= 0 && ty < targetH) {
-                        uint8_t r = colPanel[colorIdx * 3] * 4;
-                        uint8_t g = colPanel[colorIdx * 3 + 1] * 4;
-                        uint8_t b2 = colPanel[colorIdx * 3 + 2] * 4;
-                        if (shadow == 1) {
-                            // 阴影模式：叠加黑色
-                            uint32_t existing = targetPixels[ty * targetPitch + tx];
-                            uint8_t er = (existing >> 16) & 0xFF;
-                            uint8_t eg = (existing >> 8) & 0xFF;
-                            uint8_t eb = existing & 0xFF;
-                            r = er / 2; g = eg / 2; b2 = eb / 2;
+    // 逐行解码
+    for (int iy = 1; iy <= h; iy++) {
+        int l = *data;  // 本行entry数量 (1字节)
+        data++;
+        int ww = 1;     // 当前列位置, 从1开始
+        int p = 0;      // 状态: 0=读跳过, 1=读像素数, >=2=逐像素绘制
+
+        for (int ix = 1; ix <= l; ix++) {
+            int l1 = *data;
+            data++;
+
+            if (p == 0) {
+                // 跳过l1个空白像素
+                ww = ww + l1;
+                p = 1;
+            } else if (p == 1) {
+                // 接下来有l1个像素数据
+                p = 2 + l1;
+            } else if (p > 2) {
+                p = p - 1;
+                // l1是颜色索引, 绘制像素
+                int x = ww - xs + px;
+                int y = iy - ys + py;
+                if (x >= area.x && y >= area.y && x < area.x + area.w && y < area.y + area.h) {
+                    uint8_t pix1 = colPanel[l1 * 3]     * (4 + shadow);
+                    uint8_t pix2 = colPanel[l1 * 3 + 1] * (4 + shadow);
+                    uint8_t pix3 = colPanel[l1 * 3 + 2] * (4 + shadow);
+                    uint8_t pix4 = 0;
+
+                    if (Image == screen) {
+                        // 画到屏幕
+                        if (hasMixColor) {
+                            // BlendRGBAByPercent: r = BlendByte(srcR, r, percent)
+                            pix1 = (uint8_t)((mixAlpha * mixColor1 + (100 - mixAlpha) * pix1) / 100);
+                            pix2 = (uint8_t)((mixAlpha * mixColor2 + (100 - mixAlpha) * pix2) / 100);
+                            pix3 = (uint8_t)((mixAlpha * mixColor3 + (100 - mixAlpha) * pix3) / 100);
+                            pix4 = (uint8_t)((mixAlpha * mixColor4 + (100 - mixAlpha) * pix4) / 100);
                         }
-                        if (mixAlpha > 0 && mixColor != 0) {
-                            uint8_t mr = (mixColor >> 16) & 0xFF;
-                            uint8_t mg = (mixColor >> 8) & 0xFF;
-                            uint8_t mb = mixColor & 0xFF;
-                            r = (uint8_t)(r * (100 - mixAlpha) / 100 + mr * mixAlpha / 100);
-                            g = (uint8_t)(g * (100 - mixAlpha) / 100 + mg * mixAlpha / 100);
-                            b2 = (uint8_t)(b2 * (100 - mixAlpha) / 100 + mb * mixAlpha / 100);
+
+                        int isAlpha = 0;
+                        if (alpha != 0) {
+                            if (BlockImageW == nullptr) {
+                                isAlpha = 1;
+                            } else {
+                                // 需要遮挡判断
+                                if (x < blockx + screen->w && y < blocky + screen->h) {
+                                    pixdepth = *(const int16_t*)(BlockImageW + ((x + blockx) * heightW + y + blocky) * sizeW);
+                                    curdepth = depth;
+                                    if (pixdepth >= curdepth) {
+                                        isAlpha = 1;
+                                    } else {
+                                        isAlpha = 0;
+                                    }
+                                }
+                            }
+
+                            if (isAlpha == 1 && alpha < 100) {
+                                uint32_t colorin = GetPixel(screen, x, y);
+                                uint8_t color1, color2, color3, color4;
+                                SDL_GetRGBA(colorin, SDL_GetPixelFormatDetails(screen->format),
+                                            SDL_GetSurfacePalette(screen),
+                                            &color1, &color2, &color3, &color4);
+                                // BlendRGBAByPercent(pix, color, alpha)
+                                int a = alpha;
+                                pix1 = (uint8_t)((a * color1 + (100 - a) * pix1) / 100);
+                                pix2 = (uint8_t)((a * color2 + (100 - a) * pix2) / 100);
+                                pix3 = (uint8_t)((a * color3 + (100 - a) * pix3) / 100);
+                                pix4 = (uint8_t)((a * color4 + (100 - a) * pix4) / 100);
+                            }
+
+                            if (isAlpha == 0 && alpha1 > 0 && alpha1 <= 100) {
+                                uint32_t colorin = GetPixel(screen, x, y);
+                                uint8_t color1, color2, color3, color4;
+                                SDL_GetRGBA(colorin, SDL_GetPixelFormatDetails(screen->format),
+                                            SDL_GetSurfacePalette(screen),
+                                            &color1, &color2, &color3, &color4);
+                                pix1 = (uint8_t)((alpha1 * color1 + (100 - alpha1) * pix1) / 100);
+                                pix2 = (uint8_t)((alpha1 * color2 + (100 - alpha1) * pix2) / 100);
+                                pix3 = (uint8_t)((alpha1 * color3 + (100 - alpha1) * pix3) / 100);
+                                pix4 = (uint8_t)((alpha1 * color4 + (100 - alpha1) * pix4) / 100);
+                            }
                         }
-                        if (alpha > 0) {
-                            uint32_t existing = targetPixels[ty * targetPitch + tx];
-                            uint8_t er = (existing >> 16) & 0xFF;
-                            uint8_t eg = (existing >> 8) & 0xFF;
-                            uint8_t eb = existing & 0xFF;
-                            r = BlendByteByPercent(r, er, alpha);
-                            g = BlendByteByPercent(g, eg, alpha);
-                            b2 = BlendByteByPercent(b2, eb, alpha);
+
+                        uint32_t pix = SDL_MapSurfaceRGBA(screen, pix1, pix2, pix3, 255);
+                        if (alpha < 100 || pixdepth <= curdepth) {
+                            PutPixel(screen, x, y, pix);
+                            total++;
+                            if (totalpix > 0 && total >= totalpix) return;
                         }
-                        targetPixels[ty * targetPitch + tx] = (0xFF << 24) | (r << 16) | (g << 8) | b2;
+                    } else {
+                        // 画到映像Image
+                        if (x < widthI && y < heightI) {
+                            if (BlockImageW != nullptr) {
+                                *(int16_t*)(BlockImageW + (x * heightI + y) * sizeI) = (int16_t)depth;
+                            }
+                            uint32_t pix = SDL_MapSurfaceRGBA(screen, pix1, pix2, pix3, 255);
+                            PutPixel(Image, x, y, pix);
+                            total++;
+                            if (totalpix > 0 && total >= totalpix) return;
+                        }
                     }
                 }
-                col += count;
-            } else {
-                // 直接绘制 b 个像素
-                int count = b;
-                for (int k = 0; k < count; k++) {
-                    uint8_t colorIdx = *p++;
-                    int tx = drawX + col + k;
-                    int ty = drawY + row;
-                    if (tx >= 0 && tx < targetW && ty >= 0 && ty < targetH) {
-                        uint8_t r = colPanel[colorIdx * 3] * 4;
-                        uint8_t g = colPanel[colorIdx * 3 + 1] * 4;
-                        uint8_t b2 = colPanel[colorIdx * 3 + 2] * 4;
-                        if (shadow == 1) {
-                            uint32_t existing = targetPixels[ty * targetPitch + tx];
-                            uint8_t er = (existing >> 16) & 0xFF;
-                            uint8_t eg = (existing >> 8) & 0xFF;
-                            uint8_t eb = existing & 0xFF;
-                            r = er / 2; g = eg / 2; b2 = eb / 2;
-                        }
-                        if (mixAlpha > 0 && mixColor != 0) {
-                            uint8_t mr = (mixColor >> 16) & 0xFF;
-                            uint8_t mg = (mixColor >> 8) & 0xFF;
-                            uint8_t mb = mixColor & 0xFF;
-                            r = (uint8_t)(r * (100 - mixAlpha) / 100 + mr * mixAlpha / 100);
-                            g = (uint8_t)(g * (100 - mixAlpha) / 100 + mg * mixAlpha / 100);
-                            b2 = (uint8_t)(b2 * (100 - mixAlpha) / 100 + mb * mixAlpha / 100);
-                        }
-                        if (alpha > 0) {
-                            uint32_t existing = targetPixels[ty * targetPitch + tx];
-                            uint8_t er = (existing >> 16) & 0xFF;
-                            uint8_t eg = (existing >> 8) & 0xFF;
-                            uint8_t eb = existing & 0xFF;
-                            r = BlendByteByPercent(r, er, alpha);
-                            g = BlendByteByPercent(g, eg, alpha);
-                            b2 = BlendByteByPercent(b2, eb, alpha);
-                        }
-                        targetPixels[ty * targetPitch + tx] = (0xFF << 24) | (r << 16) | (g << 8) | b2;
-                    }
-                }
-                col += count;
-            }
-        }
-        p = rowEnd;
-    }
-    // Block image 写入
-    if (BlockImageW && depth > 0) {
-        int16_t* blockW = (int16_t*)BlockImageW;
-        for (int row = 0; row < h; row++) {
-            for (int c = 0; c < w; c++) {
-                int tx = drawX + c;
-                int ty = drawY + row;
-                if (tx >= 0 && tx < widthW && ty >= 0 && ty < heightW) {
-                    int bidx = ty * widthW + tx;
-                    if (depth >= blockW[bidx])
-                        blockW[bidx] = (int16_t)depth;
+                ww = ww + 1;
+                if (p == 2) {
+                    p = 0;
                 }
             }
         }
     }
-    SDL_UnlockSurface(target);
 }
 
 TPosition GetPositionOnScreen(int x, int y, int CenterX, int CenterY) {

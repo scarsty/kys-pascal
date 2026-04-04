@@ -16,7 +16,7 @@
 void DrawTitlePic(int num, int px, int py) {
     // 主标题图使用 smp 贴图
     if (num < 0 || num >= SPicAmount) return;
-    DrawRLE8Pic((const char*)ACol, num, px, py, SIdx.data(), SPic.data(),
+    DrawRLE8Pic((const char*)ACol, num, px, py, TitleIdx.data(), TitlePic.data(),
                 nullptr, nullptr, 0, 0, 0, 0, 0);
 }
 
@@ -134,8 +134,8 @@ void Redraw() {
         case 0: DrawMMap(); break;
         case 1: DrawScene(); break;
         case 2: DrawBField(); break;
-        case 3: display_img("end.png", 0, 0); break;
-        case 4: display_img("pic/fail.png", 0, 0); break;
+        case 3: display_img("resource/open.png", 0, 0); break;
+        case 4: display_img("resource/end.png", 0, 0); break;
     }
 }
 

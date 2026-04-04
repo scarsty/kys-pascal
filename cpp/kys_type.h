@@ -294,8 +294,8 @@ inline int MPicAmount = 0, SPicAmount = 0, BPicAmount = 0;
 inline int EPicAmount = 0, CPicAmount = 0, FPicAmount = 0, HPicAmount = 0;
 
 // 贴图数据
-inline std::vector<uint8_t> MPic, SPic, WPic, EPic, HPic, CPic, KDef, TDef;
-inline std::vector<int> MIdx, SIdx, WIdx, EIdx, HIdx, CIdx, KIdx, TIdx;
+inline std::vector<uint8_t> MPic, SPic, WPic, EPic, HPic, CPic, KDef, TDef, TitlePic;
+inline std::vector<int> MIdx, SIdx, WIdx, EIdx, HIdx, CIdx, KIdx, TIdx, TitleIdx;
 
 inline std::vector<uint8_t> FPic[1000];
 inline std::vector<int> FIdx[1000];
