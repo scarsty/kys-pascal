@@ -21,7 +21,7 @@
 static std::vector<TPosition> movetable;
 static int maxdelaypicnum;
 
-// ---- 战斗主控制 ----
+// ---- 战斗主控�?----
 
 bool Battle(int battlenum, int getexp) {
     BattleResult = 0;
@@ -31,16 +31,16 @@ bool Battle(int battlenum, int getexp) {
     if (autoTeam) {
         int SelectTeamList = SelectTeamMembers();
         for (int i = 0; i < 6; i++) {
-            int x = warsta.TeamX[i], y = warsta.TeamY[i];
+            int x = WarSta.TeamX[i], y = WarSta.TeamY[i];
             if (SelectTeamList & (1 << i)) {
                 InitialBRole(BRoleAmount, TeamList[i], 0, x, y);
                 BRoleAmount++;
             }
         }
         for (int i = 0; i < 6; i++) {
-            int x = warsta.TeamX[i], y = warsta.TeamY[i] + 1;
-            if (warsta.TeamMate[i] > 0 && instruct_16(warsta.TeamMate[i], 1, 0) == 0) {
-                InitialBRole(BRoleAmount, warsta.TeamMate[i], 0, x, y);
+            int x = WarSta.TeamX[i], y = WarSta.TeamY[i] + 1;
+            if (WarSta.TeamMate[i] > 0 && instruct_16(WarSta.TeamMate[i], 1, 0) == 0) {
+                InitialBRole(BRoleAmount, WarSta.TeamMate[i], 0, x, y);
                 BRoleAmount++;
             }
         }
@@ -51,12 +51,12 @@ bool Battle(int battlenum, int getexp) {
 
     int PreMusic = NowMusic;
     StopMP3();
-    PlayMP3(warsta.MusicNum, -1);
+    PlayMP3(WarSta.MusicNum, -1);
 
     for (int i = 0; i < BRoleAmount; i++)
         Brole[i].AutoMode = 1;
 
-    // 载入战斗所需的额外贴图
+    // 载入战斗所需的额外贴�?
     if (SEMIREAL == 1) {
         BHead.resize(BRoleAmount);
         for (int i = 0; i < BRoleAmount; i++) {
@@ -107,10 +107,10 @@ bool InitialBField() {
     FILE* sta = fopen((AppPath + "resource/war.sta").c_str(), "rb");
     int offset = CurrentBattle * (int)sizeof(TWarData);
     fseek(sta, offset, SEEK_SET);
-    fread(&warsta, sizeof(TWarData), 1, sta);
+    fread(&WarSta, sizeof(TWarData), 1, sta);
     fclose(sta);
 
-    int fieldnum = warsta.BFieldNum;
+    int fieldnum = WarSta.BFieldNum;
     offset = 0;
     if (fieldnum != 0) {
         FILE* idx = fopen((AppPath + "resource/warfld.idx").c_str(), "rb");
@@ -130,18 +130,18 @@ bool InitialBField() {
     bool result = true;
 
     for (int i = 0; i < 6; i++) {
-        int x = warsta.TeamX[i], y = warsta.TeamY[i];
-        if (warsta.AutoTeamMate[i] >= 0) {
-            InitialBRole(BRoleAmount, warsta.AutoTeamMate[i], 0, x, y);
+        int x = WarSta.TeamX[i], y = WarSta.TeamY[i];
+        if (WarSta.AutoTeamMate[i] >= 0) {
+            InitialBRole(BRoleAmount, WarSta.AutoTeamMate[i], 0, x, y);
             BRoleAmount++;
         }
     }
     if (BRoleAmount > 0) result = false;
 
     for (int i = 0; i < 20; i++) {
-        int x = warsta.EnemyX[i], y = warsta.EnemyY[i];
-        if (warsta.Enemy[i] >= 0) {
-            InitialBRole(BRoleAmount, warsta.Enemy[i], 1, x, y);
+        int x = WarSta.EnemyX[i], y = WarSta.EnemyY[i];
+        if (WarSta.Enemy[i] >= 0) {
+            InitialBRole(BRoleAmount, WarSta.Enemy[i], 1, x, y);
             BRoleAmount++;
         }
     }
@@ -378,7 +378,7 @@ int BattleStatus() {
 }
 
 int BattleMenu(int bnum) {
-    static const char* word[] = {"移動","攻擊","用毒","解毒","醫療","物品","等待","狀態","休息","自動"};
+    static const char* word[] = {"移動","攻擊","用毒","解毒","醫療","物品","等待","狀�?,"休息","自動"};
     int MenuStat = 0x3E0, max = 4, rnum = Brole[bnum].rnum;
     if (Brole[bnum].Step > 0) { MenuStat |= 1; max++; }
     if (Rrole[rnum].PhyPower >= 10) {
@@ -667,7 +667,7 @@ void SetAminationPosition(int mode, int step, int range) {
 void SetAminationPosition2(int bx1, int by1, int ax1, int ay1, int mode, int step, int range) {
     memset(&Bfield[4][0][0], 0, sizeof(Bfield[4]));
     switch (mode) {
-        case 0: // 点
+        case 0: // �?
             if (range == 0) { Bfield[4][ax1][ay1] = 1; }
             else {
                 for (int i = -range; i <= range; i++)
@@ -676,7 +676,7 @@ void SetAminationPosition2(int bx1, int by1, int ax1, int ay1, int mode, int ste
                             Bfield[4][ax1 + i][ay1 + j] = 1;
             }
             break;
-        case 1: { // 线
+        case 1: { // �?
             int dx = ax1 - bx1, dy = ay1 - by1;
             int sx = (dx > 0) ? 1 : (dx < 0) ? -1 : 0;
             int sy = (dy > 0) ? 1 : (dy < 0) ? -1 : 0;
@@ -795,7 +795,7 @@ void SelectModeColor(int mode, uint32_t& color1, uint32_t& color2, std::string& 
     switch (mode) {
         case 0: color1 = ColColor(0xFF); color2 = ColColor(0x42); str = ""; break;
         case 1: color1 = ColColor(0x24); color2 = ColColor(0x21); str = ""; break;
-        case 2: color1 = ColColor(0x3E); color2 = ColColor(0x3A); str = "毒"; break;
+        case 2: color1 = ColColor(0x3E); color2 = ColColor(0x3A); str = "�?; break;
         default: color1 = ColColor(0xFF); color2 = ColColor(0x42); str = ""; break;
     }
 }
@@ -839,10 +839,10 @@ void ClearDeadRolePic() {
 }
 
 void Wait(int bnum) {
-    // 交换至列表尾部
+    // 交换至列表尾�?
     int pos = -1;
     for (int i = 0; i < BRoleAmount; i++) if (&Brole[i] == &Brole[bnum]) { pos = i; break; }
-    // 标记为已行动但不结束回合 - 简化实现
+    // 标记为已行动但不结束回合 - 简化实�?
     Brole[bnum].Acted = 1;
 }
 
@@ -882,7 +882,7 @@ void LevelUp(int bnum) {
     int rnum = Brole[bnum].rnum;
     Rrole[rnum].Level++;
     int apt = Rrole[rnum].Aptitude;
-    // 属性成长
+    // 属性成�?
     Rrole[rnum].MaxHP += 3 + rand() % (apt / 10 + 1);
     Rrole[rnum].MaxMP += 2 + rand() % (apt / 10 + 1);
     Rrole[rnum].Attack += 1 + rand() % (apt / 15 + 1);
@@ -893,7 +893,7 @@ void LevelUp(int bnum) {
 
     DrawRectangle(screen, CENTER_X - 80, 98, 160, 26, 0, ColColor(255), 50);
     DrawBig5ShadowText(screen, Rrole[rnum].Name, CENTER_X - 75, 100, ColColor(0x21), ColColor(0x23));
-    DrawShadowText(screen, " 升級！", CENTER_X - 20, 100, ColColor(0x64), ColColor(0x66));
+    DrawShadowText(screen, " 升級�?, CENTER_X - 20, 100, ColColor(0x64), ColColor(0x66));
     UpdateScreen(screen, 0, 0, screen->w, screen->h);
     SDL_Delay(1000);
 }
@@ -906,7 +906,7 @@ void CheckBook() {
                 int mnum = Rrole[rnum].Magic[m];
                 if (mnum <= 0) continue;
                 if (Rrole[rnum].MagLevel[m] >= Rmagic[mnum].NeedExp[0]) {
-                    // 练习书系统
+                    // 练习书系�?
                     int bookItem = Rmagic[mnum].NeedItem;
                     if (bookItem > 0) {
                         bool found = false;
@@ -1074,7 +1074,7 @@ bool TeamModeMenu(int bnum) {
 
 void AutoBattle(int bnum) {
     int rnum = Brole[bnum].rnum;
-    // 简单AI: 找最近敌人，移动并攻击
+    // 简单AI: 找最近敌人，移动并攻�?
     int targetTeam = (Brole[bnum].Team == 0) ? 1 : 0;
     int bestTarget = -1, bestDist = 9999;
     for (int i = 0; i < BRoleAmount; i++) {
@@ -1123,7 +1123,7 @@ void AutoBattle(int bnum) {
 }
 
 void AutoUseItem(int bnum, int list) {
-    // AI使用物品 - 简化
+    // AI使用物品 - 简�?
     BattleMenuItem(bnum);
 }
 
@@ -1185,7 +1185,7 @@ void NearestMove(int& Mx1, int& My1, int bnum) {
         }
     }
     if (tx < 0) return;
-    // 在可移动范围内找最接近目标的位置
+    // 在可移动范围内找最接近目标的位�?
     int bestMDist = 9999;
     for (int i = 0; i < 64; i++)
         for (int j = 0; j < 64; j++)

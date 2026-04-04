@@ -1,4 +1,4 @@
-// kys_engine.cpp - 基础引擎实现
+﻿// kys_engine.cpp - 基础引擎实现
 // 对应 kys_engine.pas
 
 #include "kys_engine.h"
@@ -515,7 +515,7 @@ void DrawRLE8Pic(const char* colorPanel, int num, int px, int py,
     }
     // Block image 写入
     if (BlockImageW && depth > 0) {
-        smallint* blockW = (smallint*)BlockImageW;
+        int16_t* blockW = (int16_t*)BlockImageW;
         for (int row = 0; row < h; row++) {
             for (int c = 0; c < w; c++) {
                 int tx = drawX + c;
@@ -523,7 +523,7 @@ void DrawRLE8Pic(const char* colorPanel, int num, int px, int py,
                 if (tx >= 0 && tx < widthW && ty >= 0 && ty < heightW) {
                     int bidx = ty * widthW + tx;
                     if (depth >= blockW[bidx])
-                        blockW[bidx] = (smallint)depth;
+                        blockW[bidx] = (int16_t)depth;
                 }
             }
         }

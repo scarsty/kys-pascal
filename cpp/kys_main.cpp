@@ -1,4 +1,4 @@
-// kys_main.cpp - 游戏主流程实现
+﻿// kys_main.cpp - 游戏主流程实现
 // 对应 kys_main.pas
 
 #include "kys_main.h"
@@ -24,46 +24,58 @@
 #include <fstream>
 #include <sstream>
 
-// ---- 额外全局变量 ----
-int Where = 0;
-int CurScene = 0, CurEvent = -1, CurItem = -1;
-int Cx = 0, Cy = 0;
-int Bx = 0, By = 0;
-int Ax = 0, Ay = 0;
-int SFace = 0;
-int NowMusic = 0, StartMusic = 16;
-int BRoleAmount = 0;
-TBattleRole Brole[200];
-int BattleResult = 0;
-int MainMapStep = 0;
-int BeginTime = 0, NowTime = 0;
-int CellPhone = 0;
-int ScreenRotate = 0;
-int CHNFONT_SPACEWIDTH = 10;
-int ImageWidth = 0, ImageHeight = 0;
-int BATTLE_SPEED = 10, WALK_SPEED = 10, WALK_SPEED2 = 10;
-int MMAPAMI = 1, SEMIREAL = 0;
-int KDEF_SCRIPT = 1, NIGHT_EFFECT = 0, EXPAND_GROUND = 0;
-int ShowVirtualKey = 0;
-int VirtualCrossX = 100, VirtualCrossY = 250;
-int VirtualAX = 0, VirtualAY = 0, VirtualBX = 0, VirtualBY = 0;
-int RENDERER = 0;
-int TouchWalk = 1;
-double EXP_RATE = 1.0;
-int SkipTalk = 0;
-SDL_Surface* VirtualKeyU = nullptr;
-SDL_Surface* VirtualKeyD = nullptr;
-SDL_Surface* VirtualKeyL = nullptr;
-SDL_Surface* VirtualKeyR = nullptr;
-SDL_Surface* VirtualKeyA = nullptr;
-SDL_Surface* VirtualKeyB = nullptr;
-TPosition TitlePosition = {0, 0};
-TPosition OpenPicPosition = {-1, -1};
-TCloud cloud[CLOUD_AMOUNT];
-smallint x50[30001]; // 扩展x50变量区
-int Script5032Pos = -100;
-int Script5032Value = 0;
-SDL_Mutex* mutex = nullptr;
+// ---- 简易INI解析 ----
+
+static int readIniInt(const std::string& filename, const std::string& section, const std::string& key, int def) {
+    FILE* f = fopen(filename.c_str(), "r");
+    if (!f) return def;
+    char line[512];
+    bool inSection = false;
+    std::string sec = "[" + section + "]";
+    while (fgets(line, sizeof(line), f)) {
+        std::string s = line;
+        while (!s.empty() && (s.back() == '\n' || s.back() == '\r' || s.back() == ' ')) s.pop_back();
+        if (s == sec) { inSection = true; continue; }
+        if (!s.empty() && s[0] == '[') { inSection = false; continue; }
+        if (inSection) {
+            auto eq = s.find('=');
+            if (eq != std::string::npos) {
+                std::string k = s.substr(0, eq);
+                while (!k.empty() && k.back() == ' ') k.pop_back();
+                if (k == key) { fclose(f); return atoi(s.c_str() + eq + 1); }
+            }
+        }
+    }
+    fclose(f);
+    return def;
+}
+
+static double readIniFloat(const std::string& filename, const std::string& section, const std::string& key, double def) {
+    FILE* f = fopen(filename.c_str(), "r");
+    if (!f) return def;
+    char line[512];
+    bool inSection = false;
+    std::string sec = "[" + section + "]";
+    while (fgets(line, sizeof(line), f)) {
+        std::string s = line;
+        while (!s.empty() && (s.back() == '\n' || s.back() == '\r' || s.back() == ' ')) s.pop_back();
+        if (s == sec) { inSection = true; continue; }
+        if (!s.empty() && s[0] == '[') { inSection = false; continue; }
+        if (inSection) {
+            auto eq = s.find('=');
+            if (eq != std::string::npos) {
+                std::string k = s.substr(0, eq);
+                while (!k.empty() && k.back() == ' ') k.pop_back();
+                if (k == key) { fclose(f); return atof(s.c_str() + eq + 1); }
+            }
+        }
+    }
+    fclose(f);
+    return def;
+}
+
+static int signof(int x) { return (x > 0) ? 1 : (x < 0) ? -1 : 0; }
+
 
 // ---- 实现 ----
 
@@ -237,55 +249,75 @@ void SetMODVersion() {
 
 void ReadFiles() {
     std::string filename = AppPath + "kysmod.ini";
-    // 读取 INI 配置 - 使用简易解析
-    FILE* f = fopen(filename.c_str(), "r");
-    if (!f) return;
 
-    char line[256];
-    auto readInt = [&](const char* section, const char* key, int def) -> int {
-        // 简化: 直接返回默认值, 实际应解析ini
-        return def;
-    };
+    // INI解析
+    ITEM_BEGIN_PIC = readIniInt(filename, "constant", "ITEM_BEGIN_PIC", 3501);
+    MAX_HEAD_NUM = readIniInt(filename, "constant", "MAX_HEAD_NUM", 189);
+    BEGIN_EVENT = readIniInt(filename, "constant", "BEGIN_EVENT", 691);
+    BEGIN_SCENE = readIniInt(filename, "constant", "BEGIN_SCENE", 70);
+    BEGIN_Sx = readIniInt(filename, "constant", "BEGIN_Sx", 20);
+    BEGIN_Sy = readIniInt(filename, "constant", "BEGIN_Sy", 19);
+    SOFTSTAR_BEGIN_TALK = readIniInt(filename, "constant", "SOFTSTAR_BEGIN_TALK", 2547);
+    SOFTSTAR_NUM_TALK = readIniInt(filename, "constant", "SOFTSTAR_NUM_TALK", 18);
+    MAX_PHYSICAL_POWER = readIniInt(filename, "constant", "MAX_PHYSICAL_POWER", 100);
+    BEGIN_WALKPIC = readIniInt(filename, "constant", "BEGIN_WALKPIC", 2501);
+    MONEY_ID = readIniInt(filename, "constant", "MONEY_ID", 174);
+    COMPASS_ID = readIniInt(filename, "constant", "COMPASS_ID", 182);
+    BEGIN_LEAVE_EVENT = readIniInt(filename, "constant", "BEGIN_LEAVE_EVENT", 950);
+    BEGIN_BATTLE_ROLE_PIC = readIniInt(filename, "constant", "BEGIN_BATTLE_ROLE_PIC", 2553);
+    MAX_LEVEL = readIniInt(filename, "constant", "MAX_LEVEL", 30);
+    MAX_WEAPON_MATCH = readIniInt(filename, "constant", "MAX_WEAPON_MATCH", 7);
+    MIN_KNOWLEDGE = readIniInt(filename, "constant", "MIN_KNOWLEDGE", 80);
+    MAX_HP = readIniInt(filename, "constant", "MAX_HP", 999);
+    MAX_MP = readIniInt(filename, "constant", "MAX_MP", 999);
+    LIFE_HURT = readIniInt(filename, "constant", "LIFE_HURT", 10);
+    POISON_HURT = readIniInt(filename, "constant", "POISON_HURT", 10);
+    MED_LIFE = readIniInt(filename, "constant", "MED_LIFE", 4);
+    NOVEL_BOOK = readIniInt(filename, "constant", "NOVEL_BOOK", 144);
+    MAX_ADD_PRO = readIniInt(filename, "constant", "MAX_ADD_PRO", 0);
+    MAX_ITEM_AMOUNT = readIniInt(filename, "constant", "MAX_ITEM_AMOUNT", 200);
 
-    fclose(f);
+    BATTLE_SPEED = readIniInt(filename, "system", "BATTLE_SPEED", 10);
+    WALK_SPEED = readIniInt(filename, "system", "WALK_SPEED", 10);
+    WALK_SPEED2 = readIniInt(filename, "system", "WALK_SPEED2", WALK_SPEED);
+    SMOOTH = readIniInt(filename, "system", "SMOOTH", 1);
+    HIRES_TEXT = readIniInt(filename, "system", "HIRES_TEXT", 1);
+    SIMPLE = readIniInt(filename, "system", "SIMPLE", 1);
+    VOLUME = readIniInt(filename, "music", "VOLUME", 30);
+    VOLUMEWAV = readIniInt(filename, "music", "VOLUMEWAV", 30);
+    SOUND3D = readIniInt(filename, "music", "SOUND3D", 1);
+    MMAPAMI = readIniInt(filename, "system", "MMAPAMI", 1);
+    SEMIREAL = readIniInt(filename, "system", "SEMIREAL", 0);
+    MODVersion = readIniInt(filename, "system", "MODVersion", 0);
+    CHINESE_FONT_SIZE = readIniInt(filename, "system", "CHINESE_FONT_SIZE", 20);
+    ENGLISH_FONT_SIZE = readIniInt(filename, "system", "ENGLISH_FONT_SIZE", 19);
+    KDEF_SCRIPT = readIniInt(filename, "system", "KDEF_SCRIPT", 1);
+    NIGHT_EFFECT = readIniInt(filename, "system", "NIGHT_EFFECT", 0);
+    EXPAND_GROUND = readIniInt(filename, "system", "EXPAND_GROUND", 0);
+    WMP_4_PIC = readIniInt(filename, "system", "WMP_4_PIC", 0);
+    TouchWalk = readIniInt(filename, "system", "TOUCH_WALK", 1);
+    RENDERER = readIniInt(filename, "system", "RENDERER", 0);
+    EXP_RATE = readIniFloat(filename, "system", "EXP_RATE", 1.0);
 
-    // 使用默认值
-    ITEM_BEGIN_PIC = 3501;
-    MAX_HEAD_NUM = 189;
-    BEGIN_EVENT = 691;
-    BEGIN_SCENE = 70;
-    BEGIN_Sx = 20;
-    BEGIN_Sy = 19;
-    SOFTSTAR_BEGIN_TALK = 2547;
-    SOFTSTAR_NUM_TALK = 18;
-    MAX_PHYSICAL_POWER = 100;
-    BEGIN_WALKPIC = 2501;
-    MONEY_ID = 174;
-    COMPASS_ID = 182;
-    BEGIN_LEAVE_EVENT = 950;
-    BEGIN_BATTLE_ROLE_PIC = 2553;
-    MAX_LEVEL = 30;
-    MAX_WEAPON_MATCH = 7;
-    MIN_KNOWLEDGE = 80;
-    MAX_HP = 999;
-    MAX_MP = 999;
-    LIFE_HURT = 10;
-    POISON_HURT = 10;
-    MED_LIFE = 4;
-    NOVEL_BOOK = 144;
-    MAX_ADD_PRO = 0;
-    MAX_ITEM_AMOUNT = 200;
-    BATTLE_SPEED = 10;
-    WALK_SPEED = 10;
-    WALK_SPEED2 = WALK_SPEED;
-    SMOOTH = 1;
-    HIRES_TEXT = 1;
-    SIMPLE = 1;
-    VOLUME = 30;
-    VOLUMEWAV = 30;
-    SOUND3D = 1;
+    if (CellPhone != 0) {
+        ShowVirtualKey = readIniInt(filename, "system", "VirtualKey", 1);
+        VirtualCrossX = readIniInt(filename, "system", "VirtualCrossX", 100);
+        VirtualCrossY = readIniInt(filename, "system", "VirtualCrossY", 250);
+        int w = CENTER_X * 2, h = CENTER_Y * 2;
+        VirtualAX = readIniInt(filename, "system", "VirtualAX", w - 200);
+        VirtualAY = readIniInt(filename, "system", "VirtualAY", h - 100);
+        VirtualBX = readIniInt(filename, "system", "VirtualBX", w - 100);
+        VirtualBY = readIniInt(filename, "system", "VirtualBY", h - 200);
+    } else {
+        ShowVirtualKey = 0;
+        TouchWalk = 1;
+    }
 
-    for (int i = 0; i < 16; i++) MaxProList[i] = 100;
+    char keybuf[32];
+    for (int i = 0; i < 16; i++) {
+        snprintf(keybuf, sizeof(keybuf), "MaxProList%d", 43 + i);
+        MaxProList[i] = readIniInt(filename, "constant", keybuf, 100);
+    }
     if (LIFE_HURT == 0) LIFE_HURT = 1;
     if (POISON_HURT == 0) POISON_HURT = 1;
 
@@ -845,13 +877,258 @@ void MenuEsc() {
 }
 
 void ShowMenu(int menu) {}
-void MenuMedcine() {}
-void MenuMedPoison() {}
-bool MenuItem() { return false; }
-int ReadItemList(int ItemType) { return 0; }
-void DrawItemFrame(int x, int y) {}
-void UseItem(int inum) {}
-bool CanEquip(int rnum, int inum) { return false; }
+
+void MenuMedcine() {
+    std::string str = " 隊員醫療能力";
+    DrawTextWithRect(screen, str, 80, 30, 132, ColColor(0x21), ColColor(0x23));
+    int menu = SelectOneTeamMember(80, 65, "%4d", 46, 0);
+    if (menu >= 0) {
+        int role1 = menu;
+        str = " 隊員目前生命";
+        DrawTextWithRect(screen, str, 230, 30, 132, ColColor(0x21), ColColor(0x23));
+        int menu2 = SelectOneTeamMember(230, 65, "%4d/%4d", 17, 18);
+        if (menu2 >= 0) EffectMedcine(role1, menu2);
+    }
+}
+
+void MenuMedPoison() {
+    std::string str = " 隊員解毒能力";
+    DrawTextWithRect(screen, str, 80, 30, 132, ColColor(0x21), ColColor(0x23));
+    int menu = SelectOneTeamMember(80, 65, "%4d", 48, 0);
+    if (menu >= 0) {
+        int role1 = menu;
+        str = " 隊員中毒程度";
+        DrawTextWithRect(screen, str, 230, 30, 132, ColColor(0x21), ColColor(0x23));
+        int menu2 = SelectOneTeamMember(230, 65, "%4d", 20, 0);
+        if (menu2 >= 0) EffectMedPoison(role1, menu2);
+    }
+}
+
+bool MenuItem() {
+    std::string menuStr[] = {" 全部", " 劇情", " 神兵", " 秘笈", " 藥品", " 暗器", " 整理"};
+    int typeMap[] = {100, 0, 1, 2, 3, 4};
+    int sel = CommonMenu(CENTER_X - 60, CENTER_Y - 80, 60, 6, menuStr);
+    if (sel < 0) return false;
+    if (sel == 6) { ReArrangeItem(1); return true; }
+    int itemType = typeMap[sel];
+    int count = ReadItemList(itemType);
+    if (count == 0) return false;
+    std::string itemNames[501];
+    for (int i = 0; i < count; i++) {
+        if (ItemList[i] < 0) { itemNames[i] = ""; continue; }
+        int inum = RItemList[ItemList[i]].Number;
+        std::string name = cp950toutf8(Ritem[inum].Name);
+        char buf[32]; snprintf(buf, sizeof(buf), " x%d", RItemList[ItemList[i]].Amount);
+        itemNames[i] = name + buf;
+    }
+    int idx = CommonScrollMenu(CENTER_X - 120, CENTER_Y - 120, 240, count - 1, 15, itemNames);
+    if (idx >= 0 && ItemList[idx] >= 0) {
+        UseItem(RItemList[ItemList[idx]].Number);
+    }
+    return true;
+}
+
+int ReadItemList(int ItemType) {
+    int p = 0;
+    for (int i = 0; i < 501; i++) ItemList[i] = -1;
+    for (int i = 0; i < MAX_ITEM_AMOUNT; i++) {
+        if (RItemList[i].Number >= 0) {
+            if (Ritem[RItemList[i].Number].ItemType == ItemType || ItemType == 100) {
+                ItemList[p] = i;
+                p++;
+            }
+        }
+    }
+    return p;
+}
+
+void DrawItemFrame(int x, int y) {
+    int xp = 110, yp = 60, d = 42;
+    for (int i = 0; i < 40; i++) {
+        uint8_t t = 250 - i * 3;
+        uint32_t c = SDL_MapSurfaceRGB(screen, t, t, t);
+        PutPixel(screen, x * d + 6 + i + xp, y * d + 36 + yp, c);
+        PutPixel(screen, x * d + 6 + 39 - i + xp, y * d + 36 + 39 + yp, c);
+        PutPixel(screen, x * d + 6 + xp, y * d + 36 + i + yp, c);
+        PutPixel(screen, x * d + 6 + 39 + xp, y * d + 36 + 39 - i + yp, c);
+    }
+}
+
+void UseItem(int inum) {
+    CurItem = inum;
+    Redraw();
+    switch (Ritem[inum].ItemType) {
+        case 0: { // 剧情物品
+            if (Ritem[inum].UnKnow7 > 0) {
+                CallEvent(Ritem[inum].UnKnow7);
+            } else if (Where == 1) {
+                int x = Sx, y = Sy;
+                switch (SFace) {
+                    case 0: x--; break; case 1: y++; break;
+                    case 2: x++; break; case 3: y--; break;
+                }
+                if (SData[CurScene][3][x][y] >= 0) {
+                    CurEvent = SData[CurScene][3][x][y];
+                    if (DData[CurScene][CurEvent][3] >= 0) {
+                        Cx = Sx; Cy = Sy;
+                        CallEvent(DData[CurScene][CurEvent][3]);
+                    }
+                }
+                CurEvent = -1;
+            }
+            break;
+        }
+        case 1: { // 装备
+            int menu = 1;
+            if (Ritem[inum].User >= 0) {
+                Redraw();
+                std::string ms[] = {" 取消", " 繼續"};
+                std::string str = " 此物品正有人裝備，是否繼續？";
+                DrawTextWithRect(screen, str, 80, 30, 285, ColColor(5), ColColor(7));
+                menu = CommonMenu(80, 65, 45, 1, ms);
+            }
+            if (menu == 1) {
+                Redraw();
+                std::string str1 = cp950toutf8(Ritem[inum].Name);
+                DrawTextWithRect(screen, " 誰要裝備", 80, 30, (int)str1.size() * 11 + 80, ColColor(0x21), ColColor(0x23));
+                DrawShadowText(screen, str1, 160, 32, ColColor(0x64), ColColor(0x66));
+                UpdateScreen(screen, 0, 0, screen->w, screen->h);
+                int sel = SelectOneTeamMember(80, 65, "", 0, 0);
+                if (sel >= 0) {
+                    int rnum = sel;
+                    int p = Ritem[inum].EquipType;
+                    if (p < 0 || p > 1) p = 0;
+                    if (CanEquip(rnum, inum)) {
+                        if (Ritem[inum].User >= 0) Rrole[Ritem[inum].User].Equip[p] = -1;
+                        if (Rrole[rnum].Equip[p] >= 0) Ritem[Rrole[rnum].Equip[p]].User = -1;
+                        Rrole[rnum].Equip[p] = inum;
+                        Ritem[inum].User = rnum;
+                    } else {
+                        DrawTextWithRect(screen, " 此人不適合裝備此物品", 80, 230, 205, ColColor(0x64), ColColor(0x66));
+                        WaitAnyKey(); Redraw();
+                    }
+                }
+            }
+            break;
+        }
+        case 2: { // 秘笈
+            int menu = 1;
+            if (Ritem[inum].User >= 0) {
+                Redraw();
+                std::string ms[] = {" 取消", " 繼續"};
+                DrawTextWithRect(screen, " 此秘笈正有人修煉，是否繼續？", 80, 30, 285, ColColor(5), ColColor(7));
+                menu = CommonMenu(80, 65, 45, 1, ms);
+            }
+            if (menu == 1) {
+                Redraw();
+                std::string str1 = cp950toutf8(Ritem[inum].Name);
+                DrawTextWithRect(screen, " 誰要修煉", 80, 30, (int)str1.size() * 11 + 80, ColColor(0x21), ColColor(0x23));
+                DrawShadowText(screen, str1, 160, 32, ColColor(0x64), ColColor(0x66));
+                UpdateScreen(screen, 0, 0, screen->w, screen->h);
+                int sel = SelectOneTeamMember(80, 65, "", 0, 0);
+                if (sel >= 0) {
+                    int rnum = sel;
+                    if (CanEquip(rnum, inum)) {
+                        if (Ritem[inum].User >= 0) Rrole[Ritem[inum].User].PracticeBook = -1;
+                        if (Rrole[rnum].PracticeBook >= 0) Ritem[Rrole[rnum].PracticeBook].User = -1;
+                        Rrole[rnum].PracticeBook = inum;
+                        Ritem[inum].User = rnum;
+                    } else {
+                        DrawTextWithRect(screen, " 此人不適合修煉此秘笈", 80, 230, 205, ColColor(0x64), ColColor(0x66));
+                        WaitAnyKey(); Redraw();
+                    }
+                }
+            }
+            break;
+        }
+        case 3: { // 药品
+            int sel = -1;
+            if (Where != 2) {
+                std::string str1 = cp950toutf8(Ritem[inum].Name);
+                DrawTextWithRect(screen, " 誰要服用", 80, 30, (int)str1.size() * 11 + 80, ColColor(0x21), ColColor(0x23));
+                DrawShadowText(screen, str1, 160, 32, ColColor(0x64), ColColor(0x66));
+                UpdateScreen(screen, 0, 0, screen->w, screen->h);
+                sel = SelectOneTeamMember(80, 65, "", 0, 0);
+            }
+            if (sel >= 0) {
+                Redraw();
+                EatOneItem(sel, inum);
+                instruct_32(inum, -1);
+                WaitAnyKey();
+            }
+            break;
+        }
+        case 4: break; // 暗器
+    }
+}
+
+bool CanEquip(int rnum, int inum) {
+    bool result = true;
+    if (signof(Ritem[inum].NeedMP) * Rrole[rnum].CurrentMP < Ritem[inum].NeedMP) result = false;
+    if (signof(Ritem[inum].NeedAttack) * Rrole[rnum].Attack < Ritem[inum].NeedAttack) result = false;
+    if (signof(Ritem[inum].NeedSpeed) * Rrole[rnum].Speed < Ritem[inum].NeedSpeed) result = false;
+    if (signof(Ritem[inum].NeedUsePoi) * Rrole[rnum].UsePoi < Ritem[inum].NeedUsePoi) result = false;
+    if (signof(Ritem[inum].NeedMedcine) * Rrole[rnum].Medcine < Ritem[inum].NeedMedcine) result = false;
+    if (signof(Ritem[inum].NeedMedPoi) * Rrole[rnum].MedPoi < Ritem[inum].NeedMedPoi) result = false;
+    if (signof(Ritem[inum].NeedFist) * Rrole[rnum].Fist < Ritem[inum].NeedFist) result = false;
+    if (signof(Ritem[inum].NeedSword) * Rrole[rnum].Sword < Ritem[inum].NeedSword) result = false;
+    if (signof(Ritem[inum].NeedKnife) * Rrole[rnum].Knife < Ritem[inum].NeedKnife) result = false;
+    if (signof(Ritem[inum].NeedUnusual) * Rrole[rnum].Unusual < Ritem[inum].NeedUnusual) result = false;
+    if (signof(Ritem[inum].NeedHidWeapon) * Rrole[rnum].HidWeapon < Ritem[inum].NeedHidWeapon) result = false;
+    if (signof(Ritem[inum].NeedAptitude) * Rrole[rnum].Aptitude < Ritem[inum].NeedAptitude) result = false;
+    // 内力性质
+    if (Rrole[rnum].MPType < 2 && Ritem[inum].NeedMPType < 2)
+        if (Rrole[rnum].MPType != Ritem[inum].NeedMPType) result = false;
+    // 专用人物
+    if (Ritem[inum].OnlyPracRole >= 0 && result)
+        result = (Ritem[inum].OnlyPracRole == rnum);
+    // 武功槽满
+    int r = 0;
+    for (int i = 0; i < 10; i++) if (Rrole[rnum].Magic[i] > 0) r++;
+    if (r >= 10 && Ritem[inum].Magic > 0) result = false;
+    // 已有该武功且未满级
+    for (int i = 0; i < 10; i++)
+        if (Rrole[rnum].Magic[i] == Ritem[inum].Magic && Rrole[rnum].MagLevel[i] < 900)
+            { result = true; break; }
+    // 自宫确认
+    if ((inum == 78 || inum == 93) && result && Rrole[rnum].Sexual != 2) {
+        Redraw();
+        std::string ms[] = {" 取消", " 繼續"};
+        DrawTextWithRect(screen, " 是否自宮？", 80, 30, 105, ColColor(7), ColColor(5));
+        if (CommonMenu(80, 65, 45, 1, ms) == 1)
+            Rrole[rnum].Sexual = 2;
+        else result = false;
+    }
+    return result;
+}
+
+void MenuLeave() {
+    if (Where == 0 || MODVersion == 22) {
+        std::string str = (MODVersion == 22) ? " 選擇一個隊友" : " 要求誰離隊？";
+        DrawTextWithRect(screen, str, 80, 30, 132, ColColor(0x21), ColColor(0x23));
+        int menu = SelectOneTeamMember(80, 65, "%3d", 15, 0);
+        if (menu >= 0) {
+            for (int i = 0; i < 6; i++) {
+                if (TeamList[i] == menu) {
+                    for (int j = 0; j < 100; j++) {
+                        if (LeaveList[j] == TeamList[i]) {
+                            Redraw();
+                            CallEvent(BEGIN_LEAVE_EVENT + j * 2);
+                            UpdateScreen(screen, 0, 0, screen->w, screen->h);
+                            break;
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+    } else {
+        DrawTextWithRect(screen, " 子場景不可離隊！", 80, 30, 172, ColColor(0x21), ColColor(0x23));
+        WaitAnyKey();
+    }
+    Redraw();
+    UpdateScreen(screen, 0, 0, screen->w, screen->h);
+}
 
 void MenuStatus() {
     for (int i = 0; i < 6; i++) {
@@ -903,7 +1180,6 @@ void ShowSimpleStatus(int rnum, int x, int y) {
     ShowStatus(rnum, x, y);
 }
 
-void MenuLeave() {}
 int MenuSystem() {
     std::string menuStr[] = {" 存檔", " 讀檔", " 退出"};
     int sel = CommonMenu(CENTER_X - 40, CENTER_Y - 40, 80, 2, menuStr);
@@ -989,39 +1265,120 @@ int EatOneItem(int rnum, int inum, int times, int display) {
 // ---- 事件调用 ----
 
 void CallEvent(int num) {
-    if (KDEF_SCRIPT == 1) {
-        // 尝试lua脚本
-        char buf[128];
-        snprintf(buf, sizeof(buf), "script/%d.lua", num);
-        std::string scriptFile = AppPath + buf;
-        FILE* f = fopen(scriptFile.c_str(), "rb");
-        if (f) {
-            fclose(f);
-            char funcname[32];
-            snprintf(funcname, sizeof(funcname), "f%d", num);
-            ExecScript(scriptFile, funcname);
-            return;
+    SStep = 0;
+    SceneRolePic = BEGIN_WALKPIC + SFace * 7;
+    NeedRefreshScene = 0;
+
+    // 优先尝试lua脚本
+    char buf[128];
+    snprintf(buf, sizeof(buf), "script/event/ka%d.lua", num);
+    std::string scriptFile = AppPath + buf;
+    if (KDEF_SCRIPT != 0) {
+        FILE* tf = fopen(scriptFile.c_str(), "rb");
+        if (tf) { fclose(tf); ExecScript(scriptFile, ""); goto event_end; }
+    }
+
+    // kdef二进制指令分发
+    {
+        int offset, len;
+        if (num == 0) { offset = 0; len = KIdx[0]; }
+        else { offset = KIdx[num - 1]; len = KIdx[num] - offset; }
+        int ecount = len / 2 + 1;
+        std::vector<int16_t> e(ecount, 0);
+        if (len > 0) memcpy(e.data(), KDef.data() + offset, len);
+        int i = 0;
+
+        while (i < ecount - 1) {
+            SDL_PollEvent(&event);
+            CheckBasicEvent();
+            if (e[i] < 0) break;
+            switch (e[i]) {
+                case 0:  instruct_0(); i += 1; break;
+                case 1:  instruct_1(e[i+1], e[i+2], e[i+3]); i += 4; break;
+                case 2:  instruct_2(e[i+1], e[i+2]); i += 3; break;
+                case 3:  { int list[13]; for(int j=0;j<13;j++) list[j]=e[i+1+j]; instruct_3(list); i += 14; break; }
+                case 4:  i += instruct_4(e[i+1], e[i+2], e[i+3]); i += 4; break;
+                case 5:  i += instruct_5(e[i+1], e[i+2]); i += 3; break;
+                case 6:  i += instruct_6(e[i+1], e[i+2], e[i+3], e[i+4]); i += 5; break;
+                case 7:  i += 1; goto event_end;
+                case 8:  instruct_8(e[i+1]); i += 2; break;
+                case 9:  i += instruct_9(e[i+1], e[i+2]); i += 3; break;
+                case 10: instruct_10(e[i+1]); i += 2; break;
+                case 11: i += instruct_11(e[i+1], e[i+2]); i += 3; break;
+                case 12: instruct_12(); i += 1; break;
+                case 13: instruct_13(); i += 1; break;
+                case 14: instruct_14(); i += 1; break;
+                case 15: instruct_15(); i += 1; goto event_end;
+                case 16: i += instruct_16(e[i+1], e[i+2], e[i+3]); i += 4; break;
+                case 17: { int list[5]; for(int j=0;j<5;j++) list[j]=e[i+1+j]; instruct_17(list); i += 6; break; }
+                case 18: i += instruct_18(e[i+1], e[i+2], e[i+3]); i += 4; break;
+                case 19: instruct_19(e[i+1], e[i+2]); i += 3; break;
+                case 20: i += instruct_20(e[i+1], e[i+2]); i += 3; break;
+                case 21: instruct_21(e[i+1]); i += 2; break;
+                case 22: instruct_22(); i += 1; break;
+                case 23: instruct_23(e[i+1], e[i+2]); i += 3; break;
+                case 24: instruct_24(); i += 1; break;
+                case 25: instruct_25(e[i+1], e[i+2], e[i+3], e[i+4]); i += 5; break;
+                case 26: instruct_26(e[i+1], e[i+2], e[i+3], e[i+4], e[i+5]); i += 6; break;
+                case 27: instruct_27(e[i+1], e[i+2], e[i+3]); i += 4; break;
+                case 28: i += instruct_28(e[i+1], e[i+2], e[i+3], e[i+4], e[i+5]); i += 6; break;
+                case 29: i += instruct_29(e[i+1], e[i+2], e[i+3], e[i+4], e[i+5]); i += 6; break;
+                case 30: instruct_30(e[i+1], e[i+2], e[i+3], e[i+4]); i += 5; break;
+                case 31: i += instruct_31(e[i+1], e[i+2], e[i+3]); i += 4; break;
+                case 32: instruct_32(e[i+1], e[i+2]); i += 3; break;
+                case 33: instruct_33(e[i+1], e[i+2], e[i+3]); i += 4; break;
+                case 34: instruct_34(e[i+1], e[i+2]); i += 3; break;
+                case 35: instruct_35(e[i+1], e[i+2], e[i+3], e[i+4]); i += 5; break;
+                case 36: i += instruct_36(e[i+1], e[i+2], e[i+3]); i += 4; break;
+                case 37: instruct_37(e[i+1]); i += 2; break;
+                case 38: instruct_38(e[i+1], e[i+2], e[i+3], e[i+4]); i += 5; break;
+                case 39: instruct_39(e[i+1]); i += 2; break;
+                case 40: instruct_40(e[i+1]); i += 2; break;
+                case 41: instruct_41(e[i+1], e[i+2], e[i+3]); i += 4; break;
+                case 42: i += instruct_42(e[i+1], e[i+2]); i += 3; break;
+                case 43: i += instruct_43(e[i+1], e[i+2], e[i+3]); i += 4; break;
+                case 44: instruct_44(e[i+1], e[i+2], e[i+3], e[i+4], e[i+5], e[i+6]); i += 7; break;
+                case 45: instruct_45(e[i+1], e[i+2]); i += 3; break;
+                case 46: instruct_46(e[i+1], e[i+2]); i += 3; break;
+                case 47: instruct_47(e[i+1], e[i+2]); i += 3; break;
+                case 48: instruct_48(e[i+1], e[i+2]); i += 3; break;
+                case 49: instruct_49(e[i+1], e[i+2]); i += 3; break;
+                case 50: {
+                    int list[7]; for(int j=0;j<7;j++) list[j]=e[i+1+j];
+                    int p = instruct_50(list);
+                    i += 8;
+                    if (p < 622592) i += p;
+                    else e[i + ((p + 32768) / 655360) - 1] = p % 655360;
+                    break;
+                }
+                case 51: instruct_51(); i += 1; break;
+                case 52: instruct_52(); i += 1; break;
+                case 53: instruct_53(); i += 1; break;
+                case 54: instruct_54(); i += 1; break;
+                case 55: i += instruct_55(e[i+1], e[i+2], e[i+3], e[i+4]); i += 5; break;
+                case 56: instruct_56(e[i+1]); i += 2; break;
+                case 57: instruct_57(); i += 1; break;
+                case 58: instruct_58(); i += 1; break;
+                case 59: instruct_59(); i += 1; break;
+                case 60: i += instruct_60(e[i+1], e[i+2], e[i+3], e[i+4], e[i+5]); i += 6; break;
+                case 61: i += instruct_61(e[i+1], e[i+2]); i += 3; break;
+                case 62: instruct_62(e[i+1], e[i+2], e[i+3], e[i+4], e[i+5], e[i+6]); i += 7; goto event_end;
+                case 63: instruct_63(e[i+1], e[i+2]); i += 3; break;
+                case 64: instruct_64(); i += 1; break;
+                case 65: i += 1; break; // NOP
+                case 66: instruct_66(e[i+1]); i += 2; break;
+                case 67: instruct_67(e[i+1]); i += 2; break;
+                default: i += 1; break;
+            }
         }
     }
-    // kdef二进制指令
-    if (num < 0 || num >= (int)KIdx.size()) return;
-    int offset = (num == 0) ? 0 : KIdx[num - 1];
-    int len = KIdx[num] - offset;
-    if (len <= 0) return;
-    const int16_t* code = (const int16_t*)(KDef.data() + offset);
-    int count = len / 2;
-    int pos = 0;
-    while (pos < count) {
-        int inst = code[pos++];
-        // 读取最多12个参数
-        int p[12] = {};
-        int nparams = 0;
-        if (inst == 50) nparams = 7;
-        else if (inst <= 67) nparams = std::min(12, count - pos);
 
-        // 简化：跳过复杂指令分发
-        // 实际应交由 kys_event 中的 instruct_N 处理
-        break;
+event_end:
+    if (NeedRefreshScene == 1) InitialScene(0);
+    NeedRefreshScene = 1;
+    if (MMAPAMI * SCENEAMI == 0) {
+        Redraw();
+        UpdateScreen(screen, 0, 0, screen->w, screen->h);
     }
 }
 
@@ -1029,18 +1386,20 @@ void CallEvent(int num) {
 
 void CloudCreate(int num) {
     if (num < 0 || num >= CLOUD_AMOUNT) return;
-    cloud[num].Picnum = rand() % std::max(1, CPicAmount);
-    cloud[num].Shadow = 0;
-    cloud[num].Alpha = 20 + rand() % 30;
-    cloud[num].Positionx = rand() % (CENTER_X * 2);
-    cloud[num].Positiony = rand() % (CENTER_Y * 2);
-    cloud[num].Speedx = 1 + rand() % 3;
-    cloud[num].Speedy = 0;
+    if ((int)Cloud.size() <= num) Cloud.resize(num + 1);
+    Cloud[num].Picnum = rand() % std::max(1, CPicAmount);
+    Cloud[num].Shadow = 0;
+    Cloud[num].Alpha = 20 + rand() % 30;
+    Cloud[num].Positionx = rand() % (CENTER_X * 2);
+    Cloud[num].Positiony = rand() % (CENTER_Y * 2);
+    Cloud[num].Speedx = 1 + rand() % 3;
+    Cloud[num].Speedy = 0;
 }
 
 void CloudCreateOnSide(int num) {
     CloudCreate(num);
-    cloud[num].Positionx = -100;
+    if (num >= 0 && num < (int)Cloud.size())
+        Cloud[num].Positionx = -100;
 }
 
 bool IsCave(int snum) {
@@ -1085,22 +1444,4 @@ bool EnterString(std::string& str, int x, int y, int w, int h) {
     }
 }
 
-// instruct_32 辅助 (直接增减物品)
-void instruct_32(int itemnum, int amount) {
-    if (amount > 0) {
-        for (auto& il : RItemList) {
-            if (il.Number == itemnum) { il.Amount += amount; return; }
-        }
-        for (auto& il : RItemList) {
-            if (il.Number < 0) { il.Number = itemnum; il.Amount = amount; return; }
-        }
-    } else {
-        for (auto& il : RItemList) {
-            if (il.Number == itemnum) {
-                il.Amount += amount;
-                if (il.Amount <= 0) { il.Number = -1; il.Amount = 0; }
-                return;
-            }
-        }
-    }
-}
+// instruct_32 定义在 kys_event.cpp 中

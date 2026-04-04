@@ -1,4 +1,4 @@
-// kys_draw.cpp - 高层绘图实现
+﻿// kys_draw.cpp - 高层绘图实现
 // 对应 kys_draw.pas
 
 #include "kys_draw.h"
@@ -244,7 +244,7 @@ void InitialScene(int onlyvisible) {
     if (!ImgScene) return;
     SDL_FillSurfaceRect(ImgScene, nullptr, 0);
     if (BlockImg.size() > 0)
-        memset(BlockImg.data(), 0, BlockImg.size() * sizeof(smallint));
+        memset(BlockImg.data(), 0, BlockImg.size() * sizeof(int16_t));
 
     // 遍历场景所有格子
     for (int y = 0; y < 64; y++) {
@@ -340,7 +340,7 @@ void InitialBFieldImage() {
     if (!ImgBField) return;
     SDL_FillSurfaceRect(ImgBField, nullptr, 0);
     if (!BlockImg2.empty())
-        memset(BlockImg2.data(), 0, BlockImg2.size() * sizeof(smallint));
+        memset(BlockImg2.data(), 0, BlockImg2.size() * sizeof(int16_t));
 
     for (int y = 0; y < 64; y++) {
         for (int x = 0; x < 64; x++) {

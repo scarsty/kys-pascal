@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 // kys_type.h - 类型定义与全局变量声明
 // 对应 kys_type.pas
 
@@ -11,9 +11,11 @@
 #include <map>
 
 // 基本类型别名
-using smallint = int16_t;
 using uint32 = uint32_t;
 using uint16 = uint16_t;
+
+// Forward declarations
+struct lua_State;
 
 // ---- 结构体定义 ----
 
@@ -22,8 +24,8 @@ struct TPosition {
 };
 
 struct TItemList {
-    smallint Number = -1;
-    smallint Amount = 0;
+    int16_t Number = -1;
+    int16_t Amount = 0;
 };
 
 struct TBuildInfo {
@@ -32,7 +34,7 @@ struct TBuildInfo {
 };
 
 struct TPNGIndex {
-    smallint Num = 0, Frame = 0, x = 0, y = 0, Loaded = 0, UseGRP = 0;
+    int16_t Num = 0, Frame = 0, x = 0, y = 0, Loaded = 0, UseGRP = 0;
     SDL_Surface** CurPointer = nullptr;
 };
 
@@ -57,106 +59,106 @@ struct TCloud {
 struct TRole {
     union {
         struct {
-            smallint ListNum, HeadNum, IncLife, UnUse;
+            int16_t ListNum, HeadNum, IncLife, UnUse;
             char Name[10]; // ansichar
             char Nick[10];
-            smallint Sexual, Level;
+            int16_t Sexual, Level;
             uint16 Exp;
-            smallint CurrentHP, MaxHP, Hurt, Poison, PhyPower;
+            int16_t CurrentHP, MaxHP, Hurt, Poison, PhyPower;
             uint16 ExpForItem;
-            smallint Equip[2];
-            smallint AmiFrameNum[5], AmiDelay[5], SoundDealy[5];
-            smallint MPType, CurrentMP, MaxMP;
-            smallint Attack, Speed, Defence, Medcine, UsePoi, MedPoi, DefPoi;
-            smallint Fist, Sword, Knife, Unusual, HidWeapon;
-            smallint Knowledge, Ethics, AttPoi, AttTwice, Repute, Aptitude, PracticeBook;
+            int16_t Equip[2];
+            int16_t AmiFrameNum[5], AmiDelay[5], SoundDealy[5];
+            int16_t MPType, CurrentMP, MaxMP;
+            int16_t Attack, Speed, Defence, Medcine, UsePoi, MedPoi, DefPoi;
+            int16_t Fist, Sword, Knife, Unusual, HidWeapon;
+            int16_t Knowledge, Ethics, AttPoi, AttTwice, Repute, Aptitude, PracticeBook;
             uint16 ExpForBook;
-            smallint Magic[10], MagLevel[10];
-            smallint TakingItem[4], TakingItemAmount[4];
+            int16_t Magic[10], MagLevel[10];
+            int16_t TakingItem[4], TakingItemAmount[4];
         };
-        smallint Data[91];
+        int16_t Data[91];
     };
 };
 
 struct TItem {
     union {
         struct {
-            smallint ListNum;
+            int16_t ListNum;
             char Name[20];
             char Name1[20];
             char Introduction[30];
-            smallint Magic, AmiNum, User, EquipType, ShowIntro, ItemType, UnKnow5, UnKnow6, UnKnow7;
-            smallint AddCurrentHP, AddMaxHP, AddPoi, AddPhyPower, ChangeMPType, AddCurrentMP, AddMaxMP;
-            smallint AddAttack, AddSpeed, AddDefence, AddMedcine, AddUsePoi, AddMedPoi, AddDefPoi;
-            smallint AddFist, AddSword, AddKnife, AddUnusual, AddHidWeapon, AddKnowledge, AddEthics, AddAttTwice, AddAttPoi;
-            smallint OnlyPracRole, NeedMPType, NeedMP, NeedAttack, NeedSpeed, NeedUsePoi, NeedMedcine, NeedMedPoi;
-            smallint NeedFist, NeedSword, NeedKnife, NeedUnusual, NeedHidWeapon, NeedAptitude;
-            smallint NeedExp, NeedExpForItem, NeedMaterial;
-            smallint GetItem[5], NeedMatAmount[5];
+            int16_t Magic, AmiNum, User, EquipType, ShowIntro, ItemType, UnKnow5, UnKnow6, UnKnow7;
+            int16_t AddCurrentHP, AddMaxHP, AddPoi, AddPhyPower, ChangeMPType, AddCurrentMP, AddMaxMP;
+            int16_t AddAttack, AddSpeed, AddDefence, AddMedcine, AddUsePoi, AddMedPoi, AddDefPoi;
+            int16_t AddFist, AddSword, AddKnife, AddUnusual, AddHidWeapon, AddKnowledge, AddEthics, AddAttTwice, AddAttPoi;
+            int16_t OnlyPracRole, NeedMPType, NeedMP, NeedAttack, NeedSpeed, NeedUsePoi, NeedMedcine, NeedMedPoi;
+            int16_t NeedFist, NeedSword, NeedKnife, NeedUnusual, NeedHidWeapon, NeedAptitude;
+            int16_t NeedExp, NeedExpForItem, NeedMaterial;
+            int16_t GetItem[5], NeedMatAmount[5];
         };
-        smallint Data[95];
+        int16_t Data[95];
     };
 };
 
 struct TScene {
     union {
         struct {
-            smallint ListNum;
+            int16_t ListNum;
             char Name[10];
-            smallint ExitMusic, EntranceMusic;
-            smallint JumpScene, EnCondition;
-            smallint MainEntranceY1, MainEntranceX1, MainEntranceY2, MainEntranceX2;
-            smallint EntranceY, EntranceX;
-            smallint ExitY[3], ExitX[3];
-            smallint JumpY1, JumpX1, JumpY2, JumpX2;
+            int16_t ExitMusic, EntranceMusic;
+            int16_t JumpScene, EnCondition;
+            int16_t MainEntranceY1, MainEntranceX1, MainEntranceY2, MainEntranceX2;
+            int16_t EntranceY, EntranceX;
+            int16_t ExitY[3], ExitX[3];
+            int16_t JumpY1, JumpX1, JumpY2, JumpX2;
         };
-        smallint Data[26];
+        int16_t Data[26];
     };
 };
 
 struct TMagic {
     union {
         struct {
-            smallint ListNum;
+            int16_t ListNum;
             char Name[10];
-            smallint UnKnow[5];
-            smallint SoundNum, MagicType, AmiNum, HurtType, AttAreaType, NeedMP, Poison;
-            smallint Attack[10], MoveDistance[10], AttDistance[10], AddMP[10], HurtMP[10];
+            int16_t UnKnow[5];
+            int16_t SoundNum, MagicType, AmiNum, HurtType, AttAreaType, NeedMP, Poison;
+            int16_t Attack[10], MoveDistance[10], AttDistance[10], AddMP[10], HurtMP[10];
         };
-        smallint Data[68];
+        int16_t Data[68];
     };
 };
 
 struct TShop {
     union {
         struct {
-            smallint Item[5], Amount[5], Price[5];
+            int16_t Item[5], Amount[5], Price[5];
         };
-        smallint Data[15];
+        int16_t Data[15];
     };
 };
 
 struct TBattleRole {
     union {
         struct {
-            smallint rnum, Team, Y, X, Face, Dead, Step, Acted;
-            smallint Pic, ShowNumber, UnUse1, UnUse2, UnUse3, ExpGot, Auto;
-            smallint RealSpeed, RealProgress, BHead, AutoMode;
+            int16_t rnum, Team, Y, X, Face, Dead, Step, Acted;
+            int16_t Pic, ShowNumber, UnUse1, UnUse2, UnUse3, ExpGot, Auto;
+            int16_t RealSpeed, RealProgress, BHead, AutoMode;
         };
-        smallint Data[19];
+        int16_t Data[19];
     };
 };
 
 struct TWarData {
     union {
         struct {
-            smallint Warnum;
+            int16_t Warnum;
             char Name[10];
-            smallint BFieldNum, ExpGot, MusicNum;
-            smallint TeamMate[6], AutoTeamMate[6], TeamY[6], TeamX[6];
-            smallint Enemy[20], EnemyY[20], EnemyX[20];
+            int16_t BFieldNum, ExpGot, MusicNum;
+            int16_t TeamMate[6], AutoTeamMate[6], TeamY[6], TeamX[6];
+            int16_t Enemy[20], EnemyY[20], EnemyX[20];
         };
-        smallint Data[0x5D];
+        int16_t Data[0x5D];
     };
 };
 
@@ -165,234 +167,254 @@ struct TWarData {
 // ---- 函数指针类型 ----
 using TPInt1 = void(*)(int);
 
-// ---- 全局变量声明 (定义在 kys_type.cpp) ----
+// ---- 全局变量 ----
+// 大数组使用extern（定义在kys_type.cpp），其余使用C++17 inline变量
 
-extern int MODVersion;
-extern std::string TitleString;
-extern std::string VersionStr;
+// 程序路径
+inline std::string AppPath, AppPathCommon;
 
-extern const char* CHINESE_FONT;
-extern int CHINESE_FONT_SIZE;
-extern const char* ENGLISH_FONT;
-extern int ENGLISH_FONT_SIZE;
+// MOD系统
+inline int MODVersion = 0;
+inline std::string TitleString = "All Heros in Kam Yung's Stories";
+inline std::string VersionStr = "";
 
-extern int CENTER_X;
-extern int CENTER_Y;
+// 字体
+inline const char* CHINESE_FONT = "chinese.ttf";
+inline int CHINESE_FONT_SIZE = 20;
+inline const char* ENGLISH_FONT = "english.ttf";
+inline int ENGLISH_FONT_SIZE = 20;
+inline int CHNFONT_SPACEWIDTH = 10;
 
-extern std::string AppPath, AppPathCommon;
+// 屏幕中心
+inline int CENTER_X = 320;
+inline int CENTER_Y = 240;
 
 // 游戏常数
-extern int ITEM_BEGIN_PIC;
-extern int BEGIN_EVENT;
-extern int BEGIN_SCENE;
-extern int BEGIN_Sx;
-extern int BEGIN_Sy;
-extern int SOFTSTAR_BEGIN_TALK;
-extern int SOFTSTAR_NUM_TALK;
-extern int MAX_PHYSICAL_POWER;
-extern int MONEY_ID;
-extern int COMPASS_ID;
-extern int BEGIN_LEAVE_EVENT;
-extern int BEGIN_BATTLE_ROLE_PIC;
-extern int MAX_LEVEL;
-extern int MAX_WEAPON_MATCH;
-extern int MIN_KNOWLEDGE;
-extern int MAX_ITEM_AMOUNT;
-extern int MAX_HP;
-extern int MAX_MP;
-extern int MaxProList[16]; // index 43..58 => [0..15]
-extern int LIFE_HURT;
-extern int POISON_HURT;
-extern int MED_LIFE;
-extern int MAX_ADD_PRO;
-extern int NOVEL_BOOK;
-extern int MAX_HEAD_NUM;
-extern int BEGIN_WALKPIC;
+inline int ITEM_BEGIN_PIC = 3501;
+inline int BEGIN_EVENT = 691;
+inline int BEGIN_SCENE = 70;
+inline int BEGIN_Sx = 20;
+inline int BEGIN_Sy = 19;
+inline int SOFTSTAR_BEGIN_TALK = 2547;
+inline int SOFTSTAR_NUM_TALK = 18;
+inline int MAX_PHYSICAL_POWER = 100;
+inline int MONEY_ID = 174;
+inline int COMPASS_ID = 182;
+inline int BEGIN_LEAVE_EVENT = 950;
+inline int BEGIN_BATTLE_ROLE_PIC = 2553;
+inline int MAX_LEVEL = 30;
+inline int MAX_WEAPON_MATCH = 7;
+inline int MIN_KNOWLEDGE = 80;
+inline int MAX_ITEM_AMOUNT = 200;
+inline int MAX_HP = 999;
+inline int MAX_MP = 999;
+inline int MaxProList[16] = {};
+inline int LIFE_HURT = 10;
+inline int POISON_HURT = 10;
+inline int MED_LIFE = 4;
+inline int MAX_ADD_PRO = 0;
+inline int NOVEL_BOOK = 144;
+inline int MAX_HEAD_NUM = 189;
+inline int BEGIN_WALKPIC = 2501;
 
-// 游戏数据
-extern uint8_t ACol[769];
-extern uint8_t ACol1[769];
-extern uint8_t ACol2[769];
+// 调色板
+inline uint8_t ACol[769] = {};
+inline uint8_t ACol1[769] = {};
+inline uint8_t ACol2[769] = {};
 
-extern smallint Earth[480][480];
-extern smallint Surface[480][480];
-extern smallint Building[480][480];
-extern smallint BuildX[480][480];
-extern smallint BuildY[480][480];
-extern smallint Entrance[480][480];
+// 大地图数据 (extern - 大数组)
+extern int16_t Earth[480][480];
+extern int16_t Surface[480][480];
+extern int16_t Building[480][480];
+extern int16_t BuildX[480][480];
+extern int16_t BuildY[480][480];
+extern int16_t Entrance[480][480];
 
-extern smallint InShip, SavedSceneIndex, Mx, My, Sx, Sy, MFace, ShipX, ShipY, ShipX1, ShipY1, ShipFace;
-extern smallint TeamList[6];
-extern std::vector<TItemList> RItemList;
+// 游戏状态
+inline int16_t InShip = 0, SavedSceneIndex = 0;
+inline int16_t Mx = 0, My = 0, Sx = 0, Sy = 0, MFace = 0;
+inline int16_t ShipX = 0, ShipY = 0, ShipX1 = 0, ShipY1 = 0, ShipFace = 0;
+inline int16_t TeamList[6] = {};
+inline std::vector<TItemList> RItemList;
+
+// 角色/物品/场景/武功/商店 (extern - 大数组)
 extern TRole Rrole[2032];
 extern TItem Ritem[725];
 extern TScene Rscene[201];
 extern TMagic Rmagic[999];
 extern TShop RShop[11];
-extern int SceneAmount;
+inline int SceneAmount = 0;
 
-extern smallint SData[401][6][64][64];
-extern smallint DData[401][200][11];
+// 场景/事件数据 (extern - 巨大数组)
+extern int16_t SData[401][6][64][64];
+extern int16_t DData[401][200][11];
 
-extern smallint BField[8][64][64];
+// 战场地图
+extern int16_t BField[8][64][64];
 extern TWarData WarSta;
 
-extern smallint LeaveList[100];
-extern smallint EffectList[200];
-extern smallint LevelUpList[100];
-extern smallint MatchList[100][3];
+// 列表
+inline int16_t LeaveList[100] = {};
+inline int16_t EffectList[200] = {};
+inline int16_t LevelUpList[100] = {};
+inline int16_t MatchList[100][3] = {};
 
 // 图像与界面设置
-extern int BIG_PNG_TILE;
-extern int FULLSCREEN;
-extern int RESOLUTIONX;
-extern int RESOLUTIONY;
-extern int SIMPLE;
-extern int SMOOTH;
-extern int HIRES_TEXT;
-extern int WMP_4_PIC;
+inline int BIG_PNG_TILE = 0;
+inline int FULLSCREEN = 0;
+inline int RESOLUTIONX = 640;
+inline int RESOLUTIONY = 480;
+inline int SIMPLE = 1;
+inline int SMOOTH = 1;
+inline int HIRES_TEXT = 1;
+inline int WMP_4_PIC = 0;
 
 // SDL运行时对象
-extern SDL_Event event;
-extern TTF_Font* ChineseFont;
-extern TTF_Font* EnglishFont;
+inline SDL_Event event = {};
+inline TTF_Font* ChineseFont = nullptr;
+inline TTF_Font* EnglishFont = nullptr;
 
-extern uint32 ScreenFlag;
-extern SDL_Surface* screen;
-extern SDL_Surface* freshscreen;
-extern SDL_Window* window;
-extern SDL_Renderer* render;
-extern SDL_Texture* screenTex;
-extern SDL_Texture* compositeTex;
+inline uint32 ScreenFlag = 0;
+inline SDL_Surface* screen = nullptr;
+inline SDL_Surface* freshscreen = nullptr;
+inline SDL_Window* window = nullptr;
+inline SDL_Renderer* render = nullptr;
+inline SDL_Texture* screenTex = nullptr;
+inline SDL_Texture* compositeTex = nullptr;
 
-extern SDL_Surface* ImgScene;
-extern SDL_Surface* ImgSceneBack;
-extern SDL_Surface* ImgBField;
-extern SDL_Surface* ImgBBuild;
-extern std::vector<smallint> BlockImg;
-extern std::vector<smallint> BlockImg2;
-extern TPosition BlockScreen;
+inline SDL_Surface* ImgScene = nullptr;
+inline SDL_Surface* ImgSceneBack = nullptr;
+inline SDL_Surface* ImgBField = nullptr;
+inline SDL_Surface* ImgBBuild = nullptr;
+inline std::vector<int16_t> BlockImg;
+inline std::vector<int16_t> BlockImg2;
+inline TPosition BlockScreen;
 
-extern int MPicAmount, SPicAmount, BPicAmount, EPicAmount, CPicAmount, FPicAmount, HPicAmount;
+inline int MPicAmount = 0, SPicAmount = 0, BPicAmount = 0;
+inline int EPicAmount = 0, CPicAmount = 0, FPicAmount = 0, HPicAmount = 0;
 
 // 贴图数据
-extern std::vector<uint8_t> MPic, SPic, WPic, EPic, HPic, CPic, KDef, TDef;
-extern std::vector<int> MIdx, SIdx, WIdx, EIdx, HIdx, CIdx, KIdx, TIdx;
+inline std::vector<uint8_t> MPic, SPic, WPic, EPic, HPic, CPic, KDef, TDef;
+inline std::vector<int> MIdx, SIdx, WIdx, EIdx, HIdx, CIdx, KIdx, TIdx;
 
-extern std::vector<uint8_t> FPic[1000];
-extern std::vector<int> FIdx[1000];
+inline std::vector<uint8_t> FPic[1000];
+inline std::vector<int> FIdx[1000];
 
-extern std::vector<SDL_Surface*> MPNGTile, SPNGTile, BPNGTile, EPNGTile, CPNGTile, TitlePNGTile;
-extern std::vector<SDL_Surface*> FPNGTile[1000];
+inline std::vector<SDL_Surface*> MPNGTile, SPNGTile, BPNGTile, EPNGTile, CPNGTile, TitlePNGTile;
+inline std::vector<SDL_Surface*> FPNGTile[1000];
 
-extern SDL_Surface* MSurface;
-extern SDL_Surface* SSurface;
-extern std::vector<SDL_Surface*> HeadSurface;
-extern std::vector<SDL_Surface*> BHead;
-extern std::vector<SDL_Surface*> ItemSurface;
+inline SDL_Surface* MSurface = nullptr;
+inline SDL_Surface* SSurface = nullptr;
+inline std::vector<SDL_Surface*> HeadSurface;
+inline std::vector<SDL_Surface*> BHead;
+inline std::vector<SDL_Surface*> ItemSurface;
 
-extern std::map<int, SDL_Surface*> fonts;
-extern std::map<int, SDL_Surface*> FontsHr;
+inline std::map<int, SDL_Surface*> fonts;
+inline std::map<int, SDL_Surface*> FontsHr;
 
 // 音频
-extern int VOLUME, VOLUMEWAV, SOUND3D;
-extern std::vector<MIX_Audio> Music;
-extern std::vector<MIX_Audio> ESound;
-extern std::vector<MIX_Audio> ASound;
+inline int VOLUME = 30, VOLUMEWAV = 30, SOUND3D = 1;
+inline std::vector<MIX_Audio> Music;
+inline std::vector<MIX_Audio> ESound;
+inline std::vector<MIX_Audio> ASound;
+inline int StartMusic = 16;
+inline int ExitSceneMusicNum = 0;
+inline int NowMusic = 0;
 
-extern int StartMusic;
-extern int ExitSceneMusicNum;
-extern int NowMusic;
+// 脚本系统
+extern int16_t x50[0x8000];
+inline int KDEF_SCRIPT = 1;
+inline lua_State* Lua_script = nullptr;
+inline int Script5032Pos = -100;
+inline int Script5032Value = 0;
 
-// 事件和脚本状态
-extern smallint x50[0x8000];
-extern int KDEF_SCRIPT;
-extern struct lua_State* lua_script;
-extern int Script5032Pos;
-extern int Script5032Value;
+// 场景动画
+inline int SceneRolePic = 0;
+inline int NeedRefreshScene = 0;
+inline int SCENEAMI = 0;
 
-extern int SceneRolePic;
-extern int NeedRefreshScene;
+// 云
+inline int CLOUD_AMOUNT = 50;
+inline std::vector<TCloud> Cloud;
 
-// 游戏体验设置
-extern int CLOUD_AMOUNT;
-extern std::vector<TCloud> Cloud;
+// 系统设置
+inline int WALK_SPEED = 10, WALK_SPEED2 = 10, BATTLE_SPEED = 10;
+inline int MMAPAMI = 1;
+inline int SEMIREAL = 0;
+inline int NIGHT_EFFECT = 0;
+inline int EXIT_GAME = 0;
+inline int EXPAND_GROUND = 0;
 
-extern int WALK_SPEED, WALK_SPEED2, BATTLE_SPEED;
-extern int MMAPAMI;
-extern int SCENEAMI;
-extern int SEMIREAL;
-extern int NIGHT_EFFECT;
-extern int EXIT_GAME;
+// 标题/开场位置
+inline TPosition TitlePosition = {};
+inline TPosition OpenPicPosition = {-1, -1};
 
-extern TPosition TitlePosition;
-extern TPosition OpenPicPosition;
+// SDL同步
+inline SDL_Mutex* mutex = nullptr;
+inline uint32 ChangeColorList[2][21] = {};
+inline bool AskingQuit = false;
+inline int BeginTime = 0;
+inline double NowTime = 0;
+inline bool LoadingScene = false;
 
-// 运行时状态
-extern SDL_Mutex* mutex;
-extern uint32 ChangeColorList[2][21];
-extern bool AskingQuit;
-extern int BeginTime;
-extern double NowTime;
-extern bool LoadingScene;
+// 行走/场景状态
+inline int MainMapStep = 0, MainMapStill = 0;
+inline int Cx = 0, Cy = 0, SFace = 0, SStep = 0;
+inline int CurScene = 0, CurEvent = -1, CurItem = -1;
+inline int CurrentBattle = 0, Where = 0;
+inline int SaveNum = 0;
 
-extern int MainMapStep, MainMapStill;
-extern int Cx, Cy, SFace, SStep;
-extern int CurScene, CurEvent, CurItem, CurrentBattle, Where;
-extern int SaveNum;
-extern TBattleRole Brole[100];
-extern int BRoleAmount;
-extern int Bx, By, Ax, Ay;
-extern int BattleResult;
+// 战斗
+inline TBattleRole Brole[200] = {};
+inline int BRoleAmount = 0;
+inline int Bx = 0, By = 0, Ax = 0, Ay = 0;
+inline int BattleResult = 0;
+inline int BattleRound = 0;
 
 // 寻路
-extern smallint linex[480 * 480];
-extern smallint liney[480 * 480];
-extern int nowstep;
+extern int16_t linex[480 * 480];
+extern int16_t liney[480 * 480];
+inline int nowstep = 0;
 extern int PathCost[480][480];
 
-extern smallint ItemList[501];
+// 物品列表
+inline int16_t ItemList[501] = {};
 
-extern int EXPAND_GROUND;
-extern smallint ExGround[192][192]; // [-64..127]
-extern smallint ImageWidth, ImageHeight;
-extern int BattleRound;
+// 扩展地面
+extern int16_t ExGround[192][192];
+inline int ImageWidth = 0, ImageHeight = 0;
 
-extern int CHNFONT_SPACEWIDTH;
+// 手柄
+inline uint32 JOY_RETURN = 0, JOY_ESCAPE = 0;
+inline uint32 JOY_LEFT = 0, JOY_RIGHT = 0, JOY_UP = 0, JOY_DOWN = 0;
+inline uint32 JOY_MOUSE_LEFT = 0, JOY_AXIS_DELAY = 0;
 
-// 手柄控制
-extern uint32 JOY_RETURN, JOY_ESCAPE, JOY_LEFT, JOY_RIGHT, JOY_UP, JOY_DOWN, JOY_MOUSE_LEFT;
-extern uint32 JOY_AXIS_DELAY;
+// 触控/手机
+inline int CellPhone = 0;
+inline int ScreenRotate = 0;
+inline int FingerCount = 0;
+inline uint32 FingerTick = 0;
+inline bool FreeWalking = false;
+inline bool BattleSelecting = false;
 
-extern int CellPhone;
-extern int ScreenRotate;
+// 虚拟按键（手机模式）
+inline int ShowVirtualKey = 0;
+inline int VirtualCrossX = 100, VirtualCrossY = 250;
+inline int VirtualAX = 0, VirtualAY = 0;
+inline int VirtualBX = 0, VirtualBY = 0;
+inline SDL_Surface* VirtualKeyU = nullptr;
+inline SDL_Surface* VirtualKeyD = nullptr;
+inline SDL_Surface* VirtualKeyL = nullptr;
+inline SDL_Surface* VirtualKeyR = nullptr;
+inline SDL_Surface* VirtualKeyA = nullptr;
+inline SDL_Surface* VirtualKeyB = nullptr;
 
-extern int FingerCount;
-extern uint32 FingerTick;
-extern bool FreeWalking;
-extern bool BattleSelecting;
-
-extern SDL_Surface* VirtualKeyU;
-extern SDL_Surface* VirtualKeyD;
-extern SDL_Surface* VirtualKeyL;
-extern SDL_Surface* VirtualKeyR;
-extern SDL_Surface* VirtualKeyA;
-extern SDL_Surface* VirtualKeyB;
-extern int ShowVirtualKey;
-extern uint32 VirtualKeyValue;
-extern int VirtualCrossX, VirtualCrossY, VirtualKeySize;
-extern int VirtualAX, VirtualAY, VirtualBX, VirtualBY;
-
-extern int SkipTalk;
-extern uint64_t tttt;
-
-// 简繁转换
-extern void* cct2s;
-extern void* ccs2t;
-
-extern double EXP_RATE;
-extern bool TouchWalk;
-extern int RENDERER;
+// 其他系统变量
+inline int RENDERER = 0;
+inline int TouchWalk = 1;
+inline double EXP_RATE = 1.0;
+inline int SkipTalk = 0;
+inline int CHNFONT_SPACEWIDTH = 0;
 
 // 色值蒙版
 constexpr uint32 RMask = 0xFF0000;
@@ -401,6 +423,6 @@ constexpr uint32 BMask = 0xFF;
 constexpr uint32 AMask = 0xFF000000;
 
 // ExGround偏移访问辅助: Pascal中下标为 -64..127, C++中用 [0..191]
-inline smallint& ExGroundAt(int x, int y) {
+inline int16_t& ExGroundAt(int x, int y) {
     return ExGround[x + 64][y + 64];
 }
