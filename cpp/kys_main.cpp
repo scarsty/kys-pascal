@@ -988,7 +988,8 @@ bool CheckCanEnter(int snum) {
 }
 
 uint32_t UpdateSceneAmi(void* param, SDL_TimerID timerid, uint32_t interval) {
-    if (Where == 1) UpdateScene();
+    if (Where == 1 && CurEvent < 0 && !LoadingScene && NeedRefreshScene != 0)
+        InitialScene(2);
     return interval;
 }
 
@@ -2545,7 +2546,7 @@ void ShowStatus(int rnum, int x, int y) {
     DrawRectangle(screen, x, y, 525, 315, 0, ColColor(255), 50);
 
     DrawHeadPic(Rrole[rnum].HeadNum, x + 60, y + 80);
-    std::string Name = cp950toutf8(Rrole[rnum].Name, 5);
+    std::string Name = cp950toutf8(Rrole[rnum].Name, 10);
     DrawShadowText(screen, Name, x + 88 - DrawLength(Name) * 5, y + 85, ColColor(0x66), ColColor(0x63));
 
     for (int i = 0; i <= 5; i++)
@@ -2585,14 +2586,43 @@ void ShowStatus(int rnum, int x, int y) {
     // 左列属性值
     snprintf(buf, sizeof(buf), "%4d", Rrole[rnum].Level);
     DrawEngShadowText(screen, buf, x + 90, y + 110, ColColor(0x5), ColColor(0x7));
-    snprintf(buf, sizeof(buf), "%4d/%4d", Rrole[rnum].CurrentHP, Rrole[rnum].MaxHP);
-    DrawEngShadowText(screen, buf, x + 50, y + 131, ColColor(0x5), ColColor(0x7));
+
+    // 生命 - 受伤程度影响CurrentHP颜色
+    uint32_t color1, color2;
+    if (Rrole[rnum].Hurt >= 67) { color1 = ColColor(0x14); color2 = ColColor(0x16); }
+    else if (Rrole[rnum].Hurt >= 34) { color1 = ColColor(0xE); color2 = ColColor(0x10); }
+    else { color1 = ColColor(0x7); color2 = ColColor(0x5); }
+    snprintf(buf, sizeof(buf), "%4d", Rrole[rnum].CurrentHP);
+    DrawEngShadowText(screen, buf, x + 60, y + 131, color1, color2);
+    DrawEngShadowText(screen, "/", x + 100, y + 131, ColColor(0x64), ColColor(0x66));
+    // MaxHP - 中毒程度影响颜色
+    if (Rrole[rnum].Poison >= 67) { color1 = ColColor(0x35); color2 = ColColor(0x37); }
+    else if (Rrole[rnum].Poison >= 34) { color1 = ColColor(0x30); color2 = ColColor(0x32); }
+    else { color1 = ColColor(0x21); color2 = ColColor(0x23); }
+    snprintf(buf, sizeof(buf), "%4d", Rrole[rnum].MaxHP);
+    DrawEngShadowText(screen, buf, x + 110, y + 131, color1, color2);
+
+    // 内力 - 依据内力性质使用颜色
+    if (Rrole[rnum].MPType == 0) { color1 = ColColor(0x50); color2 = ColColor(0x4E); }
+    else if (Rrole[rnum].MPType == 1) { color1 = ColColor(0x5); color2 = ColColor(0x7); }
+    else { color1 = ColColor(0x64); color2 = ColColor(0x66); }
     snprintf(buf, sizeof(buf), "%4d/%4d", Rrole[rnum].CurrentMP, Rrole[rnum].MaxMP);
-    DrawEngShadowText(screen, buf, x + 50, y + 152, ColColor(0x5), ColColor(0x7));
-    snprintf(buf, sizeof(buf), "%4d", Rrole[rnum].PhyPower);
-    DrawEngShadowText(screen, buf, x + 90, y + 173, ColColor(0x5), ColColor(0x7));
-    snprintf(buf, sizeof(buf), "%4d", (int)Rrole[rnum].Exp);
-    DrawEngShadowText(screen, buf, x + 90, y + 194, ColColor(0x5), ColColor(0x7));
+    DrawEngShadowText(screen, buf, x + 60, y + 152, color1, color2);
+
+    // 体力/上限
+    snprintf(buf, sizeof(buf), "%4d/%4d", Rrole[rnum].PhyPower, MAX_PHYSICAL_POWER);
+    DrawEngShadowText(screen, buf, x + 60, y + 173, ColColor(0x5), ColColor(0x7));
+
+    // 经验
+    snprintf(buf, sizeof(buf), "%5d", (uint16_t)Rrole[rnum].Exp);
+    DrawEngShadowText(screen, buf, x + 100, y + 194, ColColor(0x5), ColColor(0x7));
+    // 升级所需经验
+    int lvl = Rrole[rnum].Level;
+    if (lvl >= 1 && lvl <= 100)
+        snprintf(buf, sizeof(buf), "%5d", (uint16_t)LevelUpList[lvl - 1]);
+    else
+        snprintf(buf, sizeof(buf), "    -");
+    DrawEngShadowText(screen, buf, x + 100, y + 215, ColColor(0x5), ColColor(0x7));
 
     // 武功列表
     for (int i = 0; i < 10; i++) {
@@ -2611,6 +2641,35 @@ void ShowStatus(int rnum, int x, int y) {
     DrawShadowText(screen, strs[21], x + 10, y + 296, ColColor(0x21), ColColor(0x23));
     snprintf(buf, sizeof(buf), "%4d", Rrole[rnum].Poison);
     DrawEngShadowText(screen, buf, x + 90, y + 296, ColColor(0x10), ColColor(0x13));
+
+    // 装备物品 / 修炼物品
+    DrawShadowText(screen, strs[17], x + 180, y + 240, ColColor(0x21), ColColor(0x23));
+    DrawShadowText(screen, strs[18], x + 360, y + 240, ColColor(0x21), ColColor(0x23));
+    if (Rrole[rnum].Equip[0] >= 0)
+        DrawBig5ShadowText(screen, Ritem[Rrole[rnum].Equip[0]].Name, x + 190, y + 261, ColColor(0x5), ColColor(0x7));
+    if (Rrole[rnum].Equip[1] >= 0)
+        DrawBig5ShadowText(screen, Ritem[Rrole[rnum].Equip[1]].Name, x + 190, y + 282, ColColor(0x5), ColColor(0x7));
+
+    // 修炼秘笈
+    if (Rrole[rnum].PracticeBook >= 0) {
+        int mlevel = 1;
+        int magicnum = Ritem[Rrole[rnum].PracticeBook].Magic;
+        if (magicnum > 0) {
+            for (int i = 0; i < 10; i++) {
+                if (Rrole[rnum].Magic[i] == magicnum) {
+                    mlevel = Rrole[rnum].MagLevel[i] / 100 + 1;
+                    break;
+                }
+            }
+        }
+        int needexp = mlevel * Ritem[Rrole[rnum].PracticeBook].NeedExp * (7 - Rrole[rnum].Aptitude / 15);
+        DrawBig5ShadowText(screen, Ritem[Rrole[rnum].PracticeBook].Name, x + 370, y + 261, ColColor(0x5), ColColor(0x7));
+        if (mlevel == 10)
+            snprintf(buf, sizeof(buf), "%5d/=", (uint16_t)Rrole[rnum].ExpForBook);
+        else
+            snprintf(buf, sizeof(buf), "%5d/%5d", (uint16_t)Rrole[rnum].ExpForBook, needexp);
+        DrawEngShadowText(screen, buf, x + 380, y + 282, ColColor(0x64), ColColor(0x66));
+    }
 
     UpdateScreen(screen, x, y, 526, 316);
 }
@@ -2708,7 +2767,24 @@ void MenuSave() {
 }
 
 void MenuQuit() {
-    Quit();
+    std::string menuStr[3];
+    menuStr[0] = "取消";
+    menuStr[1] = "確認";
+    menuStr[2] = "腳本";
+    int menu = CommonMenu(133, 30, 45, 2, menuStr);
+    if (menu == 1) {
+        Where = 3;
+        return;
+    }
+    if (menu == 2) {
+        int i = EnterNumber(0, 99, 300, 100, 1);
+        std::string scriptFile = AppPath + "script/1.lua";
+        if (ExecScript(scriptFile, "f" + std::to_string(i)) != 0) {
+            std::string err = "  Script fail!";
+            DrawTextWithRect(screen, err, 100, 200, 150, 0xFFFFFFFF, 0xFFFFFFFF);
+            WaitAnyKey();
+        }
+    }
 }
 
 // ---- 使用物品效果 ----

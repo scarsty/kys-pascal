@@ -51,12 +51,43 @@ void DrawSPic(int num, int px, int py, int xx, int yy, int xw, int yh, int shado
                 shadow, alpha, nullptr, nullptr, 0, 0, 0, 0, mixColor, mixAlpha);
 }
 
+void DrawSPic(int num, int px, int py, int shadow, int alpha, int depth, uint32_t mixColor, int mixAlpha) {
+    if (num < 0 || num >= SPicAmount) return;
+    if (num == 1941) { num = 0; py -= 50; }
+    DrawRLE8Pic((const char*)ACol, num, px, py, SIdx.data(), SPic.data(),
+                nullptr, nullptr, 0, 0, 0, shadow, alpha,
+                (char*)BlockImg.data(), (const char*)&BlockScreen,
+                ImageWidth, ImageHeight, (int)sizeof(int16_t), depth, mixColor, mixAlpha);
+}
+
 void InitialSPic(int num, int px, int py, SDL_Surface* img, int widthI, int heightI,
                   char* blockW, int widthW, int heightW, int depth, uint32_t mixColor, int mixAlpha) {
     if (num < 0 || num >= SPicAmount) return;
     DrawRLE8Pic((const char*)ACol, num, px, py, SIdx.data(), SPic.data(),
                 nullptr, img, widthI, heightI, (int)sizeof(int16_t),
                 0, 0, blockW, nullptr, widthW, heightW, 0, depth, mixColor, mixAlpha);
+}
+
+// 带裁剪区域的InitialSPic - 匹配Pascal版 InitialSPic(num, px, py, x, y, w, h, needBlock, depth, temp)
+void InitialSPic(int num, int px, int py, int areaX, int areaY, int areaW, int areaH,
+                 int needBlock, int depth, int temp) {
+    if (num < 0 || num >= SPicAmount) return;
+    SDL_Surface* pImg = (temp == 0) ? ImgScene : ImgSceneBack;
+    char* pBlock = (temp == 0) ? (char*)BlockImg.data() : (char*)BlockImg2.data();
+    if (!pImg) return;
+    if (areaX + areaW > ImageWidth) areaW = ImageWidth - areaX - 1;
+    if (areaY + areaH > ImageHeight) areaH = ImageHeight - areaY - 1;
+    SDL_Rect area = {areaX, areaY, areaW, areaH};
+    if (num == 1941) { num = 0; py -= 50; }
+    if (needBlock != 0) {
+        DrawRLE8Pic((const char*)ACol, num, px, py, SIdx.data(), SPic.data(),
+                    (const char*)&area, pImg, ImageWidth, ImageHeight, (int)sizeof(int16_t),
+                    0, 0, pBlock, nullptr, 0, 0, 0, depth, 0, 0);
+    } else {
+        DrawRLE8Pic((const char*)ACol, num, px, py, SIdx.data(), SPic.data(),
+                    (const char*)&area, pImg, ImageWidth, ImageHeight, (int)sizeof(int16_t),
+                    0);
+    }
 }
 
 void DrawHeadPic(int num, int px, int py) {
@@ -352,11 +383,10 @@ void DrawRoleOnScene() {
 }
 
 void DrawRoleOnScene(int cx, int cy) {
-    // 角色始终渲染在屏幕中央
-    TPosition pos = GetPositionOnScreen(0, 0, CENTER_X, CENTER_Y);
+    TPosition pos = GetPositionOnScreen(Sx, Sy, cx, cy);
     int pic = SceneRolePic;
     if (pic <= 0) pic = BEGIN_WALKPIC + SFace * 7 + SStep;
-    DrawSPic(pic, pos.x, pos.y, 0, 0, screen->w, screen->h);
+    DrawSPic(pic, pos.x, pos.y - SData[CurScene][4][Sx][Sy], 0, 100, CalBlock(Sx, Sy), 0, 0);
 }
 
 void InitialScene() {
@@ -373,7 +403,7 @@ void InitialScene(int onlyvisible) {
 
     if (onlyvisible == 0) {
         SDL_FillSurfaceRect(ImgScene, nullptr, 0xFF000000);
-        SDL_FillSurfaceRect(ImgSceneBack, nullptr, 1);
+        if (ImgSceneBack) SDL_FillSurfaceRect(ImgSceneBack, nullptr, 1);
         ExpandGroundOnImg(ImgScene, ImageWidth, ImageHeight);
     } else {
         TPosition lt;
@@ -397,8 +427,7 @@ void InitialScene(int onlyvisible) {
                 int num = SData[CurScene][0][i1][i2] / 2;
                 if (num > 0) {
                     TPosition pos = CalPosOnImage(i1, i2);
-                    InitialSPic(num, pos.x, pos.y, ImgScene, ImageWidth, ImageHeight,
-                                nullptr, 0, 0, 0);
+                    InitialSPic(num, pos.x, pos.y, x1, y1, w, h, 1, 0, onback);
                 }
             }
         }
@@ -406,13 +435,30 @@ void InitialScene(int onlyvisible) {
 
     // 按对角线顺序绘制建筑层（保证正确遮挡）
     for (int mini = 0; mini < 64; mini++) {
-        InitialSceneOnePosition(mini, mini, ImgScene, ImageWidth, ImageHeight,
-                                (char*)BlockImg.data(), ImageWidth, ImageHeight);
+        InitialSceneOnePosition(mini, mini, x1, y1, w, h, CalBlock(mini, mini), onback);
         for (int maxi = mini + 1; maxi < 64; maxi++) {
-            InitialSceneOnePosition(maxi, mini, ImgScene, ImageWidth, ImageHeight,
-                                    (char*)BlockImg.data(), ImageWidth, ImageHeight);
-            InitialSceneOnePosition(mini, maxi, ImgScene, ImageWidth, ImageHeight,
-                                    (char*)BlockImg.data(), ImageWidth, ImageHeight);
+            InitialSceneOnePosition(maxi, mini, x1, y1, w, h, CalBlock(maxi, mini), onback);
+            InitialSceneOnePosition(mini, maxi, x1, y1, w, h, CalBlock(mini, maxi), onback);
+        }
+    }
+
+    if (onlyvisible > 0 && Where == 1 && x1 >= 0 && y1 >= 0) {
+        // 遮挡值仅更新主角附近的即可
+        TPosition spos = CalPosOnImage(Sx, Sy);
+        int bx = spos.x - 36;
+        int by = spos.y - 100;
+        for (int i1 = bx; i1 <= bx + 72; i1++) {
+            if (i1 >= 0 && i1 < ImageWidth) {
+                int num = i1 * ImageHeight + by;
+                if (by >= 0 && num >= 0 && num + 200 <= (int)BlockImg.size()) {
+                    memcpy(&BlockImg[num], &BlockImg2[num], 200 * sizeof(int16_t));
+                }
+            }
+        }
+        // 将ImgSceneBack的可见区域拷贝到ImgScene
+        if (ImgSceneBack) {
+            SDL_Rect rect = {x1, y1, w, h};
+            SDL_BlitSurface(ImgSceneBack, &rect, ImgScene, &rect);
         }
     }
 
@@ -420,31 +466,27 @@ void InitialScene(int onlyvisible) {
     SDL_UnlockMutex(mutex);
 }
 
-void InitialSceneOnePosition(int x, int y, SDL_Surface* img, int imgW, int imgH,
-                               char* blockW, int blockWW, int blockWH) {
+// 匹配Pascal版: InitialSceneOnePosition(i1, i2, x1, y1, w, h, depth, temp)
+void InitialSceneOnePosition(int x, int y, int x1, int y1, int w, int h, int depth, int temp) {
     if (CurScene < 0) return;
     TPosition pos = CalPosOnImage(x, y);
-    int depth = CalBlock(x, y);
 
     // 地面层（当 SData[4] > 0 时也在此绘制）
     if (SData[CurScene][4][x][y] > 0) {
         int num = SData[CurScene][0][x][y] / 2;
-        if (num > 0)
-            InitialSPic(num, pos.x, pos.y, img, imgW, imgH, nullptr, 0, 0, depth);
+        InitialSPic(num, pos.x, pos.y, x1, y1, w, h, 1, depth, temp);
     }
 
     // 建筑层1 (偏移 SData[4])
     if (SData[CurScene][1][x][y] > 0) {
         int num = SData[CurScene][1][x][y] / 2;
-        InitialSPic(num, pos.x, pos.y - SData[CurScene][4][x][y], img, imgW, imgH,
-                     blockW, blockWW, blockWH, depth);
+        InitialSPic(num, pos.x, pos.y - SData[CurScene][4][x][y], x1, y1, w, h, 1, depth, temp);
     }
 
     // 建筑层2 (偏移 SData[5])
     if (SData[CurScene][2][x][y] > 0) {
         int num = SData[CurScene][2][x][y] / 2;
-        InitialSPic(num, pos.x, pos.y - SData[CurScene][5][x][y], img, imgW, imgH,
-                     blockW, blockWW, blockWH, depth);
+        InitialSPic(num, pos.x, pos.y - SData[CurScene][5][x][y], x1, y1, w, h, 1, depth, temp);
     }
 
     // 事件图 (偏移 SData[4])
@@ -453,14 +495,13 @@ void InitialSceneOnePosition(int x, int y, SDL_Surface* img, int imgW, int imgH,
         int num = DData[CurScene][eventIdx][5] / 2;
         if (num > 0) {
             if (SCENEAMI == 2)
-                InitialSPic(num, pos.x, pos.y - SData[CurScene][4][x][y], img, imgW, imgH,
-                             blockW, blockWW, blockWH, depth);
+                InitialSPic(num, pos.x, pos.y - SData[CurScene][4][x][y], x1, y1, w, h, 1, depth, temp);
         }
     }
 }
 
 int CalBlock(int x, int y) {
-    return x + y;
+    return 128 * (x + y) + y;
 }
 
 void ExpandGroundOnImg(SDL_Surface* img, int imgW, int imgH) {
@@ -468,11 +509,58 @@ void ExpandGroundOnImg(SDL_Surface* img, int imgW, int imgH) {
 }
 
 void UpdateScene() {
-    // 增量更新场景图 - 动画帧
+    // 无参版 - 由定时器回调, 仿照Pascal调用 InitialScene(2)
+    if (CurEvent < 0 && !LoadingScene && NeedRefreshScene != 0)
+        InitialScene(2);
+}
+
+// 匹配Pascal版: UpdateScene(xs, ys) - 增量更新场景映像中指定位置附近的帧
+void UpdateScene(int xs, int ys) {
+    int xp = -xs * 18 + ys * 18 + 1151;
+    int yp = xs * 9 + ys * 9 + 250;
+    int w, h;
+    int num = 0;
+    // 如在事件外，根据事件精灵尺寸确定更新区域
+    if (CurEvent < 0) {
+        num = DData[CurScene][SData[CurScene][3][xs][ys]][5] / 2;
+        if (num > 0) {
+            int offset = SIdx[num - 1];
+            xp = xp - (SPic[offset + 4] + 256 * SPic[offset + 5]) - 3;
+            yp = yp - (SPic[offset + 6] + 256 * SPic[offset + 7]) - 3 - SData[CurScene][4][xs][ys];
+            w = (SPic[offset] + 256 * SPic[offset + 1]) + 20;
+            h = (SPic[offset + 2] + 256 * SPic[offset + 3]) + 6;
+        }
+    }
+    if (CurEvent >= 0 || num <= 0) {
+        xp = xp - 30;
+        yp = yp - 120;
+        w = 100;
+        h = 130;
+    }
+    int rangeOffset = std::max(h / 18, w / 36);
+    for (int i1 = xs - rangeOffset; i1 <= xs + 5; i1++) {
+        for (int i2 = ys - rangeOffset; i2 <= ys + 5; i2++) {
+            int x = -i1 * 18 + i2 * 18 + 1151;
+            int y = i1 * 9 + i2 * 9 + 9 + 250;
+            InitialSPic(SData[CurScene][0][i1][i2] / 2, x, y, xp, yp, w, h);
+            if (i1 < 0 || i2 < 0 || i1 > 63 || i2 > 63) {
+                InitialSPic(0, x, y, xp, yp, w, h);
+            } else {
+                if (SData[CurScene][1][i1][i2] > 0)
+                    InitialSPic(SData[CurScene][1][i1][i2] / 2, x, y - SData[CurScene][4][i1][i2], xp, yp, w, h);
+                if (SData[CurScene][2][i1][i2] > 0)
+                    InitialSPic(SData[CurScene][2][i1][i2] / 2, x, y - SData[CurScene][5][i1][i2], xp, yp, w, h);
+                if (SData[CurScene][3][i1][i2] >= 0 && DData[CurScene][SData[CurScene][3][i1][i2]][5] > 0)
+                    InitialSPic(DData[CurScene][SData[CurScene][3][i1][i2]][5] / 2, x, y - SData[CurScene][4][i1][i2], xp, yp, w, h);
+            }
+        }
+    }
 }
 
 void LoadScenePart(int x1, int y1) {
     if (!ImgScene || !screen) return;
+    BlockScreen.x = x1;
+    BlockScreen.y = y1;
     SDL_Rect src = {x1, y1, CENTER_X * 2, CENTER_Y * 2};
     SDL_Rect dst = {0, 0, CENTER_X * 2, CENTER_Y * 2};
     SDL_BlitSurface(ImgScene, &src, screen, &dst);
@@ -539,6 +627,8 @@ void InitialBFieldPosition(int x, int y) {
 void LoadBfieldPart(int cx, int cy) {
     if (!ImgBField || !screen) return;
     TPosition lt = CalLTPosOnImageByCenter(cx, cy);
+    BlockScreen.x = lt.x;
+    BlockScreen.y = lt.y;
     SDL_Rect src = {lt.x, lt.y, CENTER_X * 2, CENTER_Y * 2};
     SDL_Rect dst = {0, 0, CENTER_X * 2, CENTER_Y * 2};
     SDL_BlitSurface(ImgBField, &src, screen, &dst);

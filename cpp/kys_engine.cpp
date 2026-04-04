@@ -976,8 +976,24 @@ uint32_t CheckBasicEvent() {
 }
 
 void QuitConfirm() {
-    // 直接退出或弹出确认
-    Quit();
+    if (EXIT_GAME == 0 || AskingQuit) {
+        Quit();
+        return;
+    }
+    if (AskingQuit) return;
+    AskingQuit = true;
+    SDL_Surface* tempscr = SDL_ConvertSurface(screen, screen->format);
+    SDL_BlitSurface(tempscr, nullptr, screen, nullptr);
+    DrawRectangleWithoutFrame(screen, 0, 0, screen->w, screen->h, 0, 50);
+    UpdateScreen(screen, 0, 0, screen->w, screen->h);
+    std::string menuStr[2] = {"\xe5\x8f\x96\xe6\xb6\x88", "\xe7\xa2\xba\xe8\xaa\x8d"}; // 取消, 確認
+    if (CommonMenu(CENTER_X * 2 - 50, 2, 45, 1, menuStr) == 1)
+        Quit();
+    Redraw();
+    SDL_BlitSurface(tempscr, nullptr, screen, nullptr);
+    UpdateScreen(screen, 0, 0, screen->w, screen->h);
+    SDL_DestroySurface(tempscr);
+    AskingQuit = false;
 }
 
 int AngleToDirection(double y, double x) {
