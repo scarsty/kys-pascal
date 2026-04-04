@@ -17,6 +17,10 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#ifdef _WIN32
+#define NOMINMAX
+#include <windows.h>
+#endif
 
 // ---- 基本事件指令 ----
 
@@ -165,7 +169,7 @@ int instruct_6(int battlenum, int jump1, int jump2, int getexp) {
     return Battle(battlenum, getexp) ? jump1 : jump2;
 }
 
-void instruct_8(int musicnum) { exitscenemusicnum = musicnum; }
+void instruct_8(int musicnum) { ExitSceneMusicNum = musicnum; }
 
 int instruct_9(int jump1, int jump2) {
     std::string ms[3] = {"取消", "要求", "是否要求加入？"};
@@ -710,7 +714,9 @@ int CutRegion(int x) {
 }
 
 int instruct_50e(int code, int e1, int e2, int e3, int e4, int e5, int e6) {
-    int t1, i, len;
+    int t1, i, len, i1, i2, x, y, w, h, w1, h1;
+    char *p, *p1, *p2;
+    std::string str, word, word1;
     switch (code) {
         case 0: x50[e1] = e2; break;
         case 1: t1 = CutRegion(e3 + e_GetValue(0, e1, e4)); x50[t1] = e_GetValue(1, e1, e5); if (e2==1) x50[t1] &= 0xFF; break;
@@ -740,6 +746,54 @@ int instruct_50e(int code, int e1, int e2, int e3, int e4, int e5, int e6) {
             if (!ok) x50[0x7000] = 1;
         } break;
         case 5: memset(x50, 0, sizeof(x50)); break;
+        case 8: { // Read talk to string
+            t1 = e_GetValue(0, e1, e2);
+            len = 0;
+            int offset = 0;
+            if (t1 == 0) {
+                offset = 0;
+                len = TIdx[0];
+            } else {
+                offset = TIdx[t1 - 1];
+                len = TIdx[t1] - offset;
+            }
+            p = (char*)&x50[e3];
+            for (i = 0; i < len - 1; i++) {
+                p[i] = TDef[offset + i] ^ 0xFF;
+            }
+            p[len - 1] = 0;
+        } break;
+        case 9: { // Format the string
+            e4 = e_GetValue(0, e1, e4);
+            p = (char*)&x50[e2];
+            p1 = (char*)&x50[e3];
+            str = std::string(p1);
+            char buf[256];
+            snprintf(buf, sizeof(buf), str.c_str(), e4);
+            str = buf;
+            memcpy(p, str.c_str(), str.size() + 1);
+        } break;
+        case 10: { // Get the length of a string
+            p = (char*)&x50[e1];
+            x50[e2] = (int16_t)strlen(p);
+        } break;
+        case 11: { // Combine 2 strings
+            p = (char*)&x50[e1];
+            p1 = (char*)&x50[e2];
+            int len1 = (int)strlen(p1);
+            memcpy(p, p1, len1);
+            p += len1;
+            if (len1 % 2 == 1) { *p = 0x20; p++; }
+            p1 = (char*)&x50[e3];
+            int len2 = (int)strlen(p1);
+            memcpy(p, p1, len2 + 1);
+        } break;
+        case 12: { // Build a string with spaces
+            e3 = e_GetValue(0, e1, e3);
+            p = (char*)&x50[e2];
+            for (i = 0; i <= e3 / 2; i++) { *p = ' '; p++; }
+            *p = 0;
+        } break;
         case 16: { e3 = e_GetValue(0, e1, e3); e4 = e_GetValue(1, e1, e4); e5 = e_GetValue(2, e1, e5);
             if (e3 >= 0) switch (e2) {
                 case 0: Rrole[e3].Data[e4/2] = e5; break;
@@ -767,17 +821,318 @@ int instruct_50e(int code, int e1, int e2, int e3, int e4, int e5, int e6) {
         case 22: { e2=e_GetValue(0,e1,e2); e3=e_GetValue(1,e1,e3); e4=e_GetValue(2,e1,e4); x50[e5]=DData[e2][e3][e4]; } break;
         case 23: { e2=e_GetValue(0,e1,e2); e3=e_GetValue(1,e1,e3); e4=e_GetValue(2,e1,e4); e5=e_GetValue(3,e1,e5); e6=e_GetValue(4,e1,e6); SData[e2][e3][e5][e4]=e6; } break;
         case 24: { e2=e_GetValue(0,e1,e2); e3=e_GetValue(1,e1,e3); e4=e_GetValue(2,e1,e4); e5=e_GetValue(3,e1,e5); x50[e6]=SData[e2][e3][e5][e4]; } break;
+        case 25: { // Write memory by address
+            e5 = e_GetValue(0, e1, e5);
+            e6 = e_GetValue(1, e1, e6);
+            t1 = (uint16_t)e3 + (uint16_t)e4 * 0x10000 + (uint16_t)e6;
+            i = (uint16_t)e3 + (uint16_t)e4 * 0x10000;
+            switch (t1) {
+                case 0x1D295A: Sx = e5; break;
+                case 0x1D295C: Sy = e5; break;
+            }
+            switch (i) {
+                case 0x18FE2C:
+                    if (e6 % 4 <= 1) RItemList[e6 / 4].Number = e5;
+                    else RItemList[e6 / 4].Amount = e5;
+                    break;
+                case 0x051C83:
+                    *((uint16_t*)&ACol[e6]) = e5;
+                    *((uint16_t*)&ACol1[e6]) = e5;
+                    *((uint16_t*)&ACol2[e6]) = e5;
+                    break;
+                case 0x1D295E:
+                    CurScene = e5;
+                    break;
+            }
+            UpdateScreen(screen, 0, 0, screen->w, screen->h);
+        } break;
+        case 26: { // Read memory by address
+            e6 = e_GetValue(0, e1, e6);
+            t1 = (uint16_t)e3 + (uint16_t)e4 * 0x10000 + (uint16_t)e6;
+            i = (uint16_t)e3 + (uint16_t)e4 * 0x10000;
+            switch (t1) {
+                case 0x1D295E: x50[e5] = CurScene; break;
+                case 0x1D295A: x50[e5] = Sx; break;
+                case 0x1D295C: x50[e5] = Sy; break;
+                case 0x1C0B88: x50[e5] = Mx; break;
+                case 0x1C0B8C: x50[e5] = My; break;
+                case 0x05B53A: x50[e5] = 1; break;
+                case 0x0544F2: x50[e5] = SFace; break;
+                case 0x1E6ED6: x50[e5] = x50[28100]; break;
+                case 0x556DA: x50[e5] = Ax; break;
+                case 0x556DC: x50[e5] = Ay; break;
+                case 0x1C0B90: x50[e5] = SDL_GetTicks() / 55 % 65536; break;
+            }
+            if (t1 - 0x18FE2C >= 0 && t1 - 0x18FE2C < 800) {
+                i = t1 - 0x18FE2C;
+                if (i % 4 <= 1) x50[e5] = RItemList[i / 4].Number;
+                else x50[e5] = RItemList[i / 4].Amount;
+            }
+            if (t1 >= 0x1E4A04 && t1 < 0x1E6A04) {
+                i = (t1 - 0x1E4A04) / 2;
+                x50[e5] = BField[2][i % 64][i / 64];
+            }
+        } break;
+        case 27: { // Read name to string
+            e3 = e_GetValue(0, e1, e3);
+            p = (char*)&x50[e4];
+            if (e3 >= 0) {
+                switch (e2) {
+                    case 0: p1 = (char*)Rrole[e3].Name; break;
+                    case 1: p1 = (char*)Ritem[e3].Name; break;
+                    case 2: p1 = (char*)Rscene[e3].Name; break;
+                    case 3: p1 = (char*)Rmagic[e3].Name; break;
+                    default: p1 = (char*)""; break;
+                }
+                len = std::min(10, (int)strlen(p1));
+                memcpy(p, p1, len);
+                p += len;
+                if (len % 2 == 1) { *p = 0x20; p++; }
+                *p = 0;
+            }
+        } break;
         case 28: x50[e1] = x50[28005]; break;
+        case 29: { // Select aim
+            e2 = e_GetValue(0, e1, e2);
+            e3 = e_GetValue(1, e1, e3);
+            if (e5 == 0) SelectAim(e2, e3);
+            x50[e4] = BField[2][Ax][Ay];
+        } break;
+        case 30: { // Read battle properties
+            e2 = e_GetValue(0, e1, e2);
+            e3 = e_GetValue(1, e1, e3);
+            x50[e4] = Brole[e2].Data[e3 / 2];
+        } break;
+        case 31: { // Write battle properties
+            e2 = e_GetValue(0, e1, e2);
+            e3 = e_GetValue(1, e1, e3);
+            e4 = e_GetValue(2, e1, e4);
+            Brole[e2].Data[e3 / 2] = e4;
+        } break;
         case 32: { e3=e_GetValue(0,e1,e3); Script5032Pos=e3; Script5032Value=x50[e2]; return 655360*(e3+1)+x50[e2]; }
+        case 33: { // Draw a string
+            e3 = e_GetValue(0, e1, e3);
+            e4 = e_GetValue(1, e1, e4);
+            e5 = e_GetValue(2, e1, e5);
+            p = (char*)&x50[e2];
+            p1 = p;
+            i = 0;
+            x = e3; y = e4; w = 0;
+            while ((uint8_t)*p > 0) {
+                if ((uint8_t)*p == 0x2A) {
+                    *p = 0;
+                    DrawBig5ShadowText(screen, p1, e3 - 2, e4 + 22 * i - 3, ColColor(e5 & 0xFF), ColColor((e5 & 0xFF00) << 8));
+                    i++;
+                    p1 = p + 1;
+                    w1 = (int)strlen(p1) * 11;
+                    if (w1 > w) w = w1;
+                }
+                p++;
+            }
+            DrawBig5ShadowText(screen, p1, e3 - 2, e4 + 22 * i - 3, ColColor(e5 & 0xFF), ColColor((e5 & 0xFF00) << 8));
+            w1 = (int)strlen(p1) * 11;
+            if (w1 > w) w = w1;
+            UpdateScreen(screen, x - 3, y - 3, w + 6, 22 * (i + 1) + 6);
+        } break;
+        case 34: { e2=e_GetValue(0,e1,e2); e3=e_GetValue(1,e1,e3); e4=e_GetValue(2,e1,e4); e5=e_GetValue(3,e1,e5);
+            DrawRectangle(screen, e2, e3, e4, e5, 0, ColColor(0xFF), 50);
+            UpdateScreen(screen, e2, e3, e4+1, e5+1);
+        } break;
         case 35: { i = WaitAnyKey(); x50[e1] = i;
             if (i==SDLK_LEFT) x50[e1]=154; if (i==SDLK_RIGHT) x50[e1]=156;
             if (i==SDLK_UP) x50[e1]=158; if (i==SDLK_DOWN) x50[e1]=152;
         } break;
+        case 36: { // Draw a string with background then pause
+            e3 = e_GetValue(0, e1, e3);
+            e4 = e_GetValue(1, e1, e4);
+            e5 = e_GetValue(2, e1, e5);
+            p = (char*)&x50[e2];
+            i1 = 1; i2 = 0; t1 = 0;
+            e3 = abs(e3);
+            char* pp = p;
+            while ((uint8_t)*pp > 0) {
+                if ((uint8_t)*pp == 0x2A) { if (t1 > i2) i2 = t1; t1 = 0; i1++; }
+                if ((uint8_t)*pp == 0x20) t1++;
+                pp++; t1++;
+            }
+            if (t1 > i2) i2 = t1;
+            pp--;
+            if (i1 == 0) i1 = 1;
+            if ((uint8_t)*pp == 0x2A) i1--;
+            DrawRectangle(screen, e3, e4, i2 * 10 + 25, i1 * 22 + 5, 0, ColColor(255), 50);
+            p1 = p;
+            i = 0;
+            while ((uint8_t)*p > 0) {
+                if ((uint8_t)*p == 0x2A) {
+                    *p = 0;
+                    DrawBig5ShadowText(screen, p1, e3 + 3, e4 + 22 * i + 2, ColColor(e5 & 0xFF), ColColor((e5 & 0xFF00) << 8));
+                    i++; p1 = p + 1;
+                }
+                p++;
+            }
+            DrawBig5ShadowText(screen, p1, e3 + 3, e4 + 22 * i + 2, ColColor(e5 & 0xFF), ColColor((e5 & 0xFF00) << 8));
+            UpdateScreen(screen, 0, 0, screen->w, screen->h);
+            i = WaitAnyKey();
+            if (i == SDLK_Y) x50[0x7000] = 0; else x50[0x7000] = 1;
+        } break;
         case 37: { e2=e_GetValue(0,e1,e2); SDL_Delay(e2); } break;
         case 38: { e2=e_GetValue(0,e1,e2); x50[e3] = rand() % e2; } break;
-        case 34: { e2=e_GetValue(0,e1,e2); e3=e_GetValue(1,e1,e3); e4=e_GetValue(2,e1,e4); e5=e_GetValue(3,e1,e5);
-            DrawRectangle(screen, e2, e3, e4, e5, 0, ColColor(0xFF), 50);
-            UpdateScreen(screen, e2, e3, e4+1, e5+1);
+        case 39: { // Show a menu to select
+            e2 = e_GetValue(0, e1, e2);
+            e5 = e_GetValue(1, e1, e5);
+            e6 = e_GetValue(2, e1, e6);
+            std::vector<std::string> menuString(e2);
+            t1 = 0;
+            for (i = 0; i < e2; i++) {
+                p = (char*)&x50[x50[e3 + i]];
+                menuString[i] = cp950toutf8(p);
+                i1 = (int)strlen(p);
+                if (i1 > t1) t1 = i1;
+            }
+            x50[e4] = CommonMenu(e5, e6, t1 * 10 + 5, e2 - 1, menuString.data()) + 1;
+        } break;
+        case 40: { // Show a scroll menu to select
+            e2 = e_GetValue(0, e1, e2);
+            e5 = e_GetValue(1, e1, e5);
+            e6 = e_GetValue(2, e1, e6);
+            std::vector<std::string> menuString(e2);
+            i2 = 0;
+            for (i = 0; i < e2; i++) {
+                p = (char*)&x50[x50[e3 + i]];
+                menuString[i] = cp950toutf8(p);
+                i1 = (int)strlen(p);
+                if (i1 > i2) i2 = i1;
+            }
+            t1 = (e1 >> 8) & 0xFF;
+            if (t1 == 0) t1 = 5;
+            x50[e4] = CommonScrollMenu(e5, e6, i2 * 10 + 5, e2 - 1, t1, menuString.data()) + 1;
+        } break;
+        case 41: { // Draw a picture
+            e3 = e_GetValue(0, e1, e3);
+            e4 = e_GetValue(1, e1, e4);
+            e5 = e_GetValue(2, e1, e5);
+            w = 0; h = 0; x = 0; y = 0;
+            switch (e2) {
+                case 0:
+                    if (Where != 1 || (MODVersion == 22 && CurEvent == -1)) {
+                        DrawMPic(e5 / 2, e3, e4);
+                        GetPicSize(e5 / 2, MIdx.data(), MPic.data(), w, h, x, y);
+                    } else {
+                        DrawSPic(e5 / 2, e3, e4, 0, 0, screen->w, screen->h);
+                        GetPicSize(e5 / 2, SIdx.data(), SPic.data(), w, h, x, y);
+                    }
+                    break;
+                case 1:
+                    DrawHeadPic(e5, e3, e4);
+                    GetPicSize(e5 / 2, HIdx.data(), HPic.data(), w, h, x, y);
+                    break;
+                case 2: {
+                    str = AppPath + "pic/" + std::to_string(e5) + ".png";
+                    display_img(str.c_str(), e3, e4);
+                } break;
+            }
+            UpdateScreen(screen, e3 - x, e4 - y, w, h);
+        } break;
+        case 42: { // Change position on world map
+            e2 = e_GetValue(0, e1, e2);
+            e3 = e_GetValue(0, e1, e3);
+            Mx = e3; My = e2;
+        } break;
+        case 43: { // Call another event
+            e2 = e_GetValue(0, e1, e2);
+            e3 = e_GetValue(1, e1, e3);
+            e4 = e_GetValue(2, e1, e4);
+            e5 = e_GetValue(3, e1, e5);
+            e6 = e_GetValue(4, e1, e6);
+            x50[0x7100] = e3;
+            x50[0x7101] = e4;
+            x50[0x7102] = e5;
+            x50[0x7103] = e6;
+            if (e2 == 202) {
+                if (e5 == 0) instruct_2(e3, e4);
+                else instruct_32(e3, e4);
+            } else if (e2 == 201) {
+                NewTalk(e3, e4, e5, e6 % 100, (e6 % 100) / 10, e6 / 100, 0);
+            } else if (e2 == 176 && MODVersion == 22) {
+                x50[10032] = EnterNumber(0, 32767, CENTER_X, CENTER_Y - 100);
+                x50[0x7000] = 0;
+                Redraw();
+            } else {
+                CallEvent(e2);
+            }
+        } break;
+        case 44: { // Play animation
+            e2 = e_GetValue(0, e1, e2);
+            e3 = e_GetValue(1, e1, e3);
+            e4 = e_GetValue(2, e1, e4);
+            PlayActionAmination(e2, e3);
+            PlayMagicAmination(e2, e4);
+        } break;
+        case 45: { // Show values
+            e2 = e_GetValue(0, e1, e2);
+            ShowHurtValue(e2);
+        } break;
+        case 46: { // Set effect layer
+            e2 = e_GetValue(0, e1, e2);
+            e3 = e_GetValue(1, e1, e3);
+            e4 = e_GetValue(2, e1, e4);
+            e5 = e_GetValue(3, e1, e5);
+            e6 = e_GetValue(4, e1, e6);
+            for (i1 = e2; i1 < e2 + e4; i1++)
+                for (i2 = e3; i2 < e3 + e5; i2++)
+                    BField[4][i1][i2] = e6;
+        } break;
+        case 47: break; // No need to re-set the pic
+        case 48: { // Show some parameters (debug)
+            str = "";
+            for (i = e1; i < e1 + e2; i++)
+                str += "x" + std::to_string(i) + "=" + std::to_string(x50[i]) + "\n";
+            if (FULLSCREEN == 0) {
+#ifdef _WIN32
+                MessageBoxA(0, str.c_str(), "KYS Windows", MB_OK);
+#endif
+            }
+        } break;
+        case 49: break; // In PE files, you can't call any procedure as your wish
+        case 50: { // Enter name for items, magics and roles
+            e2 = e_GetValue(0, e1, e2);
+            e3 = e_GetValue(1, e1, e3);
+            e4 = e_GetValue(2, e1, e4);
+            e5 = e_GetValue(3, e1, e5);
+            switch (e2) {
+                case 0: p = (char*)Rrole[e3].Name; break;
+                case 1: p = (char*)Ritem[e3].Name; break;
+                case 2: p = (char*)Rmagic[e3].Name; break;
+                case 3: p = (char*)Rscene[e3].Name; break;
+                default: p = nullptr; break;
+            }
+            if (p) {
+                word1 = cp950toutf8(p);
+                word = "\u8ACB\u8F38\u5165\u540D\u5B57\uFF1A";
+                DrawTextWithRect(word, CENTER_X - 133, CENTER_Y - 30, 266, ColColor(0x21), ColColor(0x23));
+                std::string inputStr = word1;
+                if (EnterString(inputStr, CENTER_X - 43, CENTER_Y + 10, 86, 20)) {
+                    str = utf8tocp950(inputStr);
+                    int copyLen = std::min((int)e5, (int)str.size());
+                    memcpy(p, str.c_str(), copyLen);
+                    if (copyLen < 10) p[copyLen] = 0;
+                }
+            }
+        } break;
+        case 51: { // Enter a number
+            x50[e1] = EnterNumber(0, 32767, CENTER_X, CENTER_Y - 100);
+        } break;
+        case 52: { // Judge someone grasp some magic
+            e2 = e_GetValue(0, e1, e2);
+            e3 = e_GetValue(1, e1, e3);
+            e4 = e_GetValue(2, e1, e4);
+            x50[0x7000] = 1;
+            if (HaveMagic(e2, e3, e4)) x50[0x7000] = 0;
+        } break;
+        case 60: { // Call scripts
+            e2 = e_GetValue(0, e1, e2);
+            e3 = e_GetValue(1, e1, e3);
+            ExecScript("script/" + std::to_string(e2) + ".lua", "f" + std::to_string(e3));
         } break;
         default: break;
     }

@@ -1,6 +1,8 @@
 ﻿// kys_engine.cpp - 基础引擎实现
 // 对应 kys_engine.pas
 
+#define _USE_MATH_DEFINES
+
 #include "kys_engine.h"
 #include "kys_draw.h"
 #include "kys_main.h"
@@ -12,7 +14,6 @@
 #include <SDL3_mixer/SDL_mixer.h>
 #include <SDL3_image/SDL_image.h>
 
-#define _USE_MATH_DEFINES
 #include <cstdio>
 #include <cstdarg>
 #include <cstring>

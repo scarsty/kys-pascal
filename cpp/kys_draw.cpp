@@ -57,6 +57,11 @@ void DrawHeadPic(int num, int px, int py) {
                 nullptr, nullptr, 0, 0, 0, 0, 0);
 }
 
+void DrawHeadPic(int num, int px, int py, SDL_Surface* scr) {
+    // 在指定表面上绘制头像（当前实现等同于默认screen）
+    DrawHeadPic(num, px, py);
+}
+
 void DrawIPic(int num, int px, int py) {
     // 物品图使用 smp 偏移
     int pic = ITEM_BEGIN_PIC + num;
@@ -229,11 +234,25 @@ void DrawSceneWithoutRole() {
     LoadScenePart(Sx, Sy);
 }
 
+void DrawSceneWithoutRole(int cx, int cy) {
+    int oldSx = Sx, oldSy = Sy;
+    Sx = cx; Sy = cy;
+    DrawSceneWithoutRole();
+    Sx = oldSx; Sy = oldSy;
+}
+
 void DrawRoleOnScene() {
     // 绘制角色在场景上
     TPosition pos = GetPositionOnScreen(0, 0, CENTER_X, CENTER_Y);
     int pic = BEGIN_WALKPIC + SFace * 7;
     DrawSPic(pic, pos.x, pos.y, 0, 0, screen->w, screen->h);
+}
+
+void DrawRoleOnScene(int cx, int cy) {
+    int oldSx = Sx, oldSy = Sy;
+    Sx = cx; Sy = cy;
+    DrawRoleOnScene();
+    Sx = oldSx; Sy = oldSy;
 }
 
 void InitialScene() {
@@ -311,10 +330,11 @@ void LoadScenePart(int cx, int cy) {
 
 // ---- 战场绘制 ----
 
-void DrawBField() {
+void DrawBField(int needProgress) {
     DrawBfieldWithoutRole();
     DrawRoleOnBfield();
     if (CellPhone) DrawVirtualKey();
+    if (needProgress) DrawProgress();
 }
 
 void DrawBfieldWithoutRole() {
@@ -417,27 +437,26 @@ void DrawBFieldWithAction(int bnum, int actionnum) {
 // ---- 云、进度条、虚拟按键 ----
 
 void DrawClouds() {
-    for (int i = 0; i < CLOUD_AMOUNT; i++) {
-        if (cloud[i].Picnum >= 0 && cloud[i].Picnum < CPicAmount) {
-            cloud[i].Positionx += cloud[i].Speedx;
-            cloud[i].Positiony += cloud[i].Speedy;
-            DrawCPic(cloud[i].Picnum, cloud[i].Positionx, cloud[i].Positiony,
-                     cloud[i].Shadow, cloud[i].Alpha);
+    for (int i = 0; i < CLOUD_AMOUNT && i < (int)Cloud.size(); i++) {
+        if (Cloud[i].Picnum >= 0 && Cloud[i].Picnum < CPicAmount) {
+            Cloud[i].Positionx += Cloud[i].Speedx;
+            Cloud[i].Positiony += Cloud[i].Speedy;
+            DrawCPic(Cloud[i].Picnum, Cloud[i].Positionx, Cloud[i].Positiony,
+                     Cloud[i].Shadow, Cloud[i].Alpha);
         }
     }
 }
 
-void DrawProgress(int* BRoleOrder, int count) {
+void DrawProgress() {
     // 绘制半即时制进度条
     int barX = 10, barY = screen->h - 30;
     int barW = screen->w - 20, barH = 20;
     DrawRectangle(screen, barX, barY, barW, barH, 0, ColColor(0xFF), 40);
-    for (int i = 0; i < count && i < BRoleAmount; i++) {
-        int idx = BRoleOrder[i];
-        if (Brole[idx].Dead) continue;
-        int progress = Brole[idx].RealProgress;
-        int px = barX + progress * barW / 1000;
-        int headnum = Rrole[Brole[idx].rnum].HeadNum;
+    for (int i = 0; i < BRoleAmount; i++) {
+        if (Brole[i].Dead) continue;
+        int progress = Brole[i].RealProgress;
+        int px = barX + progress * barW / 10000;
+        int headnum = Rrole[Brole[i].rnum].HeadNum;
         DrawHeadPic(headnum, px - 15, barY - 40);
     }
 }

@@ -43,6 +43,7 @@ int CommonScrollMenu(int x, int y, int w, int max, int maxshow, const std::strin
 int CommonGridMenu(int x, int y, int cols, int cellW, int maxShowRows, int maxItem, const std::string menuString[]);
 int CommonMenu2(int x, int y, int w, const std::string menuString[]);
 int SelectOneTeamMember(int x, int y, const std::string& str, int list1, int list2);
+bool EnterString(std::string& str, int x, int y, int w, int h);
 
 void MenuEsc();
 void ShowMenu(int menu);
