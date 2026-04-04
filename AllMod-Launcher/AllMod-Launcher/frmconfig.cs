@@ -353,7 +353,7 @@ namespace pig3config
             configIniValueAll(1);
             setStringValue(gameini, "games", "current", comboGames.SelectedIndex.ToString());
             Directory.SetCurrentDirectory(current_path);
-            System.Diagnostics.Process.Start("..\\kys-pascal\\kys.exe");
+            System.Diagnostics.Process.Start("..\\kys-pascal\\kys-pascal-c.exe");
             Close();
         }
     }
