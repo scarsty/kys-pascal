@@ -504,29 +504,68 @@ bool MoveAmination(int bnum) {
 
 bool SelectAim(int bnum, int step, int AreaType, int AreaRange) {
     Ax = Bx; Ay = By;
-    RecordFreshScreen(0, 0, screen->w, screen->h);
+    BattleSelecting = true;
+    Redraw();
+    SetAminationPosition(AreaType, step, AreaRange);
+    DrawBFieldWithCursor(step);
+    UpdateScreen(screen, 0, 0, screen->w, screen->h);
     while (SDL_WaitEvent(&event)) {
         CheckBasicEvent();
         if (event.type == SDL_EVENT_KEY_UP) {
-            int px = Ax, py = Ay;
-            if (event.key.key == SDLK_LEFT) Ax--;
-            if (event.key.key == SDLK_RIGHT) Ax++;
-            if (event.key.key == SDLK_UP) Ay--;
-            if (event.key.key == SDLK_DOWN) Ay++;
-            if (Ax < 0) Ax = 0; if (Ax > 63) Ax = 63;
-            if (Ay < 0) Ay = 0; if (Ay > 63) Ay = 63;
-            if (BField[3][Ax][Ay] < 0) { Ax = px; Ay = py; }
             if (event.key.key == SDLK_RETURN || event.key.key == SDLK_SPACE) {
-                if (BField[3][Ax][Ay] >= 0) return true;
+                if (Ax >= 0 && Ax <= 63 && Ay >= 0 && Ay <= 63 &&
+                    abs(Ax - Bx) + abs(Ay - By) <= step && BField[3][Ax][Ay] >= 0) {
+                    x50[28927] = 1;
+                    BattleSelecting = false;
+                    return true;
+                }
             }
-            if (event.key.key == SDLK_ESCAPE) return false;
-            Redraw(); UpdateScreen(screen, 0, 0, screen->w, screen->h);
+            if (event.key.key == SDLK_ESCAPE) {
+                x50[28927] = 0;
+                BattleSelecting = false;
+                return false;
+            }
+        }
+        if (event.type == SDL_EVENT_KEY_DOWN) {
+            int px = Ax, py = Ay;
+            if (event.key.key == SDLK_LEFT) Ay--;
+            else if (event.key.key == SDLK_RIGHT) Ay++;
+            else if (event.key.key == SDLK_DOWN) Ax++;
+            else if (event.key.key == SDLK_UP) Ax--;
+            if (abs(Ax - Bx) + abs(Ay - By) > step || BField[3][Ax][Ay] < 0 ||
+                Ax < 0 || Ax > 63 || Ay < 0 || Ay > 63) {
+                Ax = px; Ay = py;
+            }
+            event.key.key = SDLK_UNKNOWN;
         }
         if (event.type == SDL_EVENT_MOUSE_BUTTON_UP) {
-            if (event.button.button == SDL_BUTTON_LEFT && BField[3][Ax][Ay] >= 0) return true;
-            if (event.button.button == SDL_BUTTON_RIGHT) return false;
+            if (event.button.button == SDL_BUTTON_RIGHT) {
+                BattleSelecting = false;
+                return false;
+            }
+            if (TouchWalk && event.button.button == SDL_BUTTON_LEFT) {
+                BattleSelecting = false;
+                return true;
+            }
         }
+        if (event.type == SDL_EVENT_MOUSE_MOTION) {
+            if (TouchWalk) {
+                int axp = (int)(-(event.button.x / (RESOLUTIONX / (float)screen->w)) + CENTER_X +
+                    2 * (event.button.y / (RESOLUTIONY / (float)screen->h)) - 2 * CENTER_Y + 18) / 36 + Bx;
+                int ayp = (int)((event.button.x / (RESOLUTIONX / (float)screen->w)) - CENTER_X +
+                    2 * (event.button.y / (RESOLUTIONY / (float)screen->h)) - 2 * CENTER_Y + 18) / 36 + By;
+                if (abs(axp - Bx) + abs(ayp - By) <= step && BField[3][axp][ayp] >= 0) {
+                    Ax = axp; Ay = ayp;
+                }
+            }
+        }
+        SetAminationPosition(AreaType, step, AreaRange);
+        DrawBFieldWithCursor(step);
+        if (BField[2][Ax][Ay] >= 0)
+            ShowSimpleStatus(Brole[BField[2][Ax][Ay]].rnum, CENTER_X + 100, 50);
+        UpdateScreen(screen, 0, 0, screen->w, screen->h);
     }
+    BattleSelecting = false;
     return false;
 }
 

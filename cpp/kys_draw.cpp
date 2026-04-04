@@ -691,16 +691,35 @@ void DrawClouds() {
 }
 
 void DrawProgress() {
-    // 绘制半即时制进度条
-    int barX = 10, barY = screen->h - 30;
-    int barW = screen->w - 20, barH = 20;
-    DrawRectangle(screen, barX, barY, barW, barH, 0, ColColor(0xFF), 40);
-    for (int i = 0; i < BRoleAmount; i++) {
-        if (Brole[i].Dead) continue;
-        int progress = Brole[i].RealProgress;
-        int px = barX + progress * barW / 10000;
-        int headnum = Rrole[Brole[i].rnum].HeadNum;
-        DrawHeadPic(headnum, px - 15, barY - 40);
+    // 绘制半即时制进度条 - 匹配Pascal版
+    if (SEMIREAL != 1) return;
+    int x = 50;
+    int y = CENTER_Y * 2 - 80;
+    DrawRectangleWithoutFrame(screen, 0, CENTER_Y * 2 - 50, CENTER_X * 2, 50, 0, 50);
+    if ((int)BHead.size() == BRoleAmount && BRoleAmount > 0) {
+        std::vector<int> range(BRoleAmount), p(BRoleAmount);
+        for (int i = 0; i < BRoleAmount; i++) {
+            range[i] = i;
+            p[i] = Brole[i].RealProgress * 500 / 10000;
+        }
+        // 冒泡排序: 按进度从高到低
+        for (int i = 0; i < BRoleAmount - 1; i++) {
+            for (int j = i + 1; j < BRoleAmount; j++) {
+                if (p[i] <= p[j]) {
+                    std::swap(p[i], p[j]);
+                    std::swap(range[i], range[j]);
+                }
+            }
+        }
+        for (int i = 0; i < BRoleAmount; i++) {
+            if (Brole[range[i]].Dead == 0) {
+                SDL_Rect dest = {p[i] + x, y, 0, 0};
+                int bhead = Brole[range[i]].BHead;
+                if (bhead >= 0 && bhead < (int)BHead.size() && BHead[bhead]) {
+                    SDL_BlitSurface(BHead[bhead], nullptr, screen, &dest);
+                }
+            }
+        }
     }
 }
 

@@ -2675,7 +2675,46 @@ void ShowStatus(int rnum, int x, int y) {
 }
 
 void ShowSimpleStatus(int rnum, int x, int y) {
-    ShowStatus(rnum, x, y);
+    // 匹配Pascal版简易状态显示
+    std::string strs[4] = {"\xe7\xad\x89\xe7\xb4\x9a", "\xe7\x94\x9f\xe5\x91\xbd",
+                            "\xe5\x85\xa7\xe5\x8a\x9b", "\xe9\xab\x94\xe5\x8a\x9b"};
+    // 等級, 生命, 內力, 體力
+
+    DrawRectangle(screen, x, y, 145, 173, 0, ColColor(255), 50);
+    DrawHeadPic(Rrole[rnum].HeadNum, x + 50, y + 63);
+    std::string Name = cp950toutf8(Rrole[rnum].Name, 10);
+    DrawShadowText(screen, Name, x + 80 - DrawLength(Name) * 5, y + 65, ColColor(0x64), ColColor(0x66));
+    for (int i = 0; i <= 3; i++)
+        DrawShadowText(screen, strs[i], x + 3, y + 86 + 21 * i, ColColor(0x21), ColColor(0x23));
+
+    char buf[32];
+    snprintf(buf, sizeof(buf), "%9d", Rrole[rnum].Level);
+    DrawEngShadowText(screen, buf, x + 50, y + 86, ColColor(0x5), ColColor(0x7));
+
+    // HP颜色: 轻伤黄, 重伤红, 正常白
+    uint32_t c1, c2;
+    if (Rrole[rnum].Hurt >= 67) { c1 = ColColor(0x14); c2 = ColColor(0x16); }
+    else if (Rrole[rnum].Hurt >= 34) { c1 = ColColor(0xE); c2 = ColColor(0x10); }
+    else { c1 = ColColor(0x5); c2 = ColColor(0x7); }
+    snprintf(buf, sizeof(buf), "%4d", Rrole[rnum].CurrentHP);
+    DrawEngShadowText(screen, buf, x + 50, y + 107, c1, c2);
+    DrawEngShadowText(screen, "/", x + 90, y + 107, ColColor(0x64), ColColor(0x66));
+    // MaxHP颜色: 中毒绿, 重毒暗绿, 正常暗
+    if (Rrole[rnum].Poison >= 67) { c1 = ColColor(0x35); c2 = ColColor(0x37); }
+    else if (Rrole[rnum].Poison >= 34) { c1 = ColColor(0x30); c2 = ColColor(0x32); }
+    else { c1 = ColColor(0x21); c2 = ColColor(0x23); }
+    snprintf(buf, sizeof(buf), "%4d", Rrole[rnum].MaxHP);
+    DrawEngShadowText(screen, buf, x + 100, y + 107, c1, c2);
+
+    // MP颜色: 内力属性
+    if (Rrole[rnum].MPType == 0) { c1 = ColColor(0x50); c2 = ColColor(0x4E); }
+    else if (Rrole[rnum].MPType == 1) { c1 = ColColor(0x5); c2 = ColColor(0x7); }
+    else { c1 = ColColor(0x64); c2 = ColColor(0x66); }
+    snprintf(buf, sizeof(buf), "%4d/%4d", Rrole[rnum].CurrentMP, Rrole[rnum].MaxMP);
+    DrawEngShadowText(screen, buf, x + 50, y + 128, c1, c2);
+
+    snprintf(buf, sizeof(buf), "%9d", Rrole[rnum].PhyPower);
+    DrawEngShadowText(screen, buf, x + 50, y + 149, ColColor(0x5), ColColor(0x7));
 }
 
 int MenuSystem() {

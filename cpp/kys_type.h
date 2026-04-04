@@ -319,22 +319,22 @@ inline std::vector<MIX_Audio*> ESound;
 inline std::vector<MIX_Audio*> ASound;
 inline int StartMusic = 16;
 inline int ExitSceneMusicNum = 0;
-inline int NowMusic = 0;
+inline int NowMusic = -1;
 
 // 脚本系统
 extern int16_t x50[0x8000];
-inline int KDEF_SCRIPT = 1;
+inline int KDEF_SCRIPT = 0;
 inline lua_State* Lua_script = nullptr;
 inline int Script5032Pos = -100;
-inline int Script5032Value = 0;
+inline int Script5032Value = -1;
 
 // 场景动画
 inline int SceneRolePic = 0;
-inline int NeedRefreshScene = 0;
-inline int SCENEAMI = 0;
+inline int NeedRefreshScene = 1;
+inline int SCENEAMI = 2;
 
 // 云
-inline int CLOUD_AMOUNT = 50;
+inline int CLOUD_AMOUNT = 60;
 inline std::vector<TCloud> Cloud;
 
 // 系统设置
@@ -342,8 +342,8 @@ inline int WALK_SPEED = 10, WALK_SPEED2 = 10, BATTLE_SPEED = 10;
 inline int MMAPAMI = 1;
 inline int SEMIREAL = 0;
 inline int NIGHT_EFFECT = 0;
-inline int EXIT_GAME = 0;
-inline int EXPAND_GROUND = 0;
+inline int EXIT_GAME = 1;
+inline int EXPAND_GROUND = 1;
 
 // 标题/开场位置
 inline TPosition TitlePosition = {};
@@ -400,7 +400,8 @@ inline bool BattleSelecting = false;
 
 // 虚拟按键（手机模式）
 inline int ShowVirtualKey = 0;
-inline int VirtualCrossX = 100, VirtualCrossY = 250;
+inline int VirtualCrossX = 150, VirtualCrossY = 250;
+inline int VirtualKeySize = 60;
 inline int VirtualAX = 0, VirtualAY = 0;
 inline int VirtualBX = 0, VirtualBY = 0;
 inline SDL_Surface* VirtualKeyU = nullptr;
