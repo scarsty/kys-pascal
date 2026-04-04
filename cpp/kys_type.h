@@ -314,9 +314,9 @@ inline std::map<int, SDL_Surface*> FontsHr;
 
 // 音频
 inline int VOLUME = 30, VOLUMEWAV = 30, SOUND3D = 1;
-inline std::vector<MIX_Audio> Music;
-inline std::vector<MIX_Audio> ESound;
-inline std::vector<MIX_Audio> ASound;
+inline std::vector<MIX_Audio*> Music;
+inline std::vector<MIX_Audio*> ESound;
+inline std::vector<MIX_Audio*> ASound;
 inline int StartMusic = 16;
 inline int ExitSceneMusicNum = 0;
 inline int NowMusic = 0;
@@ -414,7 +414,6 @@ inline int RENDERER = 0;
 inline int TouchWalk = 1;
 inline double EXP_RATE = 1.0;
 inline int SkipTalk = 0;
-inline int CHNFONT_SPACEWIDTH = 0;
 
 // 色值蒙版
 constexpr uint32 RMask = 0xFF0000;

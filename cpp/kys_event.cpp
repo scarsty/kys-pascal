@@ -1,4 +1,4 @@
-// kys_event.cpp - 事件系统实现
+﻿// kys_event.cpp - 事件系统实现
 // 对应 kys_event.pas
 
 #include "kys_event.h"

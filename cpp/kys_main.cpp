@@ -8,7 +8,8 @@
 #include "kys_battle.h"
 #include "kys_script.h"
 #include "kys_type.h"
-#include "simplecc.h"
+#include "INIReader.h"
+#include "filefunc.h"
 
 #include <SDL3/SDL.h>
 #include <SDL3_ttf/SDL_ttf.h>
@@ -18,61 +19,15 @@
 #include <cstring>
 #include <cstdlib>
 #include <cmath>
+#include <ctime>
 #include <string>
 #include <vector>
 #include <algorithm>
-#include <fstream>
-#include <sstream>
 
-// ---- 简易INI解析 ----
-
-static int readIniInt(const std::string& filename, const std::string& section, const std::string& key, int def) {
-    FILE* f = fopen(filename.c_str(), "r");
-    if (!f) return def;
-    char line[512];
-    bool inSection = false;
-    std::string sec = "[" + section + "]";
-    while (fgets(line, sizeof(line), f)) {
-        std::string s = line;
-        while (!s.empty() && (s.back() == '\n' || s.back() == '\r' || s.back() == ' ')) s.pop_back();
-        if (s == sec) { inSection = true; continue; }
-        if (!s.empty() && s[0] == '[') { inSection = false; continue; }
-        if (inSection) {
-            auto eq = s.find('=');
-            if (eq != std::string::npos) {
-                std::string k = s.substr(0, eq);
-                while (!k.empty() && k.back() == ' ') k.pop_back();
-                if (k == key) { fclose(f); return atoi(s.c_str() + eq + 1); }
-            }
-        }
-    }
-    fclose(f);
-    return def;
-}
-
-static double readIniFloat(const std::string& filename, const std::string& section, const std::string& key, double def) {
-    FILE* f = fopen(filename.c_str(), "r");
-    if (!f) return def;
-    char line[512];
-    bool inSection = false;
-    std::string sec = "[" + section + "]";
-    while (fgets(line, sizeof(line), f)) {
-        std::string s = line;
-        while (!s.empty() && (s.back() == '\n' || s.back() == '\r' || s.back() == ' ')) s.pop_back();
-        if (s == sec) { inSection = true; continue; }
-        if (!s.empty() && s[0] == '[') { inSection = false; continue; }
-        if (inSection) {
-            auto eq = s.find('=');
-            if (eq != std::string::npos) {
-                std::string k = s.substr(0, eq);
-                while (!k.empty() && k.back() == ' ') k.pop_back();
-                if (k == key) { fclose(f); return atof(s.c_str() + eq + 1); }
-            }
-        }
-    }
-    fclose(f);
-    return def;
-}
+#ifdef _WIN32
+#define NOMINMAX
+#include <windows.h>
+#endif
 
 static int signof(int x) { return (x > 0) ? 1 : (x < 0) ? -1 : 0; }
 
@@ -251,63 +206,66 @@ void ReadFiles() {
     std::string filename = AppPath + "kysmod.ini";
 
     // INI解析
-    ITEM_BEGIN_PIC = readIniInt(filename, "constant", "ITEM_BEGIN_PIC", 3501);
-    MAX_HEAD_NUM = readIniInt(filename, "constant", "MAX_HEAD_NUM", 189);
-    BEGIN_EVENT = readIniInt(filename, "constant", "BEGIN_EVENT", 691);
-    BEGIN_SCENE = readIniInt(filename, "constant", "BEGIN_SCENE", 70);
-    BEGIN_Sx = readIniInt(filename, "constant", "BEGIN_Sx", 20);
-    BEGIN_Sy = readIniInt(filename, "constant", "BEGIN_Sy", 19);
-    SOFTSTAR_BEGIN_TALK = readIniInt(filename, "constant", "SOFTSTAR_BEGIN_TALK", 2547);
-    SOFTSTAR_NUM_TALK = readIniInt(filename, "constant", "SOFTSTAR_NUM_TALK", 18);
-    MAX_PHYSICAL_POWER = readIniInt(filename, "constant", "MAX_PHYSICAL_POWER", 100);
-    BEGIN_WALKPIC = readIniInt(filename, "constant", "BEGIN_WALKPIC", 2501);
-    MONEY_ID = readIniInt(filename, "constant", "MONEY_ID", 174);
-    COMPASS_ID = readIniInt(filename, "constant", "COMPASS_ID", 182);
-    BEGIN_LEAVE_EVENT = readIniInt(filename, "constant", "BEGIN_LEAVE_EVENT", 950);
-    BEGIN_BATTLE_ROLE_PIC = readIniInt(filename, "constant", "BEGIN_BATTLE_ROLE_PIC", 2553);
-    MAX_LEVEL = readIniInt(filename, "constant", "MAX_LEVEL", 30);
-    MAX_WEAPON_MATCH = readIniInt(filename, "constant", "MAX_WEAPON_MATCH", 7);
-    MIN_KNOWLEDGE = readIniInt(filename, "constant", "MIN_KNOWLEDGE", 80);
-    MAX_HP = readIniInt(filename, "constant", "MAX_HP", 999);
-    MAX_MP = readIniInt(filename, "constant", "MAX_MP", 999);
-    LIFE_HURT = readIniInt(filename, "constant", "LIFE_HURT", 10);
-    POISON_HURT = readIniInt(filename, "constant", "POISON_HURT", 10);
-    MED_LIFE = readIniInt(filename, "constant", "MED_LIFE", 4);
-    NOVEL_BOOK = readIniInt(filename, "constant", "NOVEL_BOOK", 144);
-    MAX_ADD_PRO = readIniInt(filename, "constant", "MAX_ADD_PRO", 0);
-    MAX_ITEM_AMOUNT = readIniInt(filename, "constant", "MAX_ITEM_AMOUNT", 200);
+    INIReaderNormal ini;
+    ini.loadFile(filename);
 
-    BATTLE_SPEED = readIniInt(filename, "system", "BATTLE_SPEED", 10);
-    WALK_SPEED = readIniInt(filename, "system", "WALK_SPEED", 10);
-    WALK_SPEED2 = readIniInt(filename, "system", "WALK_SPEED2", WALK_SPEED);
-    SMOOTH = readIniInt(filename, "system", "SMOOTH", 1);
-    HIRES_TEXT = readIniInt(filename, "system", "HIRES_TEXT", 1);
-    SIMPLE = readIniInt(filename, "system", "SIMPLE", 1);
-    VOLUME = readIniInt(filename, "music", "VOLUME", 30);
-    VOLUMEWAV = readIniInt(filename, "music", "VOLUMEWAV", 30);
-    SOUND3D = readIniInt(filename, "music", "SOUND3D", 1);
-    MMAPAMI = readIniInt(filename, "system", "MMAPAMI", 1);
-    SEMIREAL = readIniInt(filename, "system", "SEMIREAL", 0);
-    MODVersion = readIniInt(filename, "system", "MODVersion", 0);
-    CHINESE_FONT_SIZE = readIniInt(filename, "system", "CHINESE_FONT_SIZE", 20);
-    ENGLISH_FONT_SIZE = readIniInt(filename, "system", "ENGLISH_FONT_SIZE", 19);
-    KDEF_SCRIPT = readIniInt(filename, "system", "KDEF_SCRIPT", 1);
-    NIGHT_EFFECT = readIniInt(filename, "system", "NIGHT_EFFECT", 0);
-    EXPAND_GROUND = readIniInt(filename, "system", "EXPAND_GROUND", 0);
-    WMP_4_PIC = readIniInt(filename, "system", "WMP_4_PIC", 0);
-    TouchWalk = readIniInt(filename, "system", "TOUCH_WALK", 1);
-    RENDERER = readIniInt(filename, "system", "RENDERER", 0);
-    EXP_RATE = readIniFloat(filename, "system", "EXP_RATE", 1.0);
+    ITEM_BEGIN_PIC = ini.getInt("constant", "ITEM_BEGIN_PIC", 3501);
+    MAX_HEAD_NUM = ini.getInt("constant", "MAX_HEAD_NUM", 189);
+    BEGIN_EVENT = ini.getInt("constant", "BEGIN_EVENT", 691);
+    BEGIN_SCENE = ini.getInt("constant", "BEGIN_SCENE", 70);
+    BEGIN_Sx = ini.getInt("constant", "BEGIN_Sx", 20);
+    BEGIN_Sy = ini.getInt("constant", "BEGIN_Sy", 19);
+    SOFTSTAR_BEGIN_TALK = ini.getInt("constant", "SOFTSTAR_BEGIN_TALK", 2547);
+    SOFTSTAR_NUM_TALK = ini.getInt("constant", "SOFTSTAR_NUM_TALK", 18);
+    MAX_PHYSICAL_POWER = ini.getInt("constant", "MAX_PHYSICAL_POWER", 100);
+    BEGIN_WALKPIC = ini.getInt("constant", "BEGIN_WALKPIC", 2501);
+    MONEY_ID = ini.getInt("constant", "MONEY_ID", 174);
+    COMPASS_ID = ini.getInt("constant", "COMPASS_ID", 182);
+    BEGIN_LEAVE_EVENT = ini.getInt("constant", "BEGIN_LEAVE_EVENT", 950);
+    BEGIN_BATTLE_ROLE_PIC = ini.getInt("constant", "BEGIN_BATTLE_ROLE_PIC", 2553);
+    MAX_LEVEL = ini.getInt("constant", "MAX_LEVEL", 30);
+    MAX_WEAPON_MATCH = ini.getInt("constant", "MAX_WEAPON_MATCH", 7);
+    MIN_KNOWLEDGE = ini.getInt("constant", "MIN_KNOWLEDGE", 80);
+    MAX_HP = ini.getInt("constant", "MAX_HP", 999);
+    MAX_MP = ini.getInt("constant", "MAX_MP", 999);
+    LIFE_HURT = ini.getInt("constant", "LIFE_HURT", 10);
+    POISON_HURT = ini.getInt("constant", "POISON_HURT", 10);
+    MED_LIFE = ini.getInt("constant", "MED_LIFE", 4);
+    NOVEL_BOOK = ini.getInt("constant", "NOVEL_BOOK", 144);
+    MAX_ADD_PRO = ini.getInt("constant", "MAX_ADD_PRO", 0);
+    MAX_ITEM_AMOUNT = ini.getInt("constant", "MAX_ITEM_AMOUNT", 200);
+
+    BATTLE_SPEED = ini.getInt("system", "BATTLE_SPEED", 10);
+    WALK_SPEED = ini.getInt("system", "WALK_SPEED", 10);
+    WALK_SPEED2 = ini.getInt("system", "WALK_SPEED2", WALK_SPEED);
+    SMOOTH = ini.getInt("system", "SMOOTH", 1);
+    HIRES_TEXT = ini.getInt("system", "HIRES_TEXT", 1);
+    SIMPLE = ini.getInt("system", "SIMPLE", 1);
+    VOLUME = ini.getInt("music", "VOLUME", 30);
+    VOLUMEWAV = ini.getInt("music", "VOLUMEWAV", 30);
+    SOUND3D = ini.getInt("music", "SOUND3D", 1);
+    MMAPAMI = ini.getInt("system", "MMAPAMI", 1);
+    SEMIREAL = ini.getInt("system", "SEMIREAL", 0);
+    MODVersion = ini.getInt("system", "MODVersion", 0);
+    CHINESE_FONT_SIZE = ini.getInt("system", "CHINESE_FONT_SIZE", 20);
+    ENGLISH_FONT_SIZE = ini.getInt("system", "ENGLISH_FONT_SIZE", 19);
+    KDEF_SCRIPT = ini.getInt("system", "KDEF_SCRIPT", 1);
+    NIGHT_EFFECT = ini.getInt("system", "NIGHT_EFFECT", 0);
+    EXPAND_GROUND = ini.getInt("system", "EXPAND_GROUND", 0);
+    WMP_4_PIC = ini.getInt("system", "WMP_4_PIC", 0);
+    TouchWalk = ini.getInt("system", "TOUCH_WALK", 1);
+    RENDERER = ini.getInt("system", "RENDERER", 0);
+    EXP_RATE = ini.getReal("system", "EXP_RATE", 1.0);
 
     if (CellPhone != 0) {
-        ShowVirtualKey = readIniInt(filename, "system", "VirtualKey", 1);
-        VirtualCrossX = readIniInt(filename, "system", "VirtualCrossX", 100);
-        VirtualCrossY = readIniInt(filename, "system", "VirtualCrossY", 250);
+        ShowVirtualKey = ini.getInt("system", "VirtualKey", 1);
+        VirtualCrossX = ini.getInt("system", "VirtualCrossX", 100);
+        VirtualCrossY = ini.getInt("system", "VirtualCrossY", 250);
         int w = CENTER_X * 2, h = CENTER_Y * 2;
-        VirtualAX = readIniInt(filename, "system", "VirtualAX", w - 200);
-        VirtualAY = readIniInt(filename, "system", "VirtualAY", h - 100);
-        VirtualBX = readIniInt(filename, "system", "VirtualBX", w - 100);
-        VirtualBY = readIniInt(filename, "system", "VirtualBY", h - 200);
+        VirtualAX = ini.getInt("system", "VirtualAX", w - 200);
+        VirtualAY = ini.getInt("system", "VirtualAY", h - 100);
+        VirtualBX = ini.getInt("system", "VirtualBX", w - 100);
+        VirtualBY = ini.getInt("system", "VirtualBY", h - 200);
     } else {
         ShowVirtualKey = 0;
         TouchWalk = 1;
@@ -316,7 +274,7 @@ void ReadFiles() {
     char keybuf[32];
     for (int i = 0; i < 16; i++) {
         snprintf(keybuf, sizeof(keybuf), "MaxProList%d", 43 + i);
-        MaxProList[i] = readIniInt(filename, "constant", keybuf, 100);
+        MaxProList[i] = ini.getInt("constant", keybuf, 100);
     }
     if (LIFE_HURT == 0) LIFE_HURT = 1;
     if (POISON_HURT == 0) POISON_HURT = 1;
@@ -522,11 +480,7 @@ void SaveR(int num) {
     std::string path = AppPath + buf;
 
     // 创建目录
-#ifdef _WIN32
-    CreateDirectoryA(path.c_str(), nullptr);
-#else
-    mkdir(path.c_str(), 0755);
-#endif
+    filefunc::makePath(path);
 
     FILE* f;
     f = fopen((path + "r.grp").c_str(), "wb");

@@ -1,4 +1,4 @@
-// kys_script.h - Lua脚本系统
+﻿// kys_script.h - Lua脚本系统
 // 对应 kys_script.pas
 
 #pragma once

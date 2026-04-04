@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 // kys_engine.h - 基础引擎：音频、文件IO、绘图、文字、屏幕管理
 // 对应 kys_engine.pas
 
@@ -62,7 +62,6 @@ TPosition GetPositionOnScreen(int x, int y, int CenterX, int CenterY);
 // 文字
 std::string cp950toutf8(const char* str, int len = -1);
 std::string utf8tocp950(const std::string& str);
-std::string transcode(const std::string& str, int input, int output);
 void DrawText(SDL_Surface* sur, const std::string& word, int x_pos, int y_pos, uint32_t color);
 void DrawEngText(SDL_Surface* sur, const std::string& word, int x_pos, int y_pos, uint32_t color);
 void DrawShadowText(SDL_Surface* sur, const std::string& word, int x_pos, int y_pos, uint32_t color1, uint32_t color2);
@@ -105,7 +104,6 @@ void ClearQueuedHiResText();
 int DrawLength(const std::string& str);
 int DrawLength(const char* p);
 int utf8follow(char c1);
-int round(double x);
 void swap(uint32_t& x, uint32_t& y);
 
 // 简繁转换

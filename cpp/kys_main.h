@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 // kys_main.h - 游戏主流程：启动、行走、菜单、存读档、事件系统
 // 对应 kys_main.pas
 

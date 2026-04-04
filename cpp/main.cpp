@@ -1,4 +1,4 @@
-// main.cpp - 程序入口
+﻿// main.cpp - 程序入口
 // 对应 kys.lpr
 
 #include "kys_main.h"

@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 // kys_draw.h - 高层绘图：贴图、场景、战场
 // 对应 kys_draw.pas
 
@@ -13,6 +13,7 @@ void DrawSPic(int num, int px, int py, int xx, int yy, int xw, int yh, int shado
 void DrawSPic(int num, int px, int py, int xx, int yy, int xw, int yh, int shadow, int alpha, uint32_t mixColor, int mixAlpha);
 void InitialSPic(int num, int px, int py, SDL_Surface* img, int widthI, int heightI, char* blockW, int widthW, int heightW, int depth, uint32_t mixColor = 0, int mixAlpha = 0);
 void DrawHeadPic(int num, int px, int py);
+void DrawHeadPic(int num, int px, int py, SDL_Surface* scr);
 void DrawIPic(int num, int px, int py);
 void DrawBPic(int num, int px, int py, int shadow);
 void DrawBPic(int num, int px, int py, int shadow, int alpha);
@@ -36,7 +37,9 @@ void DrawMMap();
 // 场景
 void DrawScene();
 void DrawSceneWithoutRole();
+void DrawSceneWithoutRole(int cx, int cy);
 void DrawRoleOnScene();
+void DrawRoleOnScene(int cx, int cy);
 void InitialScene();
 void InitialScene(int onlyvisible);
 void ExpandGroundOnImg(SDL_Surface* img, int imgW, int imgH);
@@ -46,7 +49,7 @@ TPosition CalPosOnImage(int x, int y);
 TPosition CalLTPosOnImageByCenter(int cx, int cy);
 
 // 战场
-void DrawBField();
+void DrawBField(int needProgress = 1);
 void DrawBfieldWithoutRole();
 void DrawRoleOnBfield(int mixColor = 0, int mixAlpha = 0, int alpha_ = 0);
 void InitialBFieldImage();
@@ -61,7 +64,7 @@ void DrawBFieldWithAction(int bnum, int actionnum);
 
 // 云、进度条、虚拟按键
 void DrawClouds();
-void DrawProgress(int* BRoleOrder, int count);
+void DrawProgress();
 void DrawVirtualKey();
 
 // 初始化一个位置

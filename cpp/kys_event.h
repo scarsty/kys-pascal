@@ -1,4 +1,4 @@
-// kys_event.h - 事件系统声明
+﻿// kys_event.h - 事件系统声明
 // 对应 kys_event.pas
 
 #pragma once

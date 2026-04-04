@@ -1,4 +1,4 @@
-// kys_battle.cpp - 战斗系统实现
+﻿// kys_battle.cpp - 战斗系统实现
 // 对应 kys_battle.pas
 
 #include "kys_battle.h"
@@ -18,10 +18,16 @@
 #include <vector>
 #include <algorithm>
 
+// 辅助：将战场格子坐标转为屏幕像素坐标
+static int GetPositionOnBField(int gridX, int gridY, int coord) {
+    TPosition pos = GetPositionOnScreen(gridX - Bx, gridY - By, CENTER_X, CENTER_Y);
+    return (coord == 0) ? pos.x : pos.y;
+}
+
 static std::vector<TPosition> movetable;
 static int maxdelaypicnum;
 
-// ---- 战斗主控�?----
+// ---- 战斗主控制----
 
 bool Battle(int battlenum, int getexp) {
     BattleResult = 0;
@@ -56,7 +62,7 @@ bool Battle(int battlenum, int getexp) {
     for (int i = 0; i < BRoleAmount; i++)
         Brole[i].AutoMode = 1;
 
-    // 载入战斗所需的额外贴�?
+    // 载入战斗所需的额外贴图
     if (SEMIREAL == 1) {
         BHead.resize(BRoleAmount);
         for (int i = 0; i < BRoleAmount; i++) {
@@ -68,7 +74,7 @@ bool Battle(int battlenum, int getexp) {
             }
             BHead[i] = HeadSurface[hn];
             if (!BHead[i]) {
-                BHead[i] = SDL_CreateSurface(56, 71, SDL_GetPixelFormatForMasks(32, Rmask, Gmask, Bmask, Amask));
+                BHead[i] = SDL_CreateSurface(56, 71, SDL_GetPixelFormatForMasks(32, RMask, GMask, BMask, AMask));
                 SDL_FillSurfaceRect(BHead[i], nullptr, 1);
                 SDL_SetSurfaceColorKey(BHead[i], true, 1);
                 DrawHeadPic(hn, 0, 0, BHead[i]);
@@ -120,12 +126,12 @@ bool InitialBField() {
     }
     FILE* grp = fopen((AppPath + "resource/warfld.grp").c_str(), "rb");
     fseek(grp, offset, SEEK_SET);
-    fread(&Bfield[0][0][0], 2, 64 * 64 * 2, grp);
+    fread(&BField[0][0][0], 2, 64 * 64 * 2, grp);
     fclose(grp);
 
     for (int i1 = 0; i1 < 64; i1++)
         for (int i2 = 0; i2 < 64; i2++)
-            Bfield[2][i1][i2] = -1;
+            BField[2][i1][i2] = -1;
     BRoleAmount = 0;
     bool result = true;
 
@@ -250,7 +256,7 @@ void BattleMainControl() {
         if (SEMIREAL == 0) ReArrangeBRole();
         ClearDeadRolePic();
         for (int j = 0; j < BRoleAmount; j++) { Brole[j].Acted = 0; Brole[j].ShowNumber = 0; }
-        memset(&Bfield[4][0][0], 0, sizeof(Bfield[4]));
+        memset(&BField[4][0][0], 0, sizeof(BField[4]));
 
         if (SEMIREAL == 1) {
             DrawBField(0);
@@ -313,8 +319,8 @@ void BattleMainControl() {
                             break;
                         default:
                             if (tempBrole.rnum == Brole[i].rnum) {
-                                Bfield[2][tempBrole.X][tempBrole.Y] = i;
-                                Bfield[2][Brole[i].X][Brole[i].Y] = -1;
+                                BField[2][tempBrole.X][tempBrole.Y] = i;
+                                BField[2][Brole[i].X][Brole[i].Y] = -1;
                                 Brole[i] = tempBrole;
                             }
                             break;
@@ -361,9 +367,9 @@ void ReArrangeBRole() {
                 std::swap(Brole[i1], Brole[i2]);
     for (int i1 = 0; i1 < 64; i1++)
         for (int i2 = 0; i2 < 64; i2++)
-            Bfield[2][i1][i2] = -1;
+            BField[2][i1][i2] = -1;
     for (int i = 0; i < BRoleAmount; i++)
-        Bfield[2][Brole[i].X][Brole[i].Y] = (Brole[i].Dead == 0) ? i : -1;
+        BField[2][Brole[i].X][Brole[i].Y] = (Brole[i].Dead == 0) ? i : -1;
 }
 
 int BattleStatus() {
@@ -378,7 +384,7 @@ int BattleStatus() {
 }
 
 int BattleMenu(int bnum) {
-    static const char* word[] = {"移動","攻擊","用毒","解毒","醫療","物品","等待","狀�?,"休息","自動"};
+    static const char* word[] = {"移動","攻擊","用毒","解毒","醫療","物品","等待","狀態","休息","自動"};
     int MenuStat = 0x3E0, max = 4, rnum = Brole[bnum].rnum;
     if (Brole[bnum].Step > 0) { MenuStat |= 1; max++; }
     if (Rrole[rnum].PhyPower >= 10) {
@@ -460,38 +466,38 @@ void MoveRole(int bnum) {
 
 bool MoveAmination(int bnum) {
     bool result = abs(Ax - Bx) + abs(Ay - By) > 0;
-    if (Bfield[3][Ax][Ay] > 0) {
+    if (BField[3][Ax][Ay] > 0) {
         int Xinc[] = {0, 1, -1, 0, 0}, Yinc[] = {0, 0, 0, 1, -1};
         int16_t linebx[4097], lineby[4097];
         linebx[0] = Bx; lineby[0] = By;
-        linebx[Bfield[3][Ax][Ay]] = Ax;
-        lineby[Bfield[3][Ax][Ay]] = Ay;
-        int a = Bfield[3][Ax][Ay] - 1;
+        linebx[BField[3][Ax][Ay]] = Ax;
+        lineby[BField[3][Ax][Ay]] = Ay;
+        int a = BField[3][Ax][Ay] - 1;
         while (a >= 0) {
             bool seekError = true;
             for (int i = 1; i <= 4; i++) {
                 int tx = linebx[a + 1] + Xinc[i], ty = lineby[a + 1] + Yinc[i];
-                if (tx >= 0 && tx < 64 && ty >= 0 && ty < 64 && Bfield[3][tx][ty] == Bfield[3][linebx[a + 1]][lineby[a + 1]] - 1) {
+                if (tx >= 0 && tx < 64 && ty >= 0 && ty < 64 && BField[3][tx][ty] == BField[3][linebx[a + 1]][lineby[a + 1]] - 1) {
                     linebx[a] = tx; lineby[a] = ty; seekError = false; break;
                 }
             }
             if (seekError) break;
             a--;
         }
-        for (int j = 1; j <= Bfield[3][Ax][Ay]; j++) {
+        for (int j = 1; j <= BField[3][Ax][Ay]; j++) {
             if (linebx[j] > Bx && lineby[j] == By) Brole[bnum].Face = 3;
             else if (linebx[j] < Bx && lineby[j] == By) Brole[bnum].Face = 0;
             else if (linebx[j] == Bx && lineby[j] > By) Brole[bnum].Face = 1;
             else if (linebx[j] == Bx && lineby[j] < By) Brole[bnum].Face = 2;
-            if (Bfield[2][Bx][By] == bnum) Bfield[2][Bx][By] = -1;
+            if (BField[2][Bx][By] == bnum) BField[2][Bx][By] = -1;
             Bx = linebx[j]; By = lineby[j];
-            if (Bfield[2][Bx][By] == -1) Bfield[2][Bx][By] = bnum;
+            if (BField[2][Bx][By] == -1) BField[2][Bx][By] = bnum;
             Redraw(); UpdateScreen(screen, 0, 0, screen->w, screen->h);
             SDL_Delay(30);
         }
         Brole[bnum].X = Bx; Brole[bnum].Y = By;
-        Bfield[2][Bx][By] = bnum;
-        Brole[bnum].Step = Bfield[5][Ax][Ay];
+        BField[2][Bx][By] = bnum;
+        Brole[bnum].Step = BField[5][Ax][Ay];
     }
     return result;
 }
@@ -509,15 +515,15 @@ bool SelectAim(int bnum, int step, int AreaType, int AreaRange) {
             if (event.key.key == SDLK_DOWN) Ay++;
             if (Ax < 0) Ax = 0; if (Ax > 63) Ax = 63;
             if (Ay < 0) Ay = 0; if (Ay > 63) Ay = 63;
-            if (Bfield[3][Ax][Ay] < 0) { Ax = px; Ay = py; }
+            if (BField[3][Ax][Ay] < 0) { Ax = px; Ay = py; }
             if (event.key.key == SDLK_RETURN || event.key.key == SDLK_SPACE) {
-                if (Bfield[3][Ax][Ay] >= 0) return true;
+                if (BField[3][Ax][Ay] >= 0) return true;
             }
             if (event.key.key == SDLK_ESCAPE) return false;
             Redraw(); UpdateScreen(screen, 0, 0, screen->w, screen->h);
         }
         if (event.type == SDL_EVENT_MOUSE_BUTTON_UP) {
-            if (event.button.button == SDL_BUTTON_LEFT && Bfield[3][Ax][Ay] >= 0) return true;
+            if (event.button.button == SDL_BUTTON_LEFT && BField[3][Ax][Ay] >= 0) return true;
             if (event.button.button == SDL_BUTTON_RIGHT) return false;
         }
     }
@@ -548,7 +554,7 @@ void SeekPath2(int x, int y, int step, int myteam, int mode) {
     struct QNode { int x, y, s; };
     std::vector<QNode> queue;
     queue.push_back({x, y, 0});
-    Bfield[3][x][y] = 0;
+    BField[3][x][y] = 0;
     int dx[] = {1, -1, 0, 0}, dy[] = {0, 0, 1, -1};
     int head = 0;
     while (head < (int)queue.size()) {
@@ -557,13 +563,13 @@ void SeekPath2(int x, int y, int step, int myteam, int mode) {
         for (int d = 0; d < 4; d++) {
             int nx = cur.x + dx[d], ny = cur.y + dy[d];
             if (nx < 0 || nx >= 64 || ny < 0 || ny >= 64) continue;
-            if (Bfield[3][nx][ny] >= 0) continue;
+            if (BField[3][nx][ny] >= 0) continue;
             bool canPass = true;
             if (mode == 0) {
-                if (Bfield[1][nx][ny] > 0 || (Bfield[2][nx][ny] >= 0 && Bfield[2][nx][ny] != -1)) canPass = false;
+                if (BField[1][nx][ny] > 0 || (BField[2][nx][ny] >= 0 && BField[2][nx][ny] != -1)) canPass = false;
             }
             if (canPass) {
-                Bfield[3][nx][ny] = cur.s + 1;
+                BField[3][nx][ny] = cur.s + 1;
                 queue.push_back({nx, ny, cur.s + 1});
             }
         }
@@ -573,7 +579,7 @@ void SeekPath2(int x, int y, int step, int myteam, int mode) {
 void CalCanSelect(int bnum, int mode, int step) {
     for (int i = 0; i < 64; i++)
         for (int j = 0; j < 64; j++)
-            Bfield[3][i][j] = -1;
+            BField[3][i][j] = -1;
     int x = Brole[bnum].X, y = Brole[bnum].Y;
     SeekPath2(x, y, step, Brole[bnum].Team, mode);
 }
@@ -588,17 +594,16 @@ void Attack(int bnum) {
     }
     if (level > 9) level = 9;
 
-    int AreaType = Rmagic[mnum].AreaType;
-    int MoveType = Rmagic[mnum].MoveType;
-    int step = Rmagic[mnum].Range[level];
+    int AreaType = Rmagic[mnum].AttAreaType;
+    int step = Rmagic[mnum].MoveDistance[level];
     CalCanSelect(bnum, 1, step);
 
     bool selected = false;
     if (AreaType == 1 || AreaType == 2) selected = SelectDirector(bnum, step);
-    else selected = SelectAim(bnum, step, AreaType, Rmagic[mnum].SelRange[level]);
+    else selected = SelectAim(bnum, step, AreaType, Rmagic[mnum].AttDistance[level]);
 
     if (!selected) return;
-    SetAminationPosition(AreaType, step, Rmagic[mnum].SelRange[level]);
+    SetAminationPosition(AreaType, step, Rmagic[mnum].AttDistance[level]);
 
     ShowMagicName(mnum);
     AttackActionAll(bnum, mnum, level);
@@ -607,7 +612,7 @@ void Attack(int bnum) {
 
     Rrole[rnum].PhyPower -= 3 + rand() % 5;
     if (Rrole[rnum].PhyPower < 0) Rrole[rnum].PhyPower = 0;
-    int mpCost = Rmagic[mnum].NeedMP[level];
+    int mpCost = Rmagic[mnum].NeedMP;
     Rrole[rnum].CurrentMP -= mpCost;
     if (Rrole[rnum].CurrentMP < 0) Rrole[rnum].CurrentMP = 0;
 
@@ -628,9 +633,9 @@ void AttackAction(int bnum, int i, int mnum, int level) {
 }
 
 void AttackActionAll(int bnum, int mnum, int level) {
-    PlayMagicAmination(bnum, Rmagic[mnum].MagicAmination[level]);
+    PlayMagicAmination(bnum, Rmagic[mnum].AmiNum);
     for (int i = 0; i < BRoleAmount; i++) {
-        if (Brole[i].Dead == 0 && Bfield[4][Brole[i].X][Brole[i].Y] > 0)
+        if (Brole[i].Dead == 0 && BField[4][Brole[i].X][Brole[i].Y] > 0)
             AttackAction(bnum, i, mnum, level);
     }
 }
@@ -665,24 +670,24 @@ void SetAminationPosition(int mode, int step, int range) {
 }
 
 void SetAminationPosition2(int bx1, int by1, int ax1, int ay1, int mode, int step, int range) {
-    memset(&Bfield[4][0][0], 0, sizeof(Bfield[4]));
+    memset(&BField[4][0][0], 0, sizeof(BField[4]));
     switch (mode) {
-        case 0: // �?
-            if (range == 0) { Bfield[4][ax1][ay1] = 1; }
+        case 0: // 点
+            if (range == 0) { BField[4][ax1][ay1] = 1; }
             else {
                 for (int i = -range; i <= range; i++)
                     for (int j = -range; j <= range; j++)
                         if (abs(i) + abs(j) <= range && ax1 + i >= 0 && ax1 + i < 64 && ay1 + j >= 0 && ay1 + j < 64)
-                            Bfield[4][ax1 + i][ay1 + j] = 1;
+                            BField[4][ax1 + i][ay1 + j] = 1;
             }
             break;
-        case 1: { // �?
+        case 1: { // 线
             int dx = ax1 - bx1, dy = ay1 - by1;
             int sx = (dx > 0) ? 1 : (dx < 0) ? -1 : 0;
             int sy = (dy > 0) ? 1 : (dy < 0) ? -1 : 0;
             for (int s = 1; s <= step; s++) {
                 int nx = bx1 + sx * s, ny = by1 + sy * s;
-                if (nx >= 0 && nx < 64 && ny >= 0 && ny < 64) Bfield[4][nx][ny] = 1;
+                if (nx >= 0 && nx < 64 && ny >= 0 && ny < 64) BField[4][nx][ny] = 1;
             }
         } break;
         case 2: { // 十字
@@ -691,18 +696,18 @@ void SetAminationPosition2(int bx1, int by1, int ax1, int ay1, int mode, int ste
             int sy = (dy > 0) ? 1 : (dy < 0) ? -1 : 0;
             for (int s = 1; s <= step; s++) {
                 int nx = bx1 + sx * s, ny = by1 + sy * s;
-                if (nx >= 0 && nx < 64 && ny >= 0 && ny < 64) Bfield[4][nx][ny] = 1;
+                if (nx >= 0 && nx < 64 && ny >= 0 && ny < 64) BField[4][nx][ny] = 1;
                 // 交叉方向
                 if (sx == 0) {
                     for (int r = 1; r <= range; r++) {
-                        if (bx1 + r < 64) Bfield[4][bx1 + r][ny] = 1;
-                        if (bx1 - r >= 0) Bfield[4][bx1 - r][ny] = 1;
+                        if (bx1 + r < 64) BField[4][bx1 + r][ny] = 1;
+                        if (bx1 - r >= 0) BField[4][bx1 - r][ny] = 1;
                     }
                 }
                 if (sy == 0) {
                     for (int r = 1; r <= range; r++) {
-                        if (by1 + r < 64) Bfield[4][nx][by1 + r] = 1;
-                        if (by1 - r >= 0) Bfield[4][nx][by1 - r] = 1;
+                        if (by1 + r < 64) BField[4][nx][by1 + r] = 1;
+                        if (by1 - r >= 0) BField[4][nx][by1 - r] = 1;
                     }
                 }
             }
@@ -710,7 +715,7 @@ void SetAminationPosition2(int bx1, int by1, int ax1, int ay1, int mode, int ste
         case 3: // 区域
             for (int i = 0; i < 64; i++)
                 for (int j = 0; j < 64; j++)
-                    if (abs(i - bx1) + abs(j - by1) <= step) Bfield[4][i][j] = 1;
+                    if (abs(i - bx1) + abs(j - by1) <= step) BField[4][i][j] = 1;
             break;
     }
 }
@@ -723,7 +728,7 @@ void PlayMagicAmination(int bnum, int enumv, int ForTeam, int mode) {
         Redraw();
         for (int i = 0; i < 64; i++)
             for (int j = 0; j < 64; j++)
-                if (Bfield[4][i][j] > 0) DrawEPic(p, GetPositionOnBField(i, j, 0), GetPositionOnBField(i, j, 1));
+                if (BField[4][i][j] > 0) DrawEPic(p, GetPositionOnBField(i, j, 0), GetPositionOnBField(i, j, 1));
         UpdateScreen(screen, 0, 0, screen->w, screen->h);
         SDL_Delay(BATTLE_SPEED);
     }
@@ -732,7 +737,7 @@ void PlayMagicAmination(int bnum, int enumv, int ForTeam, int mode) {
 void CalHurtRole(int bnum, int mnum, int level) {
     for (int i = 0; i < BRoleAmount; i++) {
         if (Brole[i].Dead != 0) continue;
-        if (Bfield[4][Brole[i].X][Brole[i].Y] <= 0) continue;
+        if (BField[4][Brole[i].X][Brole[i].Y] <= 0) continue;
         if (Brole[i].Team == Brole[bnum].Team && i != bnum) continue;
         int hurt = CalHurtValue(bnum, i, mnum, level);
         int rnum2 = Brole[i].rnum;
@@ -740,8 +745,8 @@ void CalHurtRole(int bnum, int mnum, int level) {
             Rrole[rnum2].CurrentHP -= hurt;
             if (Rrole[rnum2].CurrentHP <= 0) { Rrole[rnum2].CurrentHP = 0; Brole[i].Dead = 1; }
             // 中毒
-            if (Rmagic[mnum].AddPoi > 0 && Rrole[Brole[bnum].rnum].UsePoi > 0)
-                Rrole[rnum2].Poison += Rmagic[mnum].AddPoi / 3;
+            if (Rmagic[mnum].Poison > 0 && Rrole[Brole[bnum].rnum].UsePoi > 0)
+                Rrole[rnum2].Poison += Rmagic[mnum].Poison / 3;
             Brole[i].ShowNumber = hurt;
         } else {
             Rrole[rnum2].CurrentHP += hurt;
@@ -774,7 +779,7 @@ int CalHurtValue(int bnum1, int bnum2, int mnum, int level) {
             int inum = Rrole[rnum1].Equip[e];
             hurt += Ritem[inum].AddAttack / 3;
             // 武器匹配加成
-            if (Rmagic[mnum].MagType == Ritem[inum].NeedMP) hurt += Ritem[inum].AddAttack / 3;
+            if (Rmagic[mnum].MagicType == Ritem[inum].NeedMP) hurt += Ritem[inum].AddAttack / 3;
         }
     }
     // 距离衰减
@@ -793,10 +798,12 @@ int CalHurtValue2(int bnum1, int bnum2, int mnum, int level) {
 
 void SelectModeColor(int mode, uint32_t& color1, uint32_t& color2, std::string& str, int trans) {
     switch (mode) {
-        case 0: color1 = ColColor(0xFF); color2 = ColColor(0x42); str = ""; break;
-        case 1: color1 = ColColor(0x24); color2 = ColColor(0x21); str = ""; break;
-        case 2: color1 = ColColor(0x3E); color2 = ColColor(0x3A); str = "�?; break;
-        default: color1 = ColColor(0xFF); color2 = ColColor(0x42); str = ""; break;
+        case 0: color1 = ColColor(0x10); color2 = ColColor(0x14); str = "-%d"; break;
+        case 1: color1 = ColColor(0x50); color2 = ColColor(0x53); str = "-%d"; break;
+        case 2: color1 = ColColor(0x30); color2 = ColColor(0x32); str = "+%d"; break;
+        case 3: color1 = ColColor(0x07); color2 = ColColor(0x05); str = "+%d"; break;
+        case 4: color1 = ColColor(0x91); color2 = ColColor(0x93); str = "-%d"; break;
+        default: color1 = ColColor(0x10); color2 = ColColor(0x14); str = "-%d"; break;
     }
 }
 
@@ -832,17 +839,17 @@ void CalPoiHurtLife() {
 void ClearDeadRolePic() {
     for (int i = 0; i < BRoleAmount; i++) {
         if (Brole[i].Dead == 1) {
-            Bfield[2][Brole[i].X][Brole[i].Y] = -1;
+            BField[2][Brole[i].X][Brole[i].Y] = -1;
             Brole[i].Dead = 2;
         }
     }
 }
 
 void Wait(int bnum) {
-    // 交换至列表尾�?
+    // 交换至列表尾部
     int pos = -1;
     for (int i = 0; i < BRoleAmount; i++) if (&Brole[i] == &Brole[bnum]) { pos = i; break; }
-    // 标记为已行动但不结束回合 - 简化实�?
+    // 标记为已行动但不结束回合 - 简化实现
     Brole[bnum].Acted = 1;
 }
 
@@ -868,12 +875,11 @@ void AddExp() {
 
 void CheckLevelUp() {
     for (int i = 0; i < BRoleAmount; i++) {
-        if (Brole[i].Team == 0) {
-            int rnum = Brole[i].rnum;
-            while (Rrole[rnum].Exp >= Rrole[rnum].ExpForMake_a_living * 100 + 100) {
-                Rrole[rnum].Exp -= Rrole[rnum].ExpForMakeLevel * 100 + 100;
-                LevelUp(i);
-            }
+        int rnum = Brole[i].rnum;
+        while ((uint16_t)Rrole[rnum].Exp >= (uint16_t)LevelUpList[Rrole[rnum].Level - 1] && Rrole[rnum].Level < MAX_LEVEL) {
+            Rrole[rnum].Exp -= LevelUpList[Rrole[rnum].Level - 1];
+            Rrole[rnum].Level++;
+            LevelUp(i);
         }
     }
 }
@@ -882,7 +888,7 @@ void LevelUp(int bnum) {
     int rnum = Brole[bnum].rnum;
     Rrole[rnum].Level++;
     int apt = Rrole[rnum].Aptitude;
-    // 属性成�?
+    // 属性成长
     Rrole[rnum].MaxHP += 3 + rand() % (apt / 10 + 1);
     Rrole[rnum].MaxMP += 2 + rand() % (apt / 10 + 1);
     Rrole[rnum].Attack += 1 + rand() % (apt / 15 + 1);
@@ -893,33 +899,39 @@ void LevelUp(int bnum) {
 
     DrawRectangle(screen, CENTER_X - 80, 98, 160, 26, 0, ColColor(255), 50);
     DrawBig5ShadowText(screen, Rrole[rnum].Name, CENTER_X - 75, 100, ColColor(0x21), ColColor(0x23));
-    DrawShadowText(screen, " 升級�?, CENTER_X - 20, 100, ColColor(0x64), ColColor(0x66));
+    DrawShadowText(screen, " 升級！", CENTER_X - 20, 100, ColColor(0x64), ColColor(0x66));
     UpdateScreen(screen, 0, 0, screen->w, screen->h);
     SDL_Delay(1000);
 }
 
 void CheckBook() {
     for (int i = 0; i < BRoleAmount; i++) {
-        if (Brole[i].Team == 0) {
-            int rnum = Brole[i].rnum;
+        int rnum = Brole[i].rnum;
+        int inum = Rrole[rnum].PracticeBook;
+        if (inum < 0) continue;
+        int mnum = Ritem[inum].Magic;
+        int mlevel = 0;
+        if (mnum > 0) {
             for (int m = 0; m < 10; m++) {
-                int mnum = Rrole[rnum].Magic[m];
-                if (mnum <= 0) continue;
-                if (Rrole[rnum].MagLevel[m] >= Rmagic[mnum].NeedExp[0]) {
-                    // 练习书系�?
-                    int bookItem = Rmagic[mnum].NeedItem;
-                    if (bookItem > 0) {
-                        bool found = false;
-                        for (int k = 0; k < MAX_ITEM_AMOUNT; k++) {
-                            if (RItemList[k].Number == bookItem && RItemList[k].Amount > 0) { found = true; break; }
-                        }
-                        if (found) {
-                            // 提升武功
-                            Rrole[rnum].MagLevel[m] += 100;
-                            if (Rrole[rnum].MagLevel[m] > 999) Rrole[rnum].MagLevel[m] = 999;
-                        }
-                    }
+                if (Rrole[rnum].Magic[m] == mnum) {
+                    mlevel = Rrole[rnum].MagLevel[m] / 100 + 1;
+                    break;
                 }
+            }
+        }
+        int ap = 7 - Rrole[rnum].Aptitude / 15;
+        if (mnum > 0) {
+            int p = 0;
+            while (mlevel < 10) {
+                int needexp = mlevel * Ritem[inum].NeedExp * ap;
+                if (mlevel == 0) needexp = Ritem[inum].NeedExp * ap;
+                if (Rrole[rnum].ExpForBook >= (uint16_t)needexp && mlevel < 10) {
+                    Rrole[rnum].ExpForBook -= needexp;
+                    instruct_33(rnum, mnum, 1);
+                    mlevel++;
+                } else break;
+                p++;
+                if (p >= 10 || mlevel > 10) break;
             }
         }
     }
@@ -934,26 +946,27 @@ int CalRNum(int team) {
 
 void BattleMenuItem(int bnum) {
     // 使用物品
-    std::string itemStr[MAX_ITEM_AMOUNT];
-    int itemIdx[MAX_ITEM_AMOUNT], cnt = 0;
+    std::vector<std::string> itemStr;
+    std::vector<int> itemIdx;
+    int cnt = 0;
     for (int i = 0; i < MAX_ITEM_AMOUNT; i++) {
         if (RItemList[i].Number >= 0 && RItemList[i].Amount > 0 && Ritem[RItemList[i].Number].ItemType == 3) {
             char buf[64];
             snprintf(buf, sizeof(buf), "%-16s %3d", cp950toutf8(Ritem[RItemList[i].Number].Name).c_str(), RItemList[i].Amount);
-            itemStr[cnt] = buf; itemIdx[cnt] = i; cnt++;
+            itemStr.push_back(buf); itemIdx.push_back(i); cnt++;
         }
     }
     if (cnt == 0) return;
-    int menu = CommonMenu(CENTER_X - 120, 80, 200, cnt - 1, itemStr);
+    int menu = CommonMenu(CENTER_X - 120, 80, 200, cnt - 1, itemStr.data());
     Redraw();
     if (menu >= 0) {
         int inum = RItemList[itemIdx[menu]].Number;
-        if (Ritem[inum].ItemType == 3 && Ritem[inum].AddHP > 0) {
+        if (Ritem[inum].ItemType == 3 && Ritem[inum].AddCurrentHP > 0) {
             // 食物恢复
             int rnum = Brole[bnum].rnum;
-            Rrole[rnum].CurrentHP += Ritem[inum].AddHP;
+            Rrole[rnum].CurrentHP += Ritem[inum].AddCurrentHP;
             if (Rrole[rnum].CurrentHP > Rrole[rnum].MaxHP) Rrole[rnum].CurrentHP = Rrole[rnum].MaxHP;
-            Rrole[rnum].CurrentMP += Ritem[inum].AddMP;
+            Rrole[rnum].CurrentMP += Ritem[inum].AddCurrentMP;
             if (Rrole[rnum].CurrentMP > Rrole[rnum].MaxMP) Rrole[rnum].CurrentMP = Rrole[rnum].MaxMP;
             instruct_32(inum, -1);
         }
@@ -1031,8 +1044,10 @@ void MedPoison(int bnum) {
 }
 
 void UseHiddenWeapon(int bnum, int inum) {
-    CalCanSelect(bnum, 1, Ritem[inum].Range);
-    if (SelectAim(bnum, Ritem[inum].Range)) {
+    int rnum = Brole[bnum].rnum;
+    int step = Rrole[rnum].HidWeapon / 15 + 1;
+    CalCanSelect(bnum, 1, step);
+    if (SelectAim(bnum, step)) {
         for (int i = 0; i < BRoleAmount; i++) {
             if (Brole[i].Dead == 0 && Brole[i].X == Ax && Brole[i].Y == Ay && Brole[i].Team != Brole[bnum].Team) {
                 int hurt = Ritem[inum].AddAttack + Rrole[Brole[bnum].rnum].Attack / 3;
@@ -1074,7 +1089,7 @@ bool TeamModeMenu(int bnum) {
 
 void AutoBattle(int bnum) {
     int rnum = Brole[bnum].rnum;
-    // 简单AI: 找最近敌人，移动并攻�?
+    // 简单AI: 找最近敌人，移动并攻击
     int targetTeam = (Brole[bnum].Team == 0) ? 1 : 0;
     int bestTarget = -1, bestDist = 9999;
     for (int i = 0; i < BRoleAmount; i++) {
@@ -1099,23 +1114,23 @@ void AutoBattle(int bnum) {
             if (Rrole[rnum].Magic[m] > 0) {
                 int mnum = Rrole[rnum].Magic[m];
                 int level = std::min(9, Rrole[rnum].MagLevel[m] / 100);
-                if (Rrole[rnum].CurrentMP >= Rmagic[mnum].NeedMP[level]) {
+                if (Rrole[rnum].CurrentMP >= Rmagic[mnum].NeedMP) {
                     if (bestMagic < 0) { bestMagic = mnum; bestLevel = level; }
                 }
             }
         }
         if (bestMagic >= 0) {
-            int step = Rmagic[bestMagic].Range[bestLevel];
+            int step = Rmagic[bestMagic].MoveDistance[bestLevel];
             int dist = abs(Brole[bestTarget].X - Brole[bnum].X) + abs(Brole[bestTarget].Y - Brole[bnum].Y);
             if (dist <= step) {
                 Ax = Brole[bestTarget].X; Ay = Brole[bestTarget].Y;
-                SetAminationPosition(Rmagic[bestMagic].AreaType, step, Rmagic[bestMagic].SelRange[bestLevel]);
+                SetAminationPosition(Rmagic[bestMagic].AttAreaType, step, Rmagic[bestMagic].AttDistance[bestLevel]);
                 ShowMagicName(bestMagic);
                 AttackActionAll(bnum, bestMagic, bestLevel);
                 CalHurtRole(bnum, bestMagic, bestLevel);
                 ShowHurtValue(0);
                 Rrole[rnum].PhyPower -= 3 + rand() % 5;
-                Rrole[rnum].CurrentMP -= Rmagic[bestMagic].NeedMP[bestLevel];
+                Rrole[rnum].CurrentMP -= Rmagic[bestMagic].NeedMP;
                 if (Rrole[rnum].CurrentMP < 0) Rrole[rnum].CurrentMP = 0;
             }
         }
@@ -1123,12 +1138,12 @@ void AutoBattle(int bnum) {
 }
 
 void AutoUseItem(int bnum, int list) {
-    // AI使用物品 - 简�?
+    // AI使用物品 - 简化
     BattleMenuItem(bnum);
 }
 
 void TryMoveAttack(int& Mx1, int& My1, int& Ax1, int& Ay1, int& tempmaxhurt, int bnum, int mnum, int level) {
-    int AreaType = Rmagic[mnum].AreaType;
+    int AreaType = Rmagic[mnum].AttAreaType;
     switch (AreaType) {
         case 0: CalPoint(Mx1, My1, Ax1, Ay1, tempmaxhurt, Brole[bnum].X, Brole[bnum].Y, bnum, mnum, level); break;
         case 1: calline(Mx1, My1, Ax1, Ay1, tempmaxhurt, Brole[bnum].X, Brole[bnum].Y, bnum, mnum, level); break;
@@ -1138,7 +1153,7 @@ void TryMoveAttack(int& Mx1, int& My1, int& Ax1, int& Ay1, int& tempmaxhurt, int
 }
 
 void CalPoint(int& Mx1, int& My1, int& Ax1, int& Ay1, int& tempmaxhurt, int curX, int curY, int bnum, int mnum, int level) {
-    int step = Rmagic[mnum].Range[level];
+    int step = Rmagic[mnum].MoveDistance[level];
     int targetTeam = (Brole[bnum].Team == 0) ? 1 : 0;
     for (int i = 0; i < BRoleAmount; i++) {
         if (Brole[i].Team == targetTeam && Brole[i].Dead == 0) {
@@ -1153,6 +1168,7 @@ void CalPoint(int& Mx1, int& My1, int& Ax1, int& Ay1, int& tempmaxhurt, int curX
     }
 }
 
+
 void calline(int& Mx1, int& My1, int& Ax1, int& Ay1, int& tempmaxhurt, int curX, int curY, int bnum, int mnum, int level) {
     CalPoint(Mx1, My1, Ax1, Ay1, tempmaxhurt, curX, curY, bnum, mnum, level);
 }
@@ -1162,7 +1178,7 @@ void calcross(int& Mx1, int& My1, int& Ax1, int& Ay1, int& tempmaxhurt, int curX
 }
 
 void CalArea(int& Mx1, int& My1, int& Ax1, int& Ay1, int& tempmaxhurt, int curX, int curY, int bnum, int mnum, int level) {
-    int step = Rmagic[mnum].Range[level];
+    int step = Rmagic[mnum].MoveDistance[level];
     int targetTeam = (Brole[bnum].Team == 0) ? 1 : 0;
     int totalHurt = 0;
     for (int i = 0; i < BRoleAmount; i++) {
@@ -1185,11 +1201,11 @@ void NearestMove(int& Mx1, int& My1, int bnum) {
         }
     }
     if (tx < 0) return;
-    // 在可移动范围内找最接近目标的位�?
+    // 在可移动范围内找最接近目标的位置
     int bestMDist = 9999;
     for (int i = 0; i < 64; i++)
         for (int j = 0; j < 64; j++)
-            if (Bfield[3][i][j] >= 0 && (Bfield[2][i][j] == -1 || (i == Brole[bnum].X && j == Brole[bnum].Y))) {
+            if (BField[3][i][j] >= 0 && (BField[2][i][j] == -1 || (i == Brole[bnum].X && j == Brole[bnum].Y))) {
                 int dist = abs(i - tx) + abs(j - ty);
                 if (dist < bestMDist) { bestMDist = dist; Mx1 = i; My1 = j; }
             }

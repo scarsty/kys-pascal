@@ -4,13 +4,15 @@
 #include "kys_engine.h"
 #include "kys_draw.h"
 #include "kys_main.h"
-#include "simplecc.h"
+#include "PotConv.h"
+#include "SimpleCC.h"
 
 #include <SDL3/SDL.h>
 #include <SDL3_ttf/SDL_ttf.h>
 #include <SDL3_mixer/SDL_mixer.h>
 #include <SDL3_image/SDL_image.h>
 
+#define _USE_MATH_DEFINES
 #include <cstdio>
 #include <cstdarg>
 #include <cstring>
@@ -19,10 +21,6 @@
 #include <map>
 #include <vector>
 #include <string>
-
-#ifdef _WIN32
-#include <windows.h>
-#endif
 
 // ---- 私有变量 ----
 struct QueuedText {
@@ -41,14 +39,16 @@ static SDL_Surface* CachedImage = nullptr;
 static std::string CachedImageName;
 static bool HiResTextRenderOk = false;
 static int compositeTexW = 0, compositeTexH = 0;
-static MIX_Mixer gMixer = nullptr;
-static MIX_Track MusicTrack = nullptr;
-static MIX_Track SfxTracks[10] = {};
+static MIX_Mixer* gMixer = nullptr;
+static MIX_Track* MusicTrack = nullptr;
+static MIX_Track* SfxTracks[10] = {};
 static int SfxNextTrack = 0;
 
-// simplecc handles
-static void* sccS2T = nullptr;
-static void* sccT2S = nullptr;
+// SimpleCC handles
+static SimpleCC sccS2T;
+static SimpleCC sccT2S;
+static bool sccS2T_loaded = false;
+static bool sccT2S_loaded = false;
 
 static uint64_t tic_time = 0;
 
@@ -65,7 +65,7 @@ static bool EnsureMixerCreated() {
     return gMixer != nullptr;
 }
 
-static MIX_Track AcquireSfxTrack(MIX_Audio audio) {
+static MIX_Track* AcquireSfxTrack(MIX_Audio* audio) {
     if (!audio) return nullptr;
     int idx = SfxNextTrack;
     SfxNextTrack++;
@@ -99,7 +99,7 @@ void InitialMusic() {
         if (Music[i]) { MIX_DestroyAudio(Music[i]); Music[i] = nullptr; }
         std::string str = AppPath + "music/" + std::to_string(i) + ".mp3";
         if (SDL_IOFromFile(str.c_str(), "rb")) {
-            Music[i] = MIX_LoadAudio(nullptr, str.c_str(), false);
+            Music[i] = MIX_LoadAudio(gMixer, str.c_str(), false);
         } else {
             str = AppPath + "music/" + std::to_string(i) + ".mid";
             // midi loading with fluidsynth would go here
@@ -114,7 +114,7 @@ void InitialMusic() {
         FILE* f = fopen(str.c_str(), "rb");
         if (f) {
             fclose(f);
-            ESound[i] = MIX_LoadAudio(nullptr, str.c_str(), false);
+            ESound[i] = MIX_LoadAudio(gMixer, str.c_str(), false);
         } else {
             ESound[i] = nullptr;
         }
@@ -127,19 +127,19 @@ void PlayMP3(int MusicNum, int times, int frombeginning) {
     if (!Music[MusicNum]) return;
     NowMusic = MusicNum;
     MIX_SetTrackAudio(MusicTrack, Music[MusicNum]);
-    MIX_SetTrackVolume(MusicTrack, (float)VOLUME / 100.0f);
-    if (times == -1) MIX_SetTrackLoop(MusicTrack, true); else MIX_SetTrackLoop(MusicTrack, false);
-    MIX_PlayTrack(MusicTrack);
+    MIX_SetTrackGain(MusicTrack, (float)VOLUME / 100.0f);
+    if (times == -1) MIX_SetTrackLoops(MusicTrack, -1); else MIX_SetTrackLoops(MusicTrack, times);
+    MIX_PlayTrack(MusicTrack, 0);
 }
 
 void PlayMP3(const char* filename, int times) {
     if (!MusicTrack) return;
-    MIX_Audio audio = MIX_LoadAudio(nullptr, filename, false);
+    MIX_Audio* audio = MIX_LoadAudio(gMixer, filename, false);
     if (!audio) return;
     MIX_SetTrackAudio(MusicTrack, audio);
-    MIX_SetTrackVolume(MusicTrack, (float)VOLUME / 100.0f);
-    if (times == -1) MIX_SetTrackLoop(MusicTrack, true);
-    MIX_PlayTrack(MusicTrack);
+    MIX_SetTrackGain(MusicTrack, (float)VOLUME / 100.0f);
+    if (times == -1) MIX_SetTrackLoops(MusicTrack, -1);
+    MIX_PlayTrack(MusicTrack, 0);
 }
 
 void StopMP3(int frombeginning) {
@@ -149,10 +149,10 @@ void StopMP3(int frombeginning) {
 void PlaySoundE(int SoundNum, int times) {
     if (SoundNum < 0 || SoundNum >= (int)ESound.size()) return;
     if (!ESound[SoundNum]) return;
-    MIX_Track trk = AcquireSfxTrack(ESound[SoundNum]);
+    MIX_Track* trk = AcquireSfxTrack(ESound[SoundNum]);
     if (trk) {
-        MIX_SetTrackVolume(trk, (float)VOLUMEWAV / 100.0f);
-        MIX_PlayTrack(trk);
+        MIX_SetTrackGain(trk, (float)VOLUMEWAV / 100.0f);
+        MIX_PlayTrack(trk, 0);
     }
 }
 
@@ -541,43 +541,15 @@ TPosition GetPositionOnScreen(int x, int y, int CenterX, int CenterY) {
 // ---- 文字编码 ----
 
 std::string cp950toutf8(const char* str, int len) {
-#ifdef _WIN32
     if (!str) return "";
     int slen = (len < 0) ? (int)strlen(str) : len;
     if (slen == 0) return "";
-    int wlen = MultiByteToWideChar(950, 0, str, slen, nullptr, 0);
-    if (wlen <= 0) return "";
-    std::vector<wchar_t> wbuf(wlen);
-    MultiByteToWideChar(950, 0, str, slen, wbuf.data(), wlen);
-    int ulen = WideCharToMultiByte(CP_UTF8, 0, wbuf.data(), wlen, nullptr, 0, nullptr, nullptr);
-    std::string result(ulen, 0);
-    WideCharToMultiByte(CP_UTF8, 0, wbuf.data(), wlen, &result[0], ulen, nullptr, nullptr);
-    return result;
-#else
-    return transcode(std::string(str, len < 0 ? strlen(str) : len), 950, 65001);
-#endif
+    return PotConv::cp950toutf8(std::string(str, slen));
 }
 
 std::string utf8tocp950(const std::string& str) {
-#ifdef _WIN32
     if (str.empty()) return "";
-    int wlen = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), (int)str.size(), nullptr, 0);
-    if (wlen <= 0) return "";
-    std::vector<wchar_t> wbuf(wlen);
-    MultiByteToWideChar(CP_UTF8, 0, str.c_str(), (int)str.size(), wbuf.data(), wlen);
-    int clen = WideCharToMultiByte(950, 0, wbuf.data(), wlen, nullptr, 0, nullptr, nullptr);
-    std::string result(clen, 0);
-    WideCharToMultiByte(950, 0, wbuf.data(), wlen, &result[0], clen, nullptr, nullptr);
-    return result;
-#else
-    return transcode(str, 65001, 950);
-#endif
-}
-
-std::string transcode(const std::string& str, int input, int output) {
-    // 简易实现：在Windows上用 MultiByteToWideChar/WideCharToMultiByte
-    // 在其他平台上可用 iconv
-    return str; // fallback
+    return PotConv::conv(str, "utf-8", "cp950");
 }
 
 // ---- 文字绘制 ----
@@ -884,10 +856,6 @@ int DrawLength(const char* p) {
     return DrawLength(std::string(p));
 }
 
-int round(double x) {
-    return (int)(x + 0.5);
-}
-
 void swap(uint32_t& x, uint32_t& y) {
     uint32_t t = x; x = y; y = t;
 }
@@ -925,29 +893,19 @@ void ChangeCol() {
 // ---- 简繁转换 ----
 
 std::string Simplified2Traditional(const std::string& str) {
-    if (!sccS2T) {
-        sccS2T = simplecc_create();
-        std::string f = AppPath + "cc/s2t.json";
-        simplecc_load(sccS2T, f.c_str());
+    if (!sccS2T_loaded) {
+        sccS2T.init({AppPath + "cc/STCharacters.txt", AppPath + "cc/STPhrases.txt"});
+        sccS2T_loaded = true;
     }
-    if (sccS2T) {
-        const char* r = simplecc_convert(sccS2T, str.c_str());
-        if (r) return std::string(r);
-    }
-    return str;
+    return sccS2T.conv(str);
 }
 
 std::string Traditional2Simplified(const std::string& str) {
-    if (!sccT2S) {
-        sccT2S = simplecc_create();
-        std::string f = AppPath + "cc/t2s.json";
-        simplecc_load(sccT2S, f.c_str());
+    if (!sccT2S_loaded) {
+        sccT2S.init({AppPath + "cc/TSCharacters.txt", AppPath + "cc/TSPhrases.txt"});
+        sccT2S_loaded = true;
     }
-    if (sccT2S) {
-        const char* r = simplecc_convert(sccT2S, str.c_str());
-        if (r) return std::string(r);
-    }
-    return str;
+    return sccT2S.conv(str);
 }
 
 // ---- 调试 ----

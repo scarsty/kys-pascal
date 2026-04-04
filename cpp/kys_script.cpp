@@ -1,4 +1,4 @@
-// kys_script.cpp - Lua脚本系统实现
+﻿// kys_script.cpp - Lua脚本系统实现
 // 对应 kys_script.pas
 
 #include "kys_script.h"
@@ -498,7 +498,7 @@ static int l_GetBattleNumber(lua_State* L) {
 
 static int l_SelectOneAim(lua_State* L) {
     if (LI(-1) == 0) SelectAim(LI(-3), LI(-2));
-    lua_pushnumber(L, Bfield[2][Ax][Ay]);
+    lua_pushnumber(L, BField[2][Ax][Ay]);
     return 1;
 }
 
@@ -528,7 +528,7 @@ static int l_SetAminationLayer(lua_State* L) {
     int x = LI(-5), y = LI(-4), w = LI(-3), h = LI(-2), t = LI(-1);
     for (int i1 = x; i1 < x + w; i1++)
         for (int i2 = y; i2 < y + h; i2++)
-            Bfield[4][i1][i2] = t;
+            BField[4][i1][i2] = t;
     return 0;
 }
 
