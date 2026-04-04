@@ -63,8 +63,9 @@ kys-pascal-androidstudio/build
 *.so
 *.apk
 cc
-cpp/build
-cpp/.vs
-cpp/kys-pascal-c/x64
-cpp/out
-cpp/x64
+kys-pascal-c/build
+kys-pascal-c/.vs
+kys-pascal-c/x64
+kys-pascal-c/out
+kys-pascal-c/x64
+kys-pascal-c/kys-pascal-c/x64
