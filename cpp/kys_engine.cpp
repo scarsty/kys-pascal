@@ -342,12 +342,8 @@ void display_img(const char* file_name, int x, int y) {
         img = CachedImage;
     } else {
         if (CachedImage) SDL_DestroySurface(CachedImage);
-        std::string fullpath = checkFileName(AppPath + name);
+        std::string fullpath = checkFileName(name);
         img = IMG_Load(fullpath.c_str());
-        if (!img) {
-            fullpath = checkFileName(AppPathCommon + name);
-            img = IMG_Load(fullpath.c_str());
-        }
         CachedImage = img;
         CachedImageName = name;
     }
@@ -1135,7 +1131,7 @@ void ChangeCol() {
 
 std::string Simplified2Traditional(const std::string& str) {
     if (!sccS2T_loaded) {
-        sccS2T.init({AppPath + "cc/STCharacters.txt", AppPath + "cc/STPhrases.txt"});
+        sccS2T.init({checkFileName("cc/STCharacters.txt"), checkFileName("cc/STPhrases.txt")});
         sccS2T_loaded = true;
     }
     return sccS2T.conv(str);
@@ -1143,7 +1139,7 @@ std::string Simplified2Traditional(const std::string& str) {
 
 std::string Traditional2Simplified(const std::string& str) {
     if (!sccT2S_loaded) {
-        sccT2S.init({AppPath + "cc/TSCharacters.txt", AppPath + "cc/TSPhrases.txt"});
+        sccT2S.init({checkFileName("cc/TSCharacters.txt"), checkFileName("cc/TSPhrases.txt")});
         sccT2S_loaded = true;
     }
     return sccT2S.conv(str);
@@ -1170,8 +1166,10 @@ void kyslog(const char* fmt, ...) {
 }
 
 std::string checkFileName(const std::string& f) {
-    // 直接返回，Windows不区分大小写
-    return f;
+    std::string result = AppPath + f;
+    if (!filefunc::fileExist(result))
+        result = AppPathCommon + f;
+    return result;
 }
 
 bool InRegion(int x1, int y1, int x, int y, int w, int h) {

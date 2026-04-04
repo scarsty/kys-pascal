@@ -14,6 +14,7 @@
 #include <SDL3/SDL.h>
 #include <SDL3_ttf/SDL_ttf.h>
 #include <SDL3_mixer/SDL_mixer.h>
+#include <SDL3_image/SDL_image.h>
 
 #include <cstdio>
 #include <cstring>
@@ -41,15 +42,18 @@ void Run() {
 #ifdef _WIN32
     SetConsoleOutputCP(65001);
 #endif
+    CellPhone = 1;
+
     AppPath = "";
+    AppPathCommon = AppPath + "../kys-pascal/";
     ReadFiles();
     SetMODVersion();
 
     // 初始化 TTF
     TTF_Init();
-    std::string fontPath = checkFileName(AppPath + CHINESE_FONT);
+    std::string fontPath = checkFileName(CHINESE_FONT);
     ChineseFont = TTF_OpenFont(fontPath.c_str(), CHINESE_FONT_SIZE);
-    fontPath = checkFileName(AppPath + ENGLISH_FONT);
+    fontPath = checkFileName(ENGLISH_FONT);
     EnglishFont = TTF_OpenFont(fontPath.c_str(), ENGLISH_FONT_SIZE);
 
     // 测试空格宽度
@@ -270,6 +274,13 @@ void ReadFiles() {
         VirtualAY = ini.getInt("system", "VirtualAY", h - 100);
         VirtualBX = ini.getInt("system", "VirtualBX", w - 100);
         VirtualBY = ini.getInt("system", "VirtualBY", h - 200);
+
+        VirtualKeyU = IMG_Load(checkFileName("resource/u.png").c_str());
+        VirtualKeyD = IMG_Load(checkFileName("resource/d.png").c_str());
+        VirtualKeyL = IMG_Load(checkFileName("resource/l.png").c_str());
+        VirtualKeyR = IMG_Load(checkFileName("resource/r.png").c_str());
+        VirtualKeyA = IMG_Load(checkFileName("resource/a.png").c_str());
+        VirtualKeyB = IMG_Load(checkFileName("resource/b.png").c_str());
     } else {
         ShowVirtualKey = 0;
         TouchWalk = 1;
