@@ -358,8 +358,9 @@ inline double NowTime = 0;
 inline bool LoadingScene = false;
 
 // 行走/场景状态
-inline int MainMapStep = 0, MainMapStill = 0;
+inline int MainMapStep = 0, MainMapStill = 0, MainMapStillcount = 0;
 inline int Cx = 0, Cy = 0, SFace = 0, SStep = 0;
+inline int gotoevent = -1;
 inline int CurScene = 0, CurEvent = -1, CurItem = -1;
 inline int CurrentBattle = 0, Where = 0;
 inline int SaveNum = 0;
