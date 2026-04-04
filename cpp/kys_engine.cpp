@@ -540,8 +540,10 @@ void DrawRLE8Pic(const char* colorPanel, int num, int px, int py,
                                 isAlpha = 1;
                             } else {
                                 // 需要遮挡判断
-                                if (x < blockx + screen->w && y < blocky + screen->h) {
-                                    pixdepth = *(const int16_t*)(BlockImageW + ((x + blockx) * heightW + y + blocky) * sizeW);
+                                int bx = x + blockx;
+                                int by = y + blocky;
+                                if (bx >= 0 && bx < widthW && by >= 0 && by < heightW) {
+                                    pixdepth = *(const int16_t*)(BlockImageW + (bx * heightW + by) * sizeW);
                                     curdepth = depth;
                                     if (pixdepth >= curdepth) {
                                         isAlpha = 1;
@@ -1038,7 +1040,35 @@ void ClearQueuedHiResText() {
 }
 
 void ChangeCol() {
-    // 调色板动画 - 暂简化
+    uint32_t now = SDL_GetTicks();
+    if (NIGHT_EFFECT == 1) {
+        NowTime += 0.3;
+        if (NowTime > 1440) NowTime = 0;
+        double p = NowTime / 1440.0;
+        if (p > 0.5) p = 1.0 - p;
+        double p0 = 0.6 + p;
+        double p1 = 0.6 + p;
+        double p2 = 1.0 - 0.4 / 1.3 + p / 1.3;
+        for (int i = 0; i < 256; i++) {
+            int b = i * 3;
+            ACol1[b] = (uint8_t)std::min((int)(ACol2[b] * p0), 63);
+            ACol1[b + 1] = (uint8_t)std::min((int)(ACol2[b + 1] * p1), 63);
+            ACol1[b + 2] = (uint8_t)std::min((int)(ACol2[b + 2] * p2), 63);
+        }
+        memcpy(ACol, ACol1, 768);
+    }
+
+    int add0 = 0xE0;
+    int len = 8;
+    int a = now / 200 % len;
+    memcpy(ACol + add0 * 3 + a * 3, ACol1 + add0 * 3, (len - a) * 3);
+    memcpy(ACol + add0 * 3, ACol1 + add0 * 3 + (len - a) * 3, a * 3);
+
+    add0 = 0xF4;
+    len = 9;
+    a = now / 200 % len;
+    memcpy(ACol + add0 * 3 + a * 3, ACol1 + add0 * 3, (len - a) * 3);
+    memcpy(ACol + add0 * 3, ACol1 + add0 * 3 + (len - a) * 3, a * 3);
 }
 
 // ---- 简繁转换 ----

@@ -2620,14 +2620,26 @@ void ShowSimpleStatus(int rnum, int x, int y) {
 }
 
 int MenuSystem() {
-    std::string menuStr[] = {" 存檔", " 讀檔", " 退出"};
-    int sel = CommonMenu(CENTER_X - 40, CENTER_Y - 40, 80, 2, menuStr);
-    switch (sel) {
-        case 0: MenuSave(); break;
-        case 1: MenuLoad(); break;
-        case 2: MenuQuit(); break;
+    std::string word[4];
+    word[0] = "讀取";
+    word[1] = "存檔";
+    word[3] = "離開";
+    int i = 0;
+    while (i >= 0) {
+        word[2] = FULLSCREEN ? "窗口" : "全屏";
+        i = CommonMenu(80, 30, 46, 3, word);
+        switch (i) {
+            case 0: MenuLoad(); break;
+            case 1: MenuSave(); break;
+            case 2: SwitchFullscreen(); break;
+            case 3: MenuQuit(); break;
+        }
+        if (Where == 3) break;
+        Redraw();
+        ShowMenu(6);
+        UpdateScreen(screen, 133, 0, screen->w - 133, screen->h);
     }
-    return sel;
+    return i;
 }
 
 static std::string GetFileDateStr(const std::string& filename) {
@@ -2891,15 +2903,7 @@ int teleport() {
         for (int y = 0; y < 480; y++) {
             int x1 = CENTER_X - (x - y);
             int y1 = (x + y) / 2;
-            if (x1 >= 0 && x1 < screen->w && y1 + 18 >= 0 && y1 + 18 < screen->h) {
-                int tile = Earth[x][y] / 2;
-                uint32_t color;
-                if (tile >= 306 && tile <= 335) color = SDL_MapSurfaceRGB(screen, 60, 100, 200);
-                else if (tile >= 253 && tile <= 305) color = SDL_MapSurfaceRGB(screen, 100, 140, 60);
-                else if (tile >= 200 && tile <= 252) color = SDL_MapSurfaceRGB(screen, 160, 140, 100);
-                else color = SDL_MapSurfaceRGB(screen, 80, 160, 80);
-                PutPixel(screen, x1, y1 + 18, color);
-            }
+            DrawMPic(Earth[x][y] / 2, x1, y1 + 18, 0, 0, 0, 0, 1);
         }
     }
     RecordFreshScreen(0, 0, screen->w, screen->h);

@@ -9,12 +9,14 @@
 void DrawTitlePic(int num, int px, int py);
 void DrawMPic(int num, int px, int py);
 void DrawMPic(int num, int px, int py, int shadow, int alpha, uint32_t mixColor, int mixAlpha);
+void DrawMPic(int num, int px, int py, int shadow, int alpha, uint32_t mixColor, int mixAlpha, int totalpix);
 void DrawSPic(int num, int px, int py, int xx, int yy, int xw, int yh);
 void DrawSPic(int num, int px, int py, int xx, int yy, int xw, int yh, int shadow, int alpha);
 void DrawSPic(int num, int px, int py, int xx, int yy, int xw, int yh, int shadow, int alpha, uint32_t mixColor, int mixAlpha);
 void InitialSPic(int num, int px, int py, SDL_Surface* img, int widthI, int heightI, char* blockW, int widthW, int heightW, int depth, uint32_t mixColor = 0, int mixAlpha = 0);
 void DrawHeadPic(int num, int px, int py);
 void DrawHeadPic(int num, int px, int py, SDL_Surface* scr);
+void DrawHeadPic(int num, int px, int py, int shadow, int alpha, int depth, uint32_t mixColor, int mixAlpha);
 void DrawIPic(int num, int px, int py);
 void DrawIPic(int num, int px, int py, int shadow, int alpha, uint32_t mixColor, int mixAlpha);
 void DrawBPic(int num, int px, int py, int shadow);

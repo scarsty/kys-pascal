@@ -10,6 +10,7 @@
 #include <cstdio>
 #include <algorithm>
 #include <vector>
+#include <io.h>
 
 // ---- 贴图绘制包装 ----
 
@@ -25,10 +26,14 @@ void DrawMPic(int num, int px, int py) {
 }
 
 void DrawMPic(int num, int px, int py, int shadow, int alpha, uint32_t mixColor, int mixAlpha) {
+    DrawMPic(num, px, py, shadow, alpha, mixColor, mixAlpha, 0);
+}
+
+void DrawMPic(int num, int px, int py, int shadow, int alpha, uint32_t mixColor, int mixAlpha, int totalpix) {
     if (num < 0 || num >= MPicAmount) return;
     DrawRLE8Pic((const char*)ACol, num, px, py, MIdx.data(), MPic.data(),
                 nullptr, nullptr, 0, 0, 0, shadow, alpha,
-                nullptr, nullptr, 0, 0, 0, 4096, mixColor, mixAlpha);
+                nullptr, nullptr, 0, 0, 0, 4096, mixColor, mixAlpha, totalpix);
 }
 
 void DrawSPic(int num, int px, int py, int xx, int yy, int xw, int yh) {
@@ -50,21 +55,59 @@ void InitialSPic(int num, int px, int py, SDL_Surface* img, int widthI, int heig
                   char* blockW, int widthW, int heightW, int depth, uint32_t mixColor, int mixAlpha) {
     if (num < 0 || num >= SPicAmount) return;
     DrawRLE8Pic((const char*)ACol, num, px, py, SIdx.data(), SPic.data(),
-                nullptr, img, widthI, heightI, img ? img->pitch : 0,
+                nullptr, img, widthI, heightI, (int)sizeof(int16_t),
                 0, 0, blockW, nullptr, widthW, heightW, 0, depth, mixColor, mixAlpha);
 }
 
 void DrawHeadPic(int num, int px, int py) {
-    if (num < 0 || (int)HPic.size() == 0) return;
-    int idx = num * 4; // 4帧头像
-    if (idx >= HPicAmount) idx = 0;
-    DrawRLE8Pic((const char*)ACol, idx, px, py, HIdx.data(), HPic.data(),
-                nullptr, nullptr, 0, 0, 0, 0, 0);
+    DrawHeadPic(num, px, py, 0, 0, 0, 0, 0);
 }
 
 void DrawHeadPic(int num, int px, int py, SDL_Surface* scr) {
-    // 在指定表面上绘制头像（当前实现等同于默认screen）
-    DrawHeadPic(num, px, py);
+    if (num < 0 || !scr) return;
+    std::string str = AppPath + "head/" + std::to_string(num) + ".png";
+    if (_access(str.c_str(), 0) == 0) {
+        SDL_Surface* image = (num < (int)HeadSurface.size()) ? HeadSurface[num] : nullptr;
+        if (!image) {
+            image = LoadSurfaceFromFile(str);
+            if (num < (int)HeadSurface.size()) HeadSurface[num] = image;
+        }
+        if (image) {
+            SDL_Rect dest = {px, py, image->w, image->h};
+            SDL_BlitSurface(image, nullptr, scr, &dest);
+        }
+    } else {
+        if (num >= 0 && num < HPicAmount && !HPic.empty()) {
+            int offset = (num > 0) ? HIdx[num - 1] : 0;
+            int16_t ys = *(const int16_t*)(&HPic[offset + 6]);
+            SDL_Rect area = {0, 0, scr->w, scr->h};
+            DrawRLE8Pic((const char*)ACol1, num, px, py + ys, HIdx.data(), HPic.data(),
+                        (const char*)&area, scr, scr->w, scr->h, 0, 0, 0,
+                        nullptr, nullptr, 0, 0, 0, 0, 0, 0);
+        }
+    }
+}
+
+void DrawHeadPic(int num, int px, int py, int shadow, int alpha, int depth, uint32_t mixColor, int mixAlpha) {
+    if (num < 0) return;
+    std::string str = AppPath + "head/" + std::to_string(num) + ".png";
+    if (_access(str.c_str(), 0) == 0) {
+        SDL_Surface* image = (num < (int)HeadSurface.size()) ? HeadSurface[num] : nullptr;
+        if (!image) {
+            image = LoadSurfaceFromFile(str);
+            if (num < (int)HeadSurface.size()) HeadSurface[num] = image;
+        }
+        if (image) {
+            SDL_Rect dest = {px, py - 60, image->w, image->h};
+            SDL_BlitSurface(image, nullptr, screen, &dest);
+        }
+    } else {
+        if (num >= 0 && num < HPicAmount && !HPic.empty()) {
+            DrawRLE8Pic((const char*)ACol1, num, px, py, HIdx.data(), HPic.data(),
+                        nullptr, nullptr, 0, 0, 0, shadow, alpha,
+                        nullptr, nullptr, 0, 0, 0, depth, mixColor, mixAlpha);
+        }
+    }
 }
 
 void DrawIPic(int num, int px, int py) {
@@ -72,11 +115,21 @@ void DrawIPic(int num, int px, int py) {
 }
 
 void DrawIPic(int num, int px, int py, int shadow, int alpha, uint32_t mixColor, int mixAlpha) {
-    int pic = ITEM_BEGIN_PIC + num;
-    if (pic < 0 || pic >= SPicAmount) return;
-    DrawRLE8Pic((const char*)ACol, pic, px, py, SIdx.data(), SPic.data(),
-                nullptr, screen, screen->w, screen->h, screen->pitch,
-                shadow, alpha, nullptr, nullptr, 0, 0, 0, 0, mixColor, mixAlpha);
+    if (num < 0) return;
+    std::string str = AppPath + "item/" + std::to_string(num) + ".png";
+    if (_access(str.c_str(), 0) == 0) {
+        SDL_Surface* image = (num < (int)ItemSurface.size()) ? ItemSurface[num] : nullptr;
+        if (!image) {
+            image = LoadSurfaceFromFile(str);
+            if (num < (int)ItemSurface.size()) ItemSurface[num] = image;
+        }
+        if (image) {
+            SDL_Rect dest = {px, py, image->w, image->h};
+            SDL_BlitSurface(image, nullptr, screen, &dest);
+        }
+    } else {
+        DrawMPic(ITEM_BEGIN_PIC + num, px, py, shadow, alpha, mixColor, mixAlpha);
+    }
 }
 
 void DrawBPic(int num, int px, int py, int shadow) {
@@ -106,7 +159,7 @@ void InitialBPic(int num, int px, int py, SDL_Surface* img, int widthI, int heig
                   char* blockW, int widthW, int heightW, int depth, uint32_t mixColor, int mixAlpha) {
     if (num <= 0 || num >= BPicAmount) return;
     DrawRLE8Pic((const char*)ACol, num, px, py, WIdx.data(), WPic.data(),
-                nullptr, img, widthI, heightI, img ? img->pitch : 0,
+                nullptr, img, widthI, heightI, (int)sizeof(int16_t),
                 0, 0, blockW, nullptr, widthW, heightW, 0, depth, mixColor, mixAlpha);
 }
 
