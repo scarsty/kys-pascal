@@ -142,6 +142,28 @@ void InitialMusic() {
             ESound[i] = nullptr;
         }
     }
+    for (int i = 0; i < (int)ASound.size(); i++) {
+        if (ASound[i]) { MIX_DestroyAudio(ASound[i]); ASound[i] = nullptr; }
+        char buf[64];
+        snprintf(buf, sizeof(buf), "sound/atk%02d.wav", i);
+        std::string str = AppPath + buf;
+        FILE* f = fopen(str.c_str(), "rb");
+        if (f) {
+            fclose(f);
+            ASound[i] = MIX_LoadAudio(nullptr, str.c_str(), false);
+        } else {
+            ASound[i] = nullptr;
+        }
+    }
+    // 调试: 统计加载数量
+    {
+        int mc = 0, ec = 0, ac = 0;
+        for (int i = 0; i < (int)Music.size(); i++) if (Music[i]) mc++;
+        for (int i = 0; i < (int)ESound.size(); i++) if (ESound[i]) ec++;
+        for (int i = 0; i < (int)ASound.size(); i++) if (ASound[i]) ac++;
+        fprintf(stderr, "[InitialMusic] loaded: Music=%d/%d  ESound=%d/%d  ASound=%d/%d  gMixer=%p\n",
+                mc, (int)Music.size(), ec, (int)ESound.size(), ac, (int)ASound.size(), (void*)gMixer);
+    }
 }
 
 void PlayMP3(int MusicNum, int times, int frombeginning) {
@@ -210,7 +232,15 @@ void PlaySoundE(int SoundNum, int times, int x, int y, int z) {
 }
 
 void PlaySoundA(int SoundNum, int times) {
-    PlaySoundE(SoundNum, times);
+    if (SoundNum < 0 || SoundNum >= (int)ASound.size()) return;
+    if (!ASound[SoundNum]) return;
+    int loops = (times == -1) ? -1 : 0;
+    MIX_Track* trk = AcquireSfxTrack(ASound[SoundNum]);
+    if (trk) {
+        MIX_SetTrackGain(trk, (float)VOLUMEWAV / 100.0f);
+        MIX_SetTrackLoops(trk, loops);
+        MIX_PlayTrack(trk, 0);
+    }
 }
 
 // ---- 文件读取 ----

@@ -133,6 +133,7 @@ void Quit() {
 void SetMODVersion() {
     Music.resize(200, nullptr);
     ESound.resize(300, nullptr);
+    ASound.resize(200, nullptr);
     StartMusic = 16;
     TitleString = "All Heros in Kam Yung's Stories - Replicated Edition";
     OpenPicPosition = {-1, -1};
@@ -1839,10 +1840,14 @@ int SelectOneTeamMember(int x, int y, const std::string& str, int list1, int lis
             if (!str.empty()) {
                 char buf[32];
                 snprintf(buf, sizeof(buf), str.c_str(), Rrole[TeamList[i]].Data[list1], Rrole[TeamList[i]].Data[list2]);
-                std::string nameStr = cp950toutf8(Rrole[TeamList[i]].Name);
+                // Pascal 在 CP950 编码下做 format('%-8s%4s', [Name, engstr])，
+                // 中文字符在 CP950 中每个占 2 字节，此处需一致
+                char nameBuf[11];
+                memcpy(nameBuf, Rrole[TeamList[i]].Name, 10);
+                nameBuf[10] = '\0';
                 char buf2[64];
-                snprintf(buf2, sizeof(buf2), "%-8s%4s", nameStr.c_str(), buf);
-                menuString[i] = buf2;
+                snprintf(buf2, sizeof(buf2), "%-8s%4s", nameBuf, buf);
+                menuString[i] = cp950toutf8(buf2);
             }
             Amount++;
         }
@@ -2883,21 +2888,196 @@ int EffectMedPoison(int role1, int role2) {
 
 int EatOneItem(int rnum, int inum, int times, int display) {
     if (inum < 0 || inum >= 725) return 0;
-    TItem& item = Ritem[inum];
-    TRole& role = Rrole[rnum];
-    role.CurrentHP += item.AddCurrentHP * times;
-    if (role.CurrentHP > role.MaxHP) role.CurrentHP = role.MaxHP;
-    role.MaxHP += item.AddMaxHP * times;
-    role.CurrentMP += item.AddCurrentMP * times;
-    if (role.CurrentMP > role.MaxMP) role.CurrentMP = role.MaxMP;
-    role.MaxMP += item.AddMaxMP * times;
-    role.Attack += item.AddAttack * times;
-    role.Speed += item.AddSpeed * times;
-    role.Defence += item.AddDefence * times;
-    role.Medcine += item.AddMedcine * times;
-    role.UsePoi += item.AddUsePoi * times;
-    role.MedPoi += item.AddMedPoi * times;
-    return 1;
+
+    // 24个属性的角色Data索引映射 (与Pascal一致)
+    int rolelist[24] = {
+        17, 18, 20, 21, 40, 41, 42,       // 0-6: 生命/最大生命/中毒/体力/内力性质/当前内力/最大内力
+        43, 44, 45, 46, 47, 48, 49,        // 7-13: 攻击/轻功/防御/医疗/用毒/解毒/抗毒
+        50, 51, 52, 53, 54, 55, 56,        // 14-20: 拳掌/御剑/耍刀/特殊/暗器/知识/品德
+        58, 57, 19                          // 21: 左右互搏, 22: 攻击带毒, 23: 受伤
+    };
+    int addvalue[24] = {};
+    for (int i = 0; i <= 22; i++) {
+        if (i != 4 && i != 21)
+            addvalue[i] = Ritem[inum].Data[45 + i] * times;
+        else
+            addvalue[i] = Ritem[inum].Data[45 + i];
+    }
+    // 减少受伤
+    addvalue[23] = -(addvalue[0] / LIFE_HURT);
+    if (-addvalue[23] > Rrole[rnum].Data[19])
+        addvalue[23] = -Rrole[rnum].Data[19];
+
+    // 增加生命、内力最大值的上限处理
+    if (addvalue[1] + Rrole[rnum].Data[18] > MAX_HP)
+        addvalue[1] = MAX_HP - Rrole[rnum].Data[18];
+    if (addvalue[6] + Rrole[rnum].Data[42] > MAX_MP)
+        addvalue[6] = MAX_MP - Rrole[rnum].Data[42];
+    if (addvalue[1] + Rrole[rnum].Data[18] < 0)
+        addvalue[1] = -Rrole[rnum].Data[18];
+    if (addvalue[6] + Rrole[rnum].Data[42] < 0)
+        addvalue[6] = -Rrole[rnum].Data[42];
+
+    // 属性上限检查 (索引7-22)
+    for (int i = 7; i <= 22; i++) {
+        if (addvalue[i] != 0) {
+            int idx = rolelist[i] - 43; // MaxProList以43为偏移
+            if (idx >= 0 && idx < 16) {
+                if (addvalue[i] + Rrole[rnum].Data[rolelist[i]] > MaxProList[idx])
+                    addvalue[i] = MaxProList[idx] - Rrole[rnum].Data[rolelist[i]];
+            }
+            if (addvalue[i] + Rrole[rnum].Data[rolelist[i]] < 0)
+                addvalue[i] = -Rrole[rnum].Data[rolelist[i]];
+        }
+    }
+    // 生命不能超过最大值
+    if (addvalue[0] + Rrole[rnum].Data[17] > addvalue[1] + Rrole[rnum].Data[18])
+        addvalue[0] = addvalue[1] + Rrole[rnum].Data[18] - Rrole[rnum].Data[17];
+    // 中毒不能小于0
+    if (addvalue[2] + Rrole[rnum].Data[20] < 0)
+        addvalue[2] = -Rrole[rnum].Data[20];
+    // 体力不能超过上限
+    if (addvalue[3] + Rrole[rnum].Data[21] > MAX_PHYSICAL_POWER)
+        addvalue[3] = MAX_PHYSICAL_POWER - Rrole[rnum].Data[21];
+    // 内力不能超过最大值
+    if (addvalue[5] + Rrole[rnum].Data[41] > addvalue[6] + Rrole[rnum].Data[42])
+        addvalue[5] = addvalue[6] + Rrole[rnum].Data[42] - Rrole[rnum].Data[41];
+
+    // 统计有效属性个数
+    int p = 0;
+    for (int i = 0; i <= 23; i++) {
+        if (i != 4 && i != 21 && addvalue[i] != 0) p++;
+    }
+    // 内力属性
+    if (addvalue[4] == 2 && Rrole[rnum].Data[40] != 2) p++;
+    // 左右互搏
+    if (addvalue[21] == 1 && Rrole[rnum].Data[58] != 1) p++;
+
+    // 计算实际使用次数 (修炼物品)
+    int Result;
+    if (Ritem[inum].ItemType == 2 && Ritem[inum].Magic <= 0) {
+        Result = 0;
+        for (int i = 0; i <= 22; i++) {
+            if (Ritem[inum].Data[45 + i] != 0 && i != 4 && i != 21) {
+                int v = (addvalue[i] == 0) ? 0 : (int)ceil(fabs((double)addvalue[i] / Ritem[inum].Data[45 + i]));
+                if (v > Result) Result = v;
+            }
+        }
+        Result = std::min(times, Result);
+        if (p == 0) Result = 0;
+    } else {
+        Result = times;
+    }
+
+    if (display != 0) {
+        // 属性名称
+        std::string word[24] = {
+            "\xe5\xa2\x9e\xe5\x8a\xa0\xe7\x94\x9f\xe5\x91\xbd",           // 增加生命
+            "\xe5\xa2\x9e\xe5\x8a\xa0\xe7\x94\x9f\xe5\x91\xbd\xe6\x9c\x80\xe5\xa4\xa7\xe5\x80\xbc", // 增加生命最大值
+            "\xe4\xb8\xad\xe6\xaf\x92\xe7\xa8\x8b\xe5\xba\xa6",           // 中毒程度
+            "\xe5\xa2\x9e\xe5\x8a\xa0\xe9\xab\x94\xe5\x8a\x9b",           // 增加體力
+            "\xe5\x85\xa7\xe5\x8a\x9b\xe9\x96\x80\xe8\xb7\xaf\xe9\x99\xb0\xe9\x99\xbd\xe5\x90\x88\xe4\xb8\x80", // 內力門路陰陽合一
+            "\xe5\xa2\x9e\xe5\x8a\xa0\xe5\x85\xa7\xe5\x8a\x9b",           // 增加內力
+            "\xe5\xa2\x9e\xe5\x8a\xa0\xe5\x85\xa7\xe5\x8a\x9b\xe6\x9c\x80\xe5\xa4\xa7\xe5\x80\xbc", // 增加內力最大值
+            "\xe5\xa2\x9e\xe5\x8a\xa0\xe6\x94\xbb\xe6\x93\x8a\xe5\x8a\x9b", // 增加攻擊力
+            "\xe5\xa2\x9e\xe5\x8a\xa0\xe8\xbc\x95\xe5\x8a\x9f",           // 增加輕功
+            "\xe5\xa2\x9e\xe5\x8a\xa0\xe9\x98\xb2\xe7\xa6\xa6\xe5\x8a\x9b", // 增加防禦力
+            "\xe5\xa2\x9e\xe5\x8a\xa0\xe9\x86\xab\xe7\x99\x82\xe8\x83\xbd\xe5\x8a\x9b", // 增加醫療能力
+            "\xe5\xa2\x9e\xe5\x8a\xa0\xe7\x94\xa8\xe6\xaf\x92\xe8\x83\xbd\xe5\x8a\x9b", // 增加用毒能力
+            "\xe5\xa2\x9e\xe5\x8a\xa0\xe8\xa7\xa3\xe6\xaf\x92\xe8\x83\xbd\xe5\x8a\x9b", // 增加解毒能力
+            "\xe5\xa2\x9e\xe5\x8a\xa0\xe6\x8a\x97\xe6\xaf\x92\xe8\x83\xbd\xe5\x8a\x9b", // 增加抗毒能力
+            "\xe5\xa2\x9e\xe5\x8a\xa0\xe6\x8b\xb3\xe6\x8e\x8c\xe8\x83\xbd\xe5\x8a\x9b", // 增加拳掌能力
+            "\xe5\xa2\x9e\xe5\x8a\xa0\xe5\xbe\xa1\xe5\x8a\x8d\xe8\x83\xbd\xe5\x8a\x9b", // 增加御劍能力
+            "\xe5\xa2\x9e\xe5\x8a\xa0\xe8\x80\x8d\xe5\x88\x80\xe8\x83\xbd\xe5\x8a\x9b", // 增加耍刀能力
+            "\xe5\xa2\x9e\xe5\x8a\xa0\xe7\x89\xb9\xe6\xae\x8a\xe5\x85\xb5\xe5\x99\xa8", // 增加特殊兵器
+            "\xe5\xa2\x9e\xe5\x8a\xa0\xe6\x9a\x97\xe5\x99\xa8\xe6\x8a\x80\xe5\xb7\xa7", // 增加暗器技巧
+            "\xe5\xa2\x9e\xe5\x8a\xa0\xe6\xad\xa6\xe5\xad\xb8\xe5\xb8\xb8\xe8\xad\x98", // 增加武學常識
+            "\xe5\xa2\x9e\xe5\x8a\xa0\xe5\x93\x81\xe5\xbe\xb7\xe6\x8c\x87\xe6\x95\xb8", // 增加品德指數
+            "\xe7\xbf\x92\xe5\xbe\x97\xe5\xb7\xa6\xe5\x8f\xb3\xe4\xba\x92\xe6\x90\x8f", // 習得左右互搏
+            "\xe5\xa2\x9e\xe5\x8a\xa0\xe6\x94\xbb\xe6\x93\x8a\xe5\xb8\xb6\xe6\xaf\x92", // 增加攻擊帶毒
+            "\xe5\x8f\x97\xe5\x82\xb7\xe7\xa8\x8b\xe5\xba\xa6"            // 受傷程度
+        };
+
+        // 显示"服用"或"練成N次"
+        std::string itemName = cp950toutf8(Ritem[inum].Name, 20);
+        int nameW = 100 + DrawLength(itemName) * 10;
+        DrawRectangle(screen, 100, 70, nameW, 25, 0, ColColor(255), 50);
+        std::string headerStr;
+        if (Ritem[inum].ItemType == 2) {
+            char tbuf[32]; snprintf(tbuf, sizeof(tbuf), "\xe7\xb7\xb4\xe6\x88\x90%d\xe6\xac\xa1", Result); // 練成%d次
+            headerStr = tbuf;
+        } else {
+            headerStr = "\xe6\x9c\x8d\xe7\x94\xa8"; // 服用
+        }
+        DrawShadowText(screen, headerStr, 103, 72, ColColor(0x21), ColColor(0x23));
+        DrawBig5ShadowText(screen, Ritem[inum].Name, 193, 72, ColColor(0x64), ColColor(0x66));
+
+        // 绘制属性面板
+        int l, twoline, x2;
+        if (p < 11) {
+            l = p; twoline = 0;
+            DrawRectangle(screen, 100, 100, 200, 22 * l + 25, 0, ColColor(0xFF), 50);
+        } else {
+            l = p / 2 + p % 2; twoline = 1;
+            DrawRectangle(screen, 20, 100, 400, 22 * l + 25, 0, ColColor(0xFF), 50);
+        }
+        if (twoline == 0) x2 = 83; else x2 = 3;
+        DrawBig5ShadowText(screen, (const char*)&Rrole[rnum].Data[4], x2 + 20, 102, ColColor(0x21), ColColor(0x23));
+        if (p == 0) {
+            DrawShadowText(screen, "\xe6\x9c\xaa\xe5\xa2\x9e\xe5\x8a\xa0\xe5\xb1\xac\xe6\x80\xa7", 183, 102, ColColor(5), ColColor(7)); // 未增加屬性
+        }
+
+        // 逐一应用并显示属性
+        p = 0;
+        for (int i = 0; i <= 23; i++) {
+            int xoff, yoff;
+            if (twoline == 0) {
+                xoff = 0; yoff = 0;
+            } else {
+                if (p < l) { xoff = -80; yoff = 0; }
+                else { xoff = 120; yoff = -l * 22; }
+            }
+            if (i != 4 && i != 21 && addvalue[i] != 0) {
+                Rrole[rnum].Data[rolelist[i]] += addvalue[i];
+                DrawShadowText(screen, word[i], 103 + xoff, 124 + yoff + p * 22, ColColor(5), ColColor(7));
+                char vbuf[16]; snprintf(vbuf, sizeof(vbuf), "%4d", addvalue[i]);
+                DrawEngShadowText(screen, vbuf, 243 + xoff, 124 + yoff + p * 22, ColColor(0x64), ColColor(0x66));
+                p++;
+            }
+            // 内力性质特殊处理
+            if (i == 4 && addvalue[i] == 2) {
+                if (Rrole[rnum].Data[rolelist[i]] != 2) {
+                    Rrole[rnum].Data[rolelist[i]] = 2;
+                    DrawShadowText(screen, word[i], 103 + xoff, 124 + yoff + p * 22, ColColor(5), ColColor(7));
+                    p++;
+                }
+            }
+            // 左右互搏特殊处理
+            if (i == 21 && addvalue[i] == 1) {
+                if (Rrole[rnum].Data[rolelist[i]] != 1) {
+                    Rrole[rnum].Data[rolelist[i]] = 1;
+                    DrawShadowText(screen, word[i], 103 + xoff, 124 + yoff + p * 22, ColColor(5), ColColor(7));
+                    p++;
+                }
+            }
+        }
+
+        int sx = 350;
+        if (twoline == 1) sx = 440;
+        ShowSimpleStatus(rnum, sx, 50);
+        UpdateScreen(screen, 0, 0, screen->w, screen->h);
+    } else {
+        // display==0时仅应用属性
+        for (int i = 0; i <= 23; i++) {
+            if (i != 4 && i != 21 && addvalue[i] != 0)
+                Rrole[rnum].Data[rolelist[i]] += addvalue[i];
+            if (i == 4 && addvalue[i] == 2 && Rrole[rnum].Data[rolelist[i]] != 2)
+                Rrole[rnum].Data[rolelist[i]] = 2;
+            if (i == 21 && addvalue[i] == 1 && Rrole[rnum].Data[rolelist[i]] != 1)
+                Rrole[rnum].Data[rolelist[i]] = 1;
+        }
+    }
+    return Result;
 }
 
 // ---- 事件调用 ----

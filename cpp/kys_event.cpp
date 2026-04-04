@@ -2,6 +2,8 @@
 // 对应 kys_event.pas
 
 #include "kys_event.h"
+
+#include "PotConv.h"
 #include "kys_engine.h"
 #include "kys_draw.h"
 #include "kys_main.h"
@@ -38,7 +40,14 @@ std::string ReadTalk(int talknum) {
     else { offset = TIdx[talknum - 1]; len = TIdx[talknum] - offset; }
     std::vector<uint8_t> buf(len + 1, 0);
     memcpy(buf.data(), &TDef[offset], len);
-    for (int i = 0; i < len; i++) buf[i] ^= 0xFF;
+    for (int i = 0; i < len; i++)
+    {
+        if (buf[i])
+        {
+            buf[i] ^= 0xFF;
+        }
+    }
+    auto str = PotConv::cp950tocp936((const char*)buf.data());
     return cp950toutf8((const char*)buf.data());
 }
 
@@ -1367,8 +1376,8 @@ void NewTalk(int headnum, int talknum, int namenum, int place, int showhead, int
                 int len_utf8 = utf8follow(TalkStr[I]);
                 std::string tempstr = TalkStr.substr(I, len_utf8);
                 int xtemp = Talk_X + ColSpacing * ix;
-                if ((uint8_t)tempstr[0] < 0x80)
-                    xtemp += 5;
+                // Pascal: uint16(tempstr[1]) < $1000 始终为真, 所有字符都 +5
+                xtemp += 5;
                 DrawShadowText(screen, tempstr, xtemp, Talk_Y + RowSpacing * iy, DrawForeGroundCol, DrawBackGroundCol);
                 I += len_utf8;
             }
@@ -1403,20 +1412,142 @@ void NewTalk(int headnum, int talknum, int namenum, int place, int showhead, int
 }
 
 int EnterNumber(int MinValue, int MaxValue, int x, int y, int Default) {
-    int val = Default;
-    if (val < MinValue) val = MinValue;
-    if (val > MaxValue) val = MaxValue;
-    while (true) {
-        Redraw();
-        char buf[32]; snprintf(buf, sizeof(buf), "%d", val);
-        DrawTextWithRect(buf, x, y, 80, ColColor(0x66), ColColor(0x63));
-        UpdateScreen(screen, 0, 0, screen->w, screen->h);
-        int key = WaitAnyKey();
-        if (key == SDLK_UP) { val++; if (val > MaxValue) val = MaxValue; }
-        if (key == SDLK_DOWN) { val--; if (val < MinValue) val = MinValue; }
-        if (key == SDLK_RETURN || key == SDLK_SPACE) return val;
-        if (key == SDLK_ESCAPE) return -1;
+    CleanKeyValue();
+    int Value = Default;
+    if (MinValue < -32768) MinValue = -32768;
+    if (MaxValue > 32767) MaxValue = 32767;
+
+    // 13个按钮：0-9=数字, 10=±, 11=←, 12=AC, 13=OK
+    std::string str[14];
+    SDL_Rect Button[14];
+    for (int i = 0; i <= 9; i++) {
+        str[i] = std::to_string(i);
+        Button[i].x = x + (i + 2) % 3 * 35 + 20;
+        Button[i].y = y + (3 - (i + 2) / 3) * 30 + 50;
+        Button[i].w = 25;
+        Button[i].h = 23;
     }
+    str[10] = "  \xC2\xB1"; // ± in UTF-8
+    Button[10].x = x + 20;  Button[10].y = y + 140; Button[10].w = 60; Button[10].h = 23;
+    str[11] = "\xE2\x86\x90"; // ← in UTF-8
+    Button[11].x = x + 125; Button[11].y = y + 50;  Button[11].w = 35; Button[11].h = 23;
+    str[12] = "AC";
+    Button[12].x = x + 125; Button[12].y = y + 80;  Button[12].w = 35; Button[12].h = 23;
+    str[13] = "OK";
+    Button[13].x = x + 125; Button[13].y = y + 110; Button[13].w = 35; Button[13].h = 53;
+    int highButton = 13;
+
+    // 绘制底板和按钮框
+    DrawRectangle(screen, x, y, 180, 180, 0, ColColor(255), 50);
+    DrawRectangle(screen, x + 20, y + 10, 140, 23, 0, ColColor(255), 75);
+    for (int i = 0; i <= highButton; i++) {
+        DrawRectangle(screen, Button[i].x, Button[i].y, Button[i].w, Button[i].h, 0, ColColor(255), 50);
+    }
+    UpdateAllScreen();
+    RecordFreshScreen(x, y, 181, 181);
+
+    // 显示范围提示
+    char rangebuf[64];
+    snprintf(rangebuf, sizeof(rangebuf), "%d~%d", MinValue, MaxValue);
+    std::string strv(rangebuf);
+    DrawTextWithRect(strv, x, y - 35, DrawLength(strv) * 10 + 7, ColColor(0x21), ColColor(0x27));
+
+    int menu = -1;
+    int sure = 0; // 1=键盘, 2=鼠标
+    int pvalue = -1;
+    int pmenu = -1;
+
+    while (SDL_PollEvent(&event) || true) {
+        CheckBasicEvent();
+        switch (event.type) {
+            case SDL_EVENT_KEY_UP:
+                if (event.key.key >= SDLK_0 && event.key.key <= SDLK_9)
+                    menu = event.key.key - SDLK_0;
+                else if (event.key.key >= SDLK_KP_1 && event.key.key <= SDLK_KP_9)
+                    menu = event.key.key - SDLK_KP_1 + 1;
+                else if (event.key.key == SDLK_KP_0)
+                    menu = 0;
+                else if (event.key.key == SDLK_MINUS || event.key.key == SDLK_KP_MINUS)
+                    menu = 10;
+                else if (event.key.key == SDLK_DELETE || event.key.key == SDLK_BACKSPACE)
+                    menu = 11;
+                else if (event.key.key == SDLK_RETURN || event.key.key == SDLK_SPACE || event.key.key == SDLK_KP_ENTER)
+                    menu = highButton;
+                sure = 1;
+                break;
+            case SDL_EVENT_MOUSE_MOTION:
+                menu = -1;
+                for (int i = 0; i <= highButton; i++) {
+                    if (MouseInRegion(Button[i].x, Button[i].y, Button[i].w, Button[i].h)) {
+                        menu = i;
+                        break;
+                    }
+                }
+                break;
+            case SDL_EVENT_MOUSE_BUTTON_UP:
+                if (event.button.button == SDL_BUTTON_LEFT) {
+                    menu = -1;
+                    for (int i = 0; i <= highButton; i++) {
+                        if (MouseInRegion(Button[i].x, Button[i].y, Button[i].w, Button[i].h)) {
+                            menu = i;
+                            break;
+                        }
+                    }
+                    if (menu >= 0 && menu <= highButton)
+                        sure = 2;
+                }
+                break;
+        }
+        // 刷新界面
+        if (Value != pvalue || menu != pmenu) {
+            LoadFreshScreen(x, y, 181, 181);
+            char vbuf[16];
+            snprintf(vbuf, sizeof(vbuf), "%6d", Value);
+            DrawShadowText(screen, std::string(vbuf), x + 80, y + 10, ColColor(0x64), ColColor(0x66));
+            if (menu >= 0 && menu <= highButton) {
+                DrawRectangle(screen, Button[menu].x, Button[menu].y, Button[menu].w, Button[menu].h,
+                              ColColor(rand() % 20), ColColor(255), 50);
+            }
+            for (int i = 0; i <= highButton; i++) {
+                DrawShadowText(screen, str[i], Button[i].x + 8, Button[i].y + Button[i].h / 2 - 11,
+                               ColColor(5), ColColor(7));
+            }
+            UpdateAllScreen();
+            pvalue = Value;
+            pmenu = menu;
+        }
+        CleanKeyValue();
+        // 计算数值变化
+        if (sure > 0) {
+            if (menu >= 0 && menu <= 9) {
+                if ((double)Value * 10 < 1E5)
+                    Value = 10 * Value + menu;
+            } else if (menu == 10) {
+                Value = -Value;
+            } else if (menu == 11) {
+                Value = Value / 10;
+            } else if (menu == 12) {
+                Value = 0;
+            } else if (menu == highButton) {
+                break;
+            }
+            if (sure == 1) menu = -1;
+        }
+        sure = 0;
+        SDL_Delay(25);
+    }
+    int Result = RegionParameter(Value, MinValue, MaxValue);
+    if (Result != Value) {
+        Redraw();
+        UpdateAllScreen();
+        char msgbuf[64];
+        snprintf(msgbuf, sizeof(msgbuf), "%s%d%s", "\xE4\xBE\x9D\xE6\x93\x9A\xE7\xAF\x84\xE5\x9C\x8D\xE8\x87\xAA\xE5\x8B\x95\xE8\xAA\xBF\xE6\x95\xB4\xE7\x82\xBA", Result, "\xEF\xBC\x81"); // 依據範圍自動調整為...！
+        std::string msg(msgbuf);
+        DrawTextWithRect(msg, x, y, DrawLength(msg) * 10 + 7, ColColor(0x64), ColColor(0x66));
+        WaitAnyKey();
+    }
+    CleanKeyValue();
+    return Result;
 }
 
 void SetAttribute(int rnum, int selecttype, int modlevel, int minlevel, int maxlevel) {

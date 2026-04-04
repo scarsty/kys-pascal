@@ -1200,8 +1200,26 @@ void Wait(int bnum) {
 void RestoreRoleStatus() {
     for (int i = 0; i < BRoleAmount; i++) {
         int rnum = Brole[i].rnum;
-        if (Rrole[rnum].CurrentHP <= 0 && Brole[i].Team == 0)
-            Rrole[rnum].CurrentHP = 1;
+        // 我方恢复部分生命、内力；敌方恢复全部
+        if (Brole[i].Team == 0) {
+            Rrole[rnum].CurrentHP = Rrole[rnum].CurrentHP + Rrole[rnum].MaxHP / 2;
+            if (Rrole[rnum].CurrentHP <= 0)
+                Rrole[rnum].CurrentHP = 1;
+            if (Rrole[rnum].CurrentHP > Rrole[rnum].MaxHP)
+                Rrole[rnum].CurrentHP = Rrole[rnum].MaxHP;
+            Rrole[rnum].CurrentMP = Rrole[rnum].CurrentMP + Rrole[rnum].MaxMP / 20;
+            if (Rrole[rnum].CurrentMP > Rrole[rnum].MaxMP)
+                Rrole[rnum].CurrentMP = Rrole[rnum].MaxMP;
+            Rrole[rnum].PhyPower = Rrole[rnum].PhyPower + MAX_PHYSICAL_POWER / 10;
+            if (Rrole[rnum].PhyPower > MAX_PHYSICAL_POWER)
+                Rrole[rnum].PhyPower = MAX_PHYSICAL_POWER;
+        } else {
+            Rrole[rnum].Hurt = 0;
+            Rrole[rnum].Poison = 0;
+            Rrole[rnum].CurrentHP = Rrole[rnum].MaxHP;
+            Rrole[rnum].CurrentMP = Rrole[rnum].MaxMP;
+            Rrole[rnum].PhyPower = MAX_PHYSICAL_POWER * 9 / 10;
+        }
     }
 }
 
