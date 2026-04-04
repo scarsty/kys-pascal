@@ -8,6 +8,7 @@
 // 各类贴图绘制
 void DrawTitlePic(int num, int px, int py);
 void DrawMPic(int num, int px, int py);
+void DrawMPic(int num, int px, int py, int shadow, int alpha, uint32_t mixColor, int mixAlpha);
 void DrawSPic(int num, int px, int py, int xx, int yy, int xw, int yh);
 void DrawSPic(int num, int px, int py, int xx, int yy, int xw, int yh, int shadow, int alpha);
 void DrawSPic(int num, int px, int py, int xx, int yy, int xw, int yh, int shadow, int alpha, uint32_t mixColor, int mixAlpha);
@@ -15,14 +16,17 @@ void InitialSPic(int num, int px, int py, SDL_Surface* img, int widthI, int heig
 void DrawHeadPic(int num, int px, int py);
 void DrawHeadPic(int num, int px, int py, SDL_Surface* scr);
 void DrawIPic(int num, int px, int py);
+void DrawIPic(int num, int px, int py, int shadow, int alpha, uint32_t mixColor, int mixAlpha);
 void DrawBPic(int num, int px, int py, int shadow);
 void DrawBPic(int num, int px, int py, int shadow, int alpha);
 void DrawBPic(int num, int px, int py, int shadow, int alpha, uint32_t mixColor, int mixAlpha);
+void DrawBPic(int num, int px, int py, int shadow, int alpha, int depth, uint32_t mixColor, int mixAlpha);
 void InitialBPic(int num, int px, int py, SDL_Surface* img, int widthI, int heightI, char* blockW, int widthW, int heightW, int depth, uint32_t mixColor = 0, int mixAlpha = 0);
 void DrawEPic(int num, int px, int py);
 void DrawFPic(int headnum, int num, int px, int py, int shadow, int alpha);
 void DrawFPic(int headnum, int num, int px, int py, int shadow, int alpha, uint32_t mixColor, int mixAlpha);
 void DrawCPic(int num, int px, int py, int shadow, int alpha);
+void DrawCPic(int num, int px, int py, int shadow, int alpha, uint32_t mixColor, int mixAlpha);
 
 void GetPicSize(int num, const int* pidx, const uint8_t* ppic, int& w, int& h, int& xs, int& ys);
 
@@ -51,7 +55,7 @@ TPosition CalLTPosOnImageByCenter(int cx, int cy);
 // 战场
 void DrawBField(int needProgress = 1);
 void DrawBfieldWithoutRole();
-void DrawRoleOnBfield(int mixColor = 0, int mixAlpha = 0, int alpha_ = 0);
+void DrawRoleOnBfield(int x, int y, uint32_t mixColor = 0, int mixAlpha = 0, int alpha_ = 75);
 void InitialBFieldImage();
 void InitialBFieldPosition(int x, int y);
 void LoadBfieldPart(int cx, int cy);

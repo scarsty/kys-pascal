@@ -179,15 +179,15 @@ inline std::string TitleString = "All Heros in Kam Yung's Stories";
 inline std::string VersionStr = "";
 
 // 字体
-inline const char* CHINESE_FONT = "chinese.ttf";
+inline const char* CHINESE_FONT = "resource/chinese.ttf";
 inline int CHINESE_FONT_SIZE = 20;
-inline const char* ENGLISH_FONT = "english.ttf";
-inline int ENGLISH_FONT_SIZE = 20;
+inline const char* ENGLISH_FONT = "resource/eng.ttf";
+inline int ENGLISH_FONT_SIZE = 19;
 inline int CHNFONT_SPACEWIDTH = 10;
 
 // 屏幕中心
-inline int CENTER_X = 320;
-inline int CENTER_Y = 240;
+inline int CENTER_X = 400;
+inline int CENTER_Y = 225;
 
 // 游戏常数
 inline int ITEM_BEGIN_PIC = 3501;
@@ -262,8 +262,8 @@ inline int16_t MatchList[100][3] = {};
 // 图像与界面设置
 inline int BIG_PNG_TILE = 0;
 inline int FULLSCREEN = 0;
-inline int RESOLUTIONX = 640;
-inline int RESOLUTIONY = 480;
+inline int RESOLUTIONX = 1280;
+inline int RESOLUTIONY = 720;
 inline int SIMPLE = 1;
 inline int SMOOTH = 1;
 inline int HIRES_TEXT = 1;

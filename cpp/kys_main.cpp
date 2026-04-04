@@ -665,18 +665,26 @@ void SaveR(int num) {
 // ---- 等待按键 ----
 
 int WaitAnyKey() {
-    SDL_Event e;
-    while (true) {
-        while (SDL_PollEvent(&e)) {
-            CheckBasicEvent();
-            if (e.type == SDL_EVENT_KEY_UP) return e.key.key;
-            if (e.type == SDL_EVENT_MOUSE_BUTTON_UP) {
-                if (e.button.button == SDL_BUTTON_LEFT) return SDLK_RETURN;
-                if (e.button.button == SDL_BUTTON_RIGHT) return SDLK_ESCAPE;
-            }
+    event.key.key = 0;
+    event.button.button = 0;
+    while (SDL_PollEvent(&event) || true) {
+        CheckBasicEvent();
+        if (event.type == SDL_EVENT_KEY_UP || event.type == SDL_EVENT_MOUSE_BUTTON_UP) {
+            if (event.key.key != 0 || event.button.button != 0)
+                break;
         }
-        SDL_Delay(10);
+        SDL_Delay(20);
     }
+    int result = event.key.key;
+    if (event.type == SDL_EVENT_MOUSE_BUTTON_UP) {
+        if (event.button.button == SDL_BUTTON_LEFT)
+            result = SDLK_SPACE;
+        if (event.button.button == SDL_BUTTON_RIGHT)
+            result = SDLK_ESCAPE;
+    }
+    event.key.key = 0;
+    event.button.button = 0;
+    return result;
 }
 
 // ---- 行走（严格按Pascal版: 连续按键+速度加速+动画+鼠标寻路） ----
@@ -903,7 +911,7 @@ void Walk() {
                 int axp2, ayp2;
                 GetMousePosition(axp2, ayp2, Mx, My);
                 TPosition pos = GetPositionOnScreen(axp2, ayp2, Mx, My);
-                DrawMPic(1, pos.x, pos.y);
+                DrawMPic(1, pos.x, pos.y, 0, 50, 0, 0);
                 UpdateScreen(screen, 0, 0, screen->w, screen->h);
             }
             SDL_Delay(40);
@@ -1226,7 +1234,7 @@ int WalkInScene(int Open) {
         event.key.key = 0;
         event.button.button = 0;
 
-        if (walking == 0 || Speed == 0) {
+        if ((walking | Speed) == 0) {
             if (SCENEAMI > 0) {
                 Redraw();
                 if (walking == 0) {
@@ -1234,7 +1242,7 @@ int WalkInScene(int Open) {
                     GetMousePosition(axp2, ayp2, Sx, Sy, SData[CurScene][4][Sx][Sy]);
                     if (axp2 >= 0 && axp2 < 64 && ayp2 >= 0 && ayp2 < 64) {
                         TPosition pos = GetPositionOnScreen(axp2, ayp2, Sx, Sy);
-                        DrawMPic(1, pos.x, pos.y - SData[CurScene][4][axp2][ayp2]);
+                        DrawMPic(1, pos.x, pos.y - SData[CurScene][4][axp2][ayp2], 0, 50, 0, 0);
                     }
                 }
                 UpdateScreen(screen, 0, 0, screen->w, screen->h);
@@ -1522,63 +1530,222 @@ menu_done:
     return result;
 }
 
-int CommonScrollMenu(int x, int y, int w, int max, int maxshow, const std::string menuString[]) {
-    int menu = 0, top = 0;
-    if (maxshow <= 0) maxshow = max + 1;
-
-    while (true) {
-        RecordFreshScreen();
-        int showCount = std::min(max + 1, maxshow);
-        DrawRectangle(screen, x, y, w, showCount * 22 + 10, 0, ColColor(0xFF), 50);
-        for (int i = 0; i < showCount && (top + i) <= max; i++) {
-            int idx = top + i;
-            uint32_t col1 = (idx == menu) ? ColColor(0x64) : ColColor(0x05);
-            uint32_t col2 = (idx == menu) ? ColColor(0x66) : ColColor(0x07);
-            DrawShadowText(screen, menuString[idx], x + 5, y + 5 + i * 22, col1, col2);
-        }
-        UpdateScreen(screen, x, y, w + 1, showCount * 22 + 11);
-
-        int key = WaitAnyKey();
-        if (key == SDLK_UP) {
-            menu--;
-            if (menu < 0) menu = max;
-            if (menu < top) top = menu;
-            if (menu > top + maxshow - 1) top = menu - maxshow + 1;
-        }
-        if (key == SDLK_DOWN) {
-            menu++;
-            if (menu > max) menu = 0;
-            if (menu < top) top = menu;
-            if (menu > top + maxshow - 1) top = menu - maxshow + 1;
-        }
-        if (key == SDLK_RETURN || key == SDLK_SPACE) { LoadFreshScreen(); return menu; }
-        if (key == SDLK_ESCAPE) { LoadFreshScreen(); return -1; }
-    }
-}
-
-int CommonGridMenu(int x, int y, int cols, int cellW, int maxShowRows, int maxItem, const std::string menuString[]) {
-    // 网格菜单 - 简化
-    return CommonScrollMenu(x, y, cols * cellW, maxItem, maxShowRows, menuString);
-}
-
+// 仅有两个选项的横排选单 - 严格按Pascal版
 int CommonMenu2(int x, int y, int w, const std::string menuString[]) {
-    return CommonMenu(x, y, w, 1, 0, menuString);
+    int menu = 0;
+
+    auto ShowCommonMenu2 = [&]() {
+        LoadFreshScreen(x, y, w + 1, 29);
+        DrawRectangle(screen, x, y, w, 28, 0, ColColor(0xFF), 50);
+        for (int i = 0; i <= 1; i++) {
+            uint32_t col1 = (i == menu) ? ColColor(0x64) : ColColor(0x05);
+            uint32_t col2 = (i == menu) ? ColColor(0x66) : ColColor(0x07);
+            DrawShadowText(screen, menuString[i], x + 3 + i * 50, y + 2, col1, col2);
+        }
+    };
+
+    RecordFreshScreen(x, y, w + 1, 29);
+    ShowCommonMenu2();
+    UpdateScreen(screen, x, y, w + 1, 29);
+
+    int result = -1;
+    while (SDL_WaitEvent(&event)) {
+        CheckBasicEvent();
+        switch (event.type) {
+            case SDL_EVENT_KEY_UP:
+                if (event.key.key == SDLK_LEFT || event.key.key == SDLK_RIGHT) {
+                    menu = 1 - menu;
+                    ShowCommonMenu2();
+                    UpdateScreen(screen, x, y, w + 1, 29);
+                }
+                if (event.key.key == SDLK_ESCAPE) {
+                    result = -1; goto menu2_done;
+                }
+                if (event.key.key == SDLK_RETURN || event.key.key == SDLK_SPACE) {
+                    result = menu; goto menu2_done;
+                }
+                break;
+            case SDL_EVENT_MOUSE_BUTTON_UP:
+                if (event.button.button == SDL_BUTTON_RIGHT) {
+                    result = -1; goto menu2_done;
+                }
+                if (event.button.button == SDL_BUTTON_LEFT) {
+                    float sx = (float)RESOLUTIONX / screen->w;
+                    float sy = (float)RESOLUTIONY / screen->h;
+                    int emx = (int)(event.button.x / sx);
+                    int emy = (int)(event.button.y / sy);
+                    if (emx >= x && emx < x + w && emy > y && emy < y + 29) {
+                        result = menu; goto menu2_done;
+                    }
+                }
+                break;
+            case SDL_EVENT_MOUSE_MOTION: {
+                float sx = (float)RESOLUTIONX / screen->w;
+                float sy = (float)RESOLUTIONY / screen->h;
+                int emx = (int)(event.motion.x / sx);
+                int emy = (int)(event.motion.y / sy);
+                if (emx >= x && emx < x + w && emy > y && emy < y + 29) {
+                    int menup = menu;
+                    menu = (emx - x - 2) / 50;
+                    if (menu > 1) menu = 1;
+                    if (menu < 0) menu = 0;
+                    if (menup != menu) {
+                        ShowCommonMenu2();
+                        UpdateScreen(screen, x, y, w + 1, 29);
+                    }
+                }
+                break;
+            }
+        }
+    }
+menu2_done:
+    event.key.key = 0;
+    event.button.button = 0;
+    return result;
 }
 
+// 卷动选单 - 严格按Pascal版
+int CommonScrollMenu(int x, int y, int w, int max, int maxshow, const std::string menuString[]) {
+    int menu = 0, menutop = 0;
+    if (max + 1 < maxshow) maxshow = max + 1;
+
+    auto ShowCommonScrollMenu = [&]() {
+        LoadFreshScreen(x, y, w + 1, maxshow * 22 + 29);
+        DrawRectangle(screen, x, y, w, maxshow * 22 + 6, 0, ColColor(0xFF), 50);
+        for (int i = menutop; i <= menutop + maxshow - 1 && i <= max; i++) {
+            uint32_t col1 = (i == menu) ? ColColor(0x64) : ColColor(0x05);
+            uint32_t col2 = (i == menu) ? ColColor(0x66) : ColColor(0x07);
+            DrawShadowText(screen, menuString[i], x + 3, y + 3 + 22 * (i - menutop), col1, col2);
+        }
+    };
+
+    RecordFreshScreen(x, y, w + 1, max * 22 + 29);
+    ShowCommonScrollMenu();
+    UpdateScreen(screen, x, y, w + 1, maxshow * 22 + 29);
+
+    int result = -1;
+    while (SDL_WaitEvent(&event)) {
+        CheckBasicEvent();
+        switch (event.type) {
+            case SDL_EVENT_KEY_UP:
+                if (event.key.key == SDLK_DOWN) {
+                    menu++;
+                    if (menu - menutop >= maxshow) menutop++;
+                    if (menu > max) { menu = 0; menutop = 0; }
+                    ShowCommonScrollMenu();
+                    UpdateScreen(screen, x, y, w + 1, maxshow * 22 + 29);
+                }
+                if (event.key.key == SDLK_UP) {
+                    menu--;
+                    if (menu <= menutop) menutop = menu;
+                    if (menu < 0) { menu = max; menutop = menu - maxshow + 1; if (menutop < 0) menutop = 0; }
+                    ShowCommonScrollMenu();
+                    UpdateScreen(screen, x, y, w + 1, maxshow * 22 + 29);
+                }
+                if (event.key.key == SDLK_PAGEDOWN) {
+                    menu += maxshow; menutop += maxshow;
+                    if (menu > max) menu = max;
+                    if (menutop > max - maxshow + 1) menutop = max - maxshow + 1;
+                    if (menutop < 0) menutop = 0;
+                    ShowCommonScrollMenu();
+                    UpdateScreen(screen, x, y, w + 1, maxshow * 22 + 29);
+                }
+                if (event.key.key == SDLK_PAGEUP) {
+                    menu -= maxshow; menutop -= maxshow;
+                    if (menu < 0) menu = 0;
+                    if (menutop < 0) menutop = 0;
+                    ShowCommonScrollMenu();
+                    UpdateScreen(screen, x, y, w + 1, maxshow * 22 + 29);
+                }
+                if (event.key.key == SDLK_ESCAPE) {
+                    result = -1; goto scroll_done;
+                }
+                if (event.key.key == SDLK_RETURN || event.key.key == SDLK_SPACE) {
+                    result = menu; goto scroll_done;
+                }
+                break;
+            case SDL_EVENT_MOUSE_BUTTON_UP:
+                if (event.button.button == SDL_BUTTON_RIGHT) {
+                    result = -1; goto scroll_done;
+                }
+                if (event.button.button == SDL_BUTTON_LEFT) {
+                    float sx = (float)RESOLUTIONX / screen->w;
+                    float sy = (float)RESOLUTIONY / screen->h;
+                    int emx = (int)(event.button.x / sx);
+                    int emy = (int)(event.button.y / sy);
+                    if (emx >= x && emx < x + w && emy > y && emy < y + max * 22 + 29) {
+                        result = menu; goto scroll_done;
+                    }
+                }
+                break;
+            case SDL_EVENT_MOUSE_WHEEL:
+                if (event.wheel.y < 0) {
+                    menu++;
+                    if (menu - menutop >= maxshow) menutop++;
+                    if (menu > max) { menu = 0; menutop = 0; }
+                    ShowCommonScrollMenu();
+                    UpdateScreen(screen, x, y, w + 1, maxshow * 22 + 29);
+                }
+                if (event.wheel.y > 0) {
+                    menu--;
+                    if (menu <= menutop) menutop = menu;
+                    if (menu < 0) { menu = max; menutop = menu - maxshow + 1; if (menutop < 0) menutop = 0; }
+                    ShowCommonScrollMenu();
+                    UpdateScreen(screen, x, y, w + 1, maxshow * 22 + 29);
+                }
+                break;
+            case SDL_EVENT_MOUSE_MOTION: {
+                float sx = (float)RESOLUTIONX / screen->w;
+                float sy = (float)RESOLUTIONY / screen->h;
+                int emx = (int)(event.motion.x / sx);
+                int emy = (int)(event.motion.y / sy);
+                if (emx >= x && emx < x + w && emy > y && emy < y + max * 22 + 29) {
+                    int menup = menu;
+                    menu = (emy - y - 2) / 22 + menutop;
+                    if (menu > max) menu = max;
+                    if (menu < 0) menu = 0;
+                    if (menup != menu) {
+                        ShowCommonScrollMenu();
+                        UpdateScreen(screen, x, y, w + 1, maxshow * 22 + 29);
+                    }
+                }
+                break;
+            }
+        }
+    }
+scroll_done:
+    event.key.key = 0;
+    event.button.button = 0;
+    return result;
+}
+
+// 严格按Pascal版: 返回team INDEX (0-5), 不是role编号
 int SelectOneTeamMember(int x, int y, const std::string& str, int list1, int list2) {
-    std::vector<std::string> names;
-    std::vector<int> indices;
+    std::string menuString[6];
+    int Amount = 0;
     for (int i = 0; i < 6; i++) {
         if (TeamList[i] >= 0) {
-            int rnum = TeamList[i];
-            names.push_back(cp950toutf8(Rrole[rnum].Name));
-            indices.push_back(rnum);
+            menuString[i] = cp950toutf8(Rrole[TeamList[i]].Name);
+            if (!str.empty()) {
+                char buf[32];
+                snprintf(buf, sizeof(buf), str.c_str(), Rrole[TeamList[i]].Data[list1], Rrole[TeamList[i]].Data[list2]);
+                std::string nameStr = cp950toutf8(Rrole[TeamList[i]].Name);
+                char buf2[64];
+                snprintf(buf2, sizeof(buf2), "%-8s%4s", nameStr.c_str(), buf);
+                menuString[i] = buf2;
+            }
+            Amount++;
         }
     }
-    if (names.empty()) return -1;
-    int sel = CommonScrollMenu(x, y, 100, (int)names.size() - 1, 6, names.data());
-    if (sel < 0) return -1;
-    return indices[sel];
+    if (Amount == 0) return -1;
+    int w2 = 105;
+    if (!str.empty()) {
+        // 计算额外宽度
+        char buf[32];
+        snprintf(buf, sizeof(buf), str.c_str(), 0, 0);
+        w2 = 105 + (int)strlen(buf) * 10 - 10;
+    }
+    return CommonMenu(x, y, w2, Amount - 1, menuString);
 }
 
 // 严格按Pascal版: 7项菜单(含传送), 循环选择
@@ -1642,54 +1809,380 @@ void MenuEsc() {
     NeedRefreshScene = 1;
 }
 
-void ShowMenu(int menu) {}
+void ShowMenu(int menu) {
+    std::string word[7];
+    word[0] = "醫療"; word[1] = "解毒"; word[2] = "物品";
+    word[3] = "狀態"; word[4] = (MODVersion == 22) ? "特殊" : "離隊";
+    word[5] = "傳送"; word[6] = "系統";
+    int max = 6;
+    Redraw();
+    DrawRectangle(screen, 27, 30, 46, max * 22 + 28, 0, ColColor(255), 50);
+    for (int i = 0; i <= max; i++) {
+        if (i == menu)
+            DrawShadowText(screen, word[i], 30, 32 + 22 * i, ColColor(0x64), ColColor(0x66));
+        else
+            DrawShadowText(screen, word[i], 30, 32 + 22 * i, ColColor(0x5), ColColor(0x7));
+    }
+    UpdateScreen(screen, 0, 0, screen->w, screen->h);
+}
 
 void MenuMedcine() {
-    std::string str = " 隊員醫療能力";
+    std::string str = "隊員醫療能力";
     DrawTextWithRect(screen, str, 80, 30, 132, ColColor(0x21), ColColor(0x23));
     int menu = SelectOneTeamMember(80, 65, "%4d", 46, 0);
     if (menu >= 0) {
-        int role1 = menu;
-        str = " 隊員目前生命";
+        int role1 = TeamList[menu];
+        str = "隊員目前生命";
         DrawTextWithRect(screen, str, 230, 30, 132, ColColor(0x21), ColColor(0x23));
         int menu2 = SelectOneTeamMember(230, 65, "%4d/%4d", 17, 18);
-        if (menu2 >= 0) EffectMedcine(role1, menu2);
+        if (menu2 >= 0) {
+            int role2 = TeamList[menu2];
+            EffectMedcine(role1, role2);
+        }
     }
 }
 
 void MenuMedPoison() {
-    std::string str = " 隊員解毒能力";
+    std::string str = "隊員解毒能力";
     DrawTextWithRect(screen, str, 80, 30, 132, ColColor(0x21), ColColor(0x23));
     int menu = SelectOneTeamMember(80, 65, "%4d", 48, 0);
     if (menu >= 0) {
-        int role1 = menu;
-        str = " 隊員中毒程度";
+        int role1 = TeamList[menu];
+        str = "隊員中毒程度";
         DrawTextWithRect(screen, str, 230, 30, 132, ColColor(0x21), ColColor(0x23));
         int menu2 = SelectOneTeamMember(230, 65, "%4d", 20, 0);
-        if (menu2 >= 0) EffectMedPoison(role1, menu2);
+        if (menu2 >= 0) {
+            int role2 = TeamList[menu2];
+            EffectMedPoison(role1, role2);
+        }
     }
 }
 
 bool MenuItem() {
-    std::string menuStr[] = {" 全部", " 劇情", " 神兵", " 秘笈", " 藥品", " 暗器", " 整理"};
-    int typeMap[] = {100, 0, 1, 2, 3, 4};
-    int sel = CommonMenu(CENTER_X - 60, CENTER_Y - 80, 60, 6, menuStr);
-    if (sel < 0) return false;
-    if (sel == 6) { ReArrangeItem(1); return true; }
-    int itemType = typeMap[sel];
-    int count = ReadItemList(itemType);
-    if (count == 0) return false;
-    std::string itemNames[501];
-    for (int i = 0; i < count; i++) {
-        if (ItemList[i] < 0) { itemNames[i] = ""; continue; }
-        int inum = RItemList[ItemList[i]].Number;
-        std::string name = cp950toutf8(Ritem[inum].Name);
-        char buf[32]; snprintf(buf, sizeof(buf), " x%d", RItemList[ItemList[i]].Amount);
-        itemNames[i] = name + buf;
+    int col = 14, row = 5;
+    int x = 0, y = 0, atlu = 0;
+    int w = col * 42 + 8;
+
+    std::string menuString[7];
+    int max_menu, xm, ym;
+
+    switch (Where) {
+        case 0: case 1:
+            max_menu = 6;
+            menuString[0] = "全部物品"; menuString[1] = "劇情物品";
+            menuString[2] = "神兵寶甲"; menuString[3] = "武功秘笈";
+            menuString[4] = "靈丹妙藥"; menuString[5] = "傷人暗器";
+            menuString[6] = "整理物品";
+            xm = 80; ym = 30;
+            break;
+        case 2:
+            max_menu = 1;
+            menuString[0] = "靈丹妙藥"; menuString[1] = "傷人暗器";
+            xm = 150; ym = 150;
+            break;
+        default:
+            return false;
     }
-    int idx = CommonScrollMenu(CENTER_X - 120, CENTER_Y - 120, 240, count - 1, 15, itemNames);
-    if (idx >= 0 && ItemList[idx] >= 0) {
-        UseItem(RItemList[ItemList[idx]].Number);
+
+    int menu = 0;
+    while (menu >= 0) {
+        menu = CommonMenu(xm, ym, 87, max_menu, menu, menuString);
+
+        int itemType = -1;
+        switch (Where) {
+            case 0: case 1:
+                if (menu == 0) itemType = 100;
+                else if (menu > 0) itemType = menu - 1;
+                break;
+            case 2:
+                if (menu >= 0) itemType = menu + 3;
+                break;
+        }
+
+        if (menu < 0) return false;
+
+        if (menu == 6) {
+            ReArrangeItem(1);
+            Redraw();
+            continue;
+        }
+
+        if (menu >= 0 && menu < 6) {
+            Redraw();
+            RecordFreshScreen(0, 0, screen->w, screen->h);
+            int iamount = ReadItemList(itemType);
+            atlu = 0; x = 0; y = 0;
+
+            // Lambda for ShowMenuItem
+            auto ShowMenuItem = [&]() {
+                int w2 = col * 42 + 8;
+                LoadFreshScreen(0, 0, screen->w, screen->h);
+                DrawRectangle(screen, 110, 30, w2, 25, 0, ColColor(255), 50);
+                DrawRectangle(screen, 110, 60, w2, 25, 0, ColColor(255), 50);
+                DrawRectangle(screen, 110, 90, w2, 218, 0, ColColor(255), 50);
+                DrawRectangle(screen, 110, 313, w2, 25, 0, ColColor(255), 50);
+
+                for (int i12 = 0; i12 < row; i12++) {
+                    for (int i22 = 0; i22 < col; i22++) {
+                        int idx = i12 * col + i22 + atlu;
+                        if (idx >= 0 && ItemList[idx] >= 0 && ItemList[idx] < MAX_ITEM_AMOUNT) {
+                            int num = RItemList[ItemList[idx]].Number;
+                            if (num >= 0) {
+                                if (i12 == y && i22 == x)
+                                    DrawIPic(num, i22 * 42 + 115, i12 * 42 + 95, 0, 0, 0, 0);
+                                else
+                                    DrawIPic(num, i22 * 42 + 115, i12 * 42 + 95, 0, 25, 0, 15);
+                            }
+                        }
+                    }
+                }
+
+                int listnum2 = ItemList[y * col + x + atlu];
+                int item2 = -1;
+                if (listnum2 >= 0 && listnum2 < MAX_ITEM_AMOUNT)
+                    item2 = RItemList[listnum2].Number;
+
+                if (listnum2 >= 0 && listnum2 < MAX_ITEM_AMOUNT && RItemList[listnum2].Amount > 0) {
+                    char buf[32];
+                    snprintf(buf, sizeof(buf), "%5d", RItemList[listnum2].Amount);
+                    DrawEngShadowText(screen, buf, 110 + w2 - 80, 32, ColColor(0x64), ColColor(0x66));
+
+                    std::string itemName = cp950toutf8(Ritem[item2].Name);
+                    DrawShadowText(screen, itemName, 110 + w2 / 2 - (int)DrawLength(itemName) * 5, 32, ColColor(0x21), ColColor(0x23));
+
+                    std::string intro = cp950toutf8(Ritem[item2].Introduction);
+                    DrawShadowText(screen, intro, 110 + w2 / 2 - (int)DrawLength(intro) * 5, 62, ColColor(0x5), ColColor(0x7));
+
+                    std::string typeNames[] = {"劇情物品", "神兵寶甲", "武功秘笈", "靈丹妙藥", "傷人暗器"};
+                    if (Ritem[item2].ItemType >= 0 && Ritem[item2].ItemType <= 4)
+                        DrawShadowText(screen, typeNames[Ritem[item2].ItemType], 117, 315, ColColor(0x21), ColColor(0x23));
+
+                    if (Ritem[item2].User >= 0) {
+                        DrawShadowText(screen, "使用人：", 207, 315, ColColor(0x21), ColColor(0x23));
+                        std::string userName = cp950toutf8(Rrole[Ritem[item2].User].Name);
+                        DrawShadowText(screen, userName, 297, 315, ColColor(0x64), ColColor(0x66));
+                    }
+                    if (item2 == COMPASS_ID) {
+                        DrawShadowText(screen, "你的位置：", 207, 315, ColColor(0x21), ColColor(0x23));
+                        snprintf(buf, sizeof(buf), "%3d, %3d", My, Mx);
+                        DrawEngShadowText(screen, buf, 317, 315, ColColor(0x64), ColColor(0x66));
+                    }
+                }
+
+                // 显示物品属性
+                if (item2 >= 0 && Ritem[item2].ItemType > 0) {
+                    std::string words22[] = {"生命","生命","中毒","體力","內力","內力",
+                        "內力","攻擊","輕功","防禦","醫療","用毒",
+                        "解毒","抗毒","拳掌","御劍","耍刀","特殊",
+                        "暗器","武學","品德","左右","帶毒"};
+                    std::string words32[] = {"內力","內力","攻擊","輕功","用毒","醫療",
+                        "解毒","拳掌","御劍","耍刀","特殊","暗器","資質"};
+
+                    int p22[23] = {0}, p32[13] = {0};
+                    int len22 = 0, len32 = 0;
+
+                    for (int i3 = 0; i3 <= 22; i3++) {
+                        if (Ritem[item2].Data[45 + i3] != 0 && i3 != 4) {
+                            p22[i3] = 1; len22++;
+                        }
+                    }
+                    if (Ritem[item2].ChangeMPType == 2) {
+                        p22[4] = 1; len22++;
+                    }
+
+                    for (int i3 = 0; i3 <= 12; i3++) {
+                        if (Ritem[item2].Data[69 + i3] != 0 && i3 != 0) {
+                            p32[i3] = 1; len32++;
+                        }
+                    }
+                    if ((Ritem[item2].NeedMPType == 0 || Ritem[item2].NeedMPType == 1) && Ritem[item2].ItemType != 3) {
+                        p32[0] = 1; len32++;
+                    }
+
+                    if (len22 + len32 > 0)
+                        DrawRectangle(screen, 110, 344, w2, 20 * ((len22 + 5) / 6 + (len32 + 5) / 6) + 5, 0, ColColor(255), 50);
+
+                    int i12 = 0;
+                    for (int i3 = 0; i3 <= 22; i3++) {
+                        if (p22[i3] == 1) {
+                            char buf2[32];
+                            if (i3 == 4) {
+                                switch (Ritem[item2].ChangeMPType) {
+                                    case 0: snprintf(buf2, sizeof(buf2), "    陰"); break;
+                                    case 1: snprintf(buf2, sizeof(buf2), "    陽"); break;
+                                    case 2: snprintf(buf2, sizeof(buf2), "  調和"); break;
+                                }
+                            } else {
+                                snprintf(buf2, sizeof(buf2), "%6d", Ritem[item2].Data[45 + i3]);
+                            }
+                            uint32_t c1, c2;
+                            if (i3 == 0 || i3 == 5) { c1 = ColColor(0x10); c2 = ColColor(0x13); }
+                            else { c1 = ColColor(0x64); c2 = ColColor(0x66); }
+                            DrawShadowText(screen, words22[i3], 117 + (i12 % 6) * 95, i12 / 6 * 20 + 346, ColColor(0x5), ColColor(0x7));
+                            DrawShadowText(screen, buf2, 137 + (i12 % 6) * 95, i12 / 6 * 20 + 346, c1, c2);
+                            i12++;
+                        }
+                    }
+
+                    i12 = 0;
+                    for (int i3 = 0; i3 <= 12; i3++) {
+                        if (p32[i3] == 1) {
+                            char buf2[32];
+                            if (i3 == 0) {
+                                switch (Ritem[item2].NeedMPType) {
+                                    case 0: snprintf(buf2, sizeof(buf2), "    陰"); break;
+                                    case 1: snprintf(buf2, sizeof(buf2), "    陽"); break;
+                                    case 2: snprintf(buf2, sizeof(buf2), "  調和"); break;
+                                }
+                            } else {
+                                snprintf(buf2, sizeof(buf2), "%6d", Ritem[item2].Data[69 + i3]);
+                            }
+                            uint32_t c1, c2;
+                            if (i3 == 1) { c1 = ColColor(0x10); c2 = ColColor(0x13); }
+                            else { c1 = ColColor(0x64); c2 = ColColor(0x66); }
+                            DrawShadowText(screen, words32[i3], 117 + (i12 % 6) * 95, ((len22 + 5) / 6 + i12 / 6) * 20 + 346, ColColor(0x50), ColColor(0x4E));
+                            DrawShadowText(screen, buf2, 137 + (i12 % 6) * 95, ((len22 + 5) / 6 + i12 / 6) * 20 + 346, c1, c2);
+                            i12++;
+                        }
+                    }
+                }
+
+                DrawItemFrame(x, y);
+            };
+
+            ShowMenuItem();
+            UpdateScreen(screen, 0, 0, screen->w, screen->h);
+
+            SDL_Event event;
+            bool done = false;
+            bool result = false;
+            while (!done && SDL_WaitEvent(&event)) {
+                CheckBasicEvent();
+                switch (event.type) {
+                    case SDL_EVENT_KEY_UP:
+                        if (event.key.key == SDLK_DOWN) {
+                            y++;
+                            if (y < 0) y = 0;
+                            if (y >= row) {
+                                if (ItemList[atlu + col * row] >= 0)
+                                    atlu += col;
+                                y = row - 1;
+                            }
+                            ShowMenuItem();
+                            UpdateScreen(screen, 0, 0, screen->w, screen->h);
+                        }
+                        if (event.key.key == SDLK_UP) {
+                            y--;
+                            if (y < 0) {
+                                y = 0;
+                                if (atlu > 0) atlu -= col;
+                            }
+                            ShowMenuItem();
+                            UpdateScreen(screen, 0, 0, screen->w, screen->h);
+                        }
+                        if (event.key.key == SDLK_PAGEDOWN) {
+                            atlu += col * row;
+                            if (y < 0) y = 0;
+                            if (ItemList[atlu + col * row] < 0 && iamount > col * row) {
+                                y = y - (iamount - atlu) / col - 1 + row;
+                                atlu = (iamount / col - row + 1) * col;
+                                if (y >= row) y = row - 1;
+                            }
+                            ShowMenuItem();
+                            UpdateScreen(screen, 0, 0, screen->w, screen->h);
+                        }
+                        if (event.key.key == SDLK_PAGEUP) {
+                            atlu -= col * row;
+                            if (atlu < 0) {
+                                y += atlu / col;
+                                atlu = 0;
+                                if (y < 0) y = 0;
+                            }
+                            ShowMenuItem();
+                            UpdateScreen(screen, 0, 0, screen->w, screen->h);
+                        }
+                        if (event.key.key == SDLK_RIGHT) {
+                            x++; if (x >= col) x = 0;
+                            ShowMenuItem();
+                            UpdateScreen(screen, 0, 0, screen->w, screen->h);
+                        }
+                        if (event.key.key == SDLK_LEFT) {
+                            x--; if (x < 0) x = col - 1;
+                            ShowMenuItem();
+                            UpdateScreen(screen, 0, 0, screen->w, screen->h);
+                        }
+                        if (event.key.key == SDLK_ESCAPE) {
+                            result = false; done = true;
+                        }
+                        if (event.key.key == SDLK_RETURN || event.key.key == SDLK_SPACE) {
+                            int sel_idx = y * col + x + atlu;
+                            if (ItemList[sel_idx] >= 0) {
+                                CurItem = RItemList[ItemList[sel_idx]].Number;
+                                if (Where != 2 && CurItem >= 0)
+                                    UseItem(CurItem);
+                            }
+                            result = true; done = true;
+                        }
+                        break;
+                    case SDL_EVENT_MOUSE_BUTTON_UP:
+                        if (event.button.button == SDL_BUTTON_RIGHT) {
+                            result = false; done = true;
+                        }
+                        if (event.button.button == SDL_BUTTON_LEFT) {
+                            int mx = (int)(event.button.x / (RESOLUTIONX / screen->w));
+                            int my = (int)(event.button.y / (RESOLUTIONY / screen->h));
+                            if (mx >= 110 && mx < 110 + w && my > 90 && my < 308) {
+                                int sel_idx = y * col + x + atlu;
+                                if (ItemList[sel_idx] >= 0) {
+                                    CurItem = RItemList[ItemList[sel_idx]].Number;
+                                    if (Where != 2 && CurItem >= 0)
+                                        UseItem(CurItem);
+                                }
+                                result = true; done = true;
+                            }
+                        }
+                        break;
+                    case SDL_EVENT_MOUSE_WHEEL:
+                        if (event.wheel.y < 0) {
+                            y++;
+                            if (y >= row) {
+                                if (ItemList[atlu + col * row] >= 0) atlu += col;
+                                y = row - 1;
+                            }
+                            ShowMenuItem();
+                            UpdateScreen(screen, 0, 0, screen->w, screen->h);
+                        }
+                        if (event.wheel.y > 0) {
+                            y--;
+                            if (y < 0) { y = 0; if (atlu > 0) atlu -= col; }
+                            ShowMenuItem();
+                            UpdateScreen(screen, 0, 0, screen->w, screen->h);
+                        }
+                        break;
+                    case SDL_EVENT_MOUSE_MOTION: {
+                        int mx = (int)(event.motion.x / (RESOLUTIONX / screen->w));
+                        int my = (int)(event.motion.y / (RESOLUTIONY / screen->h));
+                        if (mx >= 110 && mx < 110 + w && my > 90 && my < 308) {
+                            int xp = x, yp = y;
+                            x = (mx - 115) / 42;
+                            y = (my - 95) / 42;
+                            if (x >= col) x = col - 1;
+                            if (y >= row) y = row - 1;
+                            if (x < 0) x = 0;
+                            if (y < 0) y = 0;
+                            if (x != xp || y != yp) {
+                                ShowMenuItem();
+                                UpdateScreen(screen, 0, 0, screen->w, screen->h);
+                            }
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+        Redraw();
+        if (Where == 2) break;
+        ShowMenu(2);
     }
     return true;
 }
@@ -1731,7 +2224,7 @@ void UseItem(int inum) {
                 int x = Sx, y = Sy;
                 switch (SFace) {
                     case 0: x--; break; case 1: y++; break;
-                    case 2: x++; break; case 3: y--; break;
+                    case 2: y--; break; case 3: x++; break;
                 }
                 if (SData[CurScene][3][x][y] >= 0) {
                     CurEvent = SData[CurScene][3][x][y];
@@ -1748,20 +2241,20 @@ void UseItem(int inum) {
             int menu = 1;
             if (Ritem[inum].User >= 0) {
                 Redraw();
-                std::string ms[] = {" 取消", " 繼續"};
-                std::string str = " 此物品正有人裝備，是否繼續？";
+                std::string ms[] = {"取消", "繼續"};
+                std::string str = "此物品正有人裝備，是否繼續？";
                 DrawTextWithRect(screen, str, 80, 30, 285, ColColor(5), ColColor(7));
                 menu = CommonMenu(80, 65, 45, 1, ms);
             }
             if (menu == 1) {
                 Redraw();
                 std::string str1 = cp950toutf8(Ritem[inum].Name);
-                DrawTextWithRect(screen, " 誰要裝備", 80, 30, (int)str1.size() * 11 + 80, ColColor(0x21), ColColor(0x23));
+                DrawTextWithRect(screen, "誰要裝備", 80, 30, (int)str1.size() * 11 + 80, ColColor(0x21), ColColor(0x23));
                 DrawShadowText(screen, str1, 160, 32, ColColor(0x64), ColColor(0x66));
                 UpdateScreen(screen, 0, 0, screen->w, screen->h);
                 int sel = SelectOneTeamMember(80, 65, "", 0, 0);
                 if (sel >= 0) {
-                    int rnum = sel;
+                    int rnum = TeamList[sel];
                     int p = Ritem[inum].EquipType;
                     if (p < 0 || p > 1) p = 0;
                     if (CanEquip(rnum, inum)) {
@@ -1770,7 +2263,7 @@ void UseItem(int inum) {
                         Rrole[rnum].Equip[p] = inum;
                         Ritem[inum].User = rnum;
                     } else {
-                        DrawTextWithRect(screen, " 此人不適合裝備此物品", 80, 230, 205, ColColor(0x64), ColColor(0x66));
+                        DrawTextWithRect(screen, "此人不適合裝備此物品", 80, 230, 205, ColColor(0x64), ColColor(0x66));
                         WaitAnyKey(); Redraw();
                     }
                 }
@@ -1781,26 +2274,26 @@ void UseItem(int inum) {
             int menu = 1;
             if (Ritem[inum].User >= 0) {
                 Redraw();
-                std::string ms[] = {" 取消", " 繼續"};
-                DrawTextWithRect(screen, " 此秘笈正有人修煉，是否繼續？", 80, 30, 285, ColColor(5), ColColor(7));
+                std::string ms[] = {"取消", "繼續"};
+                DrawTextWithRect(screen, "此秘笈正有人修煉，是否繼續？", 80, 30, 285, ColColor(5), ColColor(7));
                 menu = CommonMenu(80, 65, 45, 1, ms);
             }
             if (menu == 1) {
                 Redraw();
                 std::string str1 = cp950toutf8(Ritem[inum].Name);
-                DrawTextWithRect(screen, " 誰要修煉", 80, 30, (int)str1.size() * 11 + 80, ColColor(0x21), ColColor(0x23));
+                DrawTextWithRect(screen, "誰要修煉", 80, 30, (int)str1.size() * 11 + 80, ColColor(0x21), ColColor(0x23));
                 DrawShadowText(screen, str1, 160, 32, ColColor(0x64), ColColor(0x66));
                 UpdateScreen(screen, 0, 0, screen->w, screen->h);
                 int sel = SelectOneTeamMember(80, 65, "", 0, 0);
                 if (sel >= 0) {
-                    int rnum = sel;
+                    int rnum = TeamList[sel];
                     if (CanEquip(rnum, inum)) {
                         if (Ritem[inum].User >= 0) Rrole[Ritem[inum].User].PracticeBook = -1;
                         if (Rrole[rnum].PracticeBook >= 0) Ritem[Rrole[rnum].PracticeBook].User = -1;
                         Rrole[rnum].PracticeBook = inum;
                         Ritem[inum].User = rnum;
                     } else {
-                        DrawTextWithRect(screen, " 此人不適合修煉此秘笈", 80, 230, 205, ColColor(0x64), ColColor(0x66));
+                        DrawTextWithRect(screen, "此人不適合修煉此秘笈", 80, 230, 205, ColColor(0x64), ColColor(0x66));
                         WaitAnyKey(); Redraw();
                     }
                 }
@@ -1811,14 +2304,15 @@ void UseItem(int inum) {
             int sel = -1;
             if (Where != 2) {
                 std::string str1 = cp950toutf8(Ritem[inum].Name);
-                DrawTextWithRect(screen, " 誰要服用", 80, 30, (int)str1.size() * 11 + 80, ColColor(0x21), ColColor(0x23));
+                DrawTextWithRect(screen, "誰要服用", 80, 30, (int)str1.size() * 11 + 80, ColColor(0x21), ColColor(0x23));
                 DrawShadowText(screen, str1, 160, 32, ColColor(0x64), ColColor(0x66));
                 UpdateScreen(screen, 0, 0, screen->w, screen->h);
                 sel = SelectOneTeamMember(80, 65, "", 0, 0);
             }
             if (sel >= 0) {
                 Redraw();
-                EatOneItem(sel, inum);
+                int rnum2 = TeamList[sel];
+                EatOneItem(rnum2, inum);
                 instruct_32(inum, -1);
                 WaitAnyKey();
             }
@@ -1859,8 +2353,8 @@ bool CanEquip(int rnum, int inum) {
     // 自宫确认
     if ((inum == 78 || inum == 93) && result && Rrole[rnum].Sexual != 2) {
         Redraw();
-        std::string ms[] = {" 取消", " 繼續"};
-        DrawTextWithRect(screen, " 是否自宮？", 80, 30, 105, ColColor(7), ColColor(5));
+        std::string ms[] = {"取消", "繼續"};
+        DrawTextWithRect(screen, "是否自宮？", 80, 30, 105, ColColor(7), ColColor(5));
         if (CommonMenu(80, 65, 45, 1, ms) == 1)
             Rrole[rnum].Sexual = 2;
         else result = false;
@@ -1870,26 +2364,21 @@ bool CanEquip(int rnum, int inum) {
 
 void MenuLeave() {
     if (Where == 0 || MODVersion == 22) {
-        std::string str = (MODVersion == 22) ? " 選擇一個隊友" : " 要求誰離隊？";
+        std::string str = (MODVersion == 22) ? "選擇一個隊友" : "要求誰離隊？";
         DrawTextWithRect(screen, str, 80, 30, 132, ColColor(0x21), ColColor(0x23));
         int menu = SelectOneTeamMember(80, 65, "%3d", 15, 0);
         if (menu >= 0) {
-            for (int i = 0; i < 6; i++) {
-                if (TeamList[i] == menu) {
-                    for (int j = 0; j < 100; j++) {
-                        if (LeaveList[j] == TeamList[i]) {
-                            Redraw();
-                            CallEvent(BEGIN_LEAVE_EVENT + j * 2);
-                            UpdateScreen(screen, 0, 0, screen->w, screen->h);
-                            break;
-                        }
-                    }
+            for (int i = 0; i < 100; i++) {
+                if (LeaveList[i] == TeamList[menu]) {
+                    Redraw();
+                    CallEvent(BEGIN_LEAVE_EVENT + i * 2);
+                    UpdateScreen(screen, 0, 0, screen->w, screen->h);
                     break;
                 }
             }
         }
     } else {
-        DrawTextWithRect(screen, " 子場景不可離隊！", 80, 30, 172, ColColor(0x21), ColColor(0x23));
+        DrawTextWithRect(screen, "子場景不可離隊！", 80, 30, 172, ColColor(0x21), ColColor(0x23));
         WaitAnyKey();
     }
     Redraw();
@@ -1897,12 +2386,23 @@ void MenuLeave() {
 }
 
 void MenuStatus() {
+    std::string str = "查看隊員狀態";
+    Redraw();
+    RecordFreshScreen(0, 0, screen->w, screen->h);
+    UpdateScreen(screen, 0, 0, screen->w, screen->h);
+    DrawTextWithRect(screen, str, 10, 30, 132, ColColor(0x21), ColColor(0x23));
+
+    std::string menuStr[6];
+    int Amount = 0;
     for (int i = 0; i < 6; i++) {
         if (TeamList[i] >= 0) {
-            ShowStatus(TeamList[i]);
-            WaitAnyKey();
+            menuStr[i] = cp950toutf8(Rrole[TeamList[i]].Name);
+            Amount++;
         }
     }
+    CommonMenu(10, 65, 85, Amount - 1, 0, menuStr, ShowStatusByTeam);
+    Redraw();
+    UpdateScreen(screen, 0, 0, screen->w, screen->h);
 }
 
 void ShowStatusByTeam(int tnum) {
@@ -1912,34 +2412,99 @@ void ShowStatusByTeam(int tnum) {
 }
 
 void ShowStatus(int rnum) {
-    ShowStatus(rnum, CENTER_X - 270, CENTER_Y - 155);
+    ShowStatus(rnum, CENTER_X - 273, 65);
 }
 
 void ShowStatus(int rnum, int x, int y) {
-    Redraw();
-    DrawRectangle(screen, x, y, 540, 310, 0, ColColor(0xFF), 50);
-    std::string name = cp950toutf8(Rrole[rnum].Name);
-    DrawShadowText(screen, name, x + 10, y + 10, ColColor(0x21), ColColor(0x23));
+    std::string strs[22];
+    strs[0] = "等級"; strs[1] = "生命"; strs[2] = "內力"; strs[3] = "體力";
+    strs[4] = "經驗"; strs[5] = "升級"; strs[6] = "攻擊"; strs[7] = "防禦";
+    strs[8] = "輕功"; strs[9] = "醫療能力"; strs[10] = "用毒能力"; strs[11] = "解毒能力";
+    strs[12] = "拳掌功夫"; strs[13] = "御劍能力"; strs[14] = "耍刀技巧"; strs[15] = "特殊兵器";
+    strs[16] = "暗器技巧"; strs[17] = "裝備物品"; strs[18] = "修煉物品"; strs[19] = "所會武功";
+    strs[20] = "受傷"; strs[21] = "中毒";
 
-    char buf[128];
-    auto drawProp = [&](const char* label, int val, int row) {
-        DrawShadowText(screen, label, x + 10, y + 35 + row * 22, ColColor(0x21), ColColor(0x23));
-        snprintf(buf, sizeof(buf), "%d", val);
-        DrawEngShadowText(screen, buf, x + 110, y + 35 + row * 22, ColColor(0x64), ColColor(0x66));
-    };
+    if (MODVersion == 22) {
+        strs[2] = "靈力"; strs[6] = "武力"; strs[8] = "移動";
+        strs[9] = "仙術能力"; strs[10] = "毒術能力";
+        strs[12] = "火系能力"; strs[13] = "水系能力"; strs[14] = "雷系能力";
+        strs[15] = "土系能力"; strs[16] = "射擊能力"; strs[19] = "所會法術";
+    }
 
-    drawProp(" 等級", Rrole[rnum].Level, 0);
-    drawProp(" 體力", Rrole[rnum].CurrentHP, 1);
-    drawProp(" 內力", Rrole[rnum].CurrentMP, 2);
-    drawProp(" 攻擊", Rrole[rnum].Attack, 3);
-    drawProp(" 防禦", Rrole[rnum].Defence, 4);
-    drawProp(" 輕功", Rrole[rnum].Speed, 5);
-    drawProp(" 醫術", Rrole[rnum].Medcine, 6);
-    drawProp(" 用毒", Rrole[rnum].UsePoi, 7);
-    drawProp(" 解毒", Rrole[rnum].MedPoi, 8);
+    if (Where <= 2)
+        LoadFreshScreen(0, 0, screen->w, screen->h);
 
-    DrawHeadPic(Rrole[rnum].HeadNum, x + 400, y + 10);
-    UpdateScreen(screen, x, y, 541, 311);
+    DrawRectangle(screen, x, y, 525, 315, 0, ColColor(255), 50);
+
+    DrawHeadPic(Rrole[rnum].HeadNum, x + 60, y + 80);
+    std::string Name = cp950toutf8(Rrole[rnum].Name, 5);
+    DrawShadowText(screen, Name, x + 88 - DrawLength(Name) * 5, y + 85, ColColor(0x66), ColColor(0x63));
+
+    for (int i = 0; i <= 5; i++)
+        DrawShadowText(screen, strs[i], x + 10, y + 110 + 21 * i, ColColor(0x21), ColColor(0x23));
+    for (int i = 6; i <= 16; i++)
+        DrawShadowText(screen, strs[i], x + 180, y + 5 + 21 * (i - 6), ColColor(0x64), ColColor(0x66));
+    DrawShadowText(screen, strs[19], x + 360, y + 5, ColColor(0x21), ColColor(0x23));
+
+    int addatk = 0, adddef = 0, addspeed = 0;
+    if (Rrole[rnum].Equip[0] >= 0) {
+        addatk += Ritem[Rrole[rnum].Equip[0]].AddAttack;
+        adddef += Ritem[Rrole[rnum].Equip[0]].AddDefence;
+        addspeed += Ritem[Rrole[rnum].Equip[0]].AddSpeed;
+    }
+    if (Rrole[rnum].Equip[1] >= 0) {
+        addatk += Ritem[Rrole[rnum].Equip[1]].AddAttack;
+        adddef += Ritem[Rrole[rnum].Equip[1]].AddDefence;
+        addspeed += Ritem[Rrole[rnum].Equip[1]].AddSpeed;
+    }
+
+    char buf[64];
+    // 右列属性值
+    snprintf(buf, sizeof(buf), "%4d", Rrole[rnum].Attack + addatk);
+    DrawEngShadowText(screen, buf, x + 280, y + 5 + 21 * 0, ColColor(0x5), ColColor(0x7));
+    snprintf(buf, sizeof(buf), "%4d", Rrole[rnum].Defence + adddef);
+    DrawEngShadowText(screen, buf, x + 280, y + 5 + 21 * 1, ColColor(0x5), ColColor(0x7));
+    snprintf(buf, sizeof(buf), "%4d", Rrole[rnum].Speed + addspeed);
+    DrawEngShadowText(screen, buf, x + 280, y + 5 + 21 * 2, ColColor(0x5), ColColor(0x7));
+    // 医疗~暗器
+    int pdata[] = {43, 45, 44, 46, 47, 48, 50, 51, 52, 53, 54};
+    for (int i = 0; i < 11; i++) {
+        if (i < 3) continue; // 攻防轻功已画
+        snprintf(buf, sizeof(buf), "%4d", Rrole[rnum].Data[pdata[i]]);
+        DrawEngShadowText(screen, buf, x + 280, y + 5 + 21 * i, ColColor(0x5), ColColor(0x7));
+    }
+
+    // 左列属性值
+    snprintf(buf, sizeof(buf), "%4d", Rrole[rnum].Level);
+    DrawEngShadowText(screen, buf, x + 90, y + 110, ColColor(0x5), ColColor(0x7));
+    snprintf(buf, sizeof(buf), "%4d/%4d", Rrole[rnum].CurrentHP, Rrole[rnum].MaxHP);
+    DrawEngShadowText(screen, buf, x + 50, y + 131, ColColor(0x5), ColColor(0x7));
+    snprintf(buf, sizeof(buf), "%4d/%4d", Rrole[rnum].CurrentMP, Rrole[rnum].MaxMP);
+    DrawEngShadowText(screen, buf, x + 50, y + 152, ColColor(0x5), ColColor(0x7));
+    snprintf(buf, sizeof(buf), "%4d", Rrole[rnum].PhyPower);
+    DrawEngShadowText(screen, buf, x + 90, y + 173, ColColor(0x5), ColColor(0x7));
+    snprintf(buf, sizeof(buf), "%4d", (int)Rrole[rnum].Exp);
+    DrawEngShadowText(screen, buf, x + 90, y + 194, ColColor(0x5), ColColor(0x7));
+
+    // 武功列表
+    for (int i = 0; i < 10; i++) {
+        if (Rrole[rnum].Magic[i] > 0 && Rrole[rnum].Magic[i] < 999) {
+            std::string mname = cp950toutf8(Rmagic[Rrole[rnum].Magic[i]].Name);
+            DrawShadowText(screen, mname, x + 360, y + 26 + 21 * i, ColColor(0x5), ColColor(0x7));
+            snprintf(buf, sizeof(buf), "%4d", Rrole[rnum].MagLevel[i] / 100 + 1);
+            DrawEngShadowText(screen, buf, x + 470, y + 26 + 21 * i, ColColor(0x64), ColColor(0x66));
+        }
+    }
+
+    // 受伤/中毒
+    DrawShadowText(screen, strs[20], x + 10, y + 280, ColColor(0x21), ColColor(0x23));
+    snprintf(buf, sizeof(buf), "%4d", Rrole[rnum].Hurt);
+    DrawEngShadowText(screen, buf, x + 90, y + 280, ColColor(0x10), ColColor(0x13));
+    DrawShadowText(screen, strs[21], x + 10, y + 296, ColColor(0x21), ColColor(0x23));
+    snprintf(buf, sizeof(buf), "%4d", Rrole[rnum].Poison);
+    DrawEngShadowText(screen, buf, x + 90, y + 296, ColColor(0x10), ColColor(0x13));
+
+    UpdateScreen(screen, x, y, 526, 316);
 }
 
 void ShowSimpleStatus(int rnum, int x, int y) {
@@ -2150,22 +2715,26 @@ event_end:
 
 // ---- 云 ----
 
-void CloudCreate(int num) {
+// 严格按Pascal版: CloudCreateOnSide先初始化所有字段, CloudCreate再覆盖Positionx
+void CloudCreateOnSide(int num) {
     if (num < 0 || num >= CLOUD_AMOUNT) return;
     if ((int)Cloud.size() <= num) Cloud.resize(num + 1);
     Cloud[num].Picnum = rand() % std::max(1, CPicAmount);
     Cloud[num].Shadow = 0;
-    Cloud[num].Alpha = 20 + rand() % 30;
-    Cloud[num].Positionx = rand() % (CENTER_X * 2);
-    Cloud[num].Positiony = rand() % (CENTER_Y * 2);
+    Cloud[num].Alpha = 10 + rand() % 50;
+    Cloud[num].mixColor = (uint32_t)(rand() % 256) + ((uint32_t)(rand() % 256) << 8)
+                        + ((uint32_t)(rand() % 256) << 16) + ((uint32_t)(rand() % 256) << 24);
+    Cloud[num].mixAlpha = 10 + rand() % 50;
+    Cloud[num].Positionx = 0;
+    Cloud[num].Positiony = rand() % 8640;
     Cloud[num].Speedx = 1 + rand() % 3;
     Cloud[num].Speedy = 0;
 }
 
-void CloudCreateOnSide(int num) {
-    CloudCreate(num);
+void CloudCreate(int num) {
+    CloudCreateOnSide(num);
     if (num >= 0 && num < (int)Cloud.size())
-        Cloud[num].Positionx = -100;
+        Cloud[num].Positionx = rand() % 17280;
 }
 
 bool IsCave(int snum) {

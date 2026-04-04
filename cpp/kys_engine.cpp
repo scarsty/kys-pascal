@@ -251,6 +251,7 @@ void ReadTiles() {
     LoadIdxGrp(path + "resource/sdx", path + "resource/smp", SIdx, SPic);
     SPicAmount = (int)SIdx.size();
     LoadIdxGrp(path + "resource/wdx", path + "resource/wmp", WIdx, WPic);
+    BPicAmount = (int)WIdx.size();
     LoadIdxGrp(path + "resource/eft.idx", path + "resource/eft.grp", EIdx, EPic);
     EPicAmount = (int)EIdx.size();
     LoadIdxGrp(path + "resource/cloud.idx", path + "resource/cloud.grp", CIdx, CPic);
@@ -323,31 +324,55 @@ uint32_t ColColor(uint8_t num) {
 void DrawRectangle(SDL_Surface* sur, int x, int y, int w, int h,
                    int colorin, uint32_t colorframe, int alpha) {
     if (!sur) return;
-    SDL_Rect rect = {x + 2, y + 2, w - 3, h - 3};
-    // 半透明填充
-    SDL_Surface* temp = SDL_CreateSurface(w, h, sur->format);
-    if (!temp) return;
-    SDL_FillSurfaceRect(temp, nullptr, 0);
-    SDL_SetSurfaceAlphaMod(temp, (uint8_t)(alpha * 255 / 100));
-    SDL_SetSurfaceBlendMode(temp, SDL_BLENDMODE_BLEND);
-    SDL_Rect dst = {x, y, w, h};
-    SDL_BlitSurface(temp, nullptr, sur, &dst);
-    SDL_DestroySurface(temp);
+    SDL_Surface* tempscr = SDL_CreateSurface(w + 1, h + 1,
+        SDL_GetPixelFormatForMasks(32, RMask, GMask, BMask, AMask));
+    if (!tempscr) return;
 
-    // 绘制边框 - 简单实现
-    for (int i = x; i < x + w; i++) { PutPixel(sur, i, y, colorframe); PutPixel(sur, i, y + h - 1, colorframe); }
-    for (int i = y; i < y + h; i++) { PutPixel(sur, x, i, colorframe); PutPixel(sur, x + w - 1, i, colorframe); }
+    uint8_t r, g, b, r1, g1, b1;
+    SDL_GetRGB(colorin, SDL_GetPixelFormatDetails(tempscr->format),
+               SDL_GetSurfacePalette(tempscr), &r, &g, &b);
+    SDL_GetRGB(colorframe, SDL_GetPixelFormatDetails(tempscr->format),
+               SDL_GetSurfacePalette(tempscr), &r1, &g1, &b1);
+
+    SDL_FillSurfaceRect(tempscr, nullptr,
+        SDL_MapSurfaceRGBA(tempscr, r, g, b, (uint8_t)(alpha * 255 / 100)));
+
+    for (int i1 = 0; i1 <= w; i1++) {
+        for (int i2 = 0; i2 <= h; i2++) {
+            int l1 = i1 + i2;
+            int l2 = -(i1 - w) + i2;
+            int l3 = i1 - (i2 - h);
+            int l4 = -(i1 - w) - (i2 - h);
+            // 4角裁切
+            if (!((l1 >= 4) && (l2 >= 4) && (l3 >= 4) && (l4 >= 4))) {
+                PutPixel(tempscr, i1, i2, 0);
+            }
+            // 框线 + 渐变alpha
+            if (((l1 >= 4) && (l2 >= 4) && (l3 >= 4) && (l4 >= 4) &&
+                 ((i1 == 0) || (i1 == w) || (i2 == 0) || (i2 == h))) ||
+                ((l1 == 4) || (l2 == 4) || (l3 == 4) || (l4 == 4))) {
+                double frac = (double)i1 / w + (double)i2 / h - 1.0;
+                uint8_t a = (uint8_t)(int)(250.0 - fabs(frac) * 150.0);
+                PutPixel(tempscr, i1, i2,
+                         SDL_MapSurfaceRGBA(tempscr, r1, g1, b1, a));
+            }
+        }
+    }
+
+    SDL_Rect dst = {x, y, 0, 0};
+    SDL_BlitSurface(tempscr, nullptr, sur, &dst);
+    SDL_DestroySurface(tempscr);
 }
 
 void DrawRectangleWithoutFrame(SDL_Surface* sur, int x, int y, int w, int h,
                                uint32_t colorin, int alpha) {
     if (!sur) return;
-    SDL_Surface* temp = SDL_CreateSurface(w, h, sur->format);
+    SDL_Surface* temp = SDL_CreateSurface(w, h,
+        SDL_GetPixelFormatForMasks(32, RMask, GMask, BMask, AMask));
     if (!temp) return;
-    SDL_FillSurfaceRect(temp, nullptr, colorin);
+    SDL_FillSurfaceRect(temp, nullptr, colorin | 0xFF000000);
     SDL_SetSurfaceAlphaMod(temp, (uint8_t)(alpha * 255 / 100));
-    SDL_SetSurfaceBlendMode(temp, SDL_BLENDMODE_BLEND);
-    SDL_Rect dst = {x, y, w, h};
+    SDL_Rect dst = {x, y, 0, 0};
     SDL_BlitSurface(temp, nullptr, sur, &dst);
     SDL_DestroySurface(temp);
 }
@@ -583,8 +608,8 @@ void DrawRLE8Pic(const char* colorPanel, int num, int px, int py,
 
 TPosition GetPositionOnScreen(int x, int y, int CenterX, int CenterY) {
     TPosition p;
-    p.x = -(y - x) * 18 + CenterX;
-    p.y = (x + y) * 9 + CenterY;
+    p.x = -(x - CenterX) * 18 + (y - CenterY) * 18 + CENTER_X;
+    p.y = (x - CenterX) * 9 + (y - CenterY) * 9 + CENTER_Y;
     return p;
 }
 
@@ -618,60 +643,97 @@ void DrawText(SDL_Surface* sur, const std::string& word, int x_pos, int y_pos, u
     std::string text = word;
     if (SIMPLE == 1) text = Traditional2Simplified(text);
 
-    int i = 0;
+    uint8_t r, g, b;
+    SDL_GetRGB(color, SDL_GetPixelFormatDetails(sur->format), SDL_GetSurfacePalette(sur), &r, &g, &b);
+
     int len = (int)text.size();
-    int dx = 0;
+    int i = 0;
     while (i < len) {
-        int charlen = utf8follow(text[i]);
-        std::string ch = text.substr(i, charlen);
-        i += charlen;
+        uint8_t c = (uint8_t)text[i];
 
-        SDL_Color c;
-        uint8_t r, g, b;
-        SDL_GetRGB(color, SDL_GetPixelFormatDetails(sur->format), SDL_GetSurfacePalette(sur), &r, &g, &b);
-        c.r = r; c.g = g; c.b = b; c.a = 255;
-
-        // 使用字体缓存
-        int k = 0;
-        for (int j = 0; j < charlen; j++)
-            k = k * 256 + (uint8_t)ch[j];
-
-        SDL_Surface* glyph = nullptr;
-        auto it = fonts.find(k);
-        if (it != fonts.end()) {
-            glyph = it->second;
+        if (c > 32 && c < 128) {
+            // ASCII字符 - 使用EnglishFont
+            int k = c;
+            auto it = fonts.find(k);
+            if (it == fonts.end()) {
+                SDL_Color white = {255, 255, 255, 255};
+                char buf[2] = {(char)c, 0};
+                SDL_Surface* glyph = TTF_RenderText_Blended(EnglishFont, buf, 1, white);
+                if (glyph) fonts[k] = glyph;
+                it = fonts.find(k);
+            }
+            if (it != fonts.end()) {
+                SDL_Surface* glyph = it->second;
+                SDL_SetSurfaceColorMod(glyph, r, g, b);
+                SDL_SetSurfaceBlendMode(glyph, SDL_BLENDMODE_BLEND);
+                SDL_SetSurfaceAlphaMod(glyph, 255);
+                SDL_Rect dst;
+                dst.x = x_pos;
+                dst.y = y_pos + 2;
+                SDL_BlitSurface(glyph, nullptr, sur, &dst);
+            }
+            x_pos += 10;
+            i += 1;
+        } else if (c >= 0xC0 && c < 0xE0 && i + 1 < len) {
+            // 2字节UTF-8
+            int k = (uint8_t)text[i] + 256 * (uint8_t)text[i+1];
+            auto it = fonts.find(k);
+            if (it == fonts.end()) {
+                SDL_Color white = {255, 255, 255, 255};
+                char buf[3] = {text[i], text[i+1], 0};
+                SDL_Surface* glyph = TTF_RenderText_Blended(ChineseFont, buf, 2, white);
+                if (glyph) fonts[k] = glyph;
+                it = fonts.find(k);
+            }
+            if (it != fonts.end()) {
+                SDL_Surface* glyph = it->second;
+                SDL_SetSurfaceColorMod(glyph, r, g, b);
+                SDL_SetSurfaceBlendMode(glyph, SDL_BLENDMODE_BLEND);
+                SDL_SetSurfaceAlphaMod(glyph, 255);
+                SDL_Rect dst;
+                dst.x = x_pos;
+                dst.y = y_pos;
+                SDL_BlitSurface(glyph, nullptr, sur, &dst);
+            }
+            x_pos += 10;
+            i += 2;
+        } else if (c >= 0xE0 && i + 2 < len) {
+            // 3字节UTF-8 (CJK等)
+            int k = (uint8_t)text[i] + 256 * (uint8_t)text[i+1] + 65536 * (uint8_t)text[i+2];
+            auto it = fonts.find(k);
+            if (it == fonts.end()) {
+                SDL_Color white = {255, 255, 255, 255};
+                char buf[4] = {text[i], text[i+1], text[i+2], 0};
+                SDL_Surface* glyph = TTF_RenderText_Blended(ChineseFont, buf, 3, white);
+                if (glyph) fonts[k] = glyph;
+                it = fonts.find(k);
+            }
+            if (it != fonts.end()) {
+                SDL_Surface* glyph = it->second;
+                SDL_SetSurfaceColorMod(glyph, r, g, b);
+                SDL_SetSurfaceBlendMode(glyph, SDL_BLENDMODE_BLEND);
+                SDL_SetSurfaceAlphaMod(glyph, 255);
+                SDL_Rect dst;
+                dst.x = x_pos;
+                dst.y = y_pos;
+                SDL_BlitSurface(glyph, nullptr, sur, &dst);
+            }
+            x_pos += 20;
+            i += 3;
         } else {
-            SDL_Color white = {255, 255, 255, 255};
-            glyph = TTF_RenderText_Blended(ChineseFont, ch.c_str(), (int)ch.size(), white);
-            if (glyph) fonts[k] = glyph;
+            // 空格或控制字符, 仅前进
+            x_pos += 10;
+            i += 1;
         }
-
-        if (glyph) {
-            SDL_SetSurfaceColorMod(glyph, r, g, b);
-            SDL_Rect dst = {x_pos + dx, y_pos, glyph->w, glyph->h};
-            SDL_BlitSurface(glyph, nullptr, sur, &dst);
-        }
-
-        dx += (charlen >= 3) ? 20 : 10;
     }
 }
 
 void DrawEngText(SDL_Surface* sur, const std::string& word, int x_pos, int y_pos, uint32_t color) {
-    if (!sur || word.empty() || !EnglishFont) return;
-    SDL_Color c;
-    uint8_t r, g, b;
-    SDL_GetRGB(color, SDL_GetPixelFormatDetails(sur->format), SDL_GetSurfacePalette(sur), &r, &g, &b);
-    c.r = r; c.g = g; c.b = b; c.a = 255;
-    SDL_Surface* text = TTF_RenderText_Blended(EnglishFont, word.c_str(), (int)word.size(), c);
-    if (text) {
-        SDL_Rect dst = {x_pos, y_pos, text->w, text->h};
-        SDL_BlitSurface(text, nullptr, sur, &dst);
-        SDL_DestroySurface(text);
-    }
+    DrawText(sur, word, x_pos, y_pos + 2, color);
 }
 
 void DrawShadowText(SDL_Surface* sur, const std::string& word, int x_pos, int y_pos, uint32_t color1, uint32_t color2) {
-    DrawText(sur, word, x_pos + 1, y_pos + 1, color2);
+    DrawText(sur, word, x_pos + 1, y_pos, color2);
     DrawText(sur, word, x_pos, y_pos, color1);
 }
 
@@ -680,8 +742,7 @@ void DrawShadowText(const std::string& word, int x_pos, int y_pos, uint32_t colo
 }
 
 void DrawEngShadowText(SDL_Surface* sur, const std::string& word, int x_pos, int y_pos, uint32_t color1, uint32_t color2) {
-    DrawEngText(sur, word, x_pos + 1, y_pos + 1, color2);
-    DrawEngText(sur, word, x_pos, y_pos, color1);
+    DrawShadowText(sur, word, x_pos, y_pos, color1, color2);
 }
 
 void DrawBig5Text(SDL_Surface* sur, const char* str, int x_pos, int y_pos, uint32_t color) {
@@ -699,14 +760,16 @@ void DrawTextWithRect(const std::string& word, int x, int y, int w, uint32_t col
 }
 
 void DrawTextWithRect(SDL_Surface* sur, const std::string& word, int x, int y, int w, uint32_t color1, uint32_t color2) {
-    DrawRectangle(sur, x - 3, y - 3, w + 6, 28, 0, ColColor(0xFF), 50);
-    DrawShadowText(sur, word, x, y, color1, color2);
-    UpdateScreen(sur, x - 3, y - 3, w + 7, 29);
+    if (w < 0) w = DrawLength(word) * 10 + 7;
+    DrawRectangle(sur, x, y, w, 28, 0, ColColor(0xFF), 50);
+    DrawShadowText(sur, word, x + 3, y + 3, color1, color2);
+    UpdateScreen(sur, x, y, w + 1, 29);
 }
 
 void DrawTextWithRectNoUpdate(SDL_Surface* sur, const std::string& word, int x, int y, int w, uint32_t color1, uint32_t color2) {
-    DrawRectangle(sur, x - 3, y - 3, w + 6, 28, 0, ColColor(0xFF), 50);
-    DrawShadowText(sur, word, x, y, color1, color2);
+    if (w < 0) w = DrawLength(word) * 10 + 7;
+    DrawRectangle(sur, x, y, w, 28, 0, ColColor(0xFF), 50);
+    DrawShadowText(sur, word, x + 3, y + 3, color1, color2);
 }
 
 // ---- PNG贴图 (桩实现) ----
@@ -859,17 +922,58 @@ bool EventFilter(void* p, SDL_Event* e) {
 }
 
 uint32_t CheckBasicEvent() {
-    // 处理基本事件: 退出、手柄映射等
+    // 刷掉无用事件
+    SDL_FlushEvent(SDL_EVENT_MOUSE_WHEEL);
+    SDL_FlushEvent(SDL_EVENT_JOYSTICK_AXIS_MOTION);
+    SDL_FlushEvent(SDL_EVENT_FINGER_MOTION);
+    if (CellPhone == 1)
+        SDL_FlushEvent(SDL_EVENT_MOUSE_MOTION);
+
+    uint32_t result = event.type;
     switch (event.type) {
+        case SDL_EVENT_JOYSTICK_BUTTON_UP:
+            event.type = SDL_EVENT_KEY_UP;
+            if (event.jbutton.button == JOY_ESCAPE)
+                event.key.key = SDLK_ESCAPE;
+            else if (event.jbutton.button == JOY_RETURN)
+                event.key.key = SDLK_RETURN;
+            else if (event.jbutton.button == JOY_UP)
+                event.key.key = SDLK_UP;
+            else if (event.jbutton.button == JOY_DOWN)
+                event.key.key = SDLK_DOWN;
+            else if (event.jbutton.button == JOY_LEFT)
+                event.key.key = SDLK_LEFT;
+            else if (event.jbutton.button == JOY_RIGHT)
+                event.key.key = SDLK_RIGHT;
+            break;
+        case SDL_EVENT_JOYSTICK_BUTTON_DOWN:
+            event.type = SDL_EVENT_KEY_DOWN;
+            if (event.jbutton.button == JOY_UP) event.key.key = SDLK_UP;
+            else if (event.jbutton.button == JOY_DOWN) event.key.key = SDLK_DOWN;
+            else if (event.jbutton.button == JOY_LEFT) event.key.key = SDLK_LEFT;
+            else if (event.jbutton.button == JOY_RIGHT) event.key.key = SDLK_RIGHT;
+            break;
         case SDL_EVENT_QUIT:
             QuitConfirm();
             break;
         case SDL_EVENT_WINDOW_RESIZED:
             RESOLUTIONX = event.window.data1;
             RESOLUTIONY = event.window.data2;
+            UpdateAllScreen();
+            break;
+        case SDL_EVENT_DID_ENTER_FOREGROUND:
+            PlayMP3(NowMusic, -1, 0);
+            break;
+        case SDL_EVENT_DID_ENTER_BACKGROUND:
+            StopMP3(0);
+            break;
+        case SDL_EVENT_KEY_UP:
+        case SDL_EVENT_MOUSE_BUTTON_UP:
+            if (event.key.key == SDLK_KP_ENTER)
+                event.key.key = SDLK_RETURN;
             break;
     }
-    return event.type;
+    return result;
 }
 
 void QuitConfirm() {

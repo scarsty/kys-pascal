@@ -39,13 +39,16 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="build\cmakefiles\4.3.0\compileridcxx\CMakeCXXCompilerId.cpp">
+    <ClCompile Include="C:\project\mlcc\filefunc.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="out\build\x64-debug\cmakefiles\4.2.3-msvc3\compileridcxx\CMakeCXXCompilerId.cpp">
+    <ClCompile Include="C:\project\mlcc\PotConv.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="out\build\x64-debug\cmakefiles\showincludes\main.c">
+    <ClCompile Include="C:\project\mlcc\SimpleCC.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\project\mlcc\strfunc.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -71,19 +74,20 @@
     <ClInclude Include="kys_type.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="simplecc.h">
+    <ClInclude Include="C:\project\mlcc\filefunc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="out\build\x64-debug\cmakefiles\showincludes\foo.h">
+    <ClInclude Include="C:\project\mlcc\INIReader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="build\cmakefiles\4.3.0\CMakeDetermineCompilerABI_CXX.bin">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="out\build\x64-debug\cmakefiles\4.2.3-msvc3\CMakeDetermineCompilerABI_CXX.bin">
-      <Filter>Resource Files</Filter>
-    </None>
+    <ClInclude Include="C:\project\mlcc\PotConv.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\project\mlcc\SimpleCC.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\project\mlcc\strfunc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
