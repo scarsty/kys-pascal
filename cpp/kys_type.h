@@ -3,12 +3,12 @@
 // 对应 kys_type.pas
 
 #include <SDL3/SDL.h>
-#include <SDL3_ttf/SDL_ttf.h>
 #include <SDL3_mixer/SDL_mixer.h>
+#include <SDL3_ttf/SDL_ttf.h>
 #include <cstdint>
+#include <map>
 #include <string>
 #include <vector>
-#include <map>
 
 // 基本类型别名
 using uint32 = uint32_t;
@@ -19,30 +19,36 @@ struct lua_State;
 
 // ---- 结构体定义 ----
 
-struct TPosition {
+struct TPosition
+{
     int x = 0, y = 0;
 };
 
-struct TItemList {
+struct TItemList
+{
     int16_t Number = -1;
     int16_t Amount = 0;
 };
 
-struct TBuildInfo {
+struct TBuildInfo
+{
     int c = 0;
     int b = 0, x = 0, y = 0;
 };
 
-struct TPNGIndex {
+struct TPNGIndex
+{
     int16_t Num = 0, Frame = 0, x = 0, y = 0, Loaded = 0, UseGRP = 0;
     SDL_Surface** CurPointer = nullptr;
 };
 
-struct TCol {
+struct TCol
+{
     uint8_t r = 0, g = 0, b = 0;
 };
 
-struct TCloud {
+struct TCloud
+{
     int Picnum = 0;
     int Shadow = 0;
     int Alpha = 0;
@@ -56,11 +62,14 @@ struct TCloud {
 
 #pragma pack(push, 1)
 
-struct TRole {
-    union {
-        struct {
+struct TRole
+{
+    union
+    {
+        struct
+        {
             int16_t ListNum, HeadNum, IncLife, UnUse;
-            char Name[10]; // ansichar
+            char Name[10];    // ansichar
             char Nick[10];
             int16_t Sexual, Level;
             uint16 Exp;
@@ -80,9 +89,12 @@ struct TRole {
     };
 };
 
-struct TItem {
-    union {
-        struct {
+struct TItem
+{
+    union
+    {
+        struct
+        {
             int16_t ListNum;
             char Name[20];
             char Name1[20];
@@ -100,9 +112,12 @@ struct TItem {
     };
 };
 
-struct TScene {
-    union {
-        struct {
+struct TScene
+{
+    union
+    {
+        struct
+        {
             int16_t ListNum;
             char Name[10];
             int16_t ExitMusic, EntranceMusic;
@@ -116,9 +131,12 @@ struct TScene {
     };
 };
 
-struct TMagic {
-    union {
-        struct {
+struct TMagic
+{
+    union
+    {
+        struct
+        {
             int16_t ListNum;
             char Name[10];
             int16_t UnKnow[5];
@@ -129,18 +147,24 @@ struct TMagic {
     };
 };
 
-struct TShop {
-    union {
-        struct {
+struct TShop
+{
+    union
+    {
+        struct
+        {
             int16_t Item[5], Amount[5], Price[5];
         };
         int16_t Data[15];
     };
 };
 
-struct TBattleRole {
-    union {
-        struct {
+struct TBattleRole
+{
+    union
+    {
+        struct
+        {
             int16_t rnum, Team, Y, X, Face, Dead, Step, Acted;
             int16_t Pic, ShowNumber, UnUse1, UnUse2, UnUse3, ExpGot, Auto;
             int16_t RealSpeed, RealProgress, BHead, AutoMode;
@@ -149,9 +173,12 @@ struct TBattleRole {
     };
 };
 
-struct TWarData {
-    union {
-        struct {
+struct TWarData
+{
+    union
+    {
+        struct
+        {
             int16_t Warnum;
             char Name[10];
             int16_t BFieldNum, ExpGot, MusicNum;
@@ -165,7 +192,7 @@ struct TWarData {
 #pragma pack(pop)
 
 // ---- 函数指针类型 ----
-using TPInt1 = void(*)(int);
+using TPInt1 = void (*)(int);
 
 // ---- 全局变量 ----
 // 大数组使用extern（定义在kys_type.cpp），其余使用C++17 inline变量
@@ -347,7 +374,7 @@ inline int EXPAND_GROUND = 1;
 
 // 标题/开场位置
 inline TPosition TitlePosition = {};
-inline TPosition OpenPicPosition = {-1, -1};
+inline TPosition OpenPicPosition = { -1, -1 };
 
 // SDL同步
 inline SDL_Mutex* mutex = nullptr;
@@ -400,6 +427,7 @@ inline bool BattleSelecting = false;
 
 // 虚拟按键（手机模式）
 inline int ShowVirtualKey = 0;
+inline uint32 VirtualKeyValue = 0;
 inline int VirtualCrossX = 150, VirtualCrossY = 250;
 inline int VirtualKeySize = 60;
 inline int VirtualAX = 0, VirtualAY = 0;
@@ -424,6 +452,7 @@ constexpr uint32 BMask = 0xFF;
 constexpr uint32 AMask = 0xFF000000;
 
 // ExGround偏移访问辅助: Pascal中下标为 -64..127, C++中用 [0..191]
-inline int16_t& ExGroundAt(int x, int y) {
+inline int16_t& ExGroundAt(int x, int y)
+{
     return ExGround[x + 64][y + 64];
 }

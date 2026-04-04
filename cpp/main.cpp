@@ -5,16 +5,11 @@
 #include <cstdlib>
 #include <cstring>
 
-extern int AutoLoadSave;
+#include "SDL3/SDL_main.h"
 
-int main(int argc, char* argv[]) {
-    // --autoload N : 自动读取进度N (1-11) 并进入游戏
-    for (int i = 1; i < argc - 1; i++) {
-        if (strcmp(argv[i], "--autoload") == 0) {
-            AutoLoadSave = atoi(argv[i + 1]);
-            break;
-        }
-    }
+
+int main(int argc, char* argv[])
+{
     Run();
     return 0;
 }

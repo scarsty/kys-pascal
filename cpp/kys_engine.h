@@ -20,7 +20,7 @@ void ReadTiles();
 char* ReadFileToBuffer(char* p, const std::string& filename, int size, int malloc_flag);
 void FreeFileBuffer(char*& p);
 int LoadIdxGrp(const std::string& stridx, const std::string& strgrp,
-               std::vector<int>& idxarray, std::vector<uint8_t>& grparray);
+    std::vector<int>& idxarray, std::vector<uint8_t>& grparray);
 SDL_Surface* LoadSurfaceFromFile(const std::string& filename);
 SDL_Surface* LoadSurfaceFromMem(const char* p, int len);
 void FreeAllSurface();
@@ -31,32 +31,32 @@ void PutPixel(SDL_Surface* surface, int x, int y, uint32_t pixel);
 void display_img(const char* file_name, int x, int y);
 uint32_t ColColor(uint8_t num);
 void DrawRectangle(SDL_Surface* sur, int x, int y, int w, int h,
-                   int colorin, uint32_t colorframe, int alpha);
+    int colorin, uint32_t colorframe, int alpha);
 void DrawRectangleWithoutFrame(SDL_Surface* sur, int x, int y, int w, int h,
-                               uint32_t colorin, int alpha);
+    uint32_t colorin, int alpha);
 
 // RLE8绘图
 bool JudgeInScreen(int px, int py, int w, int h, int xs, int ys);
 bool JudgeInScreen(int px, int py, int w, int h, int xs, int ys,
-                   int xx, int yy, int xw, int yh);
+    int xx, int yy, int xw, int yh);
 void DrawRLE8Pic(const char* colorPanel, int num, int px, int py,
-                 const int* Pidx, const uint8_t* Ppic,
-                 const char* RectArea, SDL_Surface* Image,
-                 int widthI, int heightI, int sizeI, int shadow);
+    const int* Pidx, const uint8_t* Ppic,
+    const char* RectArea, SDL_Surface* Image,
+    int widthI, int heightI, int sizeI, int shadow);
 void DrawRLE8Pic(const char* colorPanel, int num, int px, int py,
-                 const int* Pidx, const uint8_t* Ppic,
-                 const char* RectArea, SDL_Surface* Image,
-                 int widthI, int heightI, int sizeI,
-                 int shadow, int alpha);
+    const int* Pidx, const uint8_t* Ppic,
+    const char* RectArea, SDL_Surface* Image,
+    int widthI, int heightI, int sizeI,
+    int shadow, int alpha);
 void DrawRLE8Pic(const char* colorPanel, int num, int px, int py,
-                 const int* Pidx, const uint8_t* Ppic,
-                 const char* RectArea, SDL_Surface* Image,
-                 int widthI, int heightI, int sizeI,
-                 int shadow, int alpha,
-                 char* BlockImageW, const char* BlockPosition,
-                 int widthW, int heightW, int sizeW,
-                 int depth, uint32_t mixColor, int mixAlpha,
-                 int totalpix = 0);
+    const int* Pidx, const uint8_t* Ppic,
+    const char* RectArea, SDL_Surface* Image,
+    int widthI, int heightI, int sizeI,
+    int shadow, int alpha,
+    char* BlockImageW, const char* BlockPosition,
+    int widthW, int heightW, int sizeW,
+    int depth, uint32_t mixColor, int mixAlpha,
+    int totalpix = 0);
 TPosition GetPositionOnScreen(int x, int y, int CenterX, int CenterY);
 
 // 文字
@@ -76,10 +76,10 @@ void DrawTextWithRectNoUpdate(SDL_Surface* sur, const std::string& word, int x, 
 // PNG贴图
 void DrawPNGTile(TPNGIndex PNGIndex, int FrameNum, const char* RectArea, SDL_Surface* scr, int px, int py);
 void DrawPNGTile(TPNGIndex PNGIndex, int FrameNum, const char* RectArea, SDL_Surface* scr, int px, int py,
-                 int shadow, int alpha, uint32_t mixColor, int mixAlpha);
+    int shadow, int alpha, uint32_t mixColor, int mixAlpha);
 void DrawPNGTile(TPNGIndex PNGIndex, int FrameNum, const char* RectArea, SDL_Surface* scr, int px, int py,
-                 int shadow, int alpha, uint32_t mixColor, int mixAlpha, int depth,
-                 char* BlockImgR, int Width, int Height, int size, int leftupx, int leftupy);
+    int shadow, int alpha, uint32_t mixColor, int mixAlpha, int depth,
+    char* BlockImgR, int Width, int Height, int size, int leftupx, int leftupy);
 
 // 系统
 void ChangeCol();
