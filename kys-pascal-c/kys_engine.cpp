@@ -11,7 +11,6 @@
 #include "kys_main.h"
 
 #include <SDL3/SDL.h>
-#include <SDL3_image/SDL_image.h>
 #include <SDL3_mixer/SDL_mixer.h>
 #include <SDL3_ttf/SDL_ttf.h>
 
@@ -402,7 +401,7 @@ int LoadIdxGrp(const std::string& stridx, const std::string& strgrp,
 
 SDL_Surface* LoadSurfaceFromFile(const std::string& filename)
 {
-    return IMG_Load(filename.c_str());
+    return SDL_LoadSurface(filename.c_str());
 }
 
 SDL_Surface* LoadSurfaceFromMem(const char* p, int len)
@@ -412,7 +411,7 @@ SDL_Surface* LoadSurfaceFromMem(const char* p, int len)
     {
         return nullptr;
     }
-    SDL_Surface* s = IMG_Load_IO(io, true);
+    SDL_Surface* s = SDL_LoadSurface_IO(io, true);
     return s;
 }
 
@@ -553,7 +552,7 @@ void display_img(const char* file_name, int x, int y)
             SDL_DestroySurface(CachedImage);
         }
         std::string fullpath = checkFileName(name);
-        img = IMG_Load(fullpath.c_str());
+        img = SDL_LoadSurface(fullpath.c_str());
         CachedImage = img;
         CachedImageName = name;
     }

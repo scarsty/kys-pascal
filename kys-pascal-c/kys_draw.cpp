@@ -3,13 +3,13 @@
 
 #include "kys_draw.h"
 #include "kys_engine.h"
+#include "filefunc.h"
 #include "kys_main.h"
 #include "kys_type.h"
 
 #include <algorithm>
 #include <cstdio>
 #include <cstring>
-#include <io.h>
 #include <vector>
 
 // ---- 贴图绘制包装 ----
@@ -150,7 +150,7 @@ void DrawHeadPic(int num, int px, int py, SDL_Surface* scr)
         return;
     }
     std::string str = AppPath + "head/" + std::to_string(num) + ".png";
-    if (_access(str.c_str(), 0) == 0)
+    if (filefunc::fileExist(str))
     {
         SDL_Surface* image = (num < (int)HeadSurface.size()) ? HeadSurface[num] : nullptr;
         if (!image)
@@ -188,7 +188,7 @@ void DrawHeadPic(int num, int px, int py, int shadow, int alpha, int depth, uint
         return;
     }
     std::string str = AppPath + "head/" + std::to_string(num) + ".png";
-    if (_access(str.c_str(), 0) == 0)
+    if (filefunc::fileExist(str))
     {
         SDL_Surface* image = (num < (int)HeadSurface.size()) ? HeadSurface[num] : nullptr;
         if (!image)
@@ -228,7 +228,7 @@ void DrawIPic(int num, int px, int py, int shadow, int alpha, uint32_t mixColor,
         return;
     }
     std::string str = AppPath + "item/" + std::to_string(num) + ".png";
-    if (_access(str.c_str(), 0) == 0)
+    if (filefunc::fileExist(str))
     {
         SDL_Surface* image = (num < (int)ItemSurface.size()) ? ItemSurface[num] : nullptr;
         if (!image)

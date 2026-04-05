@@ -12,7 +12,6 @@
 #include "kys_type.h"
 
 #include <SDL3/SDL.h>
-#include <SDL3_image/SDL_image.h>
 #include <SDL3_mixer/SDL_mixer.h>
 #include <SDL3_ttf/SDL_ttf.h>
 
@@ -24,7 +23,6 @@
 #include <ctime>
 #include <format>
 #include <string>
-#include <sys/stat.h>
 #include <vector>
 
 #ifdef _WIN32
@@ -44,21 +42,25 @@ void Run()
 {
 #ifdef _WIN32
     SetConsoleOutputCP(65001);
+    AppPath = "";
+    AppPathCommon = AppPath + "../kys-pascal/";
 #else
     AppPath = "/sdcard/kys-pascal/";
-    if (!filefunc::fileExist(AppPath + 'kysmod.ini') && filefunc::fileExist(AppPath + 'games.ini'))
+    if (!filefunc::fileExist(AppPath + "kysmod.ini") && filefunc::fileExist(AppPath + "games.ini"))
     {
-        AppPath = SDL_GetAndroidExternalStoragePath() + '/';
+        const char* extPath = SDL_GetAndroidExternalStoragePath();
+        if (extPath && extPath[0] != '\0')
+        {
+            AppPath = std::string(extPath) + "/";
+        }
     }
+    AppPathCommon = AppPath;
 
     SDL_SetHint(SDL_HINT_ORIENTATIONS, "LandscapeLeft LandscapeRight");
     CellPhone = 1;
 #endif
 
     //CellPhone = 1;    //仅调试使用
-
-    AppPath = "";
-    AppPathCommon = AppPath + "../kys-pascal/";
     ReadFiles();
     SetMODVersion();
 
@@ -323,12 +325,12 @@ void ReadFiles()
         VirtualBX = ini.getInt("system", "VirtualBX", w - 100);
         VirtualBY = ini.getInt("system", "VirtualBY", h - 200);
 
-        VirtualKeyU = IMG_Load(checkFileName("resource/u.png").c_str());
-        VirtualKeyD = IMG_Load(checkFileName("resource/d.png").c_str());
-        VirtualKeyL = IMG_Load(checkFileName("resource/l.png").c_str());
-        VirtualKeyR = IMG_Load(checkFileName("resource/r.png").c_str());
-        VirtualKeyA = IMG_Load(checkFileName("resource/a.png").c_str());
-        VirtualKeyB = IMG_Load(checkFileName("resource/b.png").c_str());
+        VirtualKeyU = SDL_LoadSurface(checkFileName("resource/u.png").c_str());
+        VirtualKeyD = SDL_LoadSurface(checkFileName("resource/d.png").c_str());
+        VirtualKeyL = SDL_LoadSurface(checkFileName("resource/l.png").c_str());
+        VirtualKeyR = SDL_LoadSurface(checkFileName("resource/r.png").c_str());
+        VirtualKeyA = SDL_LoadSurface(checkFileName("resource/a.png").c_str());
+        VirtualKeyB = SDL_LoadSurface(checkFileName("resource/b.png").c_str());
     }
     else
     {
@@ -4581,16 +4583,8 @@ int MenuSystem()
 
 static std::string GetFileDateStr(const std::string& filename)
 {
-    struct _stat st;
-    if (_stat(filename.c_str(), &st) == 0)
-    {
-        struct tm t;
-        localtime_s(&t, &st.st_mtime);
-        return std::format("{:04d}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}",
-            t.tm_year + 1900, t.tm_mon + 1, t.tm_mday,
-            t.tm_hour, t.tm_min, t.tm_sec);
-    }
-    return "-------------------";
+    auto t = filefunc::getFileTime(filename);
+    return t.empty() ? "-------------------" : t;
 }
 
 void MenuLoad()
