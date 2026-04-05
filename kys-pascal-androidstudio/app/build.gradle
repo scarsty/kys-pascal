@@ -33,22 +33,75 @@ android {
     }
     applicationVariants.all { variant ->
         variant.outputs.all {
-            outputFileName = "kys-pascal-${variant.buildType.name}.apk"
+            outputFileName = "kys-pascal-c-${variant.buildType.name}.apk"
         }
         tasks["merge${variant.name.capitalize()}Assets"]
             .dependsOn("externalNativeBuild${variant.name.capitalize()}")
     }
-    if (!project.hasProperty('EXCLUDE_NATIVE_LIBS')) {
-        externalNativeBuild {
-                cmake {
-                    path 'jni/CMakeLists.txt'
-                }
-        }
 
+    // Always keep CMake/NDK wired for IDE Run so native .so is built before install.
+    externalNativeBuild {
+        cmake {
+            path 'jni/CMakeLists.txt'
+        }
     }
+
+    // Hard-bind install/package to native build and avoid Gradle short-circuiting CMake tasks.
+    tasks.configureEach { t ->
+        if (t.name == 'buildCMakeDebug' || t.name == 'buildCMakeDebug[arm64-v8a]' ||
+            t.name == 'externalNativeBuildDebug' || t.name == 'mergeDebugNativeLibs' ||
+            t.name == 'packageDebug' || t.name == 'assembleDebug' || t.name == 'installDebug' ||
+            t.name == 'buildCMakeRelease' || t.name == 'buildCMakeRelease[arm64-v8a]' ||
+            t.name == 'externalNativeBuildRelease' || t.name == 'mergeReleaseNativeLibs' ||
+            t.name == 'packageRelease' || t.name == 'assembleRelease' || t.name == 'installRelease') {
+            t.outputs.upToDateWhen { false }
+        }
+    }
+    tasks.matching { it.name == 'assembleDebug' }.configureEach {
+        dependsOn('externalNativeBuildDebug')
+    }
+    tasks.matching { it.name == 'installDebug' }.configureEach {
+        dependsOn('externalNativeBuildDebug')
+    }
+    tasks.matching { it.name == 'mergeDebugNativeLibs' || it.name == 'packageDebug' }.configureEach {
+        dependsOn('externalNativeBuildDebug')
+    }
+    tasks.matching { it.name == 'assembleRelease' }.configureEach {
+        dependsOn('externalNativeBuildRelease')
+    }
+    tasks.matching { it.name == 'installRelease' }.configureEach {
+        dependsOn('externalNativeBuildRelease')
+    }
+    tasks.matching { it.name == 'mergeReleaseNativeLibs' || it.name == 'packageRelease' }.configureEach {
+        dependsOn('externalNativeBuildRelease')
+    }
+
     lint {
         abortOnError = false
     }
+}
+
+tasks.register('purgeDebugNativeCache', org.gradle.api.tasks.Delete) {
+    delete layout.projectDirectory.dir('.cxx/Debug')
+    delete layout.buildDirectory.dir('intermediates/cxx/Debug')
+    delete layout.buildDirectory.dir('intermediates/merged_native_libs/debug')
+}
+
+tasks.register('purgeReleaseNativeCache', org.gradle.api.tasks.Delete) {
+    delete layout.projectDirectory.dir('.cxx/RelWithDebInfo')
+    delete layout.projectDirectory.dir('.cxx/Release')
+    delete layout.buildDirectory.dir('intermediates/cxx/RelWithDebInfo')
+    delete layout.buildDirectory.dir('intermediates/cxx/Release')
+    delete layout.buildDirectory.dir('intermediates/merged_native_libs/release')
+}
+
+tasks.matching { it.name == 'configureCMakeDebug[arm64-v8a]' || it.name == 'configureCMakeDebug' }.configureEach {
+    dependsOn('purgeDebugNativeCache')
+}
+
+tasks.matching { it.name == 'configureCMakeRelease[arm64-v8a]' || it.name == 'configureCMakeRelease' ||
+    it.name == 'configureCMakeRelWithDebInfo[arm64-v8a]' || it.name == 'configureCMakeRelWithDebInfo' }.configureEach {
+    dependsOn('purgeReleaseNativeCache')
 }
 
 dependencies {

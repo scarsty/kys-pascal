@@ -43,10 +43,9 @@ void Run()
 #ifdef _WIN32
     SetConsoleOutputCP(65001);
     AppPath = "";
-    AppPathCommon = AppPath + "../kys-pascal/";
 #else
     AppPath = "/sdcard/kys-pascal/";
-    if (!filefunc::fileExist(AppPath + "kysmod.ini") && filefunc::fileExist(AppPath + "games.ini"))
+    if (!filefunc::fileExist(AppPath + "kysmod.ini") && !filefunc::fileExist(AppPath + "games.ini"))
     {
         const char* extPath = SDL_GetAndroidExternalStoragePath();
         if (extPath && extPath[0] != '\0')
@@ -55,12 +54,28 @@ void Run()
         }
     }
     AppPathCommon = AppPath;
-
+    SDL_Log("[kys] AppPath=%s", AppPath.c_str());
     SDL_SetHint(SDL_HINT_ORIENTATIONS, "LandscapeLeft LandscapeRight");
     CellPhone = 1;
 #endif
 
     //CellPhone = 1;    //仅调试使用
+
+    if (filefunc::fileExist(AppPath + "games.ini"))
+    {
+        INIReaderNormal ini;
+        ini.loadFile(AppPath + "games.ini");
+        int current = ini.getInt("games", "current", 0);
+        std::string str = ini.getString("games", std::to_string(current), "yuan:kys-pascal");
+        current = str.find("kys");
+        str = str.substr(current, 20);
+        AppPath = AppPath + str + '/';
+    }
+
+    AppPathCommon = AppPath + "../kys-pascal/";
+
+    SDL_Log("[kys] New AppPath=%s", AppPath.c_str());
+
     ReadFiles();
     SetMODVersion();
 
@@ -105,6 +120,7 @@ void Run()
     SDL_GetWindowSize(window, &RESOLUTIONX, &RESOLUTIONY);
 
     const char* render_str = "direct3d";
+#ifdef _WIN32
     if (RENDERER == 1)
     {
         render_str = "opengl";
@@ -113,8 +129,19 @@ void Run()
     {
         render_str = "software";
     }
-
-    SDL_SetHint(SDL_HINT_RENDER_DRIVER, "direct3d,opengl,direct3d12,direct3d11");
+    SDL_SetHint(SDL_HINT_RENDER_DRIVER, "direct3d,direct3d12,direct3d11,opengl,software");
+#else
+    render_str = "opengles2";
+    if (RENDERER == 1)
+    {
+        render_str = "opengl";
+    }
+    if (RENDERER == 2)
+    {
+        render_str = "software";
+    }
+    SDL_SetHint(SDL_HINT_RENDER_DRIVER, "opengles2,opengl,software");
+#endif
     render = SDL_CreateRenderer(window, render_str);
     screen = SDL_CreateSurface(CENTER_X * 2, CENTER_Y * 2,
         SDL_GetPixelFormatForMasks(32, RMask, GMask, BMask, AMask));

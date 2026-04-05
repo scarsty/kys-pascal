@@ -415,6 +415,8 @@ SDL_Surface* LoadSurfaceFromMem(const char* p, int len)
     return s;
 }
 
+static void ClearHiResGlyphCaches();
+
 void FreeAllSurface()
 {
     // 释放所有PNG tile surfaces
@@ -474,6 +476,19 @@ void FreeAllSurface()
         }
     }
     ItemSurface.clear();
+
+    // 释放高清字体缓存
+    ClearHiResGlyphCaches();
+    if (FontHR)
+    {
+        TTF_CloseFont(FontHR);
+        FontHR = nullptr;
+    }
+    if (EngFontHR)
+    {
+        TTF_CloseFont(EngFontHR);
+        EngFontHR = nullptr;
+    }
 }
 
 void ReadTiles()
@@ -996,11 +1011,238 @@ int utf8follow(char c1)
     return 4;
 }
 
+// ---- HiRes 文字渲染 ----
+
+static void ClearHiResGlyphCaches()
+{
+    for (auto& [k, surf] : FontsHr)
+    {
+        SDL_DestroySurface(surf);
+    }
+    FontsHr.clear();
+
+    for (auto& [k, tex] : fonts_hr_tex)
+    {
+        SDL_DestroyTexture(tex);
+    }
+    fonts_hr_tex.clear();
+
+    HiResTextRenderOk = false;
+}
+
+static void EnsureHiResFonts(double scaleY)
+{
+    if (scaleY <= 0)
+        scaleY = 1;
+    int newCn = std::max(1, (int)std::round(CHINESE_FONT_SIZE * scaleY));
+    int newEn = std::max(1, (int)std::round(ENGLISH_FONT_SIZE * scaleY));
+    bool needResetCache = false;
+
+    if (FontHR && FontHRSize != newCn)
+    {
+        TTF_CloseFont(FontHR);
+        FontHR = nullptr;
+        needResetCache = true;
+    }
+    if (EngFontHR && EngFontHRSize != newEn)
+    {
+        TTF_CloseFont(EngFontHR);
+        EngFontHR = nullptr;
+        needResetCache = true;
+    }
+    if (!FontHR && FontHRSize != newCn)
+        needResetCache = true;
+    if (!EngFontHR && EngFontHRSize != newEn)
+        needResetCache = true;
+
+    if (needResetCache)
+        ClearHiResGlyphCaches();
+
+    if (needResetCache)
+    {
+        FontHRSize = 0;
+        EngFontHRSize = 0;
+    }
+    if (!FontHR)
+    {
+        std::string str = checkFileName(CHINESE_FONT);
+        FontHR = TTF_OpenFont(str.c_str(), newCn);
+        FontHRSize = newCn;
+    }
+    if (!EngFontHR)
+    {
+        std::string str = checkFileName(ENGLISH_FONT);
+        EngFontHR = TTF_OpenFont(str.c_str(), newEn);
+        EngFontHRSize = newEn;
+    }
+}
+
+static void GetHiResGlyphTexture(int k, TTF_Font* fontObj, const char* pText, int textLen,
+    const SDL_Color& tempcolor, SDL_Texture*& textTex, int& glyphW, int& glyphH)
+{
+    textTex = nullptr;
+    glyphW = 0;
+    glyphH = 0;
+
+    SDL_Surface* textSurf = nullptr;
+    auto itSurf = FontsHr.find(k);
+    if (itSurf == FontsHr.end())
+    {
+        textSurf = TTF_RenderText_Blended(fontObj, pText, textLen, tempcolor);
+        if (textSurf)
+            FontsHr[k] = textSurf;
+        else
+            return;
+    }
+    else
+    {
+        textSurf = itSurf->second;
+    }
+    glyphW = textSurf->w;
+    glyphH = textSurf->h;
+
+    auto itTex = fonts_hr_tex.find(k);
+    if (itTex == fonts_hr_tex.end())
+    {
+        textTex = SDL_CreateTextureFromSurface(render, textSurf);
+        if (textTex)
+            fonts_hr_tex[k] = textTex;
+    }
+    else
+    {
+        textTex = itTex->second;
+    }
+}
+
+static void QueueTextForHiRes(const std::string& word, int x_pos, int y_pos, uint32_t color, int adx = 0)
+{
+    TextQueue.push_back({ word, x_pos, y_pos, color, adx });
+}
+
+static void RenderQueuedHiResText(int updateX, int updateY, int updateW, int updateH)
+{
+    if (TextQueue.empty())
+        return;
+    if (HIRES_TEXT == 0 || !render)
+        return;
+
+    int curW, curH;
+    SDL_GetWindowSize(window, &curW, &curH);
+    if (curW > 0 && curH > 0)
+    {
+        RESOLUTIONX = curW;
+        RESOLUTIONY = curH;
+    }
+    double scaleX = RESOLUTIONX / (double)(CENTER_X * 2);
+    double scaleY = RESOLUTIONY / (double)(CENTER_Y * 2);
+    if (scaleX <= 0) scaleX = 1;
+    if (scaleY <= 0) scaleY = 1;
+    int stepX = std::max(1, (int)std::round(10 * scaleX));
+
+    EnsureHiResFonts(scaleY);
+    if (!FontHR || !EngFontHR)
+        return;
+
+    SDL_Color tempcolor = { 255, 255, 255, 255 };
+    bool renderSucceeded = false;
+    std::vector<QueuedText> remainQueue;
+
+    for (size_t idx = 0; idx < TextQueue.size(); idx++)
+    {
+        std::string word = TextQueue[idx].word;
+        if (SIMPLE == 1)
+            word = Traditional2Simplified(word);
+        int len = (int)word.size();
+        if (len == 0)
+            continue;
+
+        int queueX = TextQueue[idx].x_pos;
+        int queueY = TextQueue[idx].y_pos;
+        int queueW = DrawLength(word) * 10 + 20;
+        int queueH = 24;
+        if (queueX + queueW <= updateX || queueX >= updateX + updateW ||
+            queueY + queueH <= updateY || queueY >= updateY + updateH)
+        {
+            remainQueue.push_back(TextQueue[idx]);
+            continue;
+        }
+
+        int drawX = (int)std::round(TextQueue[idx].x_pos * scaleX) + TextQueue[idx].screen_dx;
+        int i = 0;
+        while (i < len)
+        {
+            uint8_t c = (uint8_t)word[i];
+            int advanceUnits = 1;
+            SDL_Texture* textTex = nullptr;
+            int glyphW = 0, glyphH = 0;
+            int drawY = 0;
+
+            if (c > 32 && c < 128)
+            {
+                // ASCII字符
+                int k = c;
+                char buf[2] = { (char)c, 0 };
+                GetHiResGlyphTexture(k, EngFontHR, buf, 1, tempcolor, textTex, glyphW, glyphH);
+                drawY = (int)std::round((TextQueue[idx].y_pos + 2) * scaleY);
+                i += 1;
+            }
+            else if (c >= 0xC0 && c < 0xE0 && i + 1 < len)
+            {
+                // 2字节UTF-8
+                char buf[3] = { word[i], word[i + 1], 0 };
+                int k = (uint8_t)word[i] + 256 * (uint8_t)word[i + 1];
+                GetHiResGlyphTexture(k, FontHR, buf, 2, tempcolor, textTex, glyphW, glyphH);
+                drawY = (int)std::round(TextQueue[idx].y_pos * scaleY);
+                i += 2;
+            }
+            else if (c >= 0xE0 && i + 2 < len)
+            {
+                // 3字节UTF-8 (CJK等)
+                char buf[4] = { word[i], word[i + 1], word[i + 2], 0 };
+                int k = (uint8_t)word[i] + 256 * (uint8_t)word[i + 1] + 65536 * (uint8_t)word[i + 2];
+                GetHiResGlyphTexture(k, FontHR, buf, 3, tempcolor, textTex, glyphW, glyphH);
+                drawY = (int)std::round(TextQueue[idx].y_pos * scaleY);
+                advanceUnits = 2;
+                i += 3;
+            }
+            else
+            {
+                i += 1;
+            }
+
+            if (textTex)
+            {
+                uint8_t r, g, b;
+                SDL_GetRGB(TextQueue[idx].color, SDL_GetPixelFormatDetails(screen->format),
+                    SDL_GetSurfacePalette(screen), &r, &g, &b);
+                SDL_FRect src = { 0, 0, (float)glyphW, (float)glyphH };
+                SDL_FRect dest = { (float)drawX, (float)drawY, (float)glyphW, (float)glyphH };
+                SDL_SetTextureColorMod(textTex, r, g, b);
+                SDL_SetTextureBlendMode(textTex, SDL_BLENDMODE_BLEND);
+                SDL_SetTextureAlphaMod(textTex, 255);
+                SDL_RenderTexture(render, textTex, &src, &dest);
+                renderSucceeded = true;
+            }
+
+            drawX += stepX * advanceUnits;
+        }
+    }
+
+    TextQueue = std::move(remainQueue);
+    HiResTextRenderOk = renderSucceeded;
+}
+
 void DrawText(SDL_Surface* sur, const std::string& word, int x_pos, int y_pos, uint32_t color)
 {
     if (!sur || word.empty() || !ChineseFont)
     {
         return;
+    }
+    if (HIRES_TEXT != 0 && sur == screen)
+    {
+        QueueTextForHiRes(word, x_pos, y_pos, color);
+        if (HiResTextRenderOk)
+            return;
     }
     std::string text = word;
     if (SIMPLE == 1)
@@ -1123,6 +1365,12 @@ void DrawEngText(SDL_Surface* sur, const std::string& word, int x_pos, int y_pos
 
 void DrawShadowText(SDL_Surface* sur, const std::string& word, int x_pos, int y_pos, uint32_t color1, uint32_t color2)
 {
+    if (HIRES_TEXT != 0 && sur == screen)
+    {
+        QueueTextForHiRes(word, x_pos, y_pos, color2, 1);
+        QueueTextForHiRes(word, x_pos, y_pos, color1, 0);
+        return;
+    }
     DrawText(sur, word, x_pos + 1, y_pos, color2);
     DrawText(sur, word, x_pos, y_pos, color1);
 }
@@ -1146,7 +1394,14 @@ void DrawBig5Text(SDL_Surface* sur, const char* str, int x_pos, int y_pos, uint3
 void DrawBig5ShadowText(SDL_Surface* sur, const char* word, int x_pos, int y_pos, uint32_t color1, uint32_t color2)
 {
     std::string utf8 = cp950toutf8(word);
-    DrawShadowText(sur, utf8, x_pos, y_pos, color1, color2);
+    if (HIRES_TEXT != 0 && sur == screen)
+    {
+        QueueTextForHiRes(utf8, x_pos, y_pos, color2, 1);
+        QueueTextForHiRes(utf8, x_pos, y_pos, color1, 0);
+        return;
+    }
+    DrawText(sur, utf8, x_pos + 1, y_pos, color2);
+    DrawText(sur, utf8, x_pos, y_pos, color1);
 }
 
 void DrawTextWithRect(const std::string& word, int x, int y, int w, uint32_t color1, uint32_t color2)
@@ -1162,7 +1417,8 @@ void DrawTextWithRect(SDL_Surface* sur, const std::string& word, int x, int y, i
     }
     DrawRectangle(sur, x, y, w, 28, 0, ColColor(0xFF), 50);
     DrawShadowText(sur, word, x + 3, y + 3, color1, color2);
-    UpdateScreen(sur, x, y, w + 1, 29);
+    if (HIRES_TEXT == 0 || sur == screen)
+        UpdateScreen(sur, x, y, w + 1, 29);
 }
 
 void DrawTextWithRectNoUpdate(SDL_Surface* sur, const std::string& word, int x, int y, int w, uint32_t color1, uint32_t color2)
@@ -1187,13 +1443,7 @@ void DrawPNGTile(TPNGIndex PNGIndex, int FrameNum, const char* RectArea, SDL_Sur
 
 static void EnsureCompositeTex()
 {
-    int curW, curH;
-    SDL_GetWindowSize(window, &curW, &curH);
-    if (curW <= 0 || curH <= 0)
-    {
-        return;
-    }
-    if (compositeTex && compositeTexW == curW && compositeTexH == curH)
+    if (compositeTex && compositeTexW == RESOLUTIONX && compositeTexH == RESOLUTIONY)
     {
         return;
     }
@@ -1201,10 +1451,16 @@ static void EnsureCompositeTex()
     {
         SDL_DestroyTexture(compositeTex);
     }
-    compositeTex = SDL_CreateTexture(render, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, curW, curH);
-    SDL_SetTextureBlendMode(compositeTex, SDL_BLENDMODE_BLEND);
-    compositeTexW = curW;
-    compositeTexH = curH;
+    compositeTex = SDL_CreateTexture(render, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, RESOLUTIONX, RESOLUTIONY);
+    compositeTexW = RESOLUTIONX;
+    compositeTexH = RESOLUTIONY;
+    // 创建时清空为透明
+    SDL_SetRenderTarget(render, compositeTex);
+    SDL_SetRenderDrawBlendMode(render, SDL_BLENDMODE_NONE);
+    SDL_SetRenderDrawColor(render, 0, 0, 0, 0);
+    SDL_RenderClear(render);
+    SDL_SetRenderDrawBlendMode(render, SDL_BLENDMODE_BLEND);
+    SDL_SetRenderTarget(render, nullptr);
 }
 
 void UpdateScreen(SDL_Surface* scr1, int x, int y, int w, int h)
@@ -1214,107 +1470,82 @@ void UpdateScreen(SDL_Surface* scr1, int x, int y, int w, int h)
         return;
     }
 
-    // 上传 surface 到 texture
-    void* pixels;
-    int pitch;
-    SDL_Rect area = { x, y, w, h };
-    if (SDL_LockTexture(screenTex, &area, &pixels, &pitch))
-    {
-        uint32_t* src = (uint32_t*)scr1->pixels;
-        int srcPitch = scr1->pitch / 4;
-        for (int row = 0; row < h && (y + row) < scr1->h; row++)
-        {
-            memcpy((uint8_t*)pixels + row * pitch,
-                &src[(y + row) * srcPitch + x],
-                w * 4);
-        }
-        SDL_UnlockTexture(screenTex);
-    }
+    SDL_Rect dest = { x, y, w, h };
+    if (w <= 0) dest.w = CENTER_X * 2;
+    if (h <= 0) dest.h = CENTER_Y * 2;
 
-    // 合成高清文字
-    if (HIRES_TEXT)
+    if (scr1 == screen)
     {
+        // 上传脏矩形到 screenTex
+        void* p = (void*)((uintptr_t)screen->pixels + y * screen->pitch + x * 4);
+        SDL_UpdateTexture(screenTex, &dest, p, screen->pitch);
+
+        // 同步窗口大小
+        int curW, curH;
+        SDL_GetWindowSize(window, &curW, &curH);
+        if (curW > 0 && curH > 0)
+        {
+            RESOLUTIONX = curW;
+            RESOLUTIONY = curH;
+        }
+
+        // 合成高清文字覆盖层
         EnsureCompositeTex();
         SDL_SetRenderTarget(render, compositeTex);
+        double scaleX = RESOLUTIONX / (double)(CENTER_X * 2);
+        double scaleY = RESOLUTIONY / (double)(CENTER_Y * 2);
+        if (scaleX <= 0) scaleX = 1;
+        if (scaleY <= 0) scaleY = 1;
+        SDL_FRect clearFRect;
+        clearFRect.x = (float)(dest.x * scaleX);
+        clearFRect.y = (float)(dest.y * scaleY);
+        clearFRect.w = (float)(dest.w * scaleX);
+        clearFRect.h = (float)(dest.h * scaleY);
         SDL_SetRenderDrawBlendMode(render, SDL_BLENDMODE_NONE);
         SDL_SetRenderDrawColor(render, 0, 0, 0, 0);
-        SDL_RenderClear(render);
+        SDL_RenderFillRect(render, &clearFRect);
         SDL_SetRenderDrawBlendMode(render, SDL_BLENDMODE_BLEND);
-        // RenderQueuedHiResText(...); // TODO: hi-res text
+        RenderQueuedHiResText(dest.x, dest.y, dest.w, dest.h);
         SDL_SetRenderTarget(render, nullptr);
-    }
 
-    // 最终渲染
-    SDL_RenderClear(render);
-    SDL_RenderTexture(render, screenTex, nullptr, nullptr);
-    if (HIRES_TEXT && compositeTex)
-    {
+        // 最终渲染呈现
+        SDL_RenderTexture(render, screenTex, nullptr, nullptr);
+        SDL_SetTextureBlendMode(compositeTex, SDL_BLENDMODE_BLEND);
         SDL_RenderTexture(render, compositeTex, nullptr, nullptr);
+        SDL_RenderPresent(render);
     }
-    SDL_RenderPresent(render);
 }
 
 void UpdateAllScreen()
 {
     if (screen)
     {
-        UpdateScreen(screen, 0, 0, screen->w, screen->h);
+        UpdateScreen(screen, 0, 0, CENTER_X * 2, CENTER_Y * 2);
     }
 }
 
 void TransBlackScreen()
 {
-    if (!screen)
-    {
-        return;
-    }
-    SDL_LockSurface(screen);
-    uint32_t* pixels = (uint32_t*)screen->pixels;
-    int total = (screen->pitch / 4) * screen->h;
-    for (int i = 0; i < total; i++)
-    {
-        uint32_t c = pixels[i];
-        uint8_t r = ((c >> 16) & 0xFF) / 2;
-        uint8_t g = ((c >> 8) & 0xFF) / 2;
-        uint8_t b = (c & 0xFF) / 2;
-        pixels[i] = (c & 0xFF000000) | (r << 16) | (g << 8) | b;
-    }
-    SDL_UnlockSurface(screen);
+    DrawRectangleWithoutFrame(screen, 0, 0, CENTER_X * 2, CENTER_Y * 2, 0, 50);
 }
 
 void ResizeWindow(int w, int h)
 {
-    if (window)
-    {
-        SDL_SetWindowSize(window, w, h);
-    }
+    RESOLUTIONX = w;
+    RESOLUTIONY = h;
 }
 
 void SwitchFullscreen()
 {
-    if (!window)
-    {
-        return;
-    }
-    FULLSCREEN = 1 - FULLSCREEN;
-    if (FULLSCREEN)
-    {
-        SDL_SetWindowFullscreen(window, true);
-    }
-    else
-    {
-        SDL_SetWindowFullscreen(window, false);
-    }
+    // Pascal版未实现
 }
 
 void SDL_GetMouseState2(int& x, int& y)
 {
     float fx, fy;
     SDL_GetMouseState(&fx, &fy);
-    int curW, curH;
-    SDL_GetWindowSize(window, &curW, &curH);
-    x = (int)(fx * CENTER_X * 2 / curW);
-    y = (int)(fy * CENTER_Y * 2 / curH);
+    x = (int)(fx * screen->w / RESOLUTIONX + 0.5f);
+    y = (int)(fy * screen->h / RESOLUTIONY + 0.5f);
 }
 
 void GetMousePosition(int& x, int& y, int x0, int y0, int yp)
@@ -1477,8 +1708,7 @@ uint32_t CheckBasicEvent()
         QuitConfirm();
         break;
     case SDL_EVENT_WINDOW_RESIZED:
-        RESOLUTIONX = event.window.data1;
-        RESOLUTIONY = event.window.data2;
+        ResizeWindow(event.window.data1, event.window.data2);
         UpdateAllScreen();
         break;
     case SDL_EVENT_DID_ENTER_FOREGROUND:
@@ -1721,6 +1951,15 @@ void QuickSortB(TBuildInfo* a, int l, int r)
 void ClearQueuedHiResText()
 {
     TextQueue.clear();
+    if (compositeTex && render)
+    {
+        SDL_SetRenderTarget(render, compositeTex);
+        SDL_SetRenderDrawBlendMode(render, SDL_BLENDMODE_NONE);
+        SDL_SetRenderDrawColor(render, 0, 0, 0, 0);
+        SDL_RenderClear(render);
+        SDL_SetRenderDrawBlendMode(render, SDL_BLENDMODE_BLEND);
+        SDL_SetRenderTarget(render, nullptr);
+    }
 }
 
 void ChangeCol()

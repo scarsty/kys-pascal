@@ -1,5 +1,6 @@
 package org.libsdl.app;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -22,10 +23,12 @@ import android.hardware.Sensor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.LocaleList;
 import android.os.Message;
 import android.os.ParcelFileDescriptor;
+import android.provider.Settings;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.SparseArray;
@@ -59,6 +62,8 @@ import java.util.Locale;
 */
 public class SDLActivity extends Activity implements View.OnSystemUiVisibilityChangeListener {
     private static final String TAG = "SDL";
+    private static final int STORAGE_PERMISSION_REQUEST_CODE = 10001;
+    private static final int STORAGE_MANAGER_REQUEST_CODE = 10002;
     private static final int SDL_MAJOR_VERSION = 3;
     private static final int SDL_MINOR_VERSION = 4;
     private static final int SDL_MICRO_VERSION = 2;
@@ -218,6 +223,7 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
     protected static ViewGroup mLayout;
     protected static SDLClipboardHandler mClipboardHandler;
     protected static Hashtable<Integer, PointerIcon> mCursors;
+    protected boolean mWaitingForStoragePermission;
     protected static int mLastCursorID;
     protected static SDLGenericMotionListener_API14 mMotionListener;
     protected static HIDDeviceManager mHIDDeviceManager;
@@ -299,7 +305,7 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
             // "SDL3_mixer",
             // "SDL3_net",
             // "SDL3_ttf",
-            "kys-pascal-c"
+            "kys_pascal_c"
         };
     }
 
@@ -498,6 +504,66 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
                 SDLActivity.onNativeDropFile(filename);
             }
         }
+
+        ensureStoragePermission();
+    }
+
+    protected boolean hasStoragePermission() {
+        if (Build.VERSION.SDK_INT >= 30) {
+            return Environment.isExternalStorageManager();
+        }
+        if (Build.VERSION.SDK_INT < 23) {
+            return true;
+        }
+        return checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+            && checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
+    }
+
+    protected boolean ensureStoragePermission() {
+        if (hasStoragePermission()) {
+            mWaitingForStoragePermission = false;
+            return true;
+        }
+        if (mWaitingForStoragePermission) {
+            return false;
+        }
+
+        mWaitingForStoragePermission = true;
+
+        if (Build.VERSION.SDK_INT >= 30) {
+            Intent intent = new Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
+            intent.setData(Uri.parse("package:" + getPackageName()));
+            try {
+                startActivityForResult(intent, STORAGE_MANAGER_REQUEST_CODE);
+            } catch (ActivityNotFoundException ex) {
+                Intent fallbackIntent = new Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
+                startActivityForResult(fallbackIntent, STORAGE_MANAGER_REQUEST_CODE);
+            }
+            return false;
+        }
+
+        if (Build.VERSION.SDK_INT >= 23) {
+            ArrayList<String> permissions = new ArrayList<String>();
+            if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                permissions.add(Manifest.permission.READ_EXTERNAL_STORAGE);
+            }
+            if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                permissions.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+            }
+            if (!permissions.isEmpty()) {
+                requestPermissions(permissions.toArray(new String[0]), STORAGE_PERMISSION_REQUEST_CODE);
+                return false;
+            }
+        }
+
+        mWaitingForStoragePermission = false;
+        return true;
+    }
+
+    protected void resumeNativeThreadWithStorageCheck() {
+        if (ensureStoragePermission()) {
+            resumeNativeThread();
+        }
     }
 
     protected void pauseNativeThread() {
@@ -545,7 +611,7 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
             mHIDDeviceManager.setFrozen(false);
         }
         if (!mHasMultiWindow) {
-            resumeNativeThread();
+            resumeNativeThreadWithStorageCheck();
         }
     }
 
@@ -563,7 +629,7 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
         Log.v(TAG, "onStart()");
         super.onStart();
         if (mHasMultiWindow) {
-            resumeNativeThread();
+            resumeNativeThreadWithStorageCheck();
         }
     }
 
@@ -733,6 +799,20 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == STORAGE_MANAGER_REQUEST_CODE) {
+            mWaitingForStoragePermission = false;
+            if (hasStoragePermission()) {
+                if (!mHasMultiWindow) {
+                    resumeNativeThread();
+                } else if (mIsResumedCalled) {
+                    resumeNativeThread();
+                }
+            } else {
+                Toast.makeText(this, "需要存储权限才能访问游戏数据", Toast.LENGTH_LONG).show();
+            }
+            return;
+        }
 
         if (mFileDialogState != null && mFileDialogState.requestCode == requestCode) {
             /* This is our file dialog */
@@ -1950,6 +2030,28 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        if (requestCode == STORAGE_PERMISSION_REQUEST_CODE) {
+            mWaitingForStoragePermission = false;
+            boolean granted = true;
+            for (int grantResult : grantResults) {
+                if (grantResult != PackageManager.PERMISSION_GRANTED) {
+                    granted = false;
+                    break;
+                }
+            }
+
+            if (granted) {
+                if (!mHasMultiWindow) {
+                    resumeNativeThread();
+                } else if (mIsResumedCalled) {
+                    resumeNativeThread();
+                }
+            } else {
+                Toast.makeText(this, "需要存储权限才能访问游戏数据", Toast.LENGTH_LONG).show();
+            }
+            return;
+        }
+
         boolean result = (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED);
         nativePermissionResult(requestCode, result);
     }

@@ -55,7 +55,7 @@ add_library(kys_pascal_c SHARED
     ${KYS_MLCC_SOURCES}
 )
 
-set_target_properties(kys_pascal_c PROPERTIES OUTPUT_NAME "kys-pascal-c")
+set_target_properties(kys_pascal_c PROPERTIES OUTPUT_NAME "kys_pascal_c")
 
 target_compile_features(kys_pascal_c PRIVATE cxx_std_23)
 target_compile_options(kys_pascal_c PRIVATE -O2 -DNDEBUG)
