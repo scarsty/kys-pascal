@@ -59,7 +59,7 @@ void Run()
     CellPhone = 1;
 #endif
 
-    //CellPhone = 1;    //仅调试使用
+    CellPhone = 1;    //仅调试使用
 
     if (filefunc::fileExist(AppPath + "games.ini"))
     {
@@ -2636,7 +2636,7 @@ int CommonMenu(int x, int y, int w, int max, int default_, const std::string men
         CheckBasicEvent();
         switch (event.type)
         {
-        case SDL_EVENT_KEY_UP:
+        case SDL_EVENT_KEY_DOWN:
             if (event.key.key == SDLK_DOWN)
             {
                 menu++;
@@ -2665,6 +2665,8 @@ int CommonMenu(int x, int y, int w, int max, int default_, const std::string men
                     fn(menu);
                 }
             }
+            break;
+        case SDL_EVENT_KEY_UP:
             if (event.key.key == SDLK_ESCAPE)
             {
                 result = -1;
@@ -2753,13 +2755,15 @@ int CommonMenu2(int x, int y, int w, const std::string menuString[])
         CheckBasicEvent();
         switch (event.type)
         {
-        case SDL_EVENT_KEY_UP:
+        case SDL_EVENT_KEY_DOWN:
             if (event.key.key == SDLK_LEFT || event.key.key == SDLK_RIGHT)
             {
                 menu = 1 - menu;
                 ShowCommonMenu2();
                 UpdateScreen(screen, x, y, w + 1, 29);
             }
+            break;
+        case SDL_EVENT_KEY_UP:
             if (event.key.key == SDLK_ESCAPE)
             {
                 result = -1;
@@ -2855,7 +2859,7 @@ int CommonScrollMenu(int x, int y, int w, int max, int maxshow, const std::strin
         CheckBasicEvent();
         switch (event.type)
         {
-        case SDL_EVENT_KEY_UP:
+        case SDL_EVENT_KEY_DOWN:
             if (event.key.key == SDLK_DOWN)
             {
                 menu++;
@@ -2924,6 +2928,8 @@ int CommonScrollMenu(int x, int y, int w, int max, int maxshow, const std::strin
                 ShowCommonScrollMenu();
                 UpdateScreen(screen, x, y, w + 1, maxshow * 22 + 29);
             }
+            break;
+        case SDL_EVENT_KEY_UP:
             if (event.key.key == SDLK_ESCAPE)
             {
                 result = -1;
@@ -3069,7 +3075,7 @@ int CommonGridMenu(int x, int y, int cols, int cellW, int maxShowRows, int maxIt
         CheckBasicEvent();
         switch (event.type)
         {
-        case SDL_EVENT_KEY_UP:
+        case SDL_EVENT_KEY_DOWN:
         {
             int prev = menu;
             if (event.key.key == SDLK_RIGHT && menu < maxItem)
@@ -3115,6 +3121,9 @@ int CommonGridMenu(int x, int y, int cols, int cellW, int maxShowRows, int maxIt
                 ShowGrid();
                 UpdateScreen(screen, x, y, areaW, areaH);
             }
+            break;
+        }
+        case SDL_EVENT_KEY_UP:
             if (event.key.key == SDLK_ESCAPE)
             {
                 event.key.key = 0;
@@ -3128,7 +3137,6 @@ int CommonGridMenu(int x, int y, int cols, int cellW, int maxShowRows, int maxIt
                 return menu;
             }
             break;
-        }
         case SDL_EVENT_MOUSE_BUTTON_UP:
             if (event.button.button == SDL_BUTTON_RIGHT)
             {
@@ -3136,7 +3144,7 @@ int CommonGridMenu(int x, int y, int cols, int cellW, int maxShowRows, int maxIt
                 event.button.button = 0;
                 return -1;
             }
-            if (event.button.button == SDL_BUTTON_LEFT)
+            if (CellPhone != 1 && event.button.button == SDL_BUTTON_LEFT)
             {
                 int mx2, my2;
                 SDL_GetMouseState2(mx2, my2);
@@ -3180,6 +3188,7 @@ int CommonGridMenu(int x, int y, int cols, int cellW, int maxShowRows, int maxIt
             break;
         case SDL_EVENT_MOUSE_MOTION:
         {
+            if (CellPhone == 1) { break; }
             int mx2, my2;
             SDL_GetMouseState2(mx2, my2);
             if (mx2 >= x && mx2 < x + cols * cellW && my2 >= y + 3 && my2 < y + areaH)
@@ -3685,7 +3694,7 @@ bool MenuItem()
                 CheckBasicEvent();
                 switch (event.type)
                 {
-                case SDL_EVENT_KEY_UP:
+                case SDL_EVENT_KEY_DOWN:
                     if (event.key.key == SDLK_DOWN)
                     {
                         y++;
@@ -3772,6 +3781,8 @@ bool MenuItem()
                         ShowMenuItem();
                         UpdateScreen(screen, 0, 0, screen->w, screen->h);
                     }
+                    break;
+                case SDL_EVENT_KEY_UP:
                     if (event.key.key == SDLK_ESCAPE)
                     {
                         result = false;

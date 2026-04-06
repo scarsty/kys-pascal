@@ -519,7 +519,7 @@ void CalMoveAbility()
         }
         if (SEMIREAL == 1)
         {
-            Brole[i].RealSpeed = (int)((Rrole[rnum].Speed + addspeed) / (log10((double)MaxProList[44]) - 1)) - Rrole[rnum].Hurt / 10 - Rrole[rnum].Poison / 30;
+            Brole[i].RealSpeed = (int)((Rrole[rnum].Speed + addspeed) / (log10((double)MaxProList[44 - 43]) - 1)) - Rrole[rnum].Hurt / 10 - Rrole[rnum].Poison / 30;
             if (Brole[i].RealSpeed > 200)
             {
                 Brole[i].RealSpeed = 200 + (Brole[i].RealSpeed - 200) / 3;
@@ -2051,7 +2051,7 @@ void LevelUp(int bnum)
     // 属性上限 Data[43..58]
     for (int j = 43; j <= 58; j++)
     {
-        Rrole[rnum].Data[j] = std::min((int)Rrole[rnum].Data[j], MaxProList[j]);
+        Rrole[rnum].Data[j] = std::min((int)Rrole[rnum].Data[j], MaxProList[j - 43]);
     }
 
     Rrole[rnum].PhyPower = MAX_PHYSICAL_POWER;
