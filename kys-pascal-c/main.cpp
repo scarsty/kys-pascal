@@ -2,6 +2,7 @@
 // 对应 kys.lpr
 
 #include "kys_main.h"
+#include "kys_type.h"
 #include <cstdlib>
 #include <cstring>
 
@@ -17,8 +18,11 @@ extern "C" int Run(int argc, char* argv[])
 
 int main(int argc, char* argv[])
 {
-    (void)argc;
     (void)argv;
+    if (argc == 2)
+    {
+        CellPhone = 1;
+    }
     Run();
     return 0;
 }

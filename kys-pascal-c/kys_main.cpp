@@ -59,7 +59,7 @@ void Run()
     CellPhone = 1;
 #endif
 
-    CellPhone = 1;    //仅调试使用
+    //CellPhone = 1;    //仅调试使用
 
     if (filefunc::fileExist(AppPath + "games.ini"))
     {
