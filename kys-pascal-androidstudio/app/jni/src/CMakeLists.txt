@@ -75,6 +75,15 @@ function(import_vcpkg_shared target soname)
     set_property(TARGET ${target} PROPERTY IMPORTED_LOCATION "${lib_path}")
 endfunction()
 
+function(import_vcpkg_static target libname)
+    set(lib_path "${VCPKG_LIB_DIR}/lib${libname}.a")
+    if(NOT EXISTS "${lib_path}")
+        message(FATAL_ERROR "Missing static dependency: ${lib_path}")
+    endif()
+    add_library(${target} STATIC IMPORTED)
+    set_property(TARGET ${target} PROPERTY IMPORTED_LOCATION "${lib_path}")
+endfunction()
+
 import_vcpkg_shared(vcpkg_sdl3 SDL3)
 import_vcpkg_shared(vcpkg_sdl3_mixer SDL3_mixer)
 import_vcpkg_shared(vcpkg_sdl3_ttf SDL3_ttf)
@@ -88,6 +97,8 @@ import_vcpkg_shared(vcpkg_lua lua)
 import_vcpkg_shared(vcpkg_yaml_cpp yaml-cpp)
 import_vcpkg_shared(vcpkg_zip zip)
 import_vcpkg_shared(vcpkg_z z)
+import_vcpkg_static(vcpkg_iconv iconv)
+import_vcpkg_static(vcpkg_charset charset)
 
 find_library(ANDROID_LOG_LIB log)
 find_library(ANDROID_M_LIB m)
@@ -106,6 +117,8 @@ target_link_libraries(kys_pascal_c PRIVATE
     vcpkg_yaml_cpp
     vcpkg_zip
     vcpkg_z
+    vcpkg_iconv
+    vcpkg_charset
     ${ANDROID_M_LIB}
     ${ANDROID_LOG_LIB}
 )

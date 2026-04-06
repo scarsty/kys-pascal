@@ -1234,7 +1234,7 @@ static void RenderQueuedHiResText(int updateX, int updateY, int updateW, int upd
 
 void DrawText(SDL_Surface* sur, const std::string& word, int x_pos, int y_pos, uint32_t color)
 {
-    if (!sur || word.empty() || !ChineseFont)
+    if (!sur || word.empty())
     {
         return;
     }
@@ -1243,6 +1243,10 @@ void DrawText(SDL_Surface* sur, const std::string& word, int x_pos, int y_pos, u
         QueueTextForHiRes(word, x_pos, y_pos, color);
         if (HiResTextRenderOk)
             return;
+    }
+    if (!ChineseFont)
+    {
+        return;
     }
     std::string text = word;
     if (SIMPLE == 1)
@@ -1418,7 +1422,7 @@ void DrawTextWithRect(SDL_Surface* sur, const std::string& word, int x, int y, i
     DrawRectangle(sur, x, y, w, 28, 0, ColColor(0xFF), 50);
     DrawShadowText(sur, word, x + 3, y + 3, color1, color2);
     if (HIRES_TEXT == 0 || sur == screen)
-        UpdateScreen(sur, x, y, w + 1, 29);
+        UpdateScreen(screen, x, y, w + 1, 29);
 }
 
 void DrawTextWithRectNoUpdate(SDL_Surface* sur, const std::string& word, int x, int y, int w, uint32_t color1, uint32_t color2)

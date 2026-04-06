@@ -70,3 +70,4 @@ kys-pascal-c/out
 kys-pascal-c/x64
 kys-pascal-c/kys-pascal-c/x64
 kys-pascal-androidstudio/export-cpp/ndk
+kys-pascal-androidstudio/vcpkg-overlay-ports
