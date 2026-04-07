@@ -1193,7 +1193,7 @@ void EndAmi()
             if (!line.empty())
             {
                 DrawShadowText(screen, line, x, y, ColColor(0xFF), ColColor(0xFF));
-                UpdateScreen(screen, x, y, DrawLength(line) * 10 + 2, 22);
+                UpdateScreen(screen, 0, 0, screen->w, screen->h);
                 y += 25;
             }
             line.clear();
@@ -1689,7 +1689,7 @@ int instruct_50e(int code, int e1, int e2, int e3, int e4, int e5, int e6)
         {
             w = w1;
         }
-        UpdateScreen(screen, x - 3, y - 3, w + 6, 22 * (i + 1) + 6);
+        UpdateScreen(screen, 0, 0, screen->w, screen->h);
     }
     break;
     case 34:
@@ -1699,7 +1699,7 @@ int instruct_50e(int code, int e1, int e2, int e3, int e4, int e5, int e6)
         e4 = e_GetValue(2, e1, e4);
         e5 = e_GetValue(3, e1, e5);
         DrawRectangle(screen, e2, e3, e4, e5, 0, ColColor(0xFF), 50);
-        UpdateScreen(screen, e2, e3, e4 + 1, e5 + 1);
+        //UpdateScreen(screen, e2, e3, e4 + 1, e5 + 1);
     }
     break;
     case 35:
@@ -1884,7 +1884,7 @@ int instruct_50e(int code, int e1, int e2, int e3, int e4, int e5, int e6)
         }
         break;
         }
-        UpdateScreen(screen, e3 - x, e4 - y, w, h);
+        UpdateScreen(screen, 0, 0, screen->w, screen->h);
     }
     break;
     case 42:

@@ -260,8 +260,6 @@ var
   SIMPLE: integer = 1; //是否简体
   SMOOTH: integer = 1;
   //平滑设置 0-完全不平滑, 1-仅标准分辨率不平滑, 2-任何时候都使用平滑
-  HIRES_TEXT: integer = 1;
-  //文字独立高分辨率渲染开关: 0-关闭, 1-开启
   WMP_4_PIC: integer = 0; //战场人物的静止贴图使用WMP中的图片，否则直接从fight中计算
 
   //SDL运行时对象
@@ -274,7 +272,6 @@ var
   window: PSDL_Window;
   render: PSDL_Renderer;
   screenTex: PSDL_Texture;
-  compositeTex: PSDL_Texture;
 
   ImgScene, ImgSceneBack, ImgBField, ImgBBuild: PSDL_Surface;
   //重画场景和战场的图形映像. 实时重画场景效率较低, 故首先生成映像, 需要时载入
@@ -307,7 +304,6 @@ var
   ItemSurface: array of PSDL_Surface;
 
   fonts: TDictionary<integer, PSDL_Surface>;
-  FontsHr: TDictionary<integer, PSDL_Surface>;
 
   //音频资源与播放状态
   VOLUME, VOLUMEWAV, SOUND3D: integer; //音乐音量 音效音量 是否启用3D音效

@@ -98,7 +98,6 @@ bool MouseInRegion(int x, int y, int w, int h);
 bool MouseInRegion(int x, int y, int w, int h, int& x1, int& y1);
 int RegionParameter(int x, int x1, int x2);
 void QuickSortB(TBuildInfo* a, int l, int r);
-void ClearQueuedHiResText();
 
 // 文字辅助
 int DrawLength(const std::string& str);

@@ -415,7 +415,6 @@ end;
 //重画屏幕
 procedure Redraw(WriteFresh: integer = 0);
 begin
-  //ClearQueuedHiResText;
   case Where of
     0: DrawMMap;
     1: DrawScene;

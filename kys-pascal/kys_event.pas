@@ -1522,7 +1522,6 @@ begin
   y := 80;
   str1 := '';
   DrawRectangleWithoutFrame(screen, 0, 0, CENTER_X * 2, CENTER_Y * 2, 0, 60);
-  UpdateScreen(screen, x, y, drawlength(str1) * 20, 22);
   for i := 1 to len + 1 do
   begin
     if str[i] = utf8char(10) then
@@ -1532,7 +1531,7 @@ begin
       str[i] := utf8char(0);
       str1 := midstr(str, p, i - p);
       DrawShadowText(screen, str1, x, y, ColColor($FF), ColColor($FF));
-      UpdateScreen(screen, x, y, drawlength(str1) * 10 + 2, 22);
+      UpdateScreen(screen, 0, 0, screen.w, screen.h);
       p := i + 1;
       y := y + 25;
     end;
@@ -2074,8 +2073,7 @@ begin
       DrawBig5ShadowText(screen, p1, e3 - 2, e4 + 22 * i - 3, ColColor(e5 and $FF), ColColor((e5 and $FF00) shl 8));
       w1 := length(p1) * 11;
       if (w1 > w) then w := w1;
-      UpdateScreen(screen, x - 3, y - 3, w + 6, 22 * (i + 1) + 6);
-      //UpdateScreen(screen, 0, 0, screen.w, screen.h);
+      UpdateScreen(screen, 0, 0, screen.w, screen.h);
       //waitanykey;
     end;
     34: //Draw a rectangle as background.
@@ -2085,7 +2083,7 @@ begin
       e4 := e_GetValue(2, e1, e4);
       e5 := e_GetValue(3, e1, e5);
       DrawRectangle(screen, e2, e3, e4, e5, 0, ColColor($FF), 50);
-      UpdateScreen(screen,e2,e3,e4+1,e5+1);
+      //UpdateScreen(screen,e2,e3,e4+1,e5+1);
     end;
     35: //Pause and wait a key.
     begin
@@ -2234,8 +2232,7 @@ begin
           display_img(@str[1], e3, e4);
         end;
       end;
-      UpdateScreen(screen, e3 - x, e4 - y, w, h);
-      //UpdateScreen(screen, 0, 0, screen.w, screen.h);
+      UpdateScreen(screen, 0, 0, screen.w, screen.h);
     end;
     42: //Change the poistion on world map.
     begin

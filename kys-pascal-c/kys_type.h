@@ -293,7 +293,6 @@ inline int RESOLUTIONX = 1280;
 inline int RESOLUTIONY = 720;
 inline int SIMPLE = 1;
 inline int SMOOTH = 1;
-inline int HIRES_TEXT = 1;
 inline int WMP_4_PIC = 0;
 
 // SDL运行时对象
@@ -307,7 +306,6 @@ inline SDL_Surface* freshscreen = nullptr;
 inline SDL_Window* window = nullptr;
 inline SDL_Renderer* render = nullptr;
 inline SDL_Texture* screenTex = nullptr;
-inline SDL_Texture* compositeTex = nullptr;
 
 inline SDL_Surface* ImgScene = nullptr;
 inline SDL_Surface* ImgSceneBack = nullptr;
@@ -337,7 +335,6 @@ inline std::vector<SDL_Surface*> BHead;
 inline std::vector<SDL_Surface*> ItemSurface;
 
 inline std::map<int, SDL_Surface*> fonts;
-inline std::map<int, SDL_Surface*> FontsHr;
 
 // 音频
 inline int VOLUME = 30, VOLUMEWAV = 30, SOUND3D = 1;

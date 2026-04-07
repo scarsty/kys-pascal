@@ -183,11 +183,6 @@ void Quit()
         SDL_DestroySurface(p.second);
     }
     fonts.clear();
-    for (auto& p : FontsHr)
-    {
-        SDL_DestroySurface(p.second);
-    }
-    FontsHr.clear();
     FreeAllSurface();
     DestroyScript();
     if (ChineseFont)
@@ -323,7 +318,6 @@ void ReadFiles()
     WALK_SPEED = ini.getInt("system", "WALK_SPEED", 10);
     WALK_SPEED2 = ini.getInt("system", "WALK_SPEED2", WALK_SPEED);
     SMOOTH = ini.getInt("system", "SMOOTH", 1);
-    HIRES_TEXT = ini.getInt("system", "HIRES_TEXT", 1);
     SIMPLE = ini.getInt("system", "SIMPLE", 1);
     VOLUME = ini.getInt("music", "VOLUME", 30);
     VOLUMEWAV = ini.getInt("music", "VOLUMEWAV", 30);
@@ -5706,7 +5700,6 @@ void StartAmi()
 
     int x = 30, y = 80;
     DrawRectangleWithoutFrame(screen, 0, 0, CENTER_X * 2, CENTER_Y * 2, 0, 60);
-    UpdateScreen(screen, 0, 0, screen->w, screen->h);
 
     int p = 0;
     for (int i = 0; i <= len; i++)
@@ -5719,9 +5712,9 @@ void StartAmi()
         {
             std::string line = str.substr(p, i - p);
             DrawShadowText(screen, line, x, y, ColColor(0xFF), ColColor(0xFF));
-            UpdateScreen(screen, x, y, (int)line.size() * 10 + 2, 22);
             p = i + 1;
             y += 25;
+            UpdateScreen(screen, 0, 0, screen->w, screen->h);
         }
         if (str[i] == '*')
         {

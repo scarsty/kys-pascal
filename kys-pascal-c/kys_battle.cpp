@@ -652,7 +652,7 @@ int BattleMenu(int bnum)
                 p2++;
             }
         }
-        UpdateScreen(screen, 100, 50, 47, max * 22 + 29);
+        UpdateScreen(screen, 100, 50, 48, max * 22 + 29);
     };
 
     ShowBMenu();

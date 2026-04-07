@@ -328,13 +328,6 @@ begin
     fonts.Free;
     fonts := nil;
   end;
-  if FontsHr <> nil then
-  begin
-    for pair0 in FontsHr do
-      SDL_DestroySurface(pair0.Value);
-    FontsHr.Free;
-    FontsHr := nil;
-  end;
   FreeAllSurface;
   DestroyScript;
   TTF_CloseFont(ChineseFont);
@@ -521,7 +514,6 @@ begin
     WALK_SPEED := Kys_ini.ReadInteger('system', 'WALK_SPEED', 10);
     WALK_SPEED2 := Kys_ini.ReadInteger('system', 'WALK_SPEED2', WALK_SPEED);
     SMOOTH := Kys_ini.ReadInteger('system', 'SMOOTH', 1);
-    HIRES_TEXT := Kys_ini.ReadInteger('system', 'HIRES_TEXT', 1);
     SIMPLE := Kys_ini.ReadInteger('system', 'SIMPLE', 1);
     //CENTER_X := Kys_ini.ReadInteger('system', 'CENTER_X', 320);
     //CENTER_Y := Kys_ini.ReadInteger('system', 'CENTER_Y', 220);
@@ -605,7 +597,6 @@ begin
   setlength(HeadSurface, 999);
   setlength(ItemSurface, 999);
   fonts := TDictionary<integer, PSDL_Surface>.Create;
-  FontsHr := TDictionary<integer, PSDL_Surface>.Create;
 
   cct2s := simplecc_create();
   simplecc_load1(cct2s, checkFileName('cc/TSCharacters.txt'));
@@ -777,7 +768,6 @@ begin
   x := 30;
   y := 80;
   DrawRectangleWithoutFrame(screen, 0, 0, CENTER_X * 2, CENTER_Y * 2, 0, 60);
-  UpdateScreen(screen, 0, 0, screen.w, screen.h);
   for i := 1 to len + 1 do
   begin
     if str[i] = utf8char(10) then
@@ -787,7 +777,7 @@ begin
       str[i] := utf8char(0);
       str1 := midstr(str, p, i - p);
       DrawShadowText(screen, str1, x, y, ColColor($FF), ColColor($FF));
-      UpdateScreen(screen, x, y, drawlength(str1) * 10 + 2, 22);
+      UpdateScreen(screen, 0, 0, screen.w, screen.h);
       p := i + 1;
       y := y + 25;
     end;
@@ -4953,8 +4943,7 @@ begin
   str := format('%9d', [Rrole[rnum].PhyPower]);
   DrawEngShadowText(screen, str, x + 50, y + 149, ColColor($5), ColColor($7));
 
-  //if not ((HIRES_TEXT <> 0) and (HIRES_BATCH_DRAW <> 0)) then
-  //  UpdateScreen(screen, 0, 0, screen.w, screen.h);
+
 end;
 
 //离队选单

@@ -722,7 +722,7 @@ var
       end;
     end;
     if (update) then
-      UpdateScreen(screen, 100, 50, 47, max * 22 + 29);
+      UpdateScreen(screen, 100, 50, 48, max * 22 + 29);
   end;
 
 begin
