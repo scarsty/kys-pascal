@@ -243,7 +243,7 @@ int SelectTeamMembers()
             uint32_t c1 = (i == menu) ? ColColor(0x64) : ColColor(0x05);
             uint32_t c2 = (i == menu) ? ColColor(0x66) : ColColor(0x07);
             DrawShadowText(screen, menuStr[i], x + 33, y + 3 + 22 * i, c1, c2);
-            if ((result & (1 << (i - 1))) && i > 0 && i < max)
+            if (i > 0 && i < max && (result & (1 << (i - 1))))
             {
                 uint32_t cs1 = (i == menu) ? ColColor(0x64) : ColColor(0x21);
                 uint32_t cs2 = (i == menu) ? ColColor(0x66) : ColColor(0x23);
@@ -331,8 +331,8 @@ int SelectTeamMembers()
         }
         if (event.type == SDL_EVENT_MOUSE_MOTION)
         {
-            float mx = event.button.x / (RESOLUTIONX / (float)screen->w);
-            float my = event.button.y / (RESOLUTIONY / (float)screen->h);
+            float mx = event.motion.x / (RESOLUTIONX / (float)screen->w);
+            float my = event.motion.y / (RESOLUTIONY / (float)screen->h);
             if (mx >= CENTER_X - 75 && mx < CENTER_X + 75 && my >= 150 && my < max * 22 + 178)
             {
                 int menup = menu;
@@ -639,7 +639,7 @@ int BattleMenu(int bnum)
 
     auto ShowBMenu = [&]()
     {
-        LoadFreshScreen(100, 50, 47, max * 22 + 29);
+        LoadFreshScreen(100, 50, 48, max * 22 + 29);
         DrawRectangle(screen, 100, 50, 47, max * 22 + 28, 0, ColColor(255), 50);
         int p2 = 0;
         for (int i2 = 0; i2 < 10; i2++)
