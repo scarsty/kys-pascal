@@ -1313,22 +1313,21 @@ int SelectMagic(int rnum)
     ShowMagicMenu();
 
     int result = 0;
-    SDL_Event e;
-    while (SDL_WaitEvent(&e))
+    while (SDL_WaitEvent(&event))
     {
         CheckBasicEvent();
-        if (e.type == SDL_EVENT_KEY_UP)
+        if (event.type == SDL_EVENT_KEY_UP)
         {
-            if (e.key.key == SDLK_RETURN || e.key.key == SDLK_SPACE)
+            if (event.key.key == SDLK_RETURN || event.key.key == SDLK_SPACE)
             {
                 break;
             }
-            if (e.key.key == SDLK_ESCAPE)
+            if (event.key.key == SDLK_ESCAPE)
             {
                 result = -1;
                 break;
             }
-            if (e.key.key == SDLK_UP)
+            if (event.key.key == SDLK_UP)
             {
                 menu--;
                 if (menu < 0)
@@ -1337,7 +1336,7 @@ int SelectMagic(int rnum)
                 }
                 ShowMagicMenu();
             }
-            if (e.key.key == SDLK_DOWN)
+            if (event.key.key == SDLK_DOWN)
             {
                 menu++;
                 if (menu > maxMenu)
@@ -1347,19 +1346,19 @@ int SelectMagic(int rnum)
                 ShowMagicMenu();
             }
         }
-        else if (e.type == SDL_EVENT_MOUSE_BUTTON_UP)
+        else if (event.type == SDL_EVENT_MOUSE_BUTTON_UP)
         {
-            if (e.button.button == SDL_BUTTON_LEFT)
+            if (event.button.button == SDL_BUTTON_LEFT)
             {
                 break;
             }
-            if (e.button.button == SDL_BUTTON_RIGHT)
+            if (event.button.button == SDL_BUTTON_RIGHT)
             {
                 result = -1;
                 break;
             }
         }
-        else if (e.type == SDL_EVENT_MOUSE_MOTION)
+        else if (event.type == SDL_EVENT_MOUSE_MOTION)
         {
             int xm, ym;
             if (MouseInRegion(100, 50, 167, maxMenu * 22 + 28, xm, ym))
