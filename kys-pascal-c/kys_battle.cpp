@@ -2561,22 +2561,21 @@ bool TeamModeMenu(int bnum)
     RecordFreshScreen(0, 0, screen->w, screen->h);
     ShowTeamModeMenu();
 
-    SDL_Event e;
-    while (SDL_WaitEvent(&e))
+    while (SDL_WaitEvent(&event))
     {
         CheckBasicEvent();
-        if (e.type == SDL_EVENT_KEY_UP)
+        if (event.type == SDL_EVENT_KEY_UP)
         {
-            if (e.key.key == SDLK_RETURN || e.key.key == SDLK_SPACE)
+            if (event.key.key == SDLK_RETURN || event.key.key == SDLK_SPACE)
             {
                 break;
             }
-            if (e.key.key == SDLK_ESCAPE)
+            if (event.key.key == SDLK_ESCAPE)
             {
                 result = false;
                 break;
             }
-            if (e.key.key == SDLK_UP)
+            if (event.key.key == SDLK_UP)
             {
                 menu--;
                 if (menu == -1)
@@ -2589,7 +2588,7 @@ bool TeamModeMenu(int bnum)
                 }
                 ShowTeamModeMenu();
             }
-            if (e.key.key == SDLK_DOWN)
+            if (event.key.key == SDLK_DOWN)
             {
                 menu++;
                 if (menu == amount)
@@ -2602,7 +2601,7 @@ bool TeamModeMenu(int bnum)
                 }
                 ShowTeamModeMenu();
             }
-            if (e.key.key == SDLK_LEFT && menu >= 0 && menu < amount)
+            if (event.key.key == SDLK_LEFT && menu >= 0 && menu < amount)
             {
                 Brole[a[menu]].AutoMode--;
                 if (Brole[a[menu]].AutoMode < 0)
@@ -2611,7 +2610,7 @@ bool TeamModeMenu(int bnum)
                 }
                 ShowTeamModeMenu();
             }
-            if (e.key.key == SDLK_RIGHT && menu >= 0 && menu < amount)
+            if (event.key.key == SDLK_RIGHT && menu >= 0 && menu < amount)
             {
                 Brole[a[menu]].AutoMode++;
                 if (Brole[a[menu]].AutoMode > 3)
@@ -2621,9 +2620,9 @@ bool TeamModeMenu(int bnum)
                 ShowTeamModeMenu();
             }
         }
-        else if (e.type == SDL_EVENT_MOUSE_BUTTON_UP)
+        else if (event.type == SDL_EVENT_MOUSE_BUTTON_UP)
         {
-            if (e.button.button == SDL_BUTTON_LEFT)
+            if (event.button.button == SDL_BUTTON_LEFT)
             {
                 int xm, ym;
                 if (MouseInRegion(x, y, w, amount * 22 + 28, xm, ym))
@@ -2643,13 +2642,13 @@ bool TeamModeMenu(int bnum)
                     }
                 }
             }
-            if (e.button.button == SDL_BUTTON_RIGHT)
+            if (event.button.button == SDL_BUTTON_RIGHT)
             {
                 result = false;
                 break;
             }
         }
-        else if (e.type == SDL_EVENT_MOUSE_MOTION)
+        else if (event.type == SDL_EVENT_MOUSE_MOTION)
         {
             int xm, ym;
             if (MouseInRegion(x, y, w, amount * 22 + 28, xm, ym))
