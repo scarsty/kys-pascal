@@ -63,11 +63,11 @@ kys-pascal-androidstudio/build
 *.so
 *.apk
 cc
-kys-pascal-c/build
-kys-pascal-c/.vs
-kys-pascal-c/x64
-kys-pascal-c/out
-kys-pascal-c/x64
-kys-pascal-c/kys-pascal-c/x64
+bin-c/build
+bin-c/.vs
+bin-c/x64
+bin-c/out
+bin-c/x64
 kys-pascal-androidstudio/export-cpp/ndk
 kys-pascal-androidstudio/vcpkg-overlay-ports
+bin-c/kys-pascal-c/x64/

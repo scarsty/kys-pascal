@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.22)
 project(kys_pascal_c_android LANGUAGES C CXX)
 
 set(KYS_ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../../../")
-set(KYS_CPP_DIR "${KYS_ROOT_DIR}/kys-pascal-c")
+set(KYS_CPP_DIR "${KYS_ROOT_DIR}/bin-c")
 set(KYS_MLCC_DIR "C:/project/mlcc")
 
 set(VCPKG_ROOT_DIR "$ENV{VCPKG_ROOT}")
