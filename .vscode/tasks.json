@@ -1,0 +1,239 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "laz-build-debug",
+			"type": "shell",
+			"command": "C:\\lazarus\\lazbuild.exe",
+			"args": [
+				"--build-mode=Debug",
+				"${workspaceFolder}\\kys.lpi"
+			],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"presentation": {
+				"reveal": "always",
+				"panel": "shared",
+				"clear": true
+			},
+			"problemMatcher": {
+				"owner": "fpc",
+				"fileLocation": "absolute",
+				"pattern": {
+					"regexp": "^(.+\\.pas)\\((\\d+),(\\d+)\\)\\s+(Fatal|Error|Warning|Note|Hint):\\s+(.+)$",
+					"file": 1,
+					"line": 2,
+					"column": 3,
+					"severity": 4,
+					"message": 5
+				}
+			}
+		},
+		{
+			"label": "laz-build-release",
+			"type": "shell",
+			"command": "C:\\lazarus\\lazbuild.exe",
+			"args": [
+				"--build-mode=Release",
+				"${workspaceFolder}\\kys.lpi"
+			],
+			"group": "build",
+			"presentation": {
+				"reveal": "always",
+				"panel": "shared",
+				"clear": true
+			},
+			"problemMatcher": {
+				"owner": "fpc",
+				"fileLocation": "absolute",
+				"pattern": {
+					"regexp": "^(.+\\.pas)\\((\\d+),(\\d+)\\)\\s+(Fatal|Error|Warning|Note|Hint):\\s+(.+)$",
+					"file": 1,
+					"line": 2,
+					"column": 3,
+					"severity": 4,
+					"message": 5
+				}
+			}
+		},
+		{
+			"label": "laz-clean",
+			"type": "shell",
+			"command": "C:\\lazarus\\lazbuild.exe",
+			"args": [
+				"--build-mode=Debug",
+				"--build-all",
+				"${workspaceFolder}\\kys.lpi"
+			],
+			"group": "build",
+			"presentation": {
+				"reveal": "always",
+				"panel": "shared",
+				"clear": true
+			},
+			"problemMatcher": {
+				"owner": "fpc",
+				"fileLocation": "absolute",
+				"pattern": {
+					"regexp": "^(.+\\.pas)\\((\\d+),(\\d+)\\)\\s+(Fatal|Error|Warning|Note|Hint):\\s+(.+)$",
+					"file": 1,
+					"line": 2,
+					"column": 3,
+					"severity": 4,
+					"message": 5
+				}
+			}
+		},
+		{
+			"label": "build-debug",
+			"type": "shell",
+			"command": "$vswhere = 'C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\vswhere.exe'; if (-not (Test-Path $vswhere)) { throw 'vswhere not found' } ; $msbuild = & $vswhere -latest -requires Microsoft.Component.MSBuild -find MSBuild\\**\\Bin\\MSBuild.exe | Select-Object -First 1; if (-not $msbuild) { throw 'MSBuild not found' } ; & $msbuild '${workspaceFolder}\\bin-c\\kys-pascal-c.sln' /p:Configuration=Debug /p:Platform=x64 /m:1",
+			"isBackground": false,
+			"presentation": {
+				"reveal": "always",
+				"panel": "shared",
+				"clear": true
+			},
+			"problemMatcher": [
+				"$msCompile"
+			]
+		},
+		{
+			"label": "build-debug-serial",
+			"type": "shell",
+			"command": "$vswhere = 'C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\vswhere.exe'; if (-not (Test-Path $vswhere)) { throw 'vswhere not found' } ; $msbuild = & $vswhere -latest -requires Microsoft.Component.MSBuild -find MSBuild\\**\\Bin\\MSBuild.exe | Select-Object -First 1; if (-not $msbuild) { throw 'MSBuild not found' } ; & $msbuild '${workspaceFolder}\\bin-c\\kys-pascal-c.sln' /p:Configuration=Debug /p:Platform=x64 /m:1 /p:CL_MPCount=1",
+			"isBackground": false,
+			"presentation": {
+				"reveal": "always",
+				"panel": "shared",
+				"clear": true
+			},
+			"problemMatcher": [
+				"$msCompile"
+			]
+		},
+		{
+			"label": "build-debug-after-killpdb",
+			"type": "shell",
+			"command": "taskkill /F /IM mspdbsrv.exe ; $vswhere = 'C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\vswhere.exe'; if (-not (Test-Path $vswhere)) { throw 'vswhere not found' } ; $msbuild = & $vswhere -latest -requires Microsoft.Component.MSBuild -find MSBuild\\**\\Bin\\MSBuild.exe | Select-Object -First 1; if (-not $msbuild) { throw 'MSBuild not found' } ; & $msbuild '${workspaceFolder}\\bin-c\\kys-pascal-c.sln' /p:Configuration=Debug /p:Platform=x64 /m:1",
+			"isBackground": false,
+			"presentation": {
+				"reveal": "always",
+				"panel": "shared",
+				"clear": true
+			},
+			"problemMatcher": [
+				"$msCompile"
+			]
+		},
+		{
+			"label": "configure-and-build-debug",
+			"type": "shell",
+			"command": "$vswhere = 'C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\vswhere.exe'; if (-not (Test-Path $vswhere)) { throw 'vswhere not found' } ; $msbuild = & $vswhere -latest -requires Microsoft.Component.MSBuild -find MSBuild\\**\\Bin\\MSBuild.exe | Select-Object -First 1; if (-not $msbuild) { throw 'MSBuild not found' } ; & $msbuild '${workspaceFolder}\\bin-c\\kys-pascal-c.sln' /t:Rebuild /p:Configuration=Debug /p:Platform=x64 /m:1",
+			"isBackground": false,
+			"presentation": {
+				"reveal": "always",
+				"panel": "shared",
+				"clear": true
+			},
+			"problemMatcher": [
+				"$msCompile"
+			]
+		},
+		{
+			"label": "run-sdl-5s",
+			"type": "shell",
+			"command": "Set-Location \"${workspaceFolder}\\bin-c\\x64\\Debug\" ; .\\kys-pascal-c.exe",
+			"isBackground": false,
+			"presentation": {
+				"reveal": "always",
+				"panel": "shared",
+				"clear": true
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "build-debug-fixed-vcxproj",
+			"type": "shell",
+			"command": "$vswhere = 'C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\vswhere.exe'; if (-not (Test-Path $vswhere)) { throw 'vswhere not found' } ; $msbuild = & $vswhere -latest -requires Microsoft.Component.MSBuild -find MSBuild\\**\\Bin\\MSBuild.exe | Select-Object -First 1; if (-not $msbuild) { throw 'MSBuild not found' } ; & $msbuild '${workspaceFolder}\\bin-c\\kys-pascal-c.sln' /p:Configuration=Debug /p:Platform=x64 /m:1",
+			"isBackground": false,
+			"presentation": {
+				"reveal": "always",
+				"panel": "shared",
+				"clear": true
+			},
+			"problemMatcher": [
+				"$msCompile"
+			]
+		},
+		{
+			"label": "fix-pdb-and-build",
+			"type": "shell",
+			"command": "Set-Location \"${workspaceFolder}\\bin-c\" ; if (Test-Path \"x64\\Debug\\vc143.pdb\") { attrib -R \"x64\\Debug\\vc143.pdb\" ; Rename-Item \"x64\\Debug\\vc143.pdb\" \"vc143.pdb.bak\" -ErrorAction SilentlyContinue } ; $vswhere = 'C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\vswhere.exe'; if (-not (Test-Path $vswhere)) { throw 'vswhere not found' } ; $msbuild = & $vswhere -latest -requires Microsoft.Component.MSBuild -find MSBuild\\**\\Bin\\MSBuild.exe | Select-Object -First 1; if (-not $msbuild) { throw 'MSBuild not found' } ; & $msbuild '${workspaceFolder}\\bin-c\\kys-pascal-c.sln' /p:Configuration=Debug /p:Platform=x64 /m:1",
+			"isBackground": false,
+			"presentation": {
+				"reveal": "always",
+				"panel": "shared",
+				"clear": true
+			},
+			"problemMatcher": [
+				"$msCompile"
+			]
+		},
+		{
+			"label": "probe-exe-launch",
+			"type": "shell",
+			"command": "Set-Location \"${workspaceFolder}\\bin-c\\x64\\Debug\" ; .\\kys-pascal-c.exe",
+			"isBackground": false,
+			"presentation": {
+				"reveal": "always",
+				"panel": "shared",
+				"clear": true
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "build-release",
+			"type": "shell",
+			"command": "$vswhere = 'C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\vswhere.exe'; if (-not (Test-Path $vswhere)) { throw 'vswhere not found' } ; $msbuild = & $vswhere -latest -requires Microsoft.Component.MSBuild -find MSBuild\\**\\Bin\\MSBuild.exe | Select-Object -First 1; if (-not $msbuild) { throw 'MSBuild not found' } ; & $msbuild '${workspaceFolder}\\bin-c\\kys-pascal-c.sln' /p:Configuration=Release /p:Platform=x64 /m:1",
+			"isBackground": false,
+			"presentation": {
+				"reveal": "always",
+				"panel": "shared",
+				"clear": true
+			},
+			"problemMatcher": [
+				"$msCompile"
+			]
+		},
+		{
+			"label": "run-release-once",
+			"type": "shell",
+			"command": "Set-Location \"${workspaceFolder}\\bin-c\\x64\\Release\" ; .\\kys-pascal-c.exe ; Write-Host \"run_exit=$LASTEXITCODE\"",
+			"isBackground": false,
+			"presentation": {
+				"reveal": "always",
+				"panel": "shared",
+				"clear": true
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "android-fpc-apk-run",
+			"type": "shell",
+			"command": "${workspaceFolder}\\kys-pascal-androidstudio\\complie_so_apk_run_device.bat",
+			"options": {
+				"cwd": "${workspaceFolder}\\kys-pascal-androidstudio"
+			},
+			"isBackground": false,
+			"presentation": {
+				"reveal": "always",
+				"panel": "shared",
+				"clear": true
+			},
+			"problemMatcher": []
+		}
+	]
+}

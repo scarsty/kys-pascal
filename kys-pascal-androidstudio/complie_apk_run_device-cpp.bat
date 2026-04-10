@@ -17,7 +17,9 @@ set "NDK_DIR="
 set "NDK_VERSION=29.0.14206865"
 set "VCPKG_ROOT_DIR="
 set "MLCC_DIR="
-set "SO_FILE=%SCRIPT_DIR%app\build\intermediates\merged_native_libs\release\mergeReleaseNativeLibs\out\lib\arm64-v8a\%SO_NAME%"
+set "STRIPPED_SO_FILE=%SCRIPT_DIR%app\build\intermediates\stripped_native_libs\release\stripReleaseDebugSymbols\out\lib\arm64-v8a\%SO_NAME%"
+set "MERGED_SO_FILE=%SCRIPT_DIR%app\build\intermediates\merged_native_libs\release\mergeReleaseNativeLibs\out\lib\arm64-v8a\%SO_NAME%"
+set "SO_FILE=%STRIPPED_SO_FILE%"
 
 if exist "%LOCAL_PROPERTIES%" (
   for /f "usebackq tokens=1,* delims==" %%A in ("%LOCAL_PROPERTIES%") do (
@@ -120,6 +122,10 @@ echo [2/3] Export SO and NDK...
 if not exist "%EXPORT_DIR%" md "%EXPORT_DIR%"
 
 if not exist "%SO_FILE%" (
+  set "SO_FILE=%MERGED_SO_FILE%"
+)
+
+if not exist "%SO_FILE%" (
   popd
   echo [ERROR] Built SO not found: "%SO_FILE%"
   exit /b 1
@@ -130,6 +136,11 @@ if errorlevel 1 (
   popd
   echo [ERROR] Failed to copy %SO_NAME% to script directory.
   exit /b 1
+)
+if /I "%SO_FILE%"=="%STRIPPED_SO_FILE%" (
+  echo Exported stripped SO.
+) else (
+  echo [WARN] Stripped SO not found. Exported merged SO instead.
 )
 
 if defined NDK_DIR if exist "%NDK_DIR%" (

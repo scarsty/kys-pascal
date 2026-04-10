@@ -117,10 +117,6 @@ void Run()
 
     uint32_t screenFlag = SDL_WINDOW_RESIZABLE;
     window = SDL_CreateWindow(TitleString.c_str(), RESOLUTIONX, RESOLUTIONY, screenFlag);
-    if (CellPhone == 1)
-    {
-        SDL_SetWindowFullscreen(window, true);
-    }
     SDL_GetWindowSize(window, &RESOLUTIONX, &RESOLUTIONY);
 
     const char* render_str = "direct3d";
