@@ -40,6 +40,128 @@ static bool sccT2S_loaded = false;
 
 static uint64_t tic_time = 0;
 
+static SDL_Surface* CreateArgbSurface(int width, int height)
+{
+    return SDL_CreateSurface(width, height,
+        SDL_GetPixelFormatForMasks(32, RMask, GMask, BMask, AMask));
+}
+
+static void CopySurfaceCentered(SDL_Surface* src, SDL_Surface* dst)
+{
+    if (!src || !dst)
+    {
+        return;
+    }
+
+    const int copy_w = std::min(src->w, dst->w);
+    const int copy_h = std::min(src->h, dst->h);
+    SDL_Rect src_rect = { std::max(0, (src->w - copy_w) / 2), std::max(0, (src->h - copy_h) / 2), copy_w, copy_h };
+    SDL_Rect dst_rect = { std::max(0, (dst->w - copy_w) / 2), std::max(0, (dst->h - copy_h) / 2), copy_w, copy_h };
+    SDL_BlitSurface(src, &src_rect, dst, &dst_rect);
+}
+
+static void CopyBlockBufferCentered(const std::vector<int16_t>& src, int src_w, int src_h,
+    std::vector<int16_t>& dst, int dst_w, int dst_h)
+{
+    if (src.empty() || src_w <= 0 || src_h <= 0 || dst_w <= 0 || dst_h <= 0)
+    {
+        return;
+    }
+
+    const int copy_w = std::min(src_w, dst_w);
+    const int copy_h = std::min(src_h, dst_h);
+    const int src_x0 = std::max(0, (src_w - copy_w) / 2);
+    const int dst_x0 = std::max(0, (dst_w - copy_w) / 2);
+    const int src_y0 = std::max(0, (src_h - copy_h) / 2);
+    const int dst_y0 = std::max(0, (dst_h - copy_h) / 2);
+
+    for (int x = 0; x < copy_w; ++x)
+    {
+        for (int y = 0; y < copy_h; ++y)
+        {
+            dst[(dst_x0 + x) * dst_h + (dst_y0 + y)] = src[(src_x0 + x) * src_h + (src_y0 + y)];
+        }
+    }
+}
+
+static void RecreateCanvasResources(int canvas_w, int canvas_h)
+{
+    if (!render || canvas_w <= 0 || canvas_h <= 0)
+    {
+        return;
+    }
+
+    SDL_Surface* old_screen = screen;
+    SDL_Surface* old_freshscreen = freshscreen;
+    SDL_Texture* old_screen_tex = screenTex;
+    SDL_Surface* old_img_scene = ImgScene;
+    SDL_Surface* old_img_scene_back = ImgSceneBack;
+    SDL_Surface* old_img_bfield = ImgBField;
+    SDL_Surface* old_img_bbuild = ImgBBuild;
+    const std::vector<int16_t> old_block_img = BlockImg;
+    const std::vector<int16_t> old_block_img2 = BlockImg2;
+    const int old_image_width = ImageWidth;
+    const int old_image_height = ImageHeight;
+
+    CENTER_X = canvas_w / 2;
+    CENTER_Y = canvas_h / 2;
+
+    screen = CreateArgbSurface(canvas_w, canvas_h);
+    freshscreen = CreateArgbSurface(canvas_w, canvas_h);
+    screenTex = SDL_CreateTexture(render, SDL_PIXELFORMAT_ARGB8888,
+        SDL_TEXTUREACCESS_STREAMING, canvas_w, canvas_h);
+
+    if (old_screen)
+    {
+        CopySurfaceCentered(old_screen, screen);
+    }
+    if (old_freshscreen)
+    {
+        CopySurfaceCentered(old_freshscreen, freshscreen);
+    }
+
+    ImageWidth = (36 * 32 + CENTER_X) * 2;
+    ImageHeight = (18 * 32 + CENTER_Y) * 2;
+
+    ImgScene = CreateArgbSurface(ImageWidth, ImageHeight);
+    ImgSceneBack = CreateArgbSurface(ImageWidth, ImageHeight);
+    ImgBField = CreateArgbSurface(ImageWidth, ImageHeight);
+    ImgBBuild = CreateArgbSurface(ImageWidth, ImageHeight);
+
+    if (old_img_scene)
+    {
+        CopySurfaceCentered(old_img_scene, ImgScene);
+    }
+    if (old_img_scene_back)
+    {
+        CopySurfaceCentered(old_img_scene_back, ImgSceneBack);
+    }
+    if (old_img_bfield)
+    {
+        CopySurfaceCentered(old_img_bfield, ImgBField);
+    }
+    if (old_img_bbuild)
+    {
+        CopySurfaceCentered(old_img_bbuild, ImgBBuild);
+    }
+
+    BlockImg.assign(ImageWidth * ImageHeight, 0);
+    BlockImg2.assign(ImageWidth * ImageHeight, 0);
+    CopyBlockBufferCentered(old_block_img, old_image_width, old_image_height, BlockImg, ImageWidth, ImageHeight);
+    CopyBlockBufferCentered(old_block_img2, old_image_width, old_image_height, BlockImg2, ImageWidth, ImageHeight);
+
+    TitlePosition.x = CENTER_X - 320 + 275;
+    TitlePosition.y = CENTER_Y - 220 + 125;
+
+    SDL_DestroySurface(old_screen);
+    SDL_DestroySurface(old_freshscreen);
+    SDL_DestroyTexture(old_screen_tex);
+    SDL_DestroySurface(old_img_scene);
+    SDL_DestroySurface(old_img_scene_back);
+    SDL_DestroySurface(old_img_bfield);
+    SDL_DestroySurface(old_img_bbuild);
+}
+
 // ---- 内部辅助函数 ----
 
 static bool EnsureMixerCreated()
@@ -1210,8 +1332,28 @@ void TransBlackScreen()
 
 void ResizeWindow(int w, int h)
 {
+    if (w <= 0 || h <= 0)
+    {
+        return;
+    }
+
     RESOLUTIONX = w;
     RESOLUTIONY = h;
+
+    const int canvas_h = screen ? screen->h : CENTER_Y * 2;
+    int canvas_w = (int)std::lround((double)canvas_h * (double)w / (double)h);
+    canvas_w = std::max(2, canvas_w);
+    if ((canvas_w & 1) != 0)
+    {
+        canvas_w++;
+    }
+
+    if (screen && screen->w == canvas_w && screen->h == canvas_h)
+    {
+        return;
+    }
+
+    RecreateCanvasResources(canvas_w, canvas_h);
 }
 
 void SwitchFullscreen()
