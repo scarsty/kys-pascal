@@ -34,7 +34,7 @@ jobs:
 
       - name: Install vcpkg dependencies
         run: |
-          C:\vcpkg\vcpkg install sdl3 sdl3-ttf sdl3-mixer lua libiconv --triplet x64-windows
+          C:\vcpkg\vcpkg install sdl3 sdl3-ttf sdl3-mixer lua libiconv --triplet x64-windows --debug
 
       - name: Configure CMake
         run: |
@@ -46,7 +46,7 @@ jobs:
             -DMLCC_DIR="$mlccDir"
 
       - name: Build
-        run: cmake --build bin-c/build --config Release
+        run: cmake --build bin-c/build --config Release --verbose
 
       - name: Collect artifacts
         run: |
@@ -292,7 +292,8 @@ jobs:
             yaml-cpp libzip zlib sqlite3 freetype libpng \
             mpg123 fluidsynth \
             --triplet arm64-android-dynamic \
-            --overlay-ports="${{ github.workspace }}/.ci/vcpkg-overlay-ports"
+            --overlay-ports="${{ github.workspace }}/.ci/vcpkg-overlay-ports" \
+            --debug
 
       - name: Setup Android SDK
         run: |
@@ -305,7 +306,7 @@ jobs:
           MLCC_DIR: ${{ github.workspace }}/mlcc
         run: |
           chmod +x gradlew
-          ./gradlew assembleRelease
+          ./gradlew assembleRelease --stacktrace --info
 
       - name: Collect .so
         run: |
