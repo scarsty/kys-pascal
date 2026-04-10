@@ -14,6 +14,9 @@ set "SO_NAME=libkys_pascal_c.so"
 set "LOCAL_PROPERTIES=%SCRIPT_DIR%local.properties"
 set "SDK_DIR="
 set "NDK_DIR="
+set "NDK_VERSION=29.0.14206865"
+set "VCPKG_ROOT_DIR="
+set "MLCC_DIR="
 set "SO_FILE=%SCRIPT_DIR%app\build\intermediates\merged_native_libs\release\mergeReleaseNativeLibs\out\lib\arm64-v8a\%SO_NAME%"
 
 if exist "%LOCAL_PROPERTIES%" (
@@ -23,13 +26,28 @@ if exist "%LOCAL_PROPERTIES%" (
 )
 
 if defined SDK_DIR (
+  set "SDK_DIR=!SDK_DIR:\:=:!"
   set "SDK_DIR=!SDK_DIR:\\=\!"
+)
+
+if defined ANDROID_SDK_ROOT if not defined SDK_DIR (
+  set "SDK_DIR=%ANDROID_SDK_ROOT%"
+)
+
+if defined ANDROID_HOME if not defined SDK_DIR (
+  set "SDK_DIR=%ANDROID_HOME%"
+)
+
+if defined ANDROID_NDK_VERSION (
+  set "NDK_VERSION=%ANDROID_NDK_VERSION%"
 )
 
 if defined ANDROID_NDK_HOME (
   set "NDK_DIR=%ANDROID_NDK_HOME%"
 ) else if defined NDK_HOME (
   set "NDK_DIR=%NDK_HOME%"
+) else if defined SDK_DIR if exist "%SDK_DIR%\ndk\%NDK_VERSION%" (
+  set "NDK_DIR=%SDK_DIR%\ndk\%NDK_VERSION%"
 ) else if defined SDK_DIR if exist "%SDK_DIR%\ndk" (
   for /f "delims=" %%D in ('dir /b /ad /o-n "%SDK_DIR%\ndk"') do (
     if not defined NDK_DIR set "NDK_DIR=%SDK_DIR%\ndk\%%D"
@@ -38,9 +56,49 @@ if defined ANDROID_NDK_HOME (
   set "NDK_DIR=%SDK_DIR%\ndk-bundle"
 )
 
+if not defined VCPKG_ROOT_DIR if defined VCPKG_ROOT (
+  set "VCPKG_ROOT_DIR=%VCPKG_ROOT%"
+)
+if not defined VCPKG_ROOT_DIR if exist "D:\project\vcpkg\vcpkg.exe" (
+  set "VCPKG_ROOT_DIR=D:\project\vcpkg"
+)
+if not defined VCPKG_ROOT_DIR if exist "C:\project\vcpkg\vcpkg.exe" (
+  set "VCPKG_ROOT_DIR=C:\project\vcpkg"
+)
+if not defined VCPKG_ROOT_DIR if exist "%USERPROFILE%\vcpkg\vcpkg.exe" (
+  set "VCPKG_ROOT_DIR=%USERPROFILE%\vcpkg"
+)
+
+if defined MLCC_DIR if exist "%MLCC_DIR%\filefunc.cpp" set "MLCC_DIR=%MLCC_DIR%"
+if not defined MLCC_DIR if exist "%SCRIPT_DIR%..\mlcc\filefunc.cpp" (
+  set "MLCC_DIR=%SCRIPT_DIR%..\mlcc"
+)
+if not defined MLCC_DIR if exist "C:\project\mlcc\filefunc.cpp" (
+  set "MLCC_DIR=C:\project\mlcc"
+)
+if not defined MLCC_DIR if exist "D:\project\mlcc\filefunc.cpp" (
+  set "MLCC_DIR=D:\project\mlcc"
+)
+
+if defined NDK_DIR (
+  set "ANDROID_NDK_HOME=%NDK_DIR%"
+  set "NDK_HOME=%NDK_DIR%"
+)
+if defined SDK_DIR set "ANDROID_SDK_ROOT=%SDK_DIR%"
+if defined SDK_DIR set "ANDROID_HOME=%SDK_DIR%"
+if defined VCPKG_ROOT_DIR set "VCPKG_ROOT=%VCPKG_ROOT_DIR%"
+if defined MLCC_DIR set "MLCC_DIR=%MLCC_DIR%"
+set "ANDROID_NDK_VERSION=%NDK_VERSION%"
+
+echo Environment:
+if defined SDK_DIR echo   SDK_DIR=%SDK_DIR%
+if defined NDK_DIR echo   NDK_DIR=%NDK_DIR%
+if defined VCPKG_ROOT_DIR echo   VCPKG_ROOT=%VCPKG_ROOT_DIR%
+if defined MLCC_DIR echo   MLCC_DIR=%MLCC_DIR%
+
 echo [1/2] Build release APK (C++ compiled by CMake/NDK)...
 pushd "%SCRIPT_DIR%"
-call gradlew.bat assembleRelease
+call gradlew.bat --no-daemon assembleRelease
 if errorlevel 1 (
   popd
   echo [ERROR] Gradle build failed.
