@@ -121,7 +121,6 @@ void Run()
     {
         SDL_SetWindowFullscreen(window, true);
     }
-
     SDL_GetWindowSize(window, &RESOLUTIONX, &RESOLUTIONY);
 
     const char* render_str = "direct3d";
@@ -147,7 +146,6 @@ void Run()
     }
     SDL_SetHint(SDL_HINT_RENDER_DRIVER, "opengles2,opengl,software");
 #endif
-
     render = SDL_CreateRenderer(window, render_str);
     screen = SDL_CreateSurface(CENTER_X * 2, CENTER_Y * 2,
         SDL_GetPixelFormatForMasks(32, RMask, GMask, BMask, AMask));
