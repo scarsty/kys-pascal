@@ -1439,16 +1439,25 @@ static uint32_t inVirtualKey(int x, int y, uint32_t& key)
     return result;
 }
 
+static void GetFingerState2(const SDL_TouchFingerEvent& finger, int& x, int& y)
+{
+    const int width = screen ? screen->w : CENTER_X * 2;
+    const int height = screen ? screen->h : CENTER_Y * 2;
+    x = (int)(finger.x * width + 0.5f);
+    y = (int)(finger.y * height + 0.5f);
+}
+
 bool EventFilter(void* p, SDL_Event* e)
 {
     switch (e->type)
     {
-    case SDL_EVENT_FINGER_UP:
-    case SDL_EVENT_FINGER_DOWN:
     case SDL_EVENT_GAMEPAD_AXIS_MOTION:
     case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
     case SDL_EVENT_GAMEPAD_BUTTON_UP:
         return false;
+    case SDL_EVENT_FINGER_UP:
+    case SDL_EVENT_FINGER_DOWN:
+        return true;
     case SDL_EVENT_FINGER_MOTION:
         if (CellPhone == 0)
         {
@@ -1541,6 +1550,23 @@ uint32_t CheckBasicEvent()
     case SDL_EVENT_FINGER_MOTION:
         if (CellPhone == 1)
         {
+            int mx, my;
+            GetFingerState2(event.tfinger, mx, my);
+            if (ShowVirtualKey != 0)
+            {
+                if (inEscape(mx, my) || inReturn(mx, my))
+                {
+                    VirtualKeyValue = 0;
+                    event.type = 0;
+                    break;
+                }
+                if (inVirtualKey(mx, my, VirtualKeyValue) != 0)
+                {
+                    event.type = 0;
+                    break;
+                }
+                VirtualKeyValue = 0;
+            }
             if (event.tfinger.fingerID == 1)
             {
                 uint32_t msCount = SDL_GetTicks() - FingerTick;
@@ -1560,6 +1586,53 @@ uint32_t CheckBasicEvent()
                     event.type = SDL_EVENT_KEY_DOWN;
                     event.key.key = AngleToDirection(event.tfinger.dy, event.tfinger.dx);
                 }
+            }
+        }
+        break;
+    case SDL_EVENT_FINGER_DOWN:
+        if (CellPhone == 1)
+        {
+            FingerCount = 0;
+            int mx, my;
+            GetFingerState2(event.tfinger, mx, my);
+            if (ShowVirtualKey != 0)
+            {
+                if (inVirtualKey(mx, my, VirtualKeyValue) != 0 && VirtualKeyValue != 0)
+                {
+                    event.type = SDL_EVENT_KEY_DOWN;
+                    event.key.key = VirtualKeyValue;
+                    break;
+                }
+                VirtualKeyValue = 0;
+            }
+        }
+        break;
+    case SDL_EVENT_FINGER_UP:
+        if (CellPhone == 1)
+        {
+            int mx, my;
+            GetFingerState2(event.tfinger, mx, my);
+            if (inEscape(mx, my))
+            {
+                event.type = SDL_EVENT_KEY_UP;
+                event.key.key = SDLK_ESCAPE;
+                VirtualKeyValue = 0;
+            }
+            else if (inReturn(mx, my))
+            {
+                event.type = SDL_EVENT_KEY_UP;
+                event.key.key = SDLK_RETURN;
+                VirtualKeyValue = 0;
+            }
+            else if (ShowVirtualKey != 0 && inVirtualKey(mx, my, VirtualKeyValue) != 0 && VirtualKeyValue != 0)
+            {
+                event.type = SDL_EVENT_KEY_UP;
+                event.key.key = VirtualKeyValue;
+                VirtualKeyValue = 0;
+            }
+            else
+            {
+                VirtualKeyValue = 0;
             }
         }
         break;
