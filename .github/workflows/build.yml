@@ -3,6 +3,7 @@ name: Build
 on:
   push:
     branches: [ master ]
+    tags: [ 'v*' ]
   pull_request:
     branches: [ master ]
   workflow_dispatch:
@@ -95,9 +96,12 @@ jobs:
           set(VCPKG_CMAKE_SYSTEM_NAME Android)
           set(VCPKG_CMAKE_SYSTEM_VERSION 29)
           set(VCPKG_MAKE_BUILD_TRIPLET "--host=aarch64-linux-android")
-          if(NOT DEFINED ENV{ANDROID_NDK_HOME})
-              set(VCPKG_CMAKE_CONFIGURE_OPTIONS "-DANDROID_NDK=$ENV{ANDROID_NDK_LATEST_HOME}")
-          endif()
+          set(VCPKG_CHAINLOAD_TOOLCHAIN_FILE "$ENV{ANDROID_NDK_HOME}/build/cmake/android.toolchain.cmake")
+          set(VCPKG_CMAKE_CONFIGURE_OPTIONS
+            "-DANDROID_ABI=arm64-v8a"
+            "-DANDROID_PLATFORM=29"
+            "-DANDROID_NDK=$ENV{ANDROID_NDK_HOME}"
+          )
           EOF
 
       - name: Create libiconv overlay port
@@ -287,7 +291,7 @@ jobs:
 
       - name: Install vcpkg dependencies for Android
         run: |
-          export ANDROID_NDK_HOME=$ANDROID_NDK_LATEST_HOME
+          export ANDROID_NDK_HOME="$ANDROID_HOME/ndk/$ANDROID_NDK_VERSION"
           ~/vcpkg/vcpkg install \
             sdl3 \
             sdl3-ttf \
@@ -324,3 +328,20 @@ jobs:
         with:
           name: kys-android-so
           path: artifact/
+
+  publish-release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [build-windows, build-android]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: release-artifacts
+
+      - name: Publish GitHub Release Assets
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            release-artifacts/kys-windows/*
+            release-artifacts/kys-android-so/*
+          generate_release_notes: true
