@@ -69,5 +69,4 @@ bin-c/x64
 bin-c/out
 bin-c/x64
 kys-pascal-androidstudio/export-cpp/ndk
-kys-pascal-androidstudio/vcpkg-overlay-ports
 bin-c/kys-pascal-c/x64/

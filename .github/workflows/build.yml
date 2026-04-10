@@ -38,11 +38,12 @@ jobs:
 
       - name: Configure CMake
         run: |
+          $mlccDir = "${{ github.workspace }}/mlcc" -replace '\\', '/'
           cd bin-c
           cmake -S . -B build `
             -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake `
             -DVCPKG_TARGET_TRIPLET=x64-windows `
-            -DMLCC_DIR="${{ github.workspace }}/mlcc"
+            -DMLCC_DIR="$mlccDir"
 
       - name: Build
         run: cmake --build bin-c/build --config Release
@@ -98,6 +99,184 @@ jobs:
           endif()
           EOF
 
+      - name: Create libiconv overlay port
+        shell: bash
+        run: |
+          OVERLAY_DIR="${{ github.workspace }}/.ci/vcpkg-overlay-ports/libiconv"
+          mkdir -p "$OVERLAY_DIR"
+
+          cat > "$OVERLAY_DIR/vcpkg.json" << 'EOF'
+          {
+            "name": "libiconv",
+            "version": "1.18",
+            "port-version": 3,
+            "description": [
+              "iconv() text conversion.",
+              "This overlay forces GNU libiconv build on Android (bionic lacks cp936/cp950 support)."
+            ],
+            "homepage": "https://www.gnu.org/software/libiconv/",
+            "license": null
+          }
+          EOF
+
+          cat > "$OVERLAY_DIR/portfile.cmake" << 'EOF'
+          # Overlay port: force build GNU libiconv on Android (API 28+ bionic iconv lacks cp936/cp950 support)
+          # Build as STATIC library to avoid libtool/lld (-soname/--no-rosegment) incompatibilities with NDK 29.
+          if(VCPKG_TARGET_IS_ANDROID)
+              set(VCPKG_LIBRARY_LINKAGE static)
+          endif()
+
+          if(NOT DEFINED X_VCPKG_BUILD_GNU_LIBICONV)
+              set(X_VCPKG_BUILD_GNU_LIBICONV 0)
+              if(VCPKG_TARGET_IS_WINDOWS OR VCPKG_TARGET_IS_IOS OR VCPKG_TARGET_IS_BSD)
+                  set(X_VCPKG_BUILD_GNU_LIBICONV 1)
+              elseif(VCPKG_TARGET_IS_ANDROID)
+                  # Force build: Android bionic iconv does NOT support cp936/cp950 encodings needed by this game
+                  set(X_VCPKG_BUILD_GNU_LIBICONV 1)
+              endif()
+          endif()
+
+          if(NOT X_VCPKG_BUILD_GNU_LIBICONV)
+              message(STATUS "Not building GNU libiconv.")
+              set(VCPKG_POLICY_EMPTY_PACKAGE enabled)
+              file(MAKE_DIRECTORY "${CURRENT_PACKAGES_DIR}/share/iconv")
+              file(COPY "${CMAKE_CURRENT_LIST_DIR}/vcpkg-cmake-wrapper.cmake" DESTINATION "${CURRENT_PACKAGES_DIR}/share/iconv")
+              return()
+          endif()
+
+          vcpkg_download_distfile(ARCHIVE
+              URLS "https://ftpmirror.gnu.org/gnu/libiconv/libiconv-${VERSION}.tar.gz"
+                   "https://ftp.gnu.org/gnu/libiconv/libiconv-${VERSION}.tar.gz"
+                   "https://www.mirrorservice.org/sites/ftp.gnu.org/gnu/libiconv/libiconv-${VERSION}.tar.gz"
+              FILENAME "libiconv-${VERSION}.tar.gz"
+              SHA512 a55eb3b7b785a78ab8918db8af541c9e11deb5ff4f89d54483287711ed797d87848ce0eafffa7ce26d9a7adb4b5a9891cb484f94bd4f51d3ce97a6a47b4c719a
+          )
+          vcpkg_extract_source_archive(SOURCE_PATH
+              ARCHIVE "${ARCHIVE}"
+              SOURCE_BASE "v${VERSION}"
+              PATCHES
+                  0002-Config-for-MSVC.patch
+                  0003-Add-export.patch
+                  0004-ModuleFileName.patch
+          )
+
+          vcpkg_list(SET OPTIONS)
+          if (NOT VCPKG_TARGET_IS_ANDROID)
+              vcpkg_list(APPEND OPTIONS --enable-relocatable)
+          endif()
+
+          vcpkg_configure_make(
+              SOURCE_PATH "${SOURCE_PATH}"
+              DETERMINE_BUILD_TRIPLET
+              USE_WRAPPERS
+              OPTIONS
+                  --enable-extra-encodings
+                  --without-libiconv-prefix
+                  --without-libintl-prefix
+                  ${OPTIONS}
+          )
+          vcpkg_install_make()
+
+          vcpkg_copy_pdbs()
+          vcpkg_copy_tool_dependencies("${CURRENT_PACKAGES_DIR}/tools/${PORT}/bin")
+          vcpkg_copy_tool_dependencies("${CURRENT_PACKAGES_DIR}/tools/${PORT}/debug/bin")
+
+          file(COPY "${CMAKE_CURRENT_LIST_DIR}/vcpkg-cmake-wrapper.cmake" DESTINATION "${CURRENT_PACKAGES_DIR}/share/iconv")
+
+          set(VCPKG_POLICY_ALLOW_RESTRICTED_HEADERS enabled)
+          file(REMOVE_RECURSE "${CURRENT_PACKAGES_DIR}/debug/share")
+          file(REMOVE_RECURSE "${CURRENT_PACKAGES_DIR}/share/${PORT}")
+
+          file(INSTALL "${CMAKE_CURRENT_LIST_DIR}/usage" DESTINATION "${CURRENT_PACKAGES_DIR}/share/${PORT}")
+
+          vcpkg_install_copyright(FILE_LIST "${SOURCE_PATH}/COPYING.LIB" "${SOURCE_PATH}/COPYING" COMMENT "
+          The libiconv and libcharset libraries and their header files are under LGPL,
+          see COPYING.LIB below.
+
+          The iconv program and the documentation are under GPL, see COPYING below.")
+          EOF
+
+          cat > "$OVERLAY_DIR/vcpkg-cmake-wrapper.cmake" << 'EOF'
+          include(SelectLibraryConfigurations)
+
+          _find_package(${ARGS})
+          if(Iconv_FOUND AND NOT Iconv_IS_BUILT_IN)
+              find_path(CHARSET_INCLUDE_DIR NAMES "libcharset.h" HINTS "${_VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/include")
+              find_library(CHARSET_LIBRARY_DEBUG NAMES charsetd libcharsetd charset libcharset NAMES_PER_DIR PATH_SUFFIXES lib HINTS "${_VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/debug")
+              find_library(CHARSET_LIBRARY_RELEASE NAMES charset libcharset NAMES_PER_DIR PATH_SUFFIXES lib HINTS "${_VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}")
+              select_library_configurations(CHARSET)
+              if(NOT TARGET Iconv::Charset)
+                  add_library(Iconv::Charset INTERFACE IMPORTED)
+                  set_target_properties(Iconv::Charset PROPERTIES
+                    INTERFACE_LINK_LIBRARIES "\$<\$<NOT:\$<CONFIG:DEBUG>>:${CHARSET_LIBRARY_RELEASE}>;\$<\$<CONFIG:DEBUG>:${CHARSET_LIBRARY_DEBUG}>"
+                    INTERFACE_INCLUDE_DIRECTORIES "${CHARSET_INCLUDE_DIRS}")
+              endif()
+              if(CHARSET_LIBRARIES)
+                  list(APPEND Iconv_LIBRARIES ${CHARSET_LIBRARIES})
+                  if(TARGET Iconv::Iconv)
+                      set_property(TARGET Iconv::Iconv APPEND PROPERTY INTERFACE_LINK_LIBRARIES Iconv::Charset)
+                  endif()
+              endif()
+          endif()
+          EOF
+
+          cat > "$OVERLAY_DIR/usage" << 'EOF'
+          libiconv provides CMake targets:
+
+            find_package(Iconv REQUIRED)
+            target_link_libraries(main PRIVATE Iconv::Iconv)
+          EOF
+
+          cat > "$OVERLAY_DIR/0002-Config-for-MSVC.patch" << 'EOF'
+          diff --git a/srclib/fcntl.c b/srclib/fcntl.c
+          index f9753c4..02fc8be 100644
+          --- a/srclib/fcntl.c
+          +++ b/srclib/fcntl.c
+          @@ -37,6 +37,9 @@
+           /* Get declarations of the native Windows API functions.  */
+           # define WIN32_LEAN_AND_MEAN
+           # include <windows.h>
+          +#if defined(WINAPI_FAMILY) && (WINAPI_FAMILY == WINAPI_FAMILY_APP)
+          +#define HANDLE_FLAG_INHERIT 0
+          +#endif
+
+           /* Get _get_osfhandle.  */
+           # if GNULIB_MSVC_NOTHROW
+          EOF
+
+          cat > "$OVERLAY_DIR/0003-Add-export.patch" << 'EOF'
+          diff -uNr libiconv-1.16/libcharset/include/libcharset.h.in libiconv-1.16-work/libcharset/include/libcharset.h.in
+          --- libiconv-1.16/libcharset/include/libcharset.h.in	2018-09-17 19:07:42.000000000 +0300
+          +++ libiconv-1.16-work/libcharset/include/libcharset.h.in	2019-12-04 17:15:50.000000000 +0300
+          @@ -33,7 +33,7 @@
+             by the corresponding pathname with the current prefix instead.  Both
+             prefixes should be directory names without trailing slash (i.e. use ""
+             instead of "/").  */
+          -extern void libcharset_set_relocation_prefix (const char *orig_prefix,
+          +extern void LIBCHARSET_DLL_EXPORTED libcharset_set_relocation_prefix (const char *orig_prefix,
+                                                         const char *curr_prefix);
+
+
+          EOF
+
+          cat > "$OVERLAY_DIR/0004-ModuleFileName.patch" << 'EOF'
+          diff --git a/srclib/relocatable.c b/srclib/relocatable.c
+          index 365c085..4e08fdc 100644
+          --- a/srclib/relocatable.c
+          +++ b/srclib/relocatable.c
+          @@ -338,7 +338,7 @@ DllMain (HINSTANCE module_handle, DWORD event, LPVOID reserved)
+                 /* The DLL is being loaded into an application's address range.  */
+                 static char location[MAX_PATH];
+
+          -      if (!GetModuleFileName (module_handle, location, sizeof (location)))
+          +      if (!GetModuleFileNameA (module_handle, location, sizeof (location)))
+                   /* Shouldn't happen.  */
+                   return FALSE;
+
+          EOF
+
+          test -d "${{ github.workspace }}/.ci/vcpkg-overlay-ports"
+
       - name: Cache vcpkg packages
         uses: actions/cache@v4
         with:
@@ -113,7 +292,7 @@ jobs:
             yaml-cpp libzip zlib sqlite3 freetype libpng \
             mpg123 fluidsynth \
             --triplet arm64-android-dynamic \
-            --overlay-ports=kys-pascal-androidstudio/vcpkg-overlay-ports
+            --overlay-ports="${{ github.workspace }}/.ci/vcpkg-overlay-ports"
 
       - name: Setup Android SDK
         run: |

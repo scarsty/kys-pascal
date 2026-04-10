@@ -1,0 +1,74 @@
+# Overlay port: force build GNU libiconv on Android (API 28+ bionic iconv lacks cp936/cp950 support)
+# Build as STATIC library to avoid libtool/lld (-soname/--no-rosegment) incompatibilities with NDK 29.
+if(VCPKG_TARGET_IS_ANDROID)
+    set(VCPKG_LIBRARY_LINKAGE static)
+endif()
+
+if(NOT DEFINED X_VCPKG_BUILD_GNU_LIBICONV)
+    set(X_VCPKG_BUILD_GNU_LIBICONV 0)
+    if(VCPKG_TARGET_IS_WINDOWS OR VCPKG_TARGET_IS_IOS OR VCPKG_TARGET_IS_BSD)
+        set(X_VCPKG_BUILD_GNU_LIBICONV 1)
+    elseif(VCPKG_TARGET_IS_ANDROID)
+        # Force build: Android bionic iconv does NOT support cp936/cp950 encodings needed by this game
+        set(X_VCPKG_BUILD_GNU_LIBICONV 1)
+    endif()
+endif()
+
+if(NOT X_VCPKG_BUILD_GNU_LIBICONV)
+    message(STATUS "Not building GNU libiconv.")
+    set(VCPKG_POLICY_EMPTY_PACKAGE enabled)
+    file(MAKE_DIRECTORY "${CURRENT_PACKAGES_DIR}/share/iconv")
+    file(COPY "${CMAKE_CURRENT_LIST_DIR}/vcpkg-cmake-wrapper.cmake" DESTINATION "${CURRENT_PACKAGES_DIR}/share/iconv")
+    return()
+endif()
+
+vcpkg_download_distfile(ARCHIVE
+    URLS "https://ftpmirror.gnu.org/gnu/libiconv/libiconv-${VERSION}.tar.gz"
+         "https://ftp.gnu.org/gnu/libiconv/libiconv-${VERSION}.tar.gz"
+         "https://www.mirrorservice.org/sites/ftp.gnu.org/gnu/libiconv/libiconv-${VERSION}.tar.gz"
+    FILENAME "libiconv-${VERSION}.tar.gz"
+    SHA512 a55eb3b7b785a78ab8918db8af541c9e11deb5ff4f89d54483287711ed797d87848ce0eafffa7ce26d9a7adb4b5a9891cb484f94bd4f51d3ce97a6a47b4c719a
+)
+vcpkg_extract_source_archive(SOURCE_PATH
+    ARCHIVE "${ARCHIVE}"
+    SOURCE_BASE "v${VERSION}"
+    PATCHES
+        0002-Config-for-MSVC.patch
+        0003-Add-export.patch
+        0004-ModuleFileName.patch
+)
+
+vcpkg_list(SET OPTIONS)
+if (NOT VCPKG_TARGET_IS_ANDROID)
+    vcpkg_list(APPEND OPTIONS --enable-relocatable)
+endif()
+
+vcpkg_configure_make(
+    SOURCE_PATH "${SOURCE_PATH}"
+    DETERMINE_BUILD_TRIPLET
+    USE_WRAPPERS
+    OPTIONS
+        --enable-extra-encodings
+        --without-libiconv-prefix
+        --without-libintl-prefix
+        ${OPTIONS}
+)
+vcpkg_install_make()
+
+vcpkg_copy_pdbs()
+vcpkg_copy_tool_dependencies("${CURRENT_PACKAGES_DIR}/tools/${PORT}/bin")
+vcpkg_copy_tool_dependencies("${CURRENT_PACKAGES_DIR}/tools/${PORT}/debug/bin")
+
+file(COPY "${CMAKE_CURRENT_LIST_DIR}/vcpkg-cmake-wrapper.cmake" DESTINATION "${CURRENT_PACKAGES_DIR}/share/iconv")
+
+set(VCPKG_POLICY_ALLOW_RESTRICTED_HEADERS enabled)
+file(REMOVE_RECURSE "${CURRENT_PACKAGES_DIR}/debug/share")
+file(REMOVE_RECURSE "${CURRENT_PACKAGES_DIR}/share/${PORT}")
+
+file(INSTALL "${CMAKE_CURRENT_LIST_DIR}/usage" DESTINATION "${CURRENT_PACKAGES_DIR}/share/${PORT}")
+
+vcpkg_install_copyright(FILE_LIST "${SOURCE_PATH}/COPYING.LIB" "${SOURCE_PATH}/COPYING" COMMENT "
+The libiconv and libcharset libraries and their header files are under LGPL,
+see COPYING.LIB below.
+
+The iconv program and the documentation are under GPL, see COPYING below.")

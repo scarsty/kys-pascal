@@ -1,0 +1,11 @@
+{
+  "name": "libiconv",
+  "version": "1.18",
+  "port-version": 3,
+  "description": [
+    "iconv() text conversion.",
+    "This overlay forces GNU libiconv build on Android (bionic lacks cp936/cp950 support)."
+  ],
+  "homepage": "https://www.gnu.org/software/libiconv/",
+  "license": null
+}

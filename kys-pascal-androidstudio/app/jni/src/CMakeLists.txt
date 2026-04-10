@@ -14,6 +14,7 @@ if(NOT DEFINED KYS_MLCC_DIR)
         set(KYS_MLCC_DIR "C:/project/mlcc")
     endif()
 endif()
+file(TO_CMAKE_PATH "${KYS_MLCC_DIR}" KYS_MLCC_DIR)
 
 set(VCPKG_ROOT_DIR "$ENV{VCPKG_ROOT}")
 if(NOT VCPKG_ROOT_DIR AND EXISTS "D:/project/vcpkg")

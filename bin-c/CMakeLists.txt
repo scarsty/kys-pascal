@@ -16,6 +16,7 @@ if(NOT DEFINED MLCC_DIR)
         message(FATAL_ERROR "Cannot find mlcc. Set -DMLCC_DIR=<path> or clone https://github.com/scarsty/mlcc")
     endif()
 endif()
+file(TO_CMAKE_PATH "${MLCC_DIR}" MLCC_DIR)
 message(STATUS "Using mlcc from: ${MLCC_DIR}")
 
 # --- 源文件 ---
