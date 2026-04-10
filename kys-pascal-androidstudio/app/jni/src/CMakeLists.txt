@@ -98,14 +98,9 @@ import_vcpkg_shared(vcpkg_sdl3 SDL3)
 import_vcpkg_shared(vcpkg_sdl3_mixer SDL3_mixer)
 import_vcpkg_shared(vcpkg_sdl3_ttf SDL3_ttf)
 import_vcpkg_shared(vcpkg_fluidsynth fluidsynth)
-import_vcpkg_shared(vcpkg_mpg123 mpg123)
 import_vcpkg_shared(vcpkg_freetype freetype)
 import_vcpkg_shared(vcpkg_png16 png16)
-import_vcpkg_shared(vcpkg_png png)
-import_vcpkg_shared(vcpkg_sqlite3 sqlite3)
 import_vcpkg_shared(vcpkg_lua lua)
-import_vcpkg_shared(vcpkg_yaml_cpp yaml-cpp)
-import_vcpkg_shared(vcpkg_zip zip)
 import_vcpkg_shared(vcpkg_z z)
 import_vcpkg_static(vcpkg_iconv iconv)
 import_vcpkg_static(vcpkg_charset charset)
@@ -118,14 +113,9 @@ target_link_libraries(kys_pascal_c PRIVATE
     vcpkg_sdl3_mixer
     vcpkg_sdl3_ttf
     vcpkg_fluidsynth
-    vcpkg_mpg123
     vcpkg_freetype
     vcpkg_png16
-    vcpkg_png
-    vcpkg_sqlite3
     vcpkg_lua
-    vcpkg_yaml_cpp
-    vcpkg_zip
     vcpkg_z
     vcpkg_iconv
     vcpkg_charset

@@ -288,9 +288,12 @@ jobs:
         run: |
           export ANDROID_NDK_HOME=$ANDROID_NDK_LATEST_HOME
           ~/vcpkg/vcpkg install \
-            sdl3 sdl3-ttf sdl3-mixer lua libiconv \
-            yaml-cpp libzip zlib sqlite3 freetype libpng \
-            mpg123 fluidsynth \
+            sdl3 \
+            sdl3-ttf \
+            "sdl3-mixer[core,fluidsynth]" \
+            fluidsynth \
+            lua \
+            libiconv \
             --triplet arm64-android-dynamic \
             --overlay-ports="${{ github.workspace }}/.ci/vcpkg-overlay-ports" \
             --debug
