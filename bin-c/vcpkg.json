@@ -1,0 +1,11 @@
+{
+  "name": "kys",
+  "version-string": "0.1",
+  "dependencies": [
+    "sdl3",
+    "sdl3-ttf",
+    "sdl3-mixer",
+    "lua",
+    "libiconv"
+  ]
+}

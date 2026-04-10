@@ -1,0 +1,141 @@
+name: Build
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  workflow_dispatch:
+
+env:
+  VCPKG_BINARY_SOURCES: "clear;files,${{ github.workspace }}/vcpkg-cache,readwrite"
+
+jobs:
+  # ========== Windows EXE ==========
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Clone mlcc
+        run: git clone --depth 1 https://github.com/scarsty/mlcc.git mlcc
+
+      - name: Setup vcpkg
+        run: |
+          git clone --depth 1 https://github.com/microsoft/vcpkg.git C:\vcpkg
+          C:\vcpkg\bootstrap-vcpkg.bat -disableMetrics
+
+      - name: Cache vcpkg packages
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/vcpkg-cache
+          key: vcpkg-win-x64-${{ hashFiles('bin-c/vcpkg.json') }}
+          restore-keys: vcpkg-win-x64-
+
+      - name: Install vcpkg dependencies
+        run: |
+          C:\vcpkg\vcpkg install sdl3 sdl3-ttf sdl3-mixer lua libiconv --triplet x64-windows
+
+      - name: Configure CMake
+        run: |
+          cd bin-c
+          cmake -S . -B build `
+            -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake `
+            -DVCPKG_TARGET_TRIPLET=x64-windows `
+            -DMLCC_DIR="${{ github.workspace }}/mlcc"
+
+      - name: Build
+        run: cmake --build bin-c/build --config Release
+
+      - name: Collect artifacts
+        run: |
+          New-Item -ItemType Directory -Force -Path artifact
+          Copy-Item bin-c/build/Release/kys.exe artifact/
+          # Copy runtime DLLs
+          Get-ChildItem bin-c/build/Release/*.dll -ErrorAction SilentlyContinue |
+            Copy-Item -Destination artifact/
+          Get-ChildItem C:/vcpkg/installed/x64-windows/bin/*.dll -ErrorAction SilentlyContinue |
+            Copy-Item -Destination artifact/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kys-windows
+          path: artifact/
+
+  # ========== Android SO ==========
+  build-android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Clone mlcc
+        run: git clone --depth 1 https://github.com/scarsty/mlcc.git mlcc
+
+      - name: Setup vcpkg
+        run: |
+          git clone --depth 1 https://github.com/microsoft/vcpkg.git ~/vcpkg
+          ~/vcpkg/bootstrap-vcpkg.sh -disableMetrics
+          echo "VCPKG_ROOT=$HOME/vcpkg" >> $GITHUB_ENV
+
+      - name: Create arm64-android-dynamic triplet
+        run: |
+          cat > ~/vcpkg/triplets/community/arm64-android-dynamic.cmake << 'EOF'
+          set(VCPKG_TARGET_IS_ANDROID ON)
+          set(VCPKG_TARGET_ARCHITECTURE arm64)
+          set(VCPKG_CRT_LINKAGE dynamic)
+          set(VCPKG_LIBRARY_LINKAGE dynamic)
+          set(VCPKG_CMAKE_SYSTEM_NAME Android)
+          set(VCPKG_CMAKE_SYSTEM_VERSION 29)
+          set(VCPKG_MAKE_BUILD_TRIPLET "--host=aarch64-linux-android")
+          if(NOT DEFINED ENV{ANDROID_NDK_HOME})
+              set(VCPKG_CMAKE_CONFIGURE_OPTIONS "-DANDROID_NDK=$ENV{ANDROID_NDK_LATEST_HOME}")
+          endif()
+          EOF
+
+      - name: Cache vcpkg packages
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/vcpkg-cache
+          key: vcpkg-android-arm64-${{ hashFiles('kys-pascal-androidstudio/app/jni/src/CMakeLists.txt') }}
+          restore-keys: vcpkg-android-arm64-
+
+      - name: Install vcpkg dependencies for Android
+        run: |
+          export ANDROID_NDK_HOME=$ANDROID_NDK_LATEST_HOME
+          ~/vcpkg/vcpkg install \
+            sdl3 sdl3-ttf sdl3-mixer lua libiconv \
+            yaml-cpp libzip zlib sqlite3 freetype libpng \
+            mpg123 fluidsynth \
+            --triplet arm64-android-dynamic \
+            --overlay-ports=kys-pascal-androidstudio/vcpkg-overlay-ports
+
+      - name: Setup Android SDK
+        run: |
+          echo "sdk.dir=$ANDROID_HOME" > kys-pascal-androidstudio/local.properties
+          echo "ndk.dir=$ANDROID_NDK_LATEST_HOME" >> kys-pascal-androidstudio/local.properties
+
+      - name: Build with Gradle
+        working-directory: kys-pascal-androidstudio
+        env:
+          MLCC_DIR: ${{ github.workspace }}/mlcc
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleRelease
+
+      - name: Collect .so
+        run: |
+          mkdir -p artifact
+          find kys-pascal-androidstudio/app/build -name "libkys_pascal_c.so" -exec cp {} artifact/ \;
+          # Also collect dependency .so files
+          find kys-pascal-androidstudio/app/build -path "*/arm64-v8a/*.so" -exec cp {} artifact/ \; 2>/dev/null || true
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kys-android-so
+          path: artifact/

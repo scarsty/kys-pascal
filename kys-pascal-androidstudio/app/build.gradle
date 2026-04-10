@@ -15,7 +15,11 @@ android {
         versionName "1.0"
         externalNativeBuild {
             cmake {
-                arguments "-DANDROID_PLATFORM=android-29", "-DANDROID_STL=c++_shared"
+                def cmakeArgs = ["-DANDROID_PLATFORM=android-29", "-DANDROID_STL=c++_shared"]
+                if (System.getenv("MLCC_DIR")) {
+                    cmakeArgs.add("-DKYS_MLCC_DIR=" + System.getenv("MLCC_DIR"))
+                }
+                arguments cmakeArgs.toArray(new String[0])
                 // abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'
                 abiFilters 'arm64-v8a'
             }

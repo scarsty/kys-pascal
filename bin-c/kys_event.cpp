@@ -472,7 +472,7 @@ int instruct_20(int jump1, int jump2)
 
 void instruct_21(int rnum)
 {
-    int newlist[6];
+    int16_t newlist[6];
     int p = 0;
     for (int i = 0; i < 6; i++)
     {

@@ -4,7 +4,16 @@ project(kys_pascal_c_android LANGUAGES C CXX)
 
 set(KYS_ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../../../")
 set(KYS_CPP_DIR "${KYS_ROOT_DIR}/bin-c")
-set(KYS_MLCC_DIR "C:/project/mlcc")
+
+if(NOT DEFINED KYS_MLCC_DIR)
+    if(DEFINED ENV{MLCC_DIR})
+        set(KYS_MLCC_DIR "$ENV{MLCC_DIR}")
+    elseif(EXISTS "${KYS_ROOT_DIR}/mlcc/filefunc.cpp")
+        set(KYS_MLCC_DIR "${KYS_ROOT_DIR}/mlcc")
+    else()
+        set(KYS_MLCC_DIR "C:/project/mlcc")
+    endif()
+endif()
 
 set(VCPKG_ROOT_DIR "$ENV{VCPKG_ROOT}")
 if(NOT VCPKG_ROOT_DIR AND EXISTS "D:/project/vcpkg")
