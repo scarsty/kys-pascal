@@ -9,6 +9,7 @@ on:
 
 env:
   VCPKG_BINARY_SOURCES: "clear;files,${{ github.workspace }}/vcpkg-cache,readwrite"
+  ANDROID_NDK_VERSION: "29.0.14206865"
 
 jobs:
   # ========== Windows EXE ==========
@@ -301,12 +302,13 @@ jobs:
       - name: Setup Android SDK
         run: |
           echo "sdk.dir=$ANDROID_HOME" > kys-pascal-androidstudio/local.properties
-          echo "ndk.dir=$ANDROID_NDK_LATEST_HOME" >> kys-pascal-androidstudio/local.properties
+          echo "ndk.dir=$ANDROID_HOME/ndk/$ANDROID_NDK_VERSION" >> kys-pascal-androidstudio/local.properties
 
       - name: Build with Gradle
         working-directory: kys-pascal-androidstudio
         env:
           MLCC_DIR: ${{ github.workspace }}/mlcc
+          ANDROID_NDK_VERSION: ${{ env.ANDROID_NDK_VERSION }}
         run: |
           chmod +x gradlew
           ./gradlew assembleRelease --stacktrace --info

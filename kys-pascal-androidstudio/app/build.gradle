@@ -3,10 +3,12 @@ plugins {
 }
 
 def buildWithCMake = project.hasProperty('BUILD_WITH_CMAKE');
+def configuredNdkVersion = System.getenv('ANDROID_NDK_VERSION') ?: '29.0.14206865'
 
 android {
     namespace = "org.libsdl.app"
     compileSdkVersion 35
+    ndkVersion configuredNdkVersion
     defaultConfig {
         applicationId = "org.libsdl.kys_pascal_c"
         minSdkVersion 26
