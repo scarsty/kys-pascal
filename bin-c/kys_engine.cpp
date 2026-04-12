@@ -1152,14 +1152,6 @@ void DrawTextWithRectNoUpdate(SDL_Surface* sur, const std::string& word, int x, 
     DrawShadowText(sur, word, x + 3, y + 3, color1, color2);
 }
 
-// ---- PNG贴图 (桩实现) ----
-void DrawPNGTile(TPNGIndex PNGIndex, int FrameNum, const char* RectArea, SDL_Surface* scr, int px, int py) {}
-void DrawPNGTile(TPNGIndex PNGIndex, int FrameNum, const char* RectArea, SDL_Surface* scr, int px, int py,
-    int shadow, int alpha, uint32_t mixColor, int mixAlpha) {}
-void DrawPNGTile(TPNGIndex PNGIndex, int FrameNum, const char* RectArea, SDL_Surface* scr, int px, int py,
-    int shadow, int alpha, uint32_t mixColor, int mixAlpha, int depth,
-    char* BlockImgR, int Width, int Height, int size, int leftupx, int leftupy) {}
-
 // ---- 屏幕管理 ----
 
 void UpdateScreen(SDL_Surface* scr1, int x, int y, int w, int h)
@@ -1203,7 +1195,17 @@ void ResizeWindow(int w, int h)
 
 void SwitchFullscreen()
 {
-    // Pascal版未实现
+    if (!window)
+    {
+        return;
+    }
+    bool targetFullscreen = (FULLSCREEN == 0);
+    SDL_SetWindowFullscreen(window, targetFullscreen);
+
+    uint64_t flags = SDL_GetWindowFlags(window);
+    FULLSCREEN = (flags & SDL_WINDOW_FULLSCREEN) ? 1 : 0;
+    SDL_GetWindowSize(window, &RESOLUTIONX, &RESOLUTIONY);
+    UpdateAllScreen();
 }
 
 void SDL_GetMouseState2(int& x, int& y)

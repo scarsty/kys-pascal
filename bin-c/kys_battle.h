@@ -27,6 +27,7 @@ void CalCanSelect(int bnum, int mode, int step);
 // 攻击系统
 void Attack(int bnum);
 void AttackAction(int bnum, int i, int mnum, int level);
+void AttackAction(int bnum, int mnum, int level);
 void AttackActionAll(int bnum, int mnum, int level);
 void ShowMagicName(int mnum, int mode = 0);
 int SelectMagic(int rnum);

@@ -1131,7 +1131,6 @@ void Attack(int bnum)
 
     while (true)
     {
-        int magicIdx = -1;
         int mnum = SelectMagic(rnum);
         if (mnum < 0)
         {
@@ -1190,28 +1189,7 @@ void Attack(int bnum)
 
         if (Brole[bnum].Acted == 1)
         {
-            // 攻击成功, 武功等级增加并播放效果
-            for (int i1 = 0; i1 <= (Rrole[rnum].AttTwice > 0 ? 1 : 0); i1++)
-            {
-                Rrole[rnum].MagLevel[magIdx] += rand() % 2 + 1;
-                if (Rrole[rnum].MagLevel[magIdx] > 999)
-                {
-                    Rrole[rnum].MagLevel[magIdx] = 999;
-                }
-                if (Rmagic[mnum].UnKnow[4] > 0)
-                {
-                    CallEvent(Rmagic[mnum].UnKnow[4]);
-                }
-                else
-                {
-                    // 攻击效果
-                    ShowMagicName(mnum);
-                    PlayActionAmination(bnum, Rmagic[mnum].MagicType, mnum);
-                    PlayMagicAmination(bnum, Rmagic[mnum].AmiNum);
-                    CalHurtRole(bnum, mnum, level);
-                    ShowHurtValue(Rmagic[mnum].HurtType);
-                }
-            }
+            AttackAction(bnum, magIdx, mnum, level);
             break;
         }
     }
@@ -1219,12 +1197,37 @@ void Attack(int bnum)
 
 void AttackAction(int bnum, int i, int mnum, int level)
 {
-    if (i >= BRoleAmount || Brole[i].Dead != 0)
+    int rnum = Brole[bnum].rnum;
+    if (i < 0 || i >= 10 || Brole[bnum].Acted != 1)
     {
         return;
     }
-    int hurt = CalHurtValue(bnum, i, mnum, level);
-    Brole[i].ShowNumber = hurt;
+
+    for (int i1 = 0; i1 <= (Rrole[rnum].AttTwice > 0 ? 1 : 0); i1++)
+    {
+        Rrole[rnum].MagLevel[i] += rand() % 2 + 1;
+        if (Rrole[rnum].MagLevel[i] > 999)
+        {
+            Rrole[rnum].MagLevel[i] = 999;
+        }
+        if (Rmagic[mnum].UnKnow[4] > 0)
+        {
+            CallEvent(Rmagic[mnum].UnKnow[4]);
+        }
+        else
+        {
+            AttackAction(bnum, mnum, level);
+        }
+    }
+}
+
+void AttackAction(int bnum, int mnum, int level)
+{
+    ShowMagicName(mnum);
+    PlayActionAmination(bnum, Rmagic[mnum].MagicType, mnum);
+    PlayMagicAmination(bnum, Rmagic[mnum].AmiNum);
+    CalHurtRole(bnum, mnum, level);
+    ShowHurtValue(Rmagic[mnum].HurtType);
 }
 
 void AttackActionAll(int bnum, int mnum, int level)
@@ -1902,18 +1905,25 @@ void ClearDeadRolePic()
 
 void Wait(int bnum)
 {
-    // 交换至列表尾部
-    int pos = -1;
+    Brole[bnum].Acted = 0;
+    Brole[BRoleAmount] = Brole[bnum];
+
+    for (int i = bnum; i < BRoleAmount; i++)
+    {
+        Brole[i] = Brole[i + 1];
+    }
+
     for (int i = 0; i < BRoleAmount; i++)
     {
-        if (&Brole[i] == &Brole[bnum])
+        if (Brole[i].Dead == 0)
         {
-            pos = i;
-            break;
+            BField[2][Brole[i].X][Brole[i].Y] = i;
+        }
+        else
+        {
+            BField[2][Brole[i].X][Brole[i].Y] = -1;
         }
     }
-    // 标记为已行动但不结束回合 - 简化实现
-    Brole[bnum].Acted = 1;
 }
 
 void RestoreRoleStatus()
@@ -2452,49 +2462,102 @@ void MedPoison(int bnum)
 void UseHiddenWeapon(int bnum, int inum)
 {
     int rnum = Brole[bnum].rnum;
-    int step = Rrole[rnum].HidWeapon / 15 + 1;
+    int hidden = Rrole[rnum].HidWeapon;
+    int step = hidden / 15 + 1;
     CalCanSelect(bnum, 1, step);
-    if (SelectAim(bnum, step))
+    bool select = false;
+    int eventnum = (inum < 0) ? -1 : Ritem[inum].UnKnow7;
+    if (eventnum > 0)
     {
-        for (int i = 0; i < BRoleAmount; i++)
+        CallEvent(eventnum);
+        return;
+    }
+
+    if (Brole[bnum].Team == 0 && Brole[bnum].Auto == 0)
+    {
+        select = SelectAim(bnum, step);
+    }
+    else if (BField[3][Ax][Ay] >= 0)
+    {
+        select = true;
+    }
+
+    if (BField[2][Ax][Ay] >= 0 && select && Brole[BField[2][Ax][Ay]].Team != Brole[bnum].Team)
+    {
+        if (Brole[bnum].Team == 0 && Brole[bnum].Auto != 0)
         {
-            if (Brole[i].Dead == 0 && Brole[i].X == Ax && Brole[i].Y == Ay && Brole[i].Team != Brole[bnum].Team)
+            inum = -1;
+            int maxhurt = 0;
+            for (int i = 0; i < MAX_ITEM_AMOUNT; i++)
             {
-                int hurt = Ritem[inum].AddAttack + Rrole[Brole[bnum].rnum].Attack / 3;
-                Rrole[Brole[i].rnum].CurrentHP -= hurt;
-                if (Rrole[Brole[i].rnum].CurrentHP <= 0)
+                if (RItemList[i].Amount > 0 && RItemList[i].Number >= 0)
                 {
-                    Rrole[Brole[i].rnum].CurrentHP = 0;
-                    Brole[i].Dead = 1;
+                    if (Ritem[RItemList[i].Number].ItemType == 4 && Ritem[RItemList[i].Number].AddCurrentHP < maxhurt)
+                    {
+                        maxhurt = Ritem[RItemList[i].Number].AddCurrentHP;
+                        inum = RItemList[i].Number;
+                    }
                 }
-                Brole[i].ShowNumber = hurt;
             }
         }
-        ShowHurtValue(0);
-        instruct_32(inum, -1);
-        Brole[bnum].Acted = 1;
+        if (Brole[bnum].Team != 0)
+        {
+            inum = -1;
+            int maxhurt = 0;
+            for (int i = 0; i < 4; i++)
+            {
+                if (Rrole[rnum].TakingItemAmount[i] > 0 && Rrole[rnum].TakingItem[i] >= 0)
+                {
+                    int itemNum = Rrole[rnum].TakingItem[i];
+                    if (Ritem[itemNum].ItemType == 4 && Ritem[itemNum].AddCurrentHP < maxhurt)
+                    {
+                        maxhurt = Ritem[itemNum].AddCurrentHP;
+                        inum = itemNum;
+                    }
+                }
+            }
+        }
+
+        if (inum >= 0)
+        {
+            Brole[bnum].Acted = 1;
+            if (Brole[bnum].Team == 0)
+            {
+                instruct_32(inum, -1);
+            }
+            else
+            {
+                instruct_41(rnum, inum, -1);
+            }
+
+            int bnum1 = BField[2][Ax][Ay];
+            if (Brole[bnum1].Team != Brole[bnum].Team)
+            {
+                int rnum1 = Brole[bnum1].rnum;
+                int hurt = hidden / 2 - Ritem[inum].AddCurrentHP / 3 - Rrole[rnum1].HidWeapon;
+                hurt = std::max(hurt * (Rrole[rnum1].Hurt / 33 + 1), 1 + rand() % 10);
+                Rrole[rnum1].CurrentHP -= hurt;
+                Brole[bnum1].ShowNumber = hurt;
+                Brole[bnum1].ExpGot += hurt;
+                Rrole[rnum1].Hurt = std::min<int>(Rrole[rnum1].Hurt + hurt / LIFE_HURT, 99);
+                Rrole[rnum1].Poison = std::min<int>(Rrole[rnum1].Poison + Ritem[inum].AddPoi * (100 - Rrole[rnum1].DefPoi) / 100, 99);
+                SetAminationPosition(0, 0);
+                ShowMagicName(inum, 1);
+                PlayActionAmination(bnum, 0);
+                PlayMagicAmination(bnum, Ritem[inum].AmiNum);
+                ShowHurtValue(0);
+            }
+        }
     }
 }
 
 void Rest(int bnum)
 {
     int rnum = Brole[bnum].rnum;
-    Rrole[rnum].PhyPower += 5 + rand() % 5;
-    if (Rrole[rnum].PhyPower > MAX_PHYSICAL_POWER)
-    {
-        Rrole[rnum].PhyPower = MAX_PHYSICAL_POWER;
-    }
-    Rrole[rnum].CurrentHP += Rrole[rnum].MaxHP / 15;
-    if (Rrole[rnum].CurrentHP > Rrole[rnum].MaxHP)
-    {
-        Rrole[rnum].CurrentHP = Rrole[rnum].MaxHP;
-    }
-    Rrole[rnum].CurrentMP += Rrole[rnum].MaxMP / 15;
-    if (Rrole[rnum].CurrentMP > Rrole[rnum].MaxMP)
-    {
-        Rrole[rnum].CurrentMP = Rrole[rnum].MaxMP;
-    }
     Brole[bnum].Acted = 1;
+    Rrole[rnum].CurrentHP = std::min<int>(Rrole[rnum].CurrentHP + (5 + Brole[bnum].Step) * Rrole[rnum].MaxHP / 200, Rrole[rnum].MaxHP);
+    Rrole[rnum].CurrentMP = std::min<int>(Rrole[rnum].CurrentMP + (5 + Brole[bnum].Step) * Rrole[rnum].MaxMP / 200, Rrole[rnum].MaxMP);
+    Rrole[rnum].PhyPower = std::min<int>(Rrole[rnum].PhyPower + (5 + Brole[bnum].Step) * MAX_PHYSICAL_POWER / 200, MAX_PHYSICAL_POWER);
 }
 
 bool TeamModeMenu(int bnum)
@@ -2686,88 +2749,318 @@ bool TeamModeMenu(int bnum)
 void AutoBattle(int bnum)
 {
     int rnum = Brole[bnum].rnum;
-    // 简单AI: 找最近敌人，移动并攻击
-    int targetTeam = (Brole[bnum].Team == 0) ? 1 : 0;
-    int bestTarget = -1, bestDist = 9999;
-    for (int i = 0; i < BRoleAmount; i++)
-    {
-        if (Brole[i].Team == targetTeam && Brole[i].Dead == 0)
-        {
-            int dist = abs(Brole[i].X - Brole[bnum].X) + abs(Brole[i].Y - Brole[bnum].Y);
-            if (dist < bestDist)
-            {
-                bestDist = dist;
-                bestTarget = i;
-            }
-        }
-    }
-    if (bestTarget < 0)
-    {
-        return;
-    }
+    ShowSimpleStatus(rnum, CENTER_X + 100, 50);
+    SDL_Delay(450);
 
-    // 移动
-    CalCanSelect(bnum, 0, Brole[bnum].Step);
-    int Mx1 = Brole[bnum].X, My1 = Brole[bnum].Y;
-    NearestMove(Mx1, My1, bnum);
-    Ax = Mx1;
-    Ay = My1;
-    MoveAmination(bnum);
-
-    // 尝试攻击
-    if (Rrole[rnum].PhyPower >= 10)
+    if (((Brole[bnum].Team == 0) && (Brole[bnum].AutoMode == 2)) || (Brole[bnum].Team != 0))
     {
-        int bestMagic = -1, bestLevel = 0;
-        for (int m = 0; m < 10; m++)
+        if (Brole[bnum].Acted != 1 && Rrole[rnum].CurrentHP < Rrole[rnum].MaxHP / 5)
         {
-            if (Rrole[rnum].Magic[m] > 0)
+            if (rand() % 100 < 70)
             {
-                int mnum = Rrole[rnum].Magic[m];
-                int level = std::min(10, Rrole[rnum].MagLevel[m] / 100 + 1);
-                if (Rrole[rnum].CurrentMP >= Rmagic[mnum].NeedMP)
+                if (Rrole[rnum].Medcine >= 50 && Rrole[rnum].PhyPower >= 50 && rand() % 100 < 50)
                 {
-                    if (bestMagic < 0)
-                    {
-                        bestMagic = mnum;
-                        bestLevel = level;
-                    }
+                    Medcine(bnum);
+                }
+                else
+                {
+                    AutoUseItem(bnum, 45);
                 }
             }
         }
-        if (bestMagic >= 0)
+
+        if (Brole[bnum].Acted != 1 && Rrole[rnum].CurrentMP < Rrole[rnum].MaxMP / 5)
         {
-            int step = Rmagic[bestMagic].MoveDistance[bestLevel - 1];
-            int dist = abs(Brole[bestTarget].X - Brole[bnum].X) + abs(Brole[bestTarget].Y - Brole[bnum].Y);
-            if (dist <= step)
+            if (rand() % 100 < 60)
             {
-                Ax = Brole[bestTarget].X;
-                Ay = Brole[bestTarget].Y;
-                SetAminationPosition(Rmagic[bestMagic].AttAreaType, step, Rmagic[bestMagic].AttDistance[bestLevel - 1]);
-                ShowMagicName(bestMagic);
-                PlayActionAmination(bnum, Rmagic[bestMagic].MagicType, bestMagic);
-                PlayMagicAmination(bnum, Rmagic[bestMagic].AmiNum);
-                CalHurtRole(bnum, bestMagic, bestLevel);
-                ShowHurtValue(Rmagic[bestMagic].HurtType);
+                AutoUseItem(bnum, 50);
             }
         }
+
+        if (Brole[bnum].Acted != 1 && Rrole[rnum].PhyPower < 20)
+        {
+            if (rand() % 100 < 80)
+            {
+                AutoUseItem(bnum, 48);
+            }
+        }
+    }
+
+    if (((Brole[bnum].Team == 0) && (Brole[bnum].AutoMode == 2)) || (Brole[bnum].Team != 0))
+    {
+        int moveX = Ax;
+        int moveY = Ay;
+        int targetX = -1;
+        int targetY = -1;
+
+        if (Brole[bnum].Acted != 1 && Rrole[rnum].Medcine > 50 && Rrole[rnum].PhyPower >= 70)
+        {
+            if (rand() % 100 < 50)
+            {
+                NearestMoveByPro(moveX, moveY, targetX, targetY, bnum, 1, 0, 17, -1, 1);
+                if (targetX != -1)
+                {
+                    Ax = moveX;
+                    Ay = moveY;
+                    MoveAmination(bnum);
+                    Ax = targetX;
+                    Ay = targetY;
+                    Medcine(bnum);
+                }
+            }
+        }
+
+        if (Brole[bnum].Acted != 1 && Rrole[rnum].MedPoi > 50 && Rrole[rnum].PhyPower >= 70)
+        {
+            if (rand() % 100 < 50)
+            {
+                NearestMoveByPro(moveX, moveY, targetX, targetY, bnum, 1, 0, 20, 1, 2);
+                if (targetX != -1)
+                {
+                    Ax = moveX;
+                    Ay = moveY;
+                    MoveAmination(bnum);
+                    Ax = targetX;
+                    Ay = targetY;
+                    MedPoison(bnum);
+                }
+            }
+        }
+
+        if (Brole[bnum].Acted != 1 && Rrole[rnum].UsePoi > Rrole[rnum].Attack && Rrole[rnum].PhyPower >= 60)
+        {
+            if (rand() % 100 < 50)
+            {
+                NearestMoveByPro(moveX, moveY, targetX, targetY, bnum, 0, std::min(Rrole[rnum].UsePoi / 15 + 1, 15), 49, -1, 0);
+                if (targetX != -1)
+                {
+                    Ax = moveX;
+                    Ay = moveY;
+                    MoveAmination(bnum);
+                    Ax = targetX;
+                    Ay = targetY;
+                    UsePoison(bnum);
+                }
+            }
+        }
+
+        if (Brole[bnum].Acted != 1 && Rrole[rnum].HidWeapon > Rrole[rnum].Attack && Rrole[rnum].PhyPower >= 30)
+        {
+            NearestMoveByPro(moveX, moveY, targetX, targetY, bnum, 0, 1, 17, -1, 0);
+            if (targetX != -1)
+            {
+                Ax = moveX;
+                Ay = moveY;
+                MoveAmination(bnum);
+                Ax = targetX;
+                Ay = targetY;
+                UseHiddenWeapon(bnum, -1);
+            }
+        }
+    }
+
+    if ((((Brole[bnum].Team == 0) && ((Brole[bnum].AutoMode == 1) || (Brole[bnum].AutoMode == 2))) || (Brole[bnum].Team != 0))
+        && Brole[bnum].Acted != 1 && Rrole[rnum].PhyPower >= 10)
+    {
+        CalCanSelect(bnum, 0, Brole[bnum].Step);
+        int curBx1 = -1, curBy1 = -1, curAx1 = -1, curAy1 = -1;
+        int curMnum = -1, curMaxHurt = 0, curlevel = 0, chosenMagicIndex = -1;
+        for (int magicIndex = 0; magicIndex < 10; magicIndex++)
+        {
+            int mnum = Rrole[rnum].Magic[magicIndex];
+            if (mnum > 0)
+            {
+                int level = Rrole[rnum].MagLevel[magicIndex] / 100 + 1;
+                if (Rrole[rnum].CurrentMP < Rmagic[mnum].NeedMP * ((level + 1) / 2))
+                {
+                    level = (Rrole[rnum].CurrentMP / Rmagic[mnum].NeedMP) * 2;
+                }
+                if (level > 10)
+                {
+                    level = 10;
+                }
+                if (level <= 0)
+                {
+                    level = 1;
+                }
+                int moveX = -1, moveY = -1, targetX = -1, targetY = -1, tempmaxhurt = -1;
+                TryMoveAttack(moveX, moveY, targetX, targetY, tempmaxhurt, bnum, mnum, level);
+                if (tempmaxhurt > curMaxHurt)
+                {
+                    curBx1 = moveX;
+                    curBy1 = moveY;
+                    curAx1 = targetX;
+                    curAy1 = targetY;
+                    curMnum = mnum;
+                    curlevel = level;
+                    curMaxHurt = tempmaxhurt;
+                    chosenMagicIndex = magicIndex;
+                }
+            }
+        }
+
+        if (curMaxHurt > 0)
+        {
+            Ax = curBx1;
+            Ay = curBy1;
+            MoveAmination(bnum);
+            Ax = curAx1;
+            Ay = curAy1;
+            SetAminationPosition(Rmagic[curMnum].AttAreaType, Rmagic[curMnum].MoveDistance[curlevel - 1], Rmagic[curMnum].AttDistance[curlevel - 1]);
+            Brole[bnum].Acted = 1;
+            AttackAction(bnum, chosenMagicIndex, curMnum, curlevel);
+        }
+    }
+
+    if (Brole[bnum].Acted != 1)
+    {
+        if (((Brole[bnum].Team == 0) && ((Brole[bnum].AutoMode == 1) || (Brole[bnum].AutoMode == 2))) || (Brole[bnum].Team != 0))
+        {
+            NearestMove(Ax, Ay, bnum);
+            MoveAmination(bnum);
+        }
+        Rest(bnum);
     }
 }
 
 void AutoUseItem(int bnum, int list)
 {
-    // AI使用物品 - 简化
-    BattleMenuItem(bnum);
+    int rnum = Brole[bnum].rnum;
+    int p = -1;
+    int temp = 10;
+
+    if (Brole[bnum].Team != 0)
+    {
+        for (int i = 0; i < 4; i++)
+        {
+            if (Rrole[rnum].TakingItem[i] >= 0)
+            {
+                if (Ritem[Rrole[rnum].TakingItem[i]].Data[list] > temp)
+                {
+                    temp = Ritem[Rrole[rnum].TakingItem[i]].Data[list];
+                    p = i;
+                }
+            }
+        }
+    }
+    else
+    {
+        for (int i = 0; i < MAX_ITEM_AMOUNT; i++)
+        {
+            if (RItemList[i].Amount > 0 && Ritem[RItemList[i].Number].ItemType == 3)
+            {
+                if (Ritem[RItemList[i].Number].Data[list] > temp)
+                {
+                    temp = Ritem[RItemList[i].Number].Data[list];
+                    p = i;
+                }
+            }
+        }
+    }
+
+    if (p >= 0)
+    {
+        int inum = (Brole[bnum].Team != 0) ? Rrole[rnum].TakingItem[p] : RItemList[p].Number;
+        Redraw();
+        UpdateScreen(screen, 0, 0, screen->w, screen->h);
+        EatOneItem(rnum, inum);
+        if (Brole[bnum].Team != 0)
+        {
+            instruct_41(rnum, Rrole[rnum].TakingItem[p], -1);
+        }
+        else
+        {
+            instruct_32(RItemList[p].Number, -1);
+        }
+        Brole[bnum].Acted = 1;
+        SDL_Delay(500);
+    }
 }
 
 void TryMoveAttack(int& Mx1, int& My1, int& Ax1, int& Ay1, int& tempmaxhurt, int bnum, int mnum, int level)
 {
-    int AreaType = Rmagic[mnum].AttAreaType;
-    switch (AreaType)
+    int step = Brole[bnum].Step;
+    Mx1 = -1;
+    My1 = -1;
+    Ax1 = -1;
+    Ay1 = -1;
+    tempmaxhurt = -1;
+
+    int aimHurt[64][64];
+    memset(aimHurt, 0xFF, sizeof(aimHurt));
+
+    int areaType = Rmagic[mnum].AttAreaType;
+    int distance = Rmagic[mnum].MoveDistance[level - 1];
+    int range = Rmagic[mnum].AttDistance[level - 1];
+    int myteam = Brole[bnum].Team;
+
+    for (int curX = 0; curX < 64; curX++)
     {
-    case 0: CalPoint(Mx1, My1, Ax1, Ay1, tempmaxhurt, Brole[bnum].X, Brole[bnum].Y, bnum, mnum, level); break;
-    case 1: calline(Mx1, My1, Ax1, Ay1, tempmaxhurt, Brole[bnum].X, Brole[bnum].Y, bnum, mnum, level); break;
-    case 2: calcross(Mx1, My1, Ax1, Ay1, tempmaxhurt, Brole[bnum].X, Brole[bnum].Y, bnum, mnum, level); break;
-    case 3: CalArea(Mx1, My1, Ax1, Ay1, tempmaxhurt, Brole[bnum].X, Brole[bnum].Y, bnum, mnum, level); break;
+        for (int curY = 0; curY < 64; curY++)
+        {
+            if (BField[3][curX][curY] >= 0 && BField[3][curX][curY] <= step)
+            {
+                int dis = 0;
+                switch (areaType)
+                {
+                case 0:
+                case 3:
+                    dis = distance;
+                    break;
+                case 1:
+                    dis = 1;
+                    break;
+                case 2:
+                    dis = 0;
+                    break;
+                default:
+                    break;
+                }
+
+                for (int i1 = std::max(curX - dis, 0); i1 <= std::min(curX + dis, 63); i1++)
+                {
+                    int dis0 = abs(i1 - curX);
+                    for (int i2 = std::max(curY - dis + dis0, 0); i2 <= std::min(curY + dis - dis0, 63); i2++)
+                    {
+                        if (areaType != 3)
+                        {
+                            SetAminationPosition2(curX, curY, i1, i2, areaType, distance, range);
+                        }
+
+                        int temphurt = 0;
+                        if ((areaType == 0 || areaType == 3) && aimHurt[i1][i2] >= 0)
+                        {
+                            if (aimHurt[i1][i2] > 0)
+                            {
+                                temphurt = aimHurt[i1][i2] + rand() % 5 - rand() % 5;
+                            }
+                        }
+                        else
+                        {
+                            for (int i = 0; i < BRoleAmount; i++)
+                            {
+                                if (Brole[i].Team != myteam && Brole[i].Dead == 0
+                                    && (((areaType != 3) && (BField[4][Brole[i].X][Brole[i].Y] > 0))
+                                        || ((areaType == 3) && (abs(i1 - Brole[i].X) <= range) && (abs(i2 - Brole[i].Y) <= range))))
+                                {
+                                    temphurt += CalHurtValue2(bnum, i, mnum, level);
+                                }
+                            }
+                            aimHurt[i1][i2] = temphurt;
+                        }
+
+                        if (temphurt > tempmaxhurt)
+                        {
+                            tempmaxhurt = temphurt;
+                            Mx1 = curX;
+                            My1 = curY;
+                            Ax1 = i1;
+                            Ay1 = i2;
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -2834,49 +3127,102 @@ void CalArea(int& Mx1, int& My1, int& Ax1, int& Ay1, int& tempmaxhurt, int curX,
 
 void NearestMove(int& Mx1, int& My1, int bnum)
 {
-    int targetTeam = (Brole[bnum].Team == 0) ? 1 : 0;
-    int bestDist = 9999;
-    int tx = -1, ty = -1;
-    for (int i = 0; i < BRoleAmount; i++)
-    {
-        if (Brole[i].Team == targetTeam && Brole[i].Dead == 0)
-        {
-            int dist = abs(Brole[i].X - Brole[bnum].X) + abs(Brole[i].Y - Brole[bnum].Y);
-            if (dist < bestDist)
-            {
-                bestDist = dist;
-                tx = Brole[i].X;
-                ty = Brole[i].Y;
-            }
-        }
-    }
-    if (tx < 0)
-    {
-        return;
-    }
-    // 在可移动范围内找最接近目标的位置
-    int bestMDist = 9999;
-    for (int i = 0; i < 64; i++)
-    {
-        for (int j = 0; j < 64; j++)
-        {
-            if (BField[3][i][j] >= 0 && (BField[2][i][j] == -1 || (i == Brole[bnum].X && j == Brole[bnum].Y)))
-            {
-                int dist = abs(i - tx) + abs(j - ty);
-                if (dist < bestMDist)
-                {
-                    bestMDist = dist;
-                    Mx1 = i;
-                    My1 = j;
-                }
-            }
-        }
-    }
+    int temp1 = -1;
+    int temp2 = -1;
+    NearestMoveByPro(Mx1, My1, temp1, temp2, bnum, 0, 1, 0, 0, 0);
 }
 
 void NearestMoveByPro(int& Mx1, int& My1, int& Ax1, int& Ay1, int bnum, int TeamMate, int KeepDis, int Prolist, int MaxMinPro, int mode)
 {
-    NearestMove(Mx1, My1, bnum);
-    Ax1 = Mx1;
-    Ay1 = My1;
+    CalCanSelect(bnum, 0, Brole[bnum].Step);
+    int myteam = Brole[bnum].Team;
+    int mindis = 9999;
+    int tempPro = (MaxMinPro < 0) ? 10000 : 0;
+    bool select = false;
+    if (KeepDis < 0)
+    {
+        KeepDis = 0;
+    }
+
+    Mx1 = Bx;
+    My1 = By;
+    int aimX = -1;
+    int aimY = -1;
+
+    if (MaxMinPro != 0 && Prolist >= 0 && Prolist < (int)(sizeof(Rrole[0].Data) / sizeof(Rrole[0].Data[0])))
+    {
+        for (int i = 0; i < BRoleAmount; i++)
+        {
+            int rnum = Brole[i].rnum;
+            bool teamMatch = ((TeamMate == 0) && (myteam != Brole[i].Team)) || ((TeamMate != 0) && (myteam == Brole[i].Team));
+            if (teamMatch && Brole[i].Dead == 0 && Rrole[rnum].Data[Prolist] * (MaxMinPro > 0 ? 1 : -1) > tempPro * (MaxMinPro > 0 ? 1 : -1))
+            {
+                if (abs(Brole[i].X - Bx) + abs(Brole[i].Y - By) <= KeepDis + Brole[bnum].Step)
+                {
+                    bool check = false;
+                    switch (mode)
+                    {
+                    case 0:
+                        check = true;
+                        break;
+                    case 1:
+                        check = (Rrole[rnum].CurrentHP < Rrole[rnum].MaxHP * 2 / 3);
+                        break;
+                    case 2:
+                        check = (Rrole[rnum].Poison > 33);
+                        break;
+                    }
+                    if (check)
+                    {
+                        aimX = Brole[i].X;
+                        aimY = Brole[i].Y;
+                        tempPro = Rrole[rnum].Data[Prolist];
+                        select = true;
+                    }
+                }
+            }
+        }
+    }
+
+    if (!select && mode == 0)
+    {
+        for (int i = 0; i < BRoleAmount; i++)
+        {
+            bool teamMatch = ((TeamMate == 0) && (myteam != Brole[i].Team)) || ((TeamMate != 0) && (myteam == Brole[i].Team));
+            if (teamMatch && Brole[i].Dead == 0)
+            {
+                int tempdis = abs(Brole[i].X - Bx) + abs(Brole[i].Y - By);
+                if (tempdis < mindis)
+                {
+                    mindis = tempdis;
+                    aimX = Brole[i].X;
+                    aimY = Brole[i].Y;
+                }
+            }
+        }
+    }
+
+    if (aimX >= 0)
+    {
+        KeepDis = std::min(KeepDis, abs(Bx - aimX) + abs(By - aimY) + Brole[bnum].Step);
+        mindis = 9999;
+        for (int curX = 0; curX < 64; curX++)
+        {
+            for (int curY = 0; curY < 64; curY++)
+            {
+                if (BField[3][curX][curY] >= 0)
+                {
+                    int tempdis = abs(curX - aimX) + abs(curY - aimY);
+                    if (tempdis < mindis && tempdis >= KeepDis)
+                    {
+                        mindis = tempdis;
+                        Mx1 = curX;
+                        My1 = curY;
+                    }
+                }
+            }
+        }
+    }
+    Ax1 = aimX;
+    Ay1 = aimY;
 }

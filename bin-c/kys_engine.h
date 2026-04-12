@@ -73,14 +73,6 @@ void DrawTextWithRect(const std::string& word, int x, int y, int w, uint32_t col
 void DrawTextWithRect(SDL_Surface* sur, const std::string& word, int x, int y, int w, uint32_t color1, uint32_t color2);
 void DrawTextWithRectNoUpdate(SDL_Surface* sur, const std::string& word, int x, int y, int w, uint32_t color1, uint32_t color2);
 
-// PNG贴图
-void DrawPNGTile(TPNGIndex PNGIndex, int FrameNum, const char* RectArea, SDL_Surface* scr, int px, int py);
-void DrawPNGTile(TPNGIndex PNGIndex, int FrameNum, const char* RectArea, SDL_Surface* scr, int px, int py,
-    int shadow, int alpha, uint32_t mixColor, int mixAlpha);
-void DrawPNGTile(TPNGIndex PNGIndex, int FrameNum, const char* RectArea, SDL_Surface* scr, int px, int py,
-    int shadow, int alpha, uint32_t mixColor, int mixAlpha, int depth,
-    char* BlockImgR, int Width, int Height, int size, int leftupx, int leftupy);
-
 // 系统
 void ChangeCol();
 void UpdateScreen(SDL_Surface* scr1, int x, int y, int w, int h);
