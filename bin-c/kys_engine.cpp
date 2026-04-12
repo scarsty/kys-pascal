@@ -42,24 +42,6 @@ static uint64_t tic_time = 0;
 
 // ---- 内部辅助函数 ----
 
-static bool EnsureMixerCreated()
-{
-    if (gMixer)
-    {
-        return true;
-    }
-    if (!MIX_Init())
-    {
-        return false;
-    }
-    SDL_AudioSpec spec;
-    spec.freq = 22500;
-    spec.format = SDL_AUDIO_S16;
-    spec.channels = 2;
-    gMixer = MIX_CreateMixerDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec);
-    return gMixer != nullptr;
-}
-
 static MIX_Track* AcquireSfxTrack(MIX_Audio* audio)
 {
     if (!audio)
@@ -95,10 +77,15 @@ static uint32_t BlendRGBAByPercent(uint32_t src, uint32_t dst, int percent)
 
 void InitialMusic()
 {
-    if (!EnsureMixerCreated())
+    if (!MIX_Init())
     {
         return;
     }
+    SDL_AudioSpec spec;
+    spec.freq = 22500;
+    spec.format = SDL_AUDIO_S16;
+    spec.channels = 2;
+    gMixer = MIX_CreateMixerDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec);
     MusicTrack = MIX_CreateTrack(gMixer);
     for (int i = 0; i < 10; i++)
     {
@@ -213,7 +200,7 @@ void InitialMusic()
 
 void PlayMP3(int MusicNum, int times, int frombeginning)
 {
-    if (!EnsureMixerCreated())
+    if (!gMixer)
     {
         return;
     }
@@ -252,7 +239,7 @@ void PlayMP3(int MusicNum, int times, int frombeginning)
 
 void PlayMP3(const char* filename, int times)
 {
-    if (!EnsureMixerCreated())
+    if (!gMixer)
     {
         return;
     }
