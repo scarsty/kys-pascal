@@ -1170,6 +1170,8 @@ void UpdateScreen(SDL_Surface* scr1, int x, int y, int w, int h)
         void* p = (void*)((uintptr_t)screen->pixels + y * screen->pitch + x * 4);
         SDL_UpdateTexture(screenTex, &dest, p, screen->pitch);
         SDL_RenderTexture(render, screenTex, nullptr, nullptr);
+        // Virtual keys are now rendered directly on window after the game surface.
+        DrawVirtualKey();
         SDL_RenderPresent(render);
     }
 }
@@ -1216,6 +1218,14 @@ void SDL_GetMouseState2(int& x, int& y)
     y = (int)(fy * screen->h / RESOLUTIONY + 0.5f);
 }
 
+static void SDL_GetWindowMouseState2(int& x, int& y)
+{
+    float fx, fy;
+    SDL_GetMouseState(&fx, &fy);
+    x = (int)(fx + 0.5f);
+    y = (int)(fy + 0.5f);
+}
+
 void GetMousePosition(int& x, int& y, int x0, int y0, int yp)
 {
     int x1, y1;
@@ -1247,38 +1257,72 @@ void CleanKeyValue()
 
 static bool inReturn(int x, int y)
 {
-    return InRegion(x, y, VirtualAX, VirtualAY, 100, 100);
+    if (!screen || screen->w <= 0 || screen->h <= 0)
+    {
+        return InRegion(x, y, VirtualAX, VirtualAY, 100, 100);
+    }
+    int ax = (int)((int64_t)VirtualAX * RESOLUTIONX / screen->w);
+    int ay = (int)((int64_t)VirtualAY * RESOLUTIONY / screen->h);
+    int aw = std::max(1, (int)((int64_t)100 * RESOLUTIONX / screen->w));
+    int ah = std::max(1, (int)((int64_t)100 * RESOLUTIONY / screen->h));
+    return InRegion(x, y, ax, ay, aw, ah);
 }
 
 static bool inEscape(int x, int y)
 {
-    return InRegion(x, y, VirtualBX, VirtualBY, 100, 100);
+    if (!screen || screen->w <= 0 || screen->h <= 0)
+    {
+        return InRegion(x, y, VirtualBX, VirtualBY, 100, 100);
+    }
+    int bx = (int)((int64_t)VirtualBX * RESOLUTIONX / screen->w);
+    int by = (int)((int64_t)VirtualBY * RESOLUTIONY / screen->h);
+    int bw = std::max(1, (int)((int64_t)100 * RESOLUTIONX / screen->w));
+    int bh = std::max(1, (int)((int64_t)100 * RESOLUTIONY / screen->h));
+    return InRegion(x, y, bx, by, bw, bh);
 }
 
 static uint32_t inVirtualKey(int x, int y, uint32_t& key)
 {
+    int winW = CENTER_X * 2;
+    int winH = CENTER_Y * 2;
+    int crossX = VirtualCrossX;
+    int crossY = VirtualCrossY;
+    int keySize = VirtualKeySize;
+    if (screen && screen->w > 0 && screen->h > 0)
+    {
+        winW = RESOLUTIONX;
+        winH = RESOLUTIONY;
+        crossX = (int)((int64_t)VirtualCrossX * RESOLUTIONX / screen->w);
+        crossY = (int)((int64_t)VirtualCrossY * RESOLUTIONY / screen->h);
+        int sx = std::max(1, (int)((int64_t)VirtualKeySize * RESOLUTIONX / screen->w));
+        int sy = std::max(1, (int)((int64_t)VirtualKeySize * RESOLUTIONY / screen->h));
+        keySize = std::min(sx, sy);
+    }
+
     uint32_t result = 0;
-    if (InRegion(x, y, CENTER_X * 2 - 200, CENTER_Y * 2 - 200, 200, 200))
+    int tabAreaW = std::max(1, keySize * 3);
+    int tabAreaH = std::max(1, keySize * 3);
+    if (InRegion(x, y, winW - tabAreaW, winH - tabAreaH, tabAreaW, tabAreaH))
     {
         result = SDLK_TAB;
     }
-    if (InRegion(x, y, 0, VirtualCrossY, VirtualKeySize * 2 + VirtualCrossX, CENTER_Y * 2 - VirtualCrossY))
+    if (InRegion(x, y, 0, crossY, keySize * 2 + crossX, std::max(1, winH - crossY)))
     {
         result = SDLK_TAB;
     }
-    if (InRegion(x, y, VirtualCrossX, VirtualCrossY, VirtualKeySize, VirtualKeySize))
+    if (InRegion(x, y, crossX, crossY, keySize, keySize))
     {
         result = SDLK_UP;
     }
-    if (InRegion(x, y, VirtualCrossX - VirtualKeySize, VirtualCrossY + VirtualKeySize, VirtualKeySize, VirtualKeySize))
+    if (InRegion(x, y, crossX - keySize, crossY + keySize, keySize, keySize))
     {
         result = SDLK_LEFT;
     }
-    if (InRegion(x, y, VirtualCrossX, VirtualCrossY + VirtualKeySize * 2, VirtualKeySize, VirtualKeySize))
+    if (InRegion(x, y, crossX, crossY + keySize * 2, keySize, keySize))
     {
         result = SDLK_DOWN;
     }
-    if (InRegion(x, y, VirtualCrossX + VirtualKeySize, VirtualCrossY + VirtualKeySize, VirtualKeySize, VirtualKeySize))
+    if (InRegion(x, y, crossX + keySize, crossY + keySize, keySize, keySize))
     {
         result = SDLK_RIGHT;
     }
@@ -1415,7 +1459,7 @@ uint32_t CheckBasicEvent()
         {
             FingerCount = 0;
             int mx, my;
-            SDL_GetMouseState2(mx, my);
+            SDL_GetWindowMouseState2(mx, my);
             if (inEscape(mx, my) || inReturn(mx, my))
             {
                 event.type = 0;
@@ -1427,7 +1471,7 @@ uint32_t CheckBasicEvent()
         if (CellPhone == 1 && ShowVirtualKey != 0)
         {
             int mx, my;
-            SDL_GetMouseState2(mx, my);
+            SDL_GetWindowMouseState2(mx, my);
             inVirtualKey(mx, my, VirtualKeyValue);
             if (VirtualKeyValue != 0)
             {
@@ -1441,7 +1485,7 @@ uint32_t CheckBasicEvent()
         if (CellPhone == 1 && event.type == SDL_EVENT_MOUSE_BUTTON_UP && event.button.button == SDL_BUTTON_LEFT)
         {
             int mx, my;
-            SDL_GetMouseState2(mx, my);
+            SDL_GetWindowMouseState2(mx, my);
             if (inEscape(mx, my))
             {
                 event.button.button = SDL_BUTTON_RIGHT;
