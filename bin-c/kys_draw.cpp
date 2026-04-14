@@ -337,6 +337,10 @@ void DrawFPic(int headnum, int num, int px, int py, int shadow, int alpha, int d
     {
         return;
     }
+    if (num < 0 || num >= (int)FIdx[headnum].size())
+    {
+        return;
+    }
     DrawRLE8Pic((const char*)ACol, num, px, py, FIdx[headnum].data(), FPic[headnum].data(),
         nullptr, screen, screen->w, screen->h, screen->pitch,
         shadow, alpha,
@@ -1265,27 +1269,10 @@ void DrawVirtualKey()
         return;
     }
 
-    if (!screen || screen->w <= 0 || screen->h <= 0 || RESOLUTIONX <= 0 || RESOLUTIONY <= 0)
+    if (!screen || screen->w <= 0 || screen->h <= 0)
     {
         return;
     }
-
-    auto toWinX = [](int x) -> int
-        {
-            return (int)((int64_t)x * RESOLUTIONX / screen->w);
-        };
-    auto toWinY = [](int y) -> int
-        {
-            return (int)((int64_t)y * RESOLUTIONY / screen->h);
-        };
-    auto toWinW = [](int w) -> int
-        {
-            return std::max(1, (int)((int64_t)w * RESOLUTIONX / screen->w));
-        };
-    auto toWinH = [](int h) -> int
-        {
-            return std::max(1, (int)((int64_t)h * RESOLUTIONY / screen->h));
-        };
 
     auto drawOverlay = [&](SDL_Surface* surf, int x, int y, int alpha)
         {
@@ -1301,10 +1288,10 @@ void DrawVirtualKey()
             SDL_SetTextureBlendMode(tex, SDL_BLENDMODE_BLEND);
             SDL_SetTextureAlphaMod(tex, (uint8_t)std::clamp(alpha, 0, 255));
             SDL_FRect dst;
-            dst.x = (float)toWinX(x);
-            dst.y = (float)toWinY(y);
-            dst.w = (float)toWinW(surf->w);
-            dst.h = (float)toWinH(surf->h);
+            dst.x = (float)x;
+            dst.y = (float)y;
+            dst.w = (float)surf->w;
+            dst.h = (float)surf->h;
             SDL_RenderTexture(render, tex, nullptr, &dst);
             SDL_DestroyTexture(tex);
         };

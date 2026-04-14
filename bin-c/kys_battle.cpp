@@ -1816,6 +1816,7 @@ void ShowHurtValue(int mode)
         }
     }
     Redraw();
+    UpdateScreen(screen, 0, 0, screen->w, screen->h);
 }
 
 void CalPoiHurtLife()
