@@ -1,7 +1,7 @@
 # 《金庸群侠传》pascal复刻版
-<img src='https://raw.githubusercontent.com/scarsty/kys-pascal/master/open.png' />
+<img src='open.png' />
 
-<img src='https://raw.githubusercontent.com/scarsty/kys-pascal/master/2.png' />
+<img src='2.png' />
 
 原DOS下面的经典游戏《金庸群侠传》pascal复刻版。
 
