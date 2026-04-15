@@ -425,6 +425,7 @@ inline bool BattleSelecting = false;
 // 虚拟按键（手机模式）
 inline int ShowVirtualKey = 0;
 inline uint32 VirtualKeyValue = 0;
+//inline int VirtualKeyUState = 0, VirtualKeyDState = 0, VirtualKeyLState = 0, VirtualKeyRState = 0, VirtualKeyAState = 0, VirtualKeyBState = 0;    //0: 无按键, 1: 经过, 2: 按下
 inline int VirtualCrossX = 150, VirtualCrossY = 250;
 inline int VirtualKeySize = 60;
 inline int VirtualAX = 0, VirtualAY = 0;

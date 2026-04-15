@@ -85,6 +85,9 @@ int AngleToDirection(double y, double x);
 void UpdateAllScreen();
 void TransBlackScreen();
 void CleanKeyValue();
+bool inReturn(int x, int y);
+bool inEscape(int x, int y);
+uint32_t inVirtualKey(int x, int y, uint32_t& value);
 void GetMousePosition(int& x, int& y, int x0, int y0, int yp = 0);
 bool MouseInRegion(int x, int y, int w, int h);
 bool MouseInRegion(int x, int y, int w, int h, int& x1, int& y1);
@@ -110,3 +113,4 @@ std::string checkFileName(const std::string& f);
 bool InRegion(int x1, int y1, int x, int y, int w, int h);
 
 bool EventFilter(void* p, SDL_Event* e);
+

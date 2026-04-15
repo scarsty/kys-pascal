@@ -1162,16 +1162,20 @@ void UpdateScreen(SDL_Surface* scr1, int x, int y, int w, int h)
     }
 
     SDL_Rect dest = { x, y, w, h };
-    if (w <= 0) dest.w = CENTER_X * 2;
-    if (h <= 0) dest.h = CENTER_Y * 2;
+    if (w <= 0)
+    {
+        dest.w = CENTER_X * 2;
+    }
+    if (h <= 0)
+    {
+        dest.h = CENTER_Y * 2;
+    }
 
     if (scr1 == screen)
     {
         void* p = (void*)((uintptr_t)screen->pixels + y * screen->pitch + x * 4);
         SDL_UpdateTexture(screenTex, &dest, p, screen->pitch);
         SDL_RenderTexture(render, screenTex, nullptr, nullptr);
-        // Virtual keys are now rendered directly on window after the game surface.
-        DrawVirtualKey();
         SDL_RenderPresent(render);
     }
 }
@@ -1218,14 +1222,6 @@ void SDL_GetMouseState2(int& x, int& y)
     y = (int)(fy * screen->h / RESOLUTIONY + 0.5f);
 }
 
-static void SDL_GetWindowMouseState2(int& x, int& y)
-{
-    float fx, fy;
-    SDL_GetMouseState(&fx, &fy);
-    x = (int)(fx + 0.5f);
-    y = (int)(fy + 0.5f);
-}
-
 void GetMousePosition(int& x, int& y, int x0, int y0, int yp)
 {
     int x1, y1;
@@ -1255,17 +1251,17 @@ void CleanKeyValue()
 
 // ---- 事件处理 ----
 
-static bool inReturn(int x, int y)
+bool inReturn(int x, int y)
 {
     return InRegion(x, y, VirtualAX, VirtualAY, 100, 100);
 }
 
-static bool inEscape(int x, int y)
+bool inEscape(int x, int y)
 {
     return InRegion(x, y, VirtualBX, VirtualBY, 100, 100);
 }
 
-static uint32_t inVirtualKey(int x, int y, uint32_t& key)
+uint32_t inVirtualKey(int x, int y, uint32_t& key)
 {
     int crossX = VirtualCrossX;
     int crossY = VirtualCrossY;
@@ -1274,13 +1270,12 @@ static uint32_t inVirtualKey(int x, int y, uint32_t& key)
     uint32_t result = 0;
     int tabAreaW = std::max(1, keySize * 3);
     int tabAreaH = std::max(1, keySize * 3);
-    
+
     // Tab button at top-right
     if (InRegion(x, y, crossX + keySize * 3 + 20, 10, tabAreaW, tabAreaH))
     {
         result = SDLK_TAB;
     }
-    
     // Up button
     if (InRegion(x, y, crossX, crossY, keySize, keySize))
     {
@@ -1301,7 +1296,7 @@ static uint32_t inVirtualKey(int x, int y, uint32_t& key)
     {
         result = SDLK_RIGHT;
     }
-    
+
     key = result;
     return result;
 }
@@ -1341,6 +1336,17 @@ uint32_t CheckBasicEvent()
     if (CellPhone == 1)
     {
         SDL_FlushEvent(SDL_EVENT_MOUSE_MOTION);
+    }
+
+    if (CellPhone == 1 && ShowVirtualKey != 0)
+    {
+        int mx, my;
+        SDL_GetMouseState2(mx, my);
+        inVirtualKey(mx, my, VirtualKeyValue);
+    }
+    else
+    {
+        VirtualKeyValue = 0;
     }
 
     uint32_t result = event.type;
@@ -1435,8 +1441,12 @@ uint32_t CheckBasicEvent()
         {
             FingerCount = 0;
             int mx, my;
-            SDL_GetWindowMouseState2(mx, my);
-            if (inEscape(mx, my) || inReturn(mx, my))
+            SDL_GetMouseState2(mx, my);
+            if (inEscape(mx, my))
+            {
+                event.type = 0;
+            }
+            if (inReturn(mx, my))
             {
                 event.type = 0;
             }
@@ -1447,21 +1457,22 @@ uint32_t CheckBasicEvent()
         if (CellPhone == 1 && ShowVirtualKey != 0)
         {
             int mx, my;
-            SDL_GetWindowMouseState2(mx, my);
+            SDL_GetMouseState2(mx, my);
             inVirtualKey(mx, my, VirtualKeyValue);
             if (VirtualKeyValue != 0)
             {
                 event.type = SDL_EVENT_KEY_DOWN;
                 event.key.key = VirtualKeyValue;
             }
+            break;
         }
-        break;
     case SDL_EVENT_KEY_UP:
     case SDL_EVENT_MOUSE_BUTTON_UP:
         if (CellPhone == 1 && event.type == SDL_EVENT_MOUSE_BUTTON_UP && event.button.button == SDL_BUTTON_LEFT)
         {
             int mx, my;
-            SDL_GetWindowMouseState2(mx, my);
+            SDL_GetMouseState2(mx, my);
+            inVirtualKey(mx, my, VirtualKeyValue);
             if (inEscape(mx, my))
             {
                 event.button.button = SDL_BUTTON_RIGHT;
@@ -1474,13 +1485,10 @@ uint32_t CheckBasicEvent()
                 event.key.key = SDLK_RETURN;
                 kyslog("Change to return");
             }
-            else if (ShowVirtualKey != 0 && inVirtualKey(mx, my, VirtualKeyValue) != 0)
+            else if (ShowVirtualKey != 0 && VirtualKeyValue != 0)
             {
-                if (VirtualKeyValue != 0)
-                {
-                    event.type = SDL_EVENT_KEY_UP;
-                    event.key.key = VirtualKeyValue;
-                }
+                event.type = SDL_EVENT_KEY_UP;
+                event.key.key = VirtualKeyValue;
             }
             else if (Where == 2 && BattleSelecting)
             {

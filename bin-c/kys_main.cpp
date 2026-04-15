@@ -120,8 +120,10 @@ void Run()
     if (CellPhone == 1)
     {
         SDL_SetWindowFullscreen(window, true);
+        FULLSCREEN = 1;
     }
     SDL_GetWindowSize(window, &RESOLUTIONX, &RESOLUTIONY);
+    kyslog(std::format("Window size: {}x{}", RESOLUTIONX, RESOLUTIONY).c_str());
 
     const char* render_str = "direct3d";
 #ifdef _WIN32
@@ -5656,7 +5658,12 @@ int TeleportByList()
 
     Redraw();
     DrawTextWithRect(screen, "傳送列表", 80, 30, 640, ColColor(0x21), ColColor(0x23));
-    int menu = CommonGridMenu(80, 60, 5, 128, 16, SceneAmount - 1, sceneMenu.data());
+    int max_show_rows = 16;
+    if (CellPhone==1)
+    {
+        max_show_rows = 8;
+    }
+    int menu = CommonGridMenu(80, 60, 5, 128, max_show_rows, SceneAmount - 1, sceneMenu.data());
     if (menu < 0)
     {
         return 0;

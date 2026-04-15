@@ -2,8 +2,8 @@
 // 对应 kys_draw.pas
 
 #include "kys_draw.h"
-#include "kys_engine.h"
 #include "filefunc.h"
+#include "kys_engine.h"
 #include "kys_main.h"
 #include "kys_type.h"
 
@@ -1264,7 +1264,7 @@ void DrawProgress()
 
 void DrawVirtualKey()
 {
-    if (ShowVirtualKey == 0 || !render)
+    if (ShowVirtualKey == 0)
     {
         return;
     }
@@ -1274,41 +1274,58 @@ void DrawVirtualKey()
         return;
     }
 
-    auto drawOverlay = [&](SDL_Surface* surf, int x, int y, int alpha)
-        {
-            if (!surf)
-            {
-                return;
-            }
-            SDL_Texture* tex = SDL_CreateTextureFromSurface(render, surf);
-            if (!tex)
-            {
-                return;
-            }
-            SDL_SetTextureBlendMode(tex, SDL_BLENDMODE_BLEND);
-            SDL_SetTextureAlphaMod(tex, (uint8_t)std::clamp(alpha, 0, 255));
-            SDL_FRect dst;
-            dst.x = (float)x;
-            dst.y = (float)y;
-            dst.w = (float)surf->w;
-            dst.h = (float)surf->h;
-            SDL_RenderTexture(render, tex, nullptr, &dst);
-            SDL_DestroyTexture(tex);
-        };
+    int mx = 0, my = 0;
+    SDL_GetMouseState2(mx, my);
+    int alphaU = 128;
+    int alphaL = 128;
+    int alphaD = 128;
+    int alphaR = 128;
+    int alphaA = 128;
+    int alphaB = 128;
 
-    int u = 128, d = 128, l = 128, r = 128;
-    switch (VirtualKeyValue)
+    uint32_t key;
+    inVirtualKey(mx, my, key);
+    //kyslog("VirtualKey: key=%u, mx=%d, my=%d", key, mx, my);
+    if (key == SDLK_UP)
     {
-    case SDLK_UP: u = 0; break;
-    case SDLK_LEFT: l = 0; break;
-    case SDLK_DOWN: d = 0; break;
-    case SDLK_RIGHT: r = 0; break;
+        alphaU = 192;
+    }
+    else if (key == SDLK_DOWN)
+    {
+        alphaD = 192;
+    }
+    else if (key == SDLK_LEFT)
+    {
+        alphaL = 192;
+    }
+    else if (key == SDLK_RIGHT)
+    {
+        alphaR = 192;
+    }
+    if (inReturn(mx, my))
+    {
+        alphaA = 192;
+    }
+    if (inEscape(mx, my))
+    {
+        alphaB = 192;
     }
 
-    drawOverlay(VirtualKeyU, VirtualCrossX, VirtualCrossY, 255 - u);
-    drawOverlay(VirtualKeyL, VirtualCrossX - VirtualKeySize, VirtualCrossY + VirtualKeySize, 255 - l);
-    drawOverlay(VirtualKeyD, VirtualCrossX, VirtualCrossY + VirtualKeySize * 2, 255 - d);
-    drawOverlay(VirtualKeyR, VirtualCrossX + VirtualKeySize, VirtualCrossY + VirtualKeySize, 255 - r);
-    drawOverlay(VirtualKeyA, VirtualAX, VirtualAY, 128);
-    drawOverlay(VirtualKeyB, VirtualBX, VirtualBY, 128);
+    auto blitKey = [&](SDL_Surface* surf, int x, int y, int alpha)
+    {
+        if (!surf)
+        {
+            return;
+        }
+        SDL_SetSurfaceAlphaMod(surf, (uint8_t)std::clamp(alpha, 0, 255));
+        SDL_Rect rect = { x, y, 0, 0 };
+        SDL_BlitSurface(surf, nullptr, screen, &rect);
+    };
+
+    blitKey(VirtualKeyU, VirtualCrossX, VirtualCrossY, alphaU);
+    blitKey(VirtualKeyL, VirtualCrossX - VirtualKeySize, VirtualCrossY + VirtualKeySize, alphaL);
+    blitKey(VirtualKeyD, VirtualCrossX, VirtualCrossY + VirtualKeySize * 2, alphaD);
+    blitKey(VirtualKeyR, VirtualCrossX + VirtualKeySize, VirtualCrossY + VirtualKeySize, alphaR);
+    blitKey(VirtualKeyA, VirtualAX, VirtualAY, alphaA);
+    blitKey(VirtualKeyB, VirtualBX, VirtualBY, alphaB);
 }
