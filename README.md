@@ -44,7 +44,7 @@ SDL3的pas文件请从<https://github.com/PascalGameDevelopment/SDL3-for-Pascal>
 
 ### 关于pascal版的Android版本
 
-以下是配置指引，但是由于pascal的工具链不太完善，Lazarus的官方版的Android编辑非常复杂，用CodeTyphon也只简单一点点。除此之外，还需下载对应系统的运行库，供链接时使用。因此不再建议研究。
+以下是配置指引，但是由于pascal的工具链不太完善，Lazarus的官方版的Android编译非常复杂，用CodeTyphon也只简单一点点。除此之外，还需下载对应系统的运行库，供链接时使用。因此不再建议研究。
 
 在Android目录里包含一个批处理文件，在安装了Android Studio和CodeTyphon后可以用于编译出so文件和打包apk。
 
