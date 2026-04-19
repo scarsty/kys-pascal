@@ -99,7 +99,7 @@ bool Battle(int battlenum, int getexp)
     for (int i = 0; i < BRoleAmount; i++)
     {
         int hn = Rrole[Brole[i].rnum].HeadNum;
-        auto sp = std::format("fight/fight{:03d}", hn);
+        auto sp = std::format("{}fight/fight{:03d}", AppPath, hn);
         FPicAmount = LoadIdxGrp(sp + ".idx", sp + ".grp", FIdx[hn], FPic[hn]);
     }
 

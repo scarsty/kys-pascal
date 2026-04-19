@@ -66,7 +66,7 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
     private static final int STORAGE_MANAGER_REQUEST_CODE = 10002;
     private static final int SDL_MAJOR_VERSION = 3;
     private static final int SDL_MINOR_VERSION = 4;
-    private static final int SDL_MICRO_VERSION = 2;
+    private static final int SDL_MICRO_VERSION = 4;
 /*
     // Display InputType.SOURCE/CLASS of events and devices
     //
@@ -300,11 +300,6 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
      */
     protected String[] getLibraries() {
         return new String[] {
-            "SDL3",
-            // "SDL3_image",
-            // "SDL3_mixer",
-            // "SDL3_net",
-            // "SDL3_ttf",
             "kys_pascal_c"
         };
     }
