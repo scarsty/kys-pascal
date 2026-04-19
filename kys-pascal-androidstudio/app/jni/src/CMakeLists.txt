@@ -112,15 +112,7 @@ endfunction()
 import_vcpkg_shared(vcpkg_sdl3 SDL3)
 import_vcpkg_shared(vcpkg_sdl3_mixer SDL3_mixer)
 import_vcpkg_shared(vcpkg_sdl3_ttf SDL3_ttf)
-import_vcpkg_shared(vcpkg_fluidsynth fluidsynth)
-import_vcpkg_shared(vcpkg_mpg123 mpg123)
-import_vcpkg_shared(vcpkg_freetype freetype)
-import_vcpkg_shared(vcpkg_bz2 bz2)
-import_vcpkg_shared(vcpkg_brotlicommon brotlicommon)
-import_vcpkg_shared(vcpkg_brotlidec brotlidec)
-import_vcpkg_shared_any(vcpkg_png16 png16 png)
 import_vcpkg_shared(vcpkg_lua lua)
-import_vcpkg_shared(vcpkg_z z)
 import_vcpkg_static(vcpkg_iconv iconv)
 import_vcpkg_static(vcpkg_charset charset)
 
@@ -131,15 +123,7 @@ target_link_libraries(kys_pascal_c PRIVATE
     vcpkg_sdl3
     vcpkg_sdl3_mixer
     vcpkg_sdl3_ttf
-    vcpkg_fluidsynth
-    vcpkg_mpg123
-    vcpkg_freetype
-    vcpkg_bz2
-    vcpkg_brotlicommon
-    vcpkg_brotlidec
-    vcpkg_png16
     vcpkg_lua
-    vcpkg_z
     vcpkg_iconv
     vcpkg_charset
     ${ANDROID_M_LIB}
