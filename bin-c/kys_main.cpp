@@ -5502,7 +5502,7 @@ int teleport()
     RecordFreshScreen(0, 0, screen->w, screen->h);
 
     int result = 0;
-    while (SDL_WaitEvent(&event))
+    while (true)
     {
         // drawtelemap: 绘制场景标记点
         LoadFreshScreen(0, 0, screen->w, screen->h);
@@ -5541,6 +5541,10 @@ int teleport()
         SDL_Delay(16);
         UpdateAllScreen();
 
+        if (!SDL_PollEvent(&event))
+        {
+            SDL_zero(event);
+        }
         CheckBasicEvent();
         switch (event.type)
         {
