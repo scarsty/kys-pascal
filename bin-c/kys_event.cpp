@@ -2271,7 +2271,7 @@ void NewTalk(int headnum, int talknum, int namenum, int place, int showhead, int
 
         int ix = 0, iy = 0;
         bool skipSync = false;
-        while (SDL_WaitEvent(&event))
+        while (SDL_PollEvent(&event) || true)
         {
             CheckBasicEvent();
             // ESC / 右键 - 跳过
