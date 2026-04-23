@@ -1268,14 +1268,13 @@ uint32_t inVirtualKey(int x, int y, uint32_t& key)
     int keySize = VirtualKeySize;
 
     uint32_t result = 0;
-    int tabAreaW = std::max(1, keySize * 3);
-    int tabAreaH = std::max(1, keySize * 3);
 
-    // Tab button at top-right
-    if (InRegion(x, y, crossX + keySize * 3 + 20, 10, tabAreaW, tabAreaH))
-    {
+    // Tab区域1: 右下角 200x200（与Pascal版一致）
+    if (InRegion(x, y, CENTER_X * 2 - 200, CENTER_Y * 2 - 200, 200, 200))
         result = SDLK_TAB;
-    }
+    // Tab区域2: 十字键左侧+下方大区域
+    if (InRegion(x, y, 0, crossY, keySize * 2 + crossX, CENTER_Y * 2 - crossY))
+        result = SDLK_TAB;
     // Up button
     if (InRegion(x, y, crossX, crossY, keySize, keySize))
     {
@@ -1464,8 +1463,8 @@ uint32_t CheckBasicEvent()
                 event.type = SDL_EVENT_KEY_DOWN;
                 event.key.key = VirtualKeyValue;
             }
-            break;
         }
+        break;    // 必须break，避免fallthrough到KEY_UP/MOUSE_BUTTON_UP
     case SDL_EVENT_KEY_UP:
     case SDL_EVENT_MOUSE_BUTTON_UP:
         if (CellPhone == 1 && event.type == SDL_EVENT_MOUSE_BUTTON_UP && event.button.button == SDL_BUTTON_LEFT)
@@ -1538,28 +1537,26 @@ void QuitConfirm()
 
 int AngleToDirection(double y, double x)
 {
-    double angle = atan2(y, x) * 180.0 / M_PI;
-    if (angle < 0)
+    // 与Pascal版一致: arctan2(-y, x)，方向区域各占PI/2
+    double angle = atan2(-y, x);
+    const double angleregion = M_PI / 4;
+    int result = 0;
+    if (fabs(angle + M_PI / 8) < angleregion)
+        result = SDLK_RIGHT;
+    if (fabs(angle - M_PI * 3 / 8) < angleregion)
+        result = SDLK_UP;
+    if (fabs(angle - M_PI * 7 / 8) < angleregion || angle < -M_PI * 7 / 8)
+        result = SDLK_LEFT;
+    if (fabs(angle + M_PI * 5 / 8) < angleregion)
+        result = SDLK_DOWN;
+    if (ScreenRotate == 1)
     {
-        angle += 360;
+        if      (result == SDLK_UP)    result = SDLK_LEFT;
+        else if (result == SDLK_DOWN)  result = SDLK_RIGHT;
+        else if (result == SDLK_LEFT)  result = SDLK_DOWN;
+        else if (result == SDLK_RIGHT) result = SDLK_UP;
     }
-    if (angle < 45)
-    {
-        return 2;
-    }
-    if (angle < 135)
-    {
-        return 0;
-    }
-    if (angle < 225)
-    {
-        return 3;
-    }
-    if (angle < 315)
-    {
-        return 1;
-    }
-    return 2;
+    return result;
 }
 
 // ---- 辅助函数 ----

@@ -1437,6 +1437,13 @@ int WaitAnyKey()
         if (event.button.button == SDL_BUTTON_LEFT)
         {
             result = SDLK_SPACE;
+            if (CellPhone == 1)
+            {
+                int x, y;
+                SDL_GetMouseState2(x, y);
+                if (x > CENTER_X * 2 - 100 && y < 100)
+                    result = SDLK_Y;    // 右上角触摸 -> Y键（用于脚本36号事件确认）
+            }
         }
         if (event.button.button == SDL_BUTTON_RIGHT)
         {
