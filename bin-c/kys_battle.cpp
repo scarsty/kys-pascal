@@ -228,7 +228,7 @@ int SelectTeamMembers()
     menuStr[0] = "   全員參戰";
     menuStr[max] = "   開始戰鬥";
     std::string str = "選擇參戰人物";
-    DrawTextWithRect(screen, str, CENTER_X - 63, 100, 126, ColColor(0x21), ColColor(0x23));
+    DrawTextWithRect(str, CENTER_X - 63, 100, 126, ColColor(0x21), ColColor(0x23));
     UpdateAllScreen();
     RecordFreshScreen(0, 0, CENTER_X * 2, CENTER_Y * 2);
 
@@ -242,12 +242,12 @@ int SelectTeamMembers()
         {
             uint32_t c1 = (i == menu) ? ColColor(0x64) : ColColor(0x05);
             uint32_t c2 = (i == menu) ? ColColor(0x66) : ColColor(0x07);
-            DrawShadowText(screen, menuStr[i], x + 33, y + 3 + 22 * i, c1, c2);
+            DrawShadowText(menuStr[i], x + 33, y + 3 + 22 * i, c1, c2);
             if (i > 0 && i < max && (result & (1 << (i - 1))))
             {
                 uint32_t cs1 = (i == menu) ? ColColor(0x64) : ColColor(0x21);
                 uint32_t cs2 = (i == menu) ? ColColor(0x66) : ColColor(0x23);
-                DrawShadowText(screen, str1, x + 133, y + 3 + 22 * i, cs1, cs2);
+                DrawShadowText(str1, x + 133, y + 3 + 22 * i, cs1, cs2);
             }
         }
         UpdateScreen(screen, x + 30, y, 151, max * 22 + 29);
@@ -634,7 +634,7 @@ int BattleMenu(int bnum)
     ShowSimpleStatus(Brole[bnum].rnum, CENTER_X + 100, 50);
     auto buf = std::format("回合{}", BattleRound);
     std::string s(buf);
-    DrawTextWithRect(screen, s, 160, 50, DrawLength(s) * 10 + 6, ColColor(0x21), ColColor(0x23));
+    DrawTextWithRect(s, 160, 50, DrawLength(s) * 10 + 6, ColColor(0x21), ColColor(0x23));
     RecordFreshScreen(0, 0, screen->w, screen->h);
 
     auto ShowBMenu = [&]()
@@ -648,7 +648,7 @@ int BattleMenu(int bnum)
             {
                 uint32_t c1 = (p2 == menu) ? ColColor(0x66) : ColColor(0x23);
                 uint32_t c2 = (p2 == menu) ? ColColor(0x64) : ColColor(0x21);
-                DrawShadowText(screen, word[i2], 103, 53 + 22 * p2, c1, c2);
+                DrawShadowText(word[i2], 103, 53 + 22 * p2, c1, c2);
                 p2++;
             }
         }
@@ -940,7 +940,7 @@ bool SelectDirector(int bnum, int step)
     DrawBFieldWithCursor(-1);
 
     std::string str = "選擇攻擊方向";
-    DrawTextWithRect(screen, str, 280, 200, 125, ColColor(0x23), ColColor(0x21));
+    DrawTextWithRect(str, 280, 200, 125, ColColor(0x23), ColColor(0x21));
     UpdateScreen(screen, 0, 0, screen->w, screen->h);
     bool result = false;
     while (SDL_WaitEvent(&event))
@@ -1255,7 +1255,7 @@ void ShowMagicName(int mnum, int mode)
         str = cp950toutf8(Rmagic[mnum].Name);
     }
     int l = DrawLength(str);
-    DrawTextWithRectNoUpdate(screen, str, CENTER_X - l * 5, CENTER_Y - 150, l * 10 + 7, ColColor(0x14), ColColor(0x16));
+    DrawTextWithRectNoUpdate(str, CENTER_X - l * 5, CENTER_Y - 150, l * 10 + 7, ColColor(0x14), ColColor(0x16));
     UpdateScreen(screen, 0, 0, screen->w, screen->h);
     SDL_Delay(500);
 }
@@ -1297,13 +1297,13 @@ int SelectMagic(int rnum)
             {
                 if (p2 == menu)
                 {
-                    DrawShadowText(screen, menuString[i2], 103, 53 + 22 * p2, ColColor(0x66), ColColor(0x64));
-                    DrawEngShadowText(screen, menuEngString[i2], 223, 53 + 22 * p2, ColColor(0x66), ColColor(0x64));
+                    DrawShadowText(menuString[i2], 103, 53 + 22 * p2, ColColor(0x66), ColColor(0x64));
+                    DrawEngShadowText(menuEngString[i2], 223, 53 + 22 * p2, ColColor(0x66), ColColor(0x64));
                 }
                 else
                 {
-                    DrawShadowText(screen, menuString[i2], 103, 53 + 22 * p2, ColColor(0x23), ColColor(0x21));
-                    DrawEngShadowText(screen, menuEngString[i2], 223, 53 + 22 * p2, ColColor(0x23), ColColor(0x21));
+                    DrawShadowText(menuString[i2], 103, 53 + 22 * p2, ColColor(0x23), ColColor(0x21));
+                    DrawEngShadowText(menuEngString[i2], 223, 53 + 22 * p2, ColColor(0x23), ColColor(0x21));
                 }
                 p2++;
             }
@@ -1519,7 +1519,7 @@ void PlayMagicAmination(int bnum, int enumv, int ForTeam, int mode)
     int sx = posA.x - posB.x;
     int sy = posB.y - posA.y;
     int sz = -((Ax + Ay) - (Bx + By)) * 9;
-    PlaySoundE(enumv, 0, sx, sy, sz);
+    PlaySound(enumv, 0, sx, sy, sz);
 
     for (int i = 0; i < enumv; i++)
     {
@@ -1804,7 +1804,7 @@ void ShowHurtValue(int mode)
             {
                 int x = -(Brole[i].X - Bx) * 18 + (Brole[i].Y - By) * 18 + CENTER_X - 10;
                 int y = (Brole[i].X - Bx) * 9 + (Brole[i].Y - By) * 9 + CENTER_Y - 40;
-                DrawEngShadowText(screen, word[i], x, y - i1 * 2, color1, color2);
+                DrawEngShadowText(word[i], x, y - i1 * 2, color1, color2);
             }
         }
         SDL_Delay(BATTLE_SPEED);
@@ -2002,9 +2002,9 @@ void AddExp()
             ShowSimpleStatus(rnum, 100, 50);
             DrawRectangle(screen, 100, 235, 145, 25, 0, ColColor(255), 50);
             std::string str = "得經驗";
-            DrawShadowText(screen, str, 103, 237, ColColor(0x23), ColColor(0x21));
+            DrawShadowText(str, 103, 237, ColColor(0x23), ColColor(0x21));
             auto buf2 = std::format("{:5d}", Brole[i].ExpGot + basicvalue);
-            DrawEngShadowText(screen, buf2, 188, 237, ColColor(0x66), ColColor(0x64));
+            DrawEngShadowText(buf2, 188, 237, ColColor(0x66), ColColor(0x64));
             UpdateScreen(screen, 0, 0, screen->w, screen->h);
             WaitAnyKey();
         }
@@ -2072,7 +2072,7 @@ void LevelUp(int bnum)
     {
         ShowStatus(rnum);
         std::string str = "昇級";
-        DrawTextWithRect(screen, str, 58, CENTER_Y - 150, 46, ColColor(0x23), ColColor(0x21));
+        DrawTextWithRect(str, 58, CENTER_Y - 150, 46, ColColor(0x23), ColColor(0x21));
         WaitAnyKey();
     }
 }
@@ -2183,7 +2183,7 @@ void CheckBook()
                     ShowSimpleStatus(rnum, 350, 50);
                     DrawRectangle(screen, 115, 63, 145, 25, 0, ColColor(255), 50);
                     std::string str = "製藥成功";
-                    DrawShadowText(screen, str, 147, 65, ColColor(0x23), ColColor(0x21));
+                    DrawShadowText(str, 147, 65, ColColor(0x23), ColColor(0x21));
                     UpdateScreen(screen, 0, 0, screen->w, screen->h);
                     instruct_2(Ritem[inum].GetItem[p2], 1 + rand() % 5);
                     instruct_32(needitem, -needitemamount);

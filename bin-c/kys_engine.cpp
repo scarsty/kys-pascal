@@ -280,7 +280,7 @@ void StopMP3(int frombeginning)
     }
 }
 
-void PlaySoundE(int SoundNum, int times)
+void PlaySound(int SoundNum, int times)
 {
     if (SoundNum < 0 || SoundNum >= (int)ESound.size())
     {
@@ -298,14 +298,14 @@ void PlaySoundE(int SoundNum, int times)
     }
 }
 
-void PlaySoundE(int SoundNum)
+void PlaySound(int SoundNum)
 {
-    PlaySoundE(SoundNum, 0);
+    PlaySound(SoundNum, 0);
 }
 
-void PlaySoundE(int SoundNum, int times, int x, int y, int z)
+void PlaySound(int SoundNum, int times, int x, int y, int z)
 {
-    PlaySoundE(SoundNum, times);
+    PlaySound(SoundNum, times);
 }
 
 void PlaySoundA(int SoundNum, int times)
@@ -968,8 +968,9 @@ int utf8follow(char c1)
     return 4;
 }
 
-void DrawText(SDL_Surface* sur, const std::string& word, int x_pos, int y_pos, uint32_t color)
+void DrawText(const std::string& word, int x_pos, int y_pos, uint32_t color)
 {
+    SDL_Surface* sur = screen;
     if (!sur || word.empty())
     {
         return;
@@ -1092,64 +1093,54 @@ void DrawText(SDL_Surface* sur, const std::string& word, int x_pos, int y_pos, u
     }
 }
 
-void DrawEngText(SDL_Surface* sur, const std::string& word, int x_pos, int y_pos, uint32_t color)
+void DrawEngText(const std::string& word, int x_pos, int y_pos, uint32_t color)
 {
-    DrawText(sur, word, x_pos, y_pos + 2, color);
-}
-
-void DrawShadowText(SDL_Surface* sur, const std::string& word, int x_pos, int y_pos, uint32_t color1, uint32_t color2)
-{
-    DrawText(sur, word, x_pos + 1, y_pos, color2);
-    DrawText(sur, word, x_pos, y_pos, color1);
+    DrawText(word, x_pos, y_pos + 2, color);
 }
 
 void DrawShadowText(const std::string& word, int x_pos, int y_pos, uint32_t color1, uint32_t color2)
 {
-    DrawShadowText(screen, word, x_pos, y_pos, color1, color2);
+    DrawText(word, x_pos + 1, y_pos, color2);
+    DrawText(word, x_pos, y_pos, color1);
 }
 
-void DrawEngShadowText(SDL_Surface* sur, const std::string& word, int x_pos, int y_pos, uint32_t color1, uint32_t color2)
+void DrawEngShadowText(const std::string& word, int x_pos, int y_pos, uint32_t color1, uint32_t color2)
 {
-    DrawShadowText(sur, word, x_pos, y_pos, color1, color2);
+    DrawShadowText(word, x_pos, y_pos, color1, color2);
 }
 
-void DrawBig5Text(SDL_Surface* sur, const char* str, int x_pos, int y_pos, uint32_t color)
+void DrawBig5Text(const char* str, int x_pos, int y_pos, uint32_t color)
 {
     std::string utf8 = cp950toutf8(str);
-    DrawText(sur, utf8, x_pos, y_pos, color);
+    DrawText(utf8, x_pos, y_pos, color);
 }
 
-void DrawBig5ShadowText(SDL_Surface* sur, const char* word, int x_pos, int y_pos, uint32_t color1, uint32_t color2)
+void DrawBig5ShadowText(const char* word, int x_pos, int y_pos, uint32_t color1, uint32_t color2)
 {
     std::string utf8 = cp950toutf8(word);
-    DrawText(sur, utf8, x_pos + 1, y_pos, color2);
-    DrawText(sur, utf8, x_pos, y_pos, color1);
+    DrawText(utf8, x_pos + 1, y_pos, color2);
+    DrawText(utf8, x_pos, y_pos, color1);
 }
 
 void DrawTextWithRect(const std::string& word, int x, int y, int w, uint32_t color1, uint32_t color2)
 {
-    DrawTextWithRect(screen, word, x, y, w, color1, color2);
-}
-
-void DrawTextWithRect(SDL_Surface* sur, const std::string& word, int x, int y, int w, uint32_t color1, uint32_t color2)
-{
     if (w < 0)
     {
         w = DrawLength(word) * 10 + 7;
     }
-    DrawRectangle(sur, x, y, w, 28, 0, ColColor(0xFF), 50);
-    DrawShadowText(sur, word, x + 3, y + 3, color1, color2);
+    DrawRectangle(screen, x, y, w, 28, 0, ColColor(0xFF), 50);
+    DrawShadowText(word, x + 3, y + 3, color1, color2);
     UpdateScreen(screen, x, y, w + 1, 29);
 }
 
-void DrawTextWithRectNoUpdate(SDL_Surface* sur, const std::string& word, int x, int y, int w, uint32_t color1, uint32_t color2)
+void DrawTextWithRectNoUpdate(const std::string& word, int x, int y, int w, uint32_t color1, uint32_t color2)
 {
     if (w < 0)
     {
         w = DrawLength(word) * 10 + 7;
     }
-    DrawRectangle(sur, x, y, w, 28, 0, ColColor(0xFF), 50);
-    DrawShadowText(sur, word, x + 3, y + 3, color1, color2);
+    DrawRectangle(screen, x, y, w, 28, 0, ColColor(0xFF), 50);
+    DrawShadowText(word, x + 3, y + 3, color1, color2);
 }
 
 // ---- 屏幕管理 ----

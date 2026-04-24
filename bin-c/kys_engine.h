@@ -10,9 +10,9 @@ void InitialMusic();
 void PlayMP3(int MusicNum, int times, int frombeginning = 1);
 void PlayMP3(const char* filename, int times);
 void StopMP3(int frombeginning = 1);
-void PlaySoundE(int SoundNum, int times);
-void PlaySoundE(int SoundNum);
-void PlaySoundE(int SoundNum, int times, int x, int y, int z);
+void PlaySound(int SoundNum, int times);
+void PlaySound(int SoundNum);
+void PlaySound(int SoundNum, int times, int x, int y, int z);
 void PlaySoundA(int SoundNum, int times);
 
 // 文件读取
@@ -62,16 +62,14 @@ TPosition GetPositionOnScreen(int x, int y, int CenterX, int CenterY);
 // 文字
 std::string cp950toutf8(const char* str, int len = -1);
 std::string utf8tocp950(const std::string& str);
-void DrawText(SDL_Surface* sur, const std::string& word, int x_pos, int y_pos, uint32_t color);
-void DrawEngText(SDL_Surface* sur, const std::string& word, int x_pos, int y_pos, uint32_t color);
-void DrawShadowText(SDL_Surface* sur, const std::string& word, int x_pos, int y_pos, uint32_t color1, uint32_t color2);
+void DrawText(const std::string& word, int x_pos, int y_pos, uint32_t color);
+void DrawEngText(const std::string& word, int x_pos, int y_pos, uint32_t color);
 void DrawShadowText(const std::string& word, int x_pos, int y_pos, uint32_t color1, uint32_t color2);
-void DrawEngShadowText(SDL_Surface* sur, const std::string& word, int x_pos, int y_pos, uint32_t color1, uint32_t color2);
-void DrawBig5Text(SDL_Surface* sur, const char* str, int x_pos, int y_pos, uint32_t color);
-void DrawBig5ShadowText(SDL_Surface* sur, const char* word, int x_pos, int y_pos, uint32_t color1, uint32_t color2);
+void DrawEngShadowText(const std::string& word, int x_pos, int y_pos, uint32_t color1, uint32_t color2);
+void DrawBig5Text(const char* str, int x_pos, int y_pos, uint32_t color);
+void DrawBig5ShadowText(const char* word, int x_pos, int y_pos, uint32_t color1, uint32_t color2);
 void DrawTextWithRect(const std::string& word, int x, int y, int w, uint32_t color1, uint32_t color2);
-void DrawTextWithRect(SDL_Surface* sur, const std::string& word, int x, int y, int w, uint32_t color1, uint32_t color2);
-void DrawTextWithRectNoUpdate(SDL_Surface* sur, const std::string& word, int x, int y, int w, uint32_t color1, uint32_t color2);
+void DrawTextWithRectNoUpdate(const std::string& word, int x, int y, int w, uint32_t color1, uint32_t color2);
 
 // 系统
 void ChangeCol();

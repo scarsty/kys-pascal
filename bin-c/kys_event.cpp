@@ -155,7 +155,7 @@ void talk_1(const std::string& talkstr, int headnum, int dismode)
     int li = 0;
     for (size_t i = 0; i < lines.size(); i++)
     {
-        DrawShadowText(screen, lines[i], diagx + 20, diagy + li * 22, ColColor(0xFF), ColColor(0));
+        DrawShadowText(lines[i], diagx + 20, diagy + li * 22, ColColor(0xFF), ColColor(0));
         li++;
         if (li >= 4 && i < lines.size() - 1)
         {
@@ -197,12 +197,12 @@ void instruct_2(int inum, int amount)
     }
     DrawRectangle(screen, x - 85, 98, 170, 76, 0, ColColor(255), 50);
     std::string word = (amount >= 0) ? "得到物品" : "失去物品";
-    DrawShadowText(screen, word, x - 80, 100, ColColor(0x21), ColColor(0x23));
-    DrawBig5ShadowText(screen, Ritem[inum].Name, x - 80, 125, ColColor(0x05), ColColor(0x07));
+    DrawShadowText(word, x - 80, 100, ColColor(0x21), ColColor(0x23));
+    DrawBig5ShadowText(Ritem[inum].Name, x - 80, 125, ColColor(0x05), ColColor(0x07));
     word = "數量";
-    DrawShadowText(screen, word, x - 80, 150, ColColor(0x64), ColColor(0x66));
+    DrawShadowText(word, x - 80, 150, ColColor(0x64), ColColor(0x66));
     auto buf = std::format(" {:5d}", amount);
-    DrawEngShadowText(screen, buf, x, 150, ColColor(0x64), ColColor(0x66));
+    DrawEngShadowText(buf, x, 150, ColColor(0x64), ColColor(0x66));
     UpdateScreen(screen, 0, 0, screen->w, screen->h);
     WaitAnyKey();
     Redraw();
@@ -258,7 +258,7 @@ void ReArrangeItem(int sort)
     }
 }
 
-void instruct_3(int list[])
+void instruct_3(std::vector<int> list)
 {
     if (list[0] == -2)
     {
@@ -305,7 +305,7 @@ int instruct_4(int inum, int jump1, int jump2) { return (inum == CurItem) ? jump
 int instruct_5(int jump1, int jump2)
 {
     std::string ms[3] = { "取消", "戰鬥", "是否與之戰鬥？" };
-    DrawTextWithRect(screen, ms[2], CENTER_X - 75, CENTER_Y - 85, 150, ColColor(5), ColColor(7));
+    DrawTextWithRect(ms[2], CENTER_X - 75, CENTER_Y - 85, 150, ColColor(5), ColColor(7));
     int menu = CommonMenu2(CENTER_X - 49, CENTER_Y - 50, 98, ms);
     Redraw();
     UpdateScreen(screen, 0, 0, screen->w, screen->h);
@@ -322,7 +322,7 @@ void instruct_8(int musicnum) { ExitSceneMusicNum = musicnum; }
 int instruct_9(int jump1, int jump2)
 {
     std::string ms[3] = { "取消", "要求", "是否要求加入？" };
-    DrawTextWithRect(screen, ms[2], CENTER_X - 75, CENTER_Y - 85, 150, ColColor(5), ColColor(7));
+    DrawTextWithRect(ms[2], CENTER_X - 75, CENTER_Y - 85, 150, ColColor(5), ColColor(7));
     int menu = CommonMenu2(CENTER_X - 49, CENTER_Y - 50, 98, ms);
     Redraw();
     UpdateScreen(screen, 0, 0, screen->w, screen->h);
@@ -357,7 +357,7 @@ void instruct_10(int rnum)
 int instruct_11(int jump1, int jump2)
 {
     std::string ms[3] = { " 否", " 是", (MODVersion != 0) ? "请選擇是或者否" : "是否需要住宿？" };
-    DrawTextWithRect(screen, ms[2], CENTER_X - 75, CENTER_Y - 85, 150, ColColor(5), ColColor(7));
+    DrawTextWithRect(ms[2], CENTER_X - 75, CENTER_Y - 85, 150, ColColor(5), ColColor(7));
     int menu = CommonMenu2(CENTER_X - 49, CENTER_Y - 50, 98, ms);
     Redraw();
     UpdateScreen(screen, 0, 0, screen->w, screen->h);
@@ -405,8 +405,8 @@ void instruct_15()
 {
     Where = 4;
     Redraw();
-    DrawShadowText(screen, " 勝敗乃兵家常事，但是……", CENTER_X - 120, 340, ColColor(255), ColColor(255));
-    DrawShadowText(screen, " 地球上又多了一失蹤人口", CENTER_X - 110, 370, ColColor(255), ColColor(255));
+    DrawShadowText(" 勝敗乃兵家常事，但是……", CENTER_X - 120, 340, ColColor(255), ColColor(255));
+    DrawShadowText(" 地球上又多了一失蹤人口", CENTER_X - 110, 370, ColColor(255), ColColor(255));
     UpdateScreen(screen, 0, 0, screen->w, screen->h);
     WaitAnyKey();
 }
@@ -423,7 +423,7 @@ int instruct_16(int rnum, int jump1, int jump2)
     return jump2;
 }
 
-void instruct_17(int list[])
+void instruct_17(std::vector<int> list)
 {
     if (list[0] == -2)
     {
@@ -766,9 +766,9 @@ void instruct_33(int rnum, int magicnum, int dismode)
     if (dismode == 0)
     {
         DrawRectangle(screen, CENTER_X - 75, 98, 145, 76, 0, ColColor(255), 50);
-        DrawShadowText(screen, "學會", CENTER_X - 70, 125, ColColor(0x05), ColColor(0x07));
-        DrawBig5ShadowText(screen, Rrole[rnum].Name, CENTER_X - 70, 100, ColColor(0x21), ColColor(0x23));
-        DrawBig5ShadowText(screen, Rmagic[magicnum].Name, CENTER_X - 70, 150, ColColor(0x64), ColColor(0x66));
+        DrawShadowText("學會", CENTER_X - 70, 125, ColColor(0x05), ColColor(0x07));
+        DrawBig5ShadowText(Rrole[rnum].Name, CENTER_X - 70, 100, ColColor(0x21), ColColor(0x23));
+        DrawBig5ShadowText(Rmagic[magicnum].Name, CENTER_X - 70, 150, ColColor(0x64), ColColor(0x66));
         UpdateScreen(screen, 0, 0, screen->w, screen->h);
         WaitAnyKey();
         Redraw();
@@ -785,10 +785,10 @@ void instruct_34(int rnum, int iq)
     if (iq > 0)
     {
         DrawRectangle(screen, CENTER_X - 75, 98, 145, 51, 0, ColColor(255), 50);
-        DrawShadowText(screen, "資質增加", CENTER_X - 70, 125, ColColor(0x05), ColColor(0x07));
-        DrawBig5ShadowText(screen, Rrole[rnum].Name, CENTER_X - 70, 100, ColColor(0x21), ColColor(0x23));
+        DrawShadowText("資質增加", CENTER_X - 70, 125, ColColor(0x05), ColColor(0x07));
+        DrawBig5ShadowText(Rrole[rnum].Name, CENTER_X - 70, 100, ColColor(0x21), ColColor(0x23));
         auto buf = std::format("{:3d}", iq);
-        DrawEngShadowText(screen, buf, CENTER_X + 30, 125, ColColor(0x64), ColColor(0x66));
+        DrawEngShadowText(buf, CENTER_X + 30, 125, ColColor(0x64), ColColor(0x66));
         UpdateScreen(screen, 0, 0, screen->w, screen->h);
         WaitAnyKey();
         Redraw();
@@ -972,10 +972,10 @@ void instruct_45(int rnum, int speed)
 {
     Rrole[rnum].Speed += speed;
     DrawRectangle(screen, CENTER_X - 75, 98, 145, 51, 0, ColColor(255), 50);
-    DrawShadowText(screen, "輕功增加", CENTER_X - 70, 125, ColColor(0x05), ColColor(0x07));
-    DrawBig5ShadowText(screen, Rrole[rnum].Name, CENTER_X - 70, 100, ColColor(0x21), ColColor(0x23));
+    DrawShadowText("輕功增加", CENTER_X - 70, 125, ColColor(0x05), ColColor(0x07));
+    DrawBig5ShadowText(Rrole[rnum].Name, CENTER_X - 70, 100, ColColor(0x21), ColColor(0x23));
     auto buf = std::format("{:4d}", speed);
-    DrawEngShadowText(screen, buf, CENTER_X + 20, 125, ColColor(0x64), ColColor(0x66));
+    DrawEngShadowText(buf, CENTER_X + 20, 125, ColColor(0x64), ColColor(0x66));
     UpdateScreen(screen, 0, 0, screen->w, screen->h);
     WaitAnyKey();
     Redraw();
@@ -986,10 +986,10 @@ void instruct_46(int rnum, int mp)
     Rrole[rnum].MaxMP += mp;
     Rrole[rnum].CurrentMP = Rrole[rnum].MaxMP;
     DrawRectangle(screen, CENTER_X - 75, 98, 145, 51, 0, ColColor(255), 50);
-    DrawShadowText(screen, "內力增加", CENTER_X - 70, 125, ColColor(0x05), ColColor(0x07));
-    DrawBig5ShadowText(screen, Rrole[rnum].Name, CENTER_X - 70, 100, ColColor(0x21), ColColor(0x23));
+    DrawShadowText("內力增加", CENTER_X - 70, 125, ColColor(0x05), ColColor(0x07));
+    DrawBig5ShadowText(Rrole[rnum].Name, CENTER_X - 70, 100, ColColor(0x21), ColColor(0x23));
     auto buf = std::format("{:4d}", mp);
-    DrawEngShadowText(screen, buf, CENTER_X + 20, 125, ColColor(0x64), ColColor(0x66));
+    DrawEngShadowText(buf, CENTER_X + 20, 125, ColColor(0x64), ColColor(0x66));
     UpdateScreen(screen, 0, 0, screen->w, screen->h);
     WaitAnyKey();
     Redraw();
@@ -999,10 +999,10 @@ void instruct_47(int rnum, int Attack)
 {
     Rrole[rnum].Attack += Attack;
     DrawRectangle(screen, CENTER_X - 75, 98, 145, 51, 0, ColColor(255), 50);
-    DrawShadowText(screen, "武力增加", CENTER_X - 70, 125, ColColor(0x05), ColColor(0x07));
-    DrawBig5ShadowText(screen, Rrole[rnum].Name, CENTER_X - 70, 100, ColColor(0x21), ColColor(0x23));
+    DrawShadowText("武力增加", CENTER_X - 70, 125, ColColor(0x05), ColColor(0x07));
+    DrawBig5ShadowText(Rrole[rnum].Name, CENTER_X - 70, 100, ColColor(0x21), ColColor(0x23));
     auto buf = std::format("{:4d}", Attack);
-    DrawEngShadowText(screen, buf, CENTER_X + 20, 125, ColColor(0x64), ColColor(0x66));
+    DrawEngShadowText(buf, CENTER_X + 20, 125, ColColor(0x64), ColColor(0x66));
     UpdateScreen(screen, 0, 0, screen->w, screen->h);
     WaitAnyKey();
     Redraw();
@@ -1013,10 +1013,10 @@ void instruct_48(int rnum, int hp)
     Rrole[rnum].MaxHP += hp;
     Rrole[rnum].CurrentHP = Rrole[rnum].MaxHP;
     DrawRectangle(screen, CENTER_X - 75, 98, 145, 51, 0, ColColor(255), 50);
-    DrawShadowText(screen, "生命增加", CENTER_X - 70, 125, ColColor(0x05), ColColor(0x07));
-    DrawBig5ShadowText(screen, Rrole[rnum].Name, CENTER_X - 70, 100, ColColor(0x21), ColColor(0x23));
+    DrawShadowText("生命增加", CENTER_X - 70, 125, ColColor(0x05), ColColor(0x07));
+    DrawBig5ShadowText(Rrole[rnum].Name, CENTER_X - 70, 100, ColColor(0x21), ColColor(0x23));
     auto buf = std::format("{:4d}", hp);
-    DrawEngShadowText(screen, buf, CENTER_X + 20, 125, ColColor(0x64), ColColor(0x66));
+    DrawEngShadowText(buf, CENTER_X + 20, 125, ColColor(0x64), ColColor(0x66));
     UpdateScreen(screen, 0, 0, screen->w, screen->h);
     WaitAnyKey();
     Redraw();
@@ -1024,7 +1024,7 @@ void instruct_48(int rnum, int hp)
 
 void instruct_49(int rnum, int MPpro) { Rrole[rnum].MPType = MPpro; }
 
-int instruct_50(int list[])
+int instruct_50(std::vector<int> list)
 {
     if (list[0] > 128 || MODVersion == 11)
     {
@@ -1043,9 +1043,9 @@ void instruct_51() { instruct_1(SOFTSTAR_BEGIN_TALK + rand() % SOFTSTAR_NUM_TALK
 void instruct_52()
 {
     DrawRectangle(screen, CENTER_X - 110, 98, 220, 26, 0, ColColor(255), 50);
-    DrawShadowText(screen, "你的品德指數為：", CENTER_X - 105, 100, ColColor(0x05), ColColor(0x07));
+    DrawShadowText("你的品德指數為：", CENTER_X - 105, 100, ColColor(0x05), ColColor(0x07));
     auto buf = std::format("{:3d}", Rrole[0].Ethics);
-    DrawEngShadowText(screen, buf, CENTER_X + 65, 100, ColColor(0x64), ColColor(0x66));
+    DrawEngShadowText(buf, CENTER_X + 65, 100, ColColor(0x64), ColColor(0x66));
     UpdateScreen(screen, 0, 0, screen->w, screen->h);
     WaitAnyKey();
     Redraw();
@@ -1054,9 +1054,9 @@ void instruct_52()
 void instruct_53()
 {
     DrawRectangle(screen, CENTER_X - 110, 98, 220, 26, 0, ColColor(255), 50);
-    DrawShadowText(screen, "你的聲望指數為：", CENTER_X - 105, 100, ColColor(0x05), ColColor(0x07));
+    DrawShadowText("你的聲望指數為：", CENTER_X - 105, 100, ColColor(0x05), ColColor(0x07));
     auto buf = std::format("{:3d}", Rrole[0].Repute);
-    DrawEngShadowText(screen, buf, CENTER_X + 65, 100, ColColor(0x64), ColColor(0x66));
+    DrawEngShadowText(buf, CENTER_X + 65, 100, ColColor(0x64), ColColor(0x66));
     UpdateScreen(screen, 0, 0, screen->w, screen->h);
     WaitAnyKey();
     Redraw();
@@ -1084,7 +1084,7 @@ void instruct_56(int Repute)
     Rrole[0].Repute += Repute;
     if (Rrole[0].Repute > 200 && Rrole[0].Repute - Repute <= 200)
     {
-        int list[] = { 70, 11, 0, 11, 0x3A4, -1, -1, 0x1F20, 0x1F20, 0x1F20, 0, 18, 21 };
+        std::vector<int> list = { 70, 11, 0, 11, 0x3A4, -1, -1, 0x1F20, 0x1F20, 0x1F20, 0, 18, 21 };
         instruct_3(list);
     }
 }
@@ -1192,7 +1192,7 @@ void EndAmi()
         {
             if (!line.empty())
             {
-                DrawShadowText(screen, line, x, y, ColColor(0xFF), ColColor(0xFF));
+                DrawShadowText(line, x, y, ColColor(0xFF), ColColor(0xFF));
                 UpdateScreen(screen, 0, 0, screen->w, screen->h);
                 y += 25;
             }
@@ -1672,7 +1672,7 @@ int instruct_50e(int code, int e1, int e2, int e3, int e4, int e5, int e6)
             if ((uint8_t)*p == 0x2A)
             {
                 *p = 0;
-                DrawBig5ShadowText(screen, p1, e3 - 2, e4 + 22 * i - 3, ColColor(e5 & 0xFF), ColColor((e5 & 0xFF00) << 8));
+                DrawBig5ShadowText(p1, e3 - 2, e4 + 22 * i - 3, ColColor(e5 & 0xFF), ColColor((e5 & 0xFF00) << 8));
                 i++;
                 p1 = p + 1;
                 w1 = (int)strlen(p1) * 11;
@@ -1683,7 +1683,7 @@ int instruct_50e(int code, int e1, int e2, int e3, int e4, int e5, int e6)
             }
             p++;
         }
-        DrawBig5ShadowText(screen, p1, e3 - 2, e4 + 22 * i - 3, ColColor(e5 & 0xFF), ColColor((e5 & 0xFF00) << 8));
+        DrawBig5ShadowText(p1, e3 - 2, e4 + 22 * i - 3, ColColor(e5 & 0xFF), ColColor((e5 & 0xFF00) << 8));
         w1 = (int)strlen(p1) * 11;
         if (w1 > w)
         {
@@ -1774,13 +1774,13 @@ int instruct_50e(int code, int e1, int e2, int e3, int e4, int e5, int e6)
             if ((uint8_t)*p == 0x2A)
             {
                 *p = 0;
-                DrawBig5ShadowText(screen, p1, e3 + 3, e4 + 22 * i + 2, ColColor(e5 & 0xFF), ColColor((e5 & 0xFF00) << 8));
+                DrawBig5ShadowText(p1, e3 + 3, e4 + 22 * i + 2, ColColor(e5 & 0xFF), ColColor((e5 & 0xFF00) << 8));
                 i++;
                 p1 = p + 1;
             }
             p++;
         }
-        DrawBig5ShadowText(screen, p1, e3 + 3, e4 + 22 * i + 2, ColColor(e5 & 0xFF), ColColor((e5 & 0xFF00) << 8));
+        DrawBig5ShadowText(p1, e3 + 3, e4 + 22 * i + 2, ColColor(e5 & 0xFF), ColColor((e5 & 0xFF00) << 8));
         UpdateScreen(screen, 0, 0, screen->w, screen->h);
         i = WaitAnyKey();
         if (i == SDLK_Y)
@@ -2265,7 +2265,7 @@ void NewTalk(int headnum, int talknum, int namenum, int place, int showhead, int
         }
         if (!NameStr.empty() || showhead != 0)
         {
-            DrawShadowText(screen, NameStr, Name_X, Name_Y, ColColor(5), ColColor(7));
+            DrawShadowText(NameStr, Name_X, Name_Y, ColColor(5), ColColor(7));
         }
         UpdateAllScreen();
 
@@ -2364,7 +2364,7 @@ void NewTalk(int headnum, int talknum, int namenum, int place, int showhead, int
                 int xtemp = Talk_X + ColSpacing * ix;
                 // Pascal: uint16(tempstr[1]) < $1000 始终为真, 所有字符都 +5
                 xtemp += 5;
-                DrawShadowText(screen, tempstr, xtemp, Talk_Y + RowSpacing * iy, DrawForeGroundCol, DrawBackGroundCol);
+                DrawShadowText(tempstr, xtemp, Talk_Y + RowSpacing * iy, DrawForeGroundCol, DrawBackGroundCol);
                 I += len_utf8;
             }
             if (!skipSync && SkipTalk == 0)
@@ -2545,7 +2545,7 @@ int EnterNumber(int MinValue, int MaxValue, int x, int y, int Default)
         {
             LoadFreshScreen(x, y, 181, 181);
             auto vbuf = std::format("{:6d}", Value);
-            DrawShadowText(screen, vbuf, x + 80, y + 10, ColColor(0x64), ColColor(0x66));
+            DrawShadowText(vbuf, x + 80, y + 10, ColColor(0x64), ColColor(0x66));
             if (menu >= 0 && menu <= highButton)
             {
                 DrawRectangle(screen, Button[menu].x, Button[menu].y, Button[menu].w, Button[menu].h,
@@ -2553,7 +2553,7 @@ int EnterNumber(int MinValue, int MaxValue, int x, int y, int Default)
             }
             for (int i = 0; i <= highButton; i++)
             {
-                DrawShadowText(screen, str[i], Button[i].x + 8, Button[i].y + Button[i].h / 2 - 11,
+                DrawShadowText(str[i], Button[i].x + 8, Button[i].y + Button[i].h / 2 - 11,
                     ColColor(5), ColColor(7));
             }
             UpdateAllScreen();

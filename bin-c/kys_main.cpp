@@ -631,9 +631,9 @@ bool InitialRole()
 
             Redraw();
             ShowStatus(0);
-            DrawShadowText(screen, str, CENTER_X - 273 + 10, CENTER_Y + 111, ColColor(0x21), ColColor(0x23));
+            DrawShadowText(str, CENTER_X - 273 + 10, CENTER_Y + 111, ColColor(0x21), ColColor(0x23));
             auto buf = std::format("{:4d}", Rrole[0].Aptitude);
-            DrawEngShadowText(screen, buf, CENTER_X - 273 + 110, CENTER_Y + 111, ColColor(0x64), ColColor(0x66));
+            DrawEngShadowText(buf, CENTER_X - 273 + 110, CENTER_Y + 111, ColColor(0x64), ColColor(0x66));
             UpdateScreen(screen, 0, 0, screen->w, screen->h);
             key = WaitAnyKey();
         } while (key != SDLK_ESCAPE && key != SDLK_RETURN);
@@ -1197,9 +1197,9 @@ bool InitialRole()
         }
 
         ShowStatus(0);
-        DrawShadowText(screen, str, 30, CENTER_Y + 111, ColColor(0x23), ColColor(0x21));
+        DrawShadowText(str, 30, CENTER_Y + 111, ColColor(0x23), ColColor(0x21));
         auto buf = std::format("{:4d}", Rrole[0].Aptitude);
-        DrawEngShadowText(screen, buf, 150, CENTER_Y + 111, ColColor(0x66), ColColor(0x63));
+        DrawEngShadowText(buf, 150, CENTER_Y + 111, ColColor(0x66), ColColor(0x63));
         UpdateScreen(screen, 0, 0, screen->w, screen->h);
 
         StartAmi();
@@ -2580,7 +2580,7 @@ void ShowSceneName(int snum)
     UpdateScreen(screen, 0, 0, screen->w, screen->h);
     std::string name = cp950toutf8(Rscene[snum].Name);
     int nameLen = (int)strlen((const char*)Rscene[snum].Name);
-    DrawTextWithRect(screen, name, CENTER_X - nameLen * 5 + 7, 100, nameLen * 10 + 6, ColColor(5), ColColor(7));
+    DrawTextWithRect(name, CENTER_X - nameLen * 5 + 7, 100, nameLen * 10 + 6, ColColor(5), ColColor(7));
     if (Rscene[snum].EntranceMusic >= 0)
     {
         StopMP3();
@@ -2625,7 +2625,7 @@ int CommonMenu(int x, int y, int w, int max, int default_, const std::string men
         {
             uint32_t col1 = (i == menu) ? ColColor(0x64) : ColColor(0x05);
             uint32_t col2 = (i == menu) ? ColColor(0x66) : ColColor(0x07);
-            DrawShadowText(screen, menuString[i], x + 3, y + 2 + 22 * i, col1, col2);
+            DrawShadowText(menuString[i], x + 3, y + 2 + 22 * i, col1, col2);
         }
     };
 
@@ -2748,7 +2748,7 @@ int CommonMenu2(int x, int y, int w, const std::string menuString[])
         {
             uint32_t col1 = (i == menu) ? ColColor(0x64) : ColColor(0x05);
             uint32_t col2 = (i == menu) ? ColColor(0x66) : ColColor(0x07);
-            DrawShadowText(screen, menuString[i], x + 3 + i * 50, y + 2, col1, col2);
+            DrawShadowText(menuString[i], x + 3 + i * 50, y + 2, col1, col2);
         }
     };
 
@@ -2852,7 +2852,7 @@ int CommonScrollMenu(int x, int y, int w, int max, int maxshow, const std::strin
         {
             uint32_t col1 = (i == menu) ? ColColor(0x64) : ColColor(0x05);
             uint32_t col2 = (i == menu) ? ColColor(0x66) : ColColor(0x07);
-            DrawShadowText(screen, menuString[i], x + 3, y + 3 + 22 * (i - menutop), col1, col2);
+            DrawShadowText(menuString[i], x + 3, y + 3 + 22 * (i - menutop), col1, col2);
         }
     };
 
@@ -3063,11 +3063,11 @@ int CommonGridMenu(int x, int y, int cols, int cellW, int maxShowRows, int maxIt
                 }
                 if (idx == menu)
                 {
-                    DrawShadowText(screen, menuString[idx], x + 3 + c * cellW, y + 3 + 22 * r, ColColor(0x64), ColColor(0x66));
+                    DrawShadowText(menuString[idx], x + 3 + c * cellW, y + 3 + 22 * r, ColColor(0x64), ColColor(0x66));
                 }
                 else
                 {
-                    DrawShadowText(screen, menuString[idx], x + 3 + c * cellW, y + 3 + 22 * r, ColColor(0x5), ColColor(0x7));
+                    DrawShadowText(menuString[idx], x + 3 + c * cellW, y + 3 + 22 * r, ColColor(0x5), ColColor(0x7));
                 }
             }
         }
@@ -3367,11 +3367,11 @@ void ShowMenu(int menu)
     {
         if (i == menu)
         {
-            DrawShadowText(screen, word[i], 30, 32 + 22 * i, ColColor(0x64), ColColor(0x66));
+            DrawShadowText(word[i], 30, 32 + 22 * i, ColColor(0x64), ColColor(0x66));
         }
         else
         {
-            DrawShadowText(screen, word[i], 30, 32 + 22 * i, ColColor(0x5), ColColor(0x7));
+            DrawShadowText(word[i], 30, 32 + 22 * i, ColColor(0x5), ColColor(0x7));
         }
     }
     UpdateScreen(screen, 0, 0, screen->w, screen->h);
@@ -3380,13 +3380,13 @@ void ShowMenu(int menu)
 void MenuMedcine()
 {
     std::string str = "隊員醫療能力";
-    DrawTextWithRect(screen, str, 80, 30, 132, ColColor(0x21), ColColor(0x23));
+    DrawTextWithRect(str, 80, 30, 132, ColColor(0x21), ColColor(0x23));
     int menu = SelectOneTeamMember(80, 65, "%4d", 46, 0);
     if (menu >= 0)
     {
         int role1 = TeamList[menu];
         str = "隊員目前生命";
-        DrawTextWithRect(screen, str, 230, 30, 132, ColColor(0x21), ColColor(0x23));
+        DrawTextWithRect(str, 230, 30, 132, ColColor(0x21), ColColor(0x23));
         int menu2 = SelectOneTeamMember(230, 65, "%4d/%4d", 17, 18);
         if (menu2 >= 0)
         {
@@ -3399,13 +3399,13 @@ void MenuMedcine()
 void MenuMedPoison()
 {
     std::string str = "隊員解毒能力";
-    DrawTextWithRect(screen, str, 80, 30, 132, ColColor(0x21), ColColor(0x23));
+    DrawTextWithRect(str, 80, 30, 132, ColColor(0x21), ColColor(0x23));
     int menu = SelectOneTeamMember(80, 65, "%4d", 48, 0);
     if (menu >= 0)
     {
         int role1 = TeamList[menu];
         str = "隊員中毒程度";
-        DrawTextWithRect(screen, str, 230, 30, 132, ColColor(0x21), ColColor(0x23));
+        DrawTextWithRect(str, 230, 30, 132, ColColor(0x21), ColColor(0x23));
         int menu2 = SelectOneTeamMember(230, 65, "%4d", 20, 0);
         if (menu2 >= 0)
         {
@@ -3541,31 +3541,31 @@ bool MenuItem()
                 if (listnum2 >= 0 && listnum2 < MAX_ITEM_AMOUNT && RItemList[listnum2].Amount > 0)
                 {
                     auto buf = std::format("{:5d}", RItemList[listnum2].Amount);
-                    DrawEngShadowText(screen, buf, 110 + w2 - 80, 32, ColColor(0x64), ColColor(0x66));
+                    DrawEngShadowText(buf, 110 + w2 - 80, 32, ColColor(0x64), ColColor(0x66));
 
                     std::string itemName = cp950toutf8(Ritem[item2].Name);
-                    DrawShadowText(screen, itemName, 110 + w2 / 2 - (int)DrawLength(itemName) * 5, 32, ColColor(0x21), ColColor(0x23));
+                    DrawShadowText(itemName, 110 + w2 / 2 - (int)DrawLength(itemName) * 5, 32, ColColor(0x21), ColColor(0x23));
 
                     std::string intro = cp950toutf8(Ritem[item2].Introduction);
-                    DrawShadowText(screen, intro, 110 + w2 / 2 - (int)DrawLength(intro) * 5, 62, ColColor(0x5), ColColor(0x7));
+                    DrawShadowText(intro, 110 + w2 / 2 - (int)DrawLength(intro) * 5, 62, ColColor(0x5), ColColor(0x7));
 
                     std::string typeNames[] = { "劇情物品", "神兵寶甲", "武功秘笈", "靈丹妙藥", "傷人暗器" };
                     if (Ritem[item2].ItemType >= 0 && Ritem[item2].ItemType <= 4)
                     {
-                        DrawShadowText(screen, typeNames[Ritem[item2].ItemType], 117, 315, ColColor(0x21), ColColor(0x23));
+                        DrawShadowText(typeNames[Ritem[item2].ItemType], 117, 315, ColColor(0x21), ColColor(0x23));
                     }
 
                     if (Ritem[item2].User >= 0)
                     {
-                        DrawShadowText(screen, "使用人：", 207, 315, ColColor(0x21), ColColor(0x23));
+                        DrawShadowText("使用人：", 207, 315, ColColor(0x21), ColColor(0x23));
                         std::string userName = cp950toutf8(Rrole[Ritem[item2].User].Name);
-                        DrawShadowText(screen, userName, 297, 315, ColColor(0x64), ColColor(0x66));
+                        DrawShadowText(userName, 297, 315, ColColor(0x64), ColColor(0x66));
                     }
                     if (item2 == COMPASS_ID)
                     {
-                        DrawShadowText(screen, "你的位置：", 207, 315, ColColor(0x21), ColColor(0x23));
+                        DrawShadowText("你的位置：", 207, 315, ColColor(0x21), ColColor(0x23));
                         buf = std::format("{:3d}, {:3d}", My, Mx);
-                        DrawEngShadowText(screen, buf, 317, 315, ColColor(0x64), ColColor(0x66));
+                        DrawEngShadowText(buf, 317, 315, ColColor(0x64), ColColor(0x66));
                     }
                 }
 
@@ -3645,8 +3645,8 @@ bool MenuItem()
                                 c1 = ColColor(0x64);
                                 c2 = ColColor(0x66);
                             }
-                            DrawShadowText(screen, words22[i3], 117 + (i12 % 6) * 95, i12 / 6 * 20 + 346, ColColor(0x5), ColColor(0x7));
-                            DrawShadowText(screen, buf2, 137 + (i12 % 6) * 95, i12 / 6 * 20 + 346, c1, c2);
+                            DrawShadowText(words22[i3], 117 + (i12 % 6) * 95, i12 / 6 * 20 + 346, ColColor(0x5), ColColor(0x7));
+                            DrawShadowText(buf2, 137 + (i12 % 6) * 95, i12 / 6 * 20 + 346, c1, c2);
                             i12++;
                         }
                     }
@@ -3681,8 +3681,8 @@ bool MenuItem()
                                 c1 = ColColor(0x64);
                                 c2 = ColColor(0x66);
                             }
-                            DrawShadowText(screen, words32[i3], 117 + (i12 % 6) * 95, ((len22 + 5) / 6 + i12 / 6) * 20 + 346, ColColor(0x50), ColColor(0x4E));
-                            DrawShadowText(screen, buf2, 137 + (i12 % 6) * 95, ((len22 + 5) / 6 + i12 / 6) * 20 + 346, c1, c2);
+                            DrawShadowText(words32[i3], 117 + (i12 % 6) * 95, ((len22 + 5) / 6 + i12 / 6) * 20 + 346, ColColor(0x50), ColColor(0x4E));
+                            DrawShadowText(buf2, 137 + (i12 % 6) * 95, ((len22 + 5) / 6 + i12 / 6) * 20 + 346, c1, c2);
                             i12++;
                         }
                     }
@@ -3991,15 +3991,15 @@ void UseItem(int inum)
             Redraw();
             std::string ms[] = { "取消", "繼續" };
             std::string str = "此物品正有人裝備，是否繼續？";
-            DrawTextWithRect(screen, str, 80, 30, 285, ColColor(5), ColColor(7));
+            DrawTextWithRect(str, 80, 30, 285, ColColor(5), ColColor(7));
             menu = CommonMenu(80, 65, 45, 1, ms);
         }
         if (menu == 1)
         {
             Redraw();
             std::string str1 = cp950toutf8(Ritem[inum].Name);
-            DrawTextWithRect(screen, "誰要裝備", 80, 30, (int)str1.size() * 11 + 80, ColColor(0x21), ColColor(0x23));
-            DrawShadowText(screen, str1, 160, 32, ColColor(0x64), ColColor(0x66));
+            DrawTextWithRect("誰要裝備", 80, 30, (int)str1.size() * 11 + 80, ColColor(0x21), ColColor(0x23));
+            DrawShadowText(str1, 160, 32, ColColor(0x64), ColColor(0x66));
             UpdateScreen(screen, 0, 0, screen->w, screen->h);
             int sel = SelectOneTeamMember(80, 65, "", 0, 0);
             if (sel >= 0)
@@ -4025,7 +4025,7 @@ void UseItem(int inum)
                 }
                 else
                 {
-                    DrawTextWithRect(screen, "此人不適合裝備此物品", 80, 230, 205, ColColor(0x64), ColColor(0x66));
+                    DrawTextWithRect("此人不適合裝備此物品", 80, 230, 205, ColColor(0x64), ColColor(0x66));
                     WaitAnyKey();
                     Redraw();
                 }
@@ -4040,15 +4040,15 @@ void UseItem(int inum)
         {
             Redraw();
             std::string ms[] = { "取消", "繼續" };
-            DrawTextWithRect(screen, "此秘笈正有人修煉，是否繼續？", 80, 30, 285, ColColor(5), ColColor(7));
+            DrawTextWithRect("此秘笈正有人修煉，是否繼續？", 80, 30, 285, ColColor(5), ColColor(7));
             menu = CommonMenu(80, 65, 45, 1, ms);
         }
         if (menu == 1)
         {
             Redraw();
             std::string str1 = cp950toutf8(Ritem[inum].Name);
-            DrawTextWithRect(screen, "誰要修煉", 80, 30, (int)str1.size() * 11 + 80, ColColor(0x21), ColColor(0x23));
-            DrawShadowText(screen, str1, 160, 32, ColColor(0x64), ColColor(0x66));
+            DrawTextWithRect("誰要修煉", 80, 30, (int)str1.size() * 11 + 80, ColColor(0x21), ColColor(0x23));
+            DrawShadowText(str1, 160, 32, ColColor(0x64), ColColor(0x66));
             UpdateScreen(screen, 0, 0, screen->w, screen->h);
             int sel = SelectOneTeamMember(80, 65, "", 0, 0);
             if (sel >= 0)
@@ -4069,7 +4069,7 @@ void UseItem(int inum)
                 }
                 else
                 {
-                    DrawTextWithRect(screen, "此人不適合修煉此秘笈", 80, 230, 205, ColColor(0x64), ColColor(0x66));
+                    DrawTextWithRect("此人不適合修煉此秘笈", 80, 230, 205, ColColor(0x64), ColColor(0x66));
                     WaitAnyKey();
                     Redraw();
                 }
@@ -4083,8 +4083,8 @@ void UseItem(int inum)
         if (Where != 2)
         {
             std::string str1 = cp950toutf8(Ritem[inum].Name);
-            DrawTextWithRect(screen, "誰要服用", 80, 30, (int)str1.size() * 11 + 80, ColColor(0x21), ColColor(0x23));
-            DrawShadowText(screen, str1, 160, 32, ColColor(0x64), ColColor(0x66));
+            DrawTextWithRect("誰要服用", 80, 30, (int)str1.size() * 11 + 80, ColColor(0x21), ColColor(0x23));
+            DrawShadowText(str1, 160, 32, ColColor(0x64), ColColor(0x66));
             UpdateScreen(screen, 0, 0, screen->w, screen->h);
             sel = SelectOneTeamMember(80, 65, "", 0, 0);
         }
@@ -4193,7 +4193,7 @@ bool CanEquip(int rnum, int inum)
     {
         Redraw();
         std::string ms[] = { "取消", "繼續" };
-        DrawTextWithRect(screen, "是否自宮？", 80, 30, 105, ColColor(7), ColColor(5));
+        DrawTextWithRect("是否自宮？", 80, 30, 105, ColColor(7), ColColor(5));
         if (CommonMenu(80, 65, 45, 1, ms) == 1)
         {
             Rrole[rnum].Sexual = 2;
@@ -4211,7 +4211,7 @@ void MenuLeave()
     if (Where == 0 || MODVersion == 22)
     {
         std::string str = (MODVersion == 22) ? "選擇一個隊友" : "要求誰離隊？";
-        DrawTextWithRect(screen, str, 80, 30, 132, ColColor(0x21), ColColor(0x23));
+        DrawTextWithRect(str, 80, 30, 132, ColColor(0x21), ColColor(0x23));
         int menu = SelectOneTeamMember(80, 65, "%3d", 15, 0);
         if (menu >= 0)
         {
@@ -4229,7 +4229,7 @@ void MenuLeave()
     }
     else
     {
-        DrawTextWithRect(screen, "子場景不可離隊！", 80, 30, 172, ColColor(0x21), ColColor(0x23));
+        DrawTextWithRect("子場景不可離隊！", 80, 30, 172, ColColor(0x21), ColColor(0x23));
         WaitAnyKey();
     }
     Redraw();
@@ -4242,7 +4242,7 @@ void MenuStatus()
     Redraw();
     RecordFreshScreen(0, 0, screen->w, screen->h);
     UpdateScreen(screen, 0, 0, screen->w, screen->h);
-    DrawTextWithRect(screen, str, 10, 30, 132, ColColor(0x21), ColColor(0x23));
+    DrawTextWithRect(str, 10, 30, 132, ColColor(0x21), ColColor(0x23));
 
     std::string menuStr[6];
     int Amount = 0;
@@ -4326,17 +4326,17 @@ void ShowStatus(int rnum, int x, int y)
 
     DrawHeadPic(Rrole[rnum].HeadNum, x + 60, y + 80);
     std::string Name = cp950toutf8(Rrole[rnum].Name, 5);
-    DrawShadowText(screen, Name, x + 88 - DrawLength(Name) * 5, y + 85, ColColor(0x66), ColColor(0x63));
+    DrawShadowText(Name, x + 88 - DrawLength(Name) * 5, y + 85, ColColor(0x66), ColColor(0x63));
 
     for (int i = 0; i <= 5; i++)
     {
-        DrawShadowText(screen, strs[i], x + 10, y + 110 + 21 * i, ColColor(0x21), ColColor(0x23));
+        DrawShadowText(strs[i], x + 10, y + 110 + 21 * i, ColColor(0x21), ColColor(0x23));
     }
     for (int i = 6; i <= 16; i++)
     {
-        DrawShadowText(screen, strs[i], x + 180, y + 5 + 21 * (i - 6), ColColor(0x64), ColColor(0x66));
+        DrawShadowText(strs[i], x + 180, y + 5 + 21 * (i - 6), ColColor(0x64), ColColor(0x66));
     }
-    DrawShadowText(screen, strs[19], x + 360, y + 5, ColColor(0x21), ColColor(0x23));
+    DrawShadowText(strs[19], x + 360, y + 5, ColColor(0x21), ColColor(0x23));
 
     int addatk = 0, adddef = 0, addspeed = 0;
     if (Rrole[rnum].Equip[0] >= 0)
@@ -4355,11 +4355,11 @@ void ShowStatus(int rnum, int x, int y)
     std::string buf;
     // 右列属性值
     buf = std::format("{:4d}", Rrole[rnum].Attack + addatk);
-    DrawEngShadowText(screen, buf, x + 280, y + 5 + 21 * 0, ColColor(0x5), ColColor(0x7));
+    DrawEngShadowText(buf, x + 280, y + 5 + 21 * 0, ColColor(0x5), ColColor(0x7));
     buf = std::format("{:4d}", Rrole[rnum].Defence + adddef);
-    DrawEngShadowText(screen, buf, x + 280, y + 5 + 21 * 1, ColColor(0x5), ColColor(0x7));
+    DrawEngShadowText(buf, x + 280, y + 5 + 21 * 1, ColColor(0x5), ColColor(0x7));
     buf = std::format("{:4d}", Rrole[rnum].Speed + addspeed);
-    DrawEngShadowText(screen, buf, x + 280, y + 5 + 21 * 2, ColColor(0x5), ColColor(0x7));
+    DrawEngShadowText(buf, x + 280, y + 5 + 21 * 2, ColColor(0x5), ColColor(0x7));
     // 医疗~暗器
     int pdata[] = { 43, 45, 44, 46, 47, 48, 50, 51, 52, 53, 54 };
     for (int i = 0; i < 11; i++)
@@ -4369,12 +4369,12 @@ void ShowStatus(int rnum, int x, int y)
             continue;    // 攻防轻功已画
         }
         buf = std::format("{:4d}", Rrole[rnum].Data[pdata[i]]);
-        DrawEngShadowText(screen, buf, x + 280, y + 5 + 21 * i, ColColor(0x5), ColColor(0x7));
+        DrawEngShadowText(buf, x + 280, y + 5 + 21 * i, ColColor(0x5), ColColor(0x7));
     }
 
     // 左列属性值
     buf = std::format("{:4d}", Rrole[rnum].Level);
-    DrawEngShadowText(screen, buf, x + 90, y + 110, ColColor(0x5), ColColor(0x7));
+    DrawEngShadowText(buf, x + 90, y + 110, ColColor(0x5), ColColor(0x7));
 
     // 生命 - 受伤程度影响CurrentHP颜色
     uint32_t color1, color2;
@@ -4394,8 +4394,8 @@ void ShowStatus(int rnum, int x, int y)
         color2 = ColColor(0x5);
     }
     buf = std::format("{:4d}", Rrole[rnum].CurrentHP);
-    DrawEngShadowText(screen, buf, x + 60, y + 131, color1, color2);
-    DrawEngShadowText(screen, "/", x + 100, y + 131, ColColor(0x64), ColColor(0x66));
+    DrawEngShadowText(buf, x + 60, y + 131, color1, color2);
+    DrawEngShadowText("/", x + 100, y + 131, ColColor(0x64), ColColor(0x66));
     // MaxHP - 中毒程度影响颜色
     if (Rrole[rnum].Poison >= 67)
     {
@@ -4413,7 +4413,7 @@ void ShowStatus(int rnum, int x, int y)
         color2 = ColColor(0x23);
     }
     buf = std::format("{:4d}", Rrole[rnum].MaxHP);
-    DrawEngShadowText(screen, buf, x + 110, y + 131, color1, color2);
+    DrawEngShadowText(buf, x + 110, y + 131, color1, color2);
 
     // 内力 - 依据内力性质使用颜色
     if (Rrole[rnum].MPType == 0)
@@ -4432,15 +4432,15 @@ void ShowStatus(int rnum, int x, int y)
         color2 = ColColor(0x66);
     }
     buf = std::format("{:4d}/{:4d}", Rrole[rnum].CurrentMP, Rrole[rnum].MaxMP);
-    DrawEngShadowText(screen, buf, x + 60, y + 152, color1, color2);
+    DrawEngShadowText(buf, x + 60, y + 152, color1, color2);
 
     // 体力/上限
     buf = std::format("{:4d}/{:4d}", Rrole[rnum].PhyPower, MAX_PHYSICAL_POWER);
-    DrawEngShadowText(screen, buf, x + 60, y + 173, ColColor(0x5), ColColor(0x7));
+    DrawEngShadowText(buf, x + 60, y + 173, ColColor(0x5), ColColor(0x7));
 
     // 经验
     buf = std::format("{:5d}", (uint16_t)Rrole[rnum].Exp);
-    DrawEngShadowText(screen, buf, x + 100, y + 194, ColColor(0x5), ColColor(0x7));
+    DrawEngShadowText(buf, x + 100, y + 194, ColColor(0x5), ColColor(0x7));
     // 升级所需经验
     int lvl = Rrole[rnum].Level;
     if (lvl >= 1 && lvl <= 100)
@@ -4451,7 +4451,7 @@ void ShowStatus(int rnum, int x, int y)
     {
         buf = "    -";
     }
-    DrawEngShadowText(screen, buf, x + 100, y + 215, ColColor(0x5), ColColor(0x7));
+    DrawEngShadowText(buf, x + 100, y + 215, ColColor(0x5), ColColor(0x7));
 
     // 武功列表
     for (int i = 0; i < 10; i++)
@@ -4459,30 +4459,30 @@ void ShowStatus(int rnum, int x, int y)
         if (Rrole[rnum].Magic[i] > 0 && Rrole[rnum].Magic[i] < 999)
         {
             std::string mname = cp950toutf8(Rmagic[Rrole[rnum].Magic[i]].Name);
-            DrawShadowText(screen, mname, x + 360, y + 26 + 21 * i, ColColor(0x5), ColColor(0x7));
+            DrawShadowText(mname, x + 360, y + 26 + 21 * i, ColColor(0x5), ColColor(0x7));
             buf = std::format("{:4d}", Rrole[rnum].MagLevel[i] / 100 + 1);
-            DrawEngShadowText(screen, buf, x + 470, y + 26 + 21 * i, ColColor(0x64), ColColor(0x66));
+            DrawEngShadowText(buf, x + 470, y + 26 + 21 * i, ColColor(0x64), ColColor(0x66));
         }
     }
 
     // 受伤/中毒
-    DrawShadowText(screen, strs[20], x + 10, y + 280, ColColor(0x21), ColColor(0x23));
+    DrawShadowText(strs[20], x + 10, y + 280, ColColor(0x21), ColColor(0x23));
     buf = std::format("{:4d}", Rrole[rnum].Hurt);
-    DrawEngShadowText(screen, buf, x + 90, y + 280, ColColor(0x10), ColColor(0x13));
-    DrawShadowText(screen, strs[21], x + 10, y + 296, ColColor(0x21), ColColor(0x23));
+    DrawEngShadowText(buf, x + 90, y + 280, ColColor(0x10), ColColor(0x13));
+    DrawShadowText(strs[21], x + 10, y + 296, ColColor(0x21), ColColor(0x23));
     buf = std::format("{:4d}", Rrole[rnum].Poison);
-    DrawEngShadowText(screen, buf, x + 90, y + 296, ColColor(0x10), ColColor(0x13));
+    DrawEngShadowText(buf, x + 90, y + 296, ColColor(0x10), ColColor(0x13));
 
     // 装备物品 / 修炼物品
-    DrawShadowText(screen, strs[17], x + 180, y + 240, ColColor(0x21), ColColor(0x23));
-    DrawShadowText(screen, strs[18], x + 360, y + 240, ColColor(0x21), ColColor(0x23));
+    DrawShadowText(strs[17], x + 180, y + 240, ColColor(0x21), ColColor(0x23));
+    DrawShadowText(strs[18], x + 360, y + 240, ColColor(0x21), ColColor(0x23));
     if (Rrole[rnum].Equip[0] >= 0)
     {
-        DrawBig5ShadowText(screen, Ritem[Rrole[rnum].Equip[0]].Name, x + 190, y + 261, ColColor(0x5), ColColor(0x7));
+        DrawBig5ShadowText(Ritem[Rrole[rnum].Equip[0]].Name, x + 190, y + 261, ColColor(0x5), ColColor(0x7));
     }
     if (Rrole[rnum].Equip[1] >= 0)
     {
-        DrawBig5ShadowText(screen, Ritem[Rrole[rnum].Equip[1]].Name, x + 190, y + 282, ColColor(0x5), ColColor(0x7));
+        DrawBig5ShadowText(Ritem[Rrole[rnum].Equip[1]].Name, x + 190, y + 282, ColColor(0x5), ColColor(0x7));
     }
 
     // 修炼秘笈
@@ -4502,7 +4502,7 @@ void ShowStatus(int rnum, int x, int y)
             }
         }
         int needexp = mlevel * Ritem[Rrole[rnum].PracticeBook].NeedExp * (7 - Rrole[rnum].Aptitude / 15);
-        DrawBig5ShadowText(screen, Ritem[Rrole[rnum].PracticeBook].Name, x + 370, y + 261, ColColor(0x5), ColColor(0x7));
+        DrawBig5ShadowText(Ritem[Rrole[rnum].PracticeBook].Name, x + 370, y + 261, ColColor(0x5), ColColor(0x7));
         if (mlevel == 10)
         {
             buf = std::format("{:5d}/=", (uint16_t)Rrole[rnum].ExpForBook);
@@ -4511,7 +4511,7 @@ void ShowStatus(int rnum, int x, int y)
         {
             buf = std::format("{:5d}/{:5d}", (uint16_t)Rrole[rnum].ExpForBook, needexp);
         }
-        DrawEngShadowText(screen, buf, x + 380, y + 282, ColColor(0x64), ColColor(0x66));
+        DrawEngShadowText(buf, x + 380, y + 282, ColColor(0x64), ColColor(0x66));
     }
 
     UpdateScreen(screen, x, y, 526, 316);
@@ -4525,15 +4525,15 @@ void ShowSimpleStatus(int rnum, int x, int y)
     DrawRectangle(screen, x, y, 145, 173, 0, ColColor(255), 50);
     DrawHeadPic(Rrole[rnum].HeadNum, x + 50, y + 63);
     std::string Name = cp950toutf8(Rrole[rnum].Name, 5);
-    DrawShadowText(screen, Name, x + 80 - DrawLength(Name) * 5, y + 65, ColColor(0x64), ColColor(0x66));
+    DrawShadowText(Name, x + 80 - DrawLength(Name) * 5, y + 65, ColColor(0x64), ColColor(0x66));
     for (int i = 0; i <= 3; i++)
     {
-        DrawShadowText(screen, strs[i], x + 3, y + 86 + 21 * i, ColColor(0x21), ColColor(0x23));
+        DrawShadowText(strs[i], x + 3, y + 86 + 21 * i, ColColor(0x21), ColColor(0x23));
     }
 
     std::string buf;
     buf = std::format("{:9d}", Rrole[rnum].Level);
-    DrawEngShadowText(screen, buf, x + 50, y + 86, ColColor(0x5), ColColor(0x7));
+    DrawEngShadowText(buf, x + 50, y + 86, ColColor(0x5), ColColor(0x7));
 
     // HP颜色: 轻伤黄, 重伤红, 正常白
     uint32_t c1, c2;
@@ -4553,8 +4553,8 @@ void ShowSimpleStatus(int rnum, int x, int y)
         c2 = ColColor(0x7);
     }
     buf = std::format("{:4d}", Rrole[rnum].CurrentHP);
-    DrawEngShadowText(screen, buf, x + 50, y + 107, c1, c2);
-    DrawEngShadowText(screen, "/", x + 90, y + 107, ColColor(0x64), ColColor(0x66));
+    DrawEngShadowText(buf, x + 50, y + 107, c1, c2);
+    DrawEngShadowText("/", x + 90, y + 107, ColColor(0x64), ColColor(0x66));
     // MaxHP颜色: 中毒绿, 重毒暗绿, 正常暗
     if (Rrole[rnum].Poison >= 67)
     {
@@ -4572,7 +4572,7 @@ void ShowSimpleStatus(int rnum, int x, int y)
         c2 = ColColor(0x23);
     }
     buf = std::format("{:4d}", Rrole[rnum].MaxHP);
-    DrawEngShadowText(screen, buf, x + 100, y + 107, c1, c2);
+    DrawEngShadowText(buf, x + 100, y + 107, c1, c2);
 
     // MP颜色: 内力属性
     if (Rrole[rnum].MPType == 0)
@@ -4591,10 +4591,10 @@ void ShowSimpleStatus(int rnum, int x, int y)
         c2 = ColColor(0x66);
     }
     buf = std::format("{:4d}/{:4d}", Rrole[rnum].CurrentMP, Rrole[rnum].MaxMP);
-    DrawEngShadowText(screen, buf, x + 50, y + 128, c1, c2);
+    DrawEngShadowText(buf, x + 50, y + 128, c1, c2);
 
     buf = std::format("{:9d}", Rrole[rnum].PhyPower);
-    DrawEngShadowText(screen, buf, x + 50, y + 149, ColColor(0x5), ColColor(0x7));
+    DrawEngShadowText(buf, x + 50, y + 149, ColColor(0x5), ColColor(0x7));
 }
 
 int MenuSystem()
@@ -4719,7 +4719,7 @@ void MenuQuit()
         if (ExecScript(scriptFile, "f" + std::to_string(i)) != 0)
         {
             std::string err = "  Script fail!";
-            DrawTextWithRect(screen, err, 100, 200, 150, 0xFFFFFFFF, 0xFFFFFFFF);
+            DrawTextWithRect(err, 100, 200, 150, 0xFFFFFFFF, 0xFFFFFFFF);
             WaitAnyKey();
         }
     }
@@ -4754,13 +4754,13 @@ int EffectMedcine(int role1, int role2)
     {
         Redraw();
         DrawRectangle(screen, 115, 98, 155, 76, 0, ColColor(255), 30);
-        DrawBig5ShadowText(screen, Rrole[role2].Name, 120, 100, ColColor(0x21), ColColor(0x23));
-        DrawShadowText(screen, "增加生命", 120, 125, ColColor(0x05), ColColor(0x07));
+        DrawBig5ShadowText(Rrole[role2].Name, 120, 100, ColColor(0x21), ColColor(0x23));
+        DrawShadowText("增加生命", 120, 125, ColColor(0x05), ColColor(0x07));
         auto buf = std::format("{:4d}", addlife);
-        DrawEngShadowText(screen, buf, 220, 125, ColColor(0x64), ColColor(0x66));
-        DrawShadowText(screen, "減少受傷", 120, 150, ColColor(0x05), ColColor(0x07));
+        DrawEngShadowText(buf, 220, 125, ColColor(0x64), ColColor(0x66));
+        DrawShadowText("減少受傷", 120, 150, ColColor(0x05), ColColor(0x07));
         buf = std::format("{:4d}", minushurt);
-        DrawEngShadowText(screen, buf, 220, 150, ColColor(0x64), ColColor(0x66));
+        DrawEngShadowText(buf, 220, 150, ColColor(0x64), ColColor(0x66));
         ShowSimpleStatus(role2, 350, 50);
         UpdateScreen(screen, 0, 0, screen->w, screen->h);
         WaitAnyKey();
@@ -4782,10 +4782,10 @@ int EffectMedPoison(int role1, int role2)
     {
         Redraw();
         DrawRectangle(screen, 115, 98, 155, 51, 0, ColColor(255), 30);
-        DrawShadowText(screen, "減少中毒", 120, 125, ColColor(0x05), ColColor(0x07));
-        DrawBig5ShadowText(screen, Rrole[role2].Name, 120, 100, ColColor(0x21), ColColor(0x23));
+        DrawShadowText("減少中毒", 120, 125, ColColor(0x05), ColColor(0x07));
+        DrawBig5ShadowText(Rrole[role2].Name, 120, 100, ColColor(0x21), ColColor(0x23));
         auto buf = std::format("{:4d}", minuspoi);
-        DrawEngShadowText(screen, buf, 220, 125, ColColor(0x64), ColColor(0x66));
+        DrawEngShadowText(buf, 220, 125, ColColor(0x64), ColColor(0x66));
         ShowSimpleStatus(role2, 350, 50);
         UpdateScreen(screen, 0, 0, screen->w, screen->h);
         WaitAnyKey();
@@ -4975,8 +4975,8 @@ int EatOneItem(int rnum, int inum, int times, int display)
         {
             headerStr = "服用";
         }
-        DrawShadowText(screen, headerStr, 103, 72, ColColor(0x21), ColColor(0x23));
-        DrawBig5ShadowText(screen, Ritem[inum].Name, 193, 72, ColColor(0x64), ColColor(0x66));
+        DrawShadowText(headerStr, 103, 72, ColColor(0x21), ColColor(0x23));
+        DrawBig5ShadowText(Ritem[inum].Name, 193, 72, ColColor(0x64), ColColor(0x66));
 
         // 绘制属性面板
         int l, twoline, x2;
@@ -5000,10 +5000,10 @@ int EatOneItem(int rnum, int inum, int times, int display)
         {
             x2 = 3;
         }
-        DrawBig5ShadowText(screen, (const char*)&Rrole[rnum].Data[4], x2 + 20, 102, ColColor(0x21), ColColor(0x23));
+        DrawBig5ShadowText((const char*)&Rrole[rnum].Data[4], x2 + 20, 102, ColColor(0x21), ColColor(0x23));
         if (p == 0)
         {
-            DrawShadowText(screen, "未增加屬性", 183, 102, ColColor(5), ColColor(7));
+            DrawShadowText("未增加屬性", 183, 102, ColColor(5), ColColor(7));
         }
 
         // 逐一应用并显示属性
@@ -5032,9 +5032,9 @@ int EatOneItem(int rnum, int inum, int times, int display)
             if (i != 4 && i != 21 && addvalue[i] != 0)
             {
                 Rrole[rnum].Data[rolelist[i]] += addvalue[i];
-                DrawShadowText(screen, word[i], 103 + xoff, 124 + yoff + p * 22, ColColor(5), ColColor(7));
+                DrawShadowText(word[i], 103 + xoff, 124 + yoff + p * 22, ColColor(5), ColColor(7));
                 auto vbuf = std::format("{:4d}", addvalue[i]);
-                DrawEngShadowText(screen, vbuf, 243 + xoff, 124 + yoff + p * 22, ColColor(0x64), ColColor(0x66));
+                DrawEngShadowText(vbuf, 243 + xoff, 124 + yoff + p * 22, ColColor(0x64), ColColor(0x66));
                 p++;
             }
             // 内力性质特殊处理
@@ -5043,7 +5043,7 @@ int EatOneItem(int rnum, int inum, int times, int display)
                 if (Rrole[rnum].Data[rolelist[i]] != 2)
                 {
                     Rrole[rnum].Data[rolelist[i]] = 2;
-                    DrawShadowText(screen, word[i], 103 + xoff, 124 + yoff + p * 22, ColColor(5), ColColor(7));
+                    DrawShadowText(word[i], 103 + xoff, 124 + yoff + p * 22, ColColor(5), ColColor(7));
                     p++;
                 }
             }
@@ -5053,7 +5053,7 @@ int EatOneItem(int rnum, int inum, int times, int display)
                 if (Rrole[rnum].Data[rolelist[i]] != 1)
                 {
                     Rrole[rnum].Data[rolelist[i]] = 1;
-                    DrawShadowText(screen, word[i], 103 + xoff, 124 + yoff + p * 22, ColColor(5), ColColor(7));
+                    DrawShadowText(word[i], 103 + xoff, 124 + yoff + p * 22, ColColor(5), ColColor(7));
                     p++;
                 }
             }
@@ -5154,7 +5154,7 @@ void CallEvent(int num)
                 break;
             case 3:
             {
-                int list[13];
+                std::vector<int> list(13);
                 for (int j = 0; j < 13; j++)
                 {
                     list[j] = e[i + 1 + j];
@@ -5214,7 +5214,7 @@ void CallEvent(int num)
                 break;
             case 17:
             {
-                int list[5];
+                std::vector<int> list(5);
                 for (int j = 0; j < 5; j++)
                 {
                     list[j] = e[i + 1 + j];
@@ -5353,7 +5353,7 @@ void CallEvent(int num)
                 break;
             case 50:
             {
-                int list[7];
+                std::vector<int> list(7);
                 for (int j = 0; j < 7; j++)
                 {
                     list[j] = e[i + 1 + j];
@@ -5543,7 +5543,7 @@ int teleport()
         {
             DrawRectangleWithoutFrame(screen, hx, hy, 5, 5, 0xFFFFFFFF, 50);
             std::string name = cp950toutf8(Rscene[hoverScene].Name);
-            DrawTextWithRect(screen, name, hx + 7, hy - 5, -1, ColColor(5), ColColor(7));
+            DrawTextWithRect(name, hx + 7, hy - 5, -1, ColColor(5), ColColor(7));
         }
         SDL_Delay(16);
         UpdateAllScreen();
@@ -5668,7 +5668,7 @@ int TeleportByList()
     }
 
     Redraw();
-    DrawTextWithRect(screen, "傳送列表", 80, 30, 640, ColColor(0x21), ColColor(0x23));
+    DrawTextWithRect("傳送列表", 80, 30, 640, ColColor(0x21), ColColor(0x23));
     int max_show_rows = 16;
     if (CellPhone==1)
     {
@@ -5733,7 +5733,7 @@ void StartAmi()
         if (str[i] == '\r')
         {
             std::string line = str.substr(p, i - p);
-            DrawShadowText(screen, line, x, y, ColColor(0xFF), ColColor(0xFF));
+            DrawShadowText(line, x, y, ColColor(0xFF), ColColor(0xFF));
             p = i + 1;
             y += 25;
             UpdateScreen(screen, 0, 0, screen->w, screen->h);

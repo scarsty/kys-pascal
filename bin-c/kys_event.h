@@ -3,6 +3,7 @@
 
 #pragma once
 #include <string>
+#include <vector>
 #include "kys_type.h"
 
 // 事件指令
@@ -12,7 +13,7 @@ void talk_1(const std::string& talkstr, int headnum, int dismode);
 void instruct_1(int talknum, int headnum, int dismode);
 void instruct_2(int inum, int amount);
 void ReArrangeItem(int sort = 0);
-void instruct_3(int list[]);
+void instruct_3(std::vector<int> list);
 int instruct_4(int inum, int jump1, int jump2);
 int instruct_5(int jump1, int jump2);
 int instruct_6(int battlenum, int jump1, int jump2, int getexp);
@@ -25,7 +26,7 @@ void instruct_13();
 void instruct_14();
 void instruct_15();
 int instruct_16(int rnum, int jump1, int jump2);
-void instruct_17(int list[]);
+void instruct_17(std::vector<int> list);
 int instruct_18(int inum, int jump1, int jump2);
 void instruct_19(int x, int y);
 int instruct_20(int jump1, int jump2);
@@ -59,7 +60,7 @@ void instruct_46(int rnum, int mp);
 void instruct_47(int rnum, int Attack);
 void instruct_48(int rnum, int hp);
 void instruct_49(int rnum, int MPpro);
-int instruct_50(int list[]);
+int instruct_50(std::vector<int> list);
 void instruct_51();
 void instruct_52();
 void instruct_53();
