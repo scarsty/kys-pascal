@@ -1906,6 +1906,7 @@ int WalkInScene(int Open)
     int localStillcount = 0;
     int gotoevent_local = -1;
     int exitscenemusicnum = Rscene[CurScene].ExitMusic;
+    int noTeleportX = -1, noTeleportY = -1;
 
     InitialScene();
 
@@ -2003,7 +2004,12 @@ int WalkInScene(int Open)
             break;
         }
         // 检查跳转场景
-        if (Sx == Rscene[CurScene].JumpX1 && Sy == Rscene[CurScene].JumpY1 && Rscene[CurScene].JumpScene >= 0)
+        if (Sx != noTeleportX || Sy != noTeleportY)
+        {
+            noTeleportX = -1;
+            noTeleportY = -1;
+        }
+        if (noTeleportX == -1 && Sx == Rscene[CurScene].JumpX1 && Sy == Rscene[CurScene].JumpY1 && Rscene[CurScene].JumpScene >= 0)
         {
             instruct_14();
             int Prescene = CurScene;
@@ -2018,6 +2024,8 @@ int WalkInScene(int Open)
                 Sx = Rscene[CurScene].JumpX2;
                 Sy = Rscene[CurScene].JumpY2;
             }
+            noTeleportX = Sx;
+            noTeleportY = Sy;
             InitialScene();
             walking = 0;
             Speed = 0;
