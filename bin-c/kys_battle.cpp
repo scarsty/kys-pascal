@@ -2845,8 +2845,21 @@ void AutoBattle(int bnum)
             }
         }
 
-        if (Brole[bnum].Acted != 1 && Rrole[rnum].HidWeapon > Rrole[rnum].Attack && Rrole[rnum].PhyPower >= 30)
+    }
+
+    // 暗器：HidWeapon > Attack 或没有攻击武功时使用暗器
+    // 适用于策略型(AutoMode==2)、全攻型(AutoMode==1)及敌方
+    if ((((Brole[bnum].Team == 0) && ((Brole[bnum].AutoMode == 1) || (Brole[bnum].AutoMode == 2))) || (Brole[bnum].Team != 0))
+        && Brole[bnum].Acted != 1 && Rrole[rnum].HidWeapon > 0 && Rrole[rnum].PhyPower >= 30)
+    {
+        bool hasNoMagic = true;
+        for (int i = 0; i < 10; i++)
         {
+            if (Rrole[rnum].Magic[i] > 0) { hasNoMagic = false; break; }
+        }
+        if (Rrole[rnum].HidWeapon > Rrole[rnum].Attack || hasNoMagic)
+        {
+            int moveX = Ax, moveY = Ay, targetX = -1, targetY = -1;
             NearestMoveByPro(moveX, moveY, targetX, targetY, bnum, 0, 1, 17, -1, 0);
             if (targetX != -1)
             {

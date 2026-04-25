@@ -3249,6 +3249,7 @@ var
   i, p, temp, rnum, inum, eneamount, aim, mnum, level: integer;
   i1, i2, step, step1, dis0, dis: integer;
   Bx1, By1, Ax1, Ay1, curBx1, curBy1, curAx1, curAy1, curMnum, curMaxHurt, curlevel, tempmaxhurt: integer;
+  hasNoMagic: boolean;
   str: utf8string;
 begin
   rnum := Brole[bnum].rnum;
@@ -3355,19 +3356,27 @@ begin
       end;
     end;
 
-    //When hidden-weapon is more than attack, and physical power is more than 30, 30% probability to use hidden-weapon.
-    if (Brole[bnum].Acted <> 1) and (Rrole[rnum].HidWeapon > Rrole[rnum].Attack) and (Rrole[rnum].PhyPower >= 30) then
+  end;
+
+  //暗器：HidWeapon > Attack 或没有攻击武功时使用暗器
+  //适用于策略型(AutoMode=2)、全攻型(AutoMode=1)及敌方
+  if (((Brole[bnum].Team = 0) and ((Brole[bnum].AutoMode = 1) or (Brole[bnum].AutoMode = 2))) or (Brole[bnum].Team <> 0))
+    and (Brole[bnum].Acted <> 1) and (Rrole[rnum].HidWeapon > 0) and (Rrole[rnum].PhyPower >= 30) then
+  begin
+    hasNoMagic := true;
+    for i1 := 0 to 9 do
     begin
-      if random(100) < 100 then
+      if Rrole[rnum].Magic[i1] > 0 then begin hasNoMagic := false; break; end;
+    end;
+    if (Rrole[rnum].HidWeapon > Rrole[rnum].Attack) or hasNoMagic then
+    begin
+      NearestMoveByPro(Ax, Ay, Ax1, Ay1, bnum, 0, 1, 17, -1, 0);
+      if (Ax1 <> -1) then
       begin
-        NearestMoveByPro(Ax, Ay, Ax1, Ay1, bnum, 0, 1, 17, -1, 0);
-        if (Ax1 <> -1) then
-        begin
-          MoveAmination(bnum);
-          Ax := Ax1;
-          Ay := Ay1;
-          UseHiddenWeapon(bnum, -1);
-        end;
+        MoveAmination(bnum);
+        Ax := Ax1;
+        Ay := Ay1;
+        UseHiddenWeapon(bnum, -1);
       end;
     end;
   end;
