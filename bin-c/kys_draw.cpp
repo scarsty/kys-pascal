@@ -931,7 +931,8 @@ void InitialBFieldImage()
     }
     if (!BlockImg2.empty())
     {
-        memset(BlockImg2.data(), 0, BlockImg2.size() * sizeof(int16_t));
+        // Pascal: FillChar($FF) → 每个 int16_t = -1, 表示"无建筑"(最小深度)
+        memset(BlockImg2.data(), 0xFF, BlockImg2.size() * sizeof(int16_t));
     }
 
     // Pascal: diagonal order for sumi=0..126, i1=63 downto 0, i2=sumi-i1
@@ -960,7 +961,8 @@ void InitialBFieldPosition(int x, int y)
     int buildPic = BField[1][x][y] / 2;
     if (buildPic > 0)
     {
-        int depth = x + y;
+        // Pascal: depth = CalBlock(i1, i2), 与DrawRoleOnBfield中角色depth同一尺度
+        int depth = CalBlock(x, y);
         // Pascal: buildings go to ImgBBuild (needBlock=1)
         InitialBPic(buildPic, pos.x, pos.y, ImgBBuild, ImageWidth, ImageHeight,
             (char*)BlockImg2.data(), ImageWidth, ImageHeight, depth);
