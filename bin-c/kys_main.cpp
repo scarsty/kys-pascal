@@ -3694,6 +3694,32 @@ bool MenuItem()
                             i12++;
                         }
                     }
+
+                    // 如果可修炼出武功，显示武功名、10级威力、攻击范围
+                    if (Ritem[item2].Magic > 0 && Ritem[item2].Magic < 999)
+                    {
+                        int mnum = Ritem[item2].Magic;
+                        std::string magicName = cp950toutf8(Rmagic[mnum].Name);
+                        int atk10 = Rmagic[mnum].Attack[9];
+                        int areaType = Rmagic[mnum].AttAreaType;
+                        std::string areaStr;
+                        switch (areaType)
+                        {
+                        case 0: areaStr = "點"; break;
+                        case 1: areaStr = "線"; break;
+                        case 2: areaStr = "十字"; break;
+                        case 3: areaStr = "面"; break;
+                        default: areaStr = std::format("{}", areaType); break;
+                        }
+                        int magicY = ((len22 + 5) / 6 + (len32 + 5) / 6) * 20 + 346 + 5;
+                        DrawRectangle(screen, 110, magicY, w2, 25, 0, ColColor(255), 50);
+                        DrawShadowText("修炼:", 117, magicY + 3, ColColor(0x50), ColColor(0x4E));
+                        DrawShadowText(magicName, 157, magicY + 3, ColColor(0x21), ColColor(0x23));
+                        DrawShadowText("威力:", 317, magicY + 3, ColColor(0x5), ColColor(0x7));
+                        DrawShadowText(std::format("{}", atk10), 357, magicY + 3, ColColor(0x64), ColColor(0x66));
+                        DrawShadowText("範圍:", 437, magicY + 3, ColColor(0x5), ColColor(0x7));
+                        DrawShadowText(areaStr, 477, magicY + 3, ColColor(0x64), ColColor(0x66));
+                    }
                 }
 
                 DrawItemFrame(x, y);
@@ -3826,6 +3852,8 @@ bool MenuItem()
                     }
                     if (event.button.button == SDL_BUTTON_LEFT)
                     {
+                        // 手机触屏防误触: TouchWalk关闭时(防误触模式)鼠标点击无效，仅虚拟按键可操作
+                        if (CellPhone != 0 && !TouchWalk) { break; }
                         int mx = (int)(event.button.x / ((float)RESOLUTIONX / screen->w));
                         int my = (int)(event.button.y / ((float)RESOLUTIONY / screen->h));
                         if (mx >= 110 && mx < 110 + w && my > 90 && my < 308)
@@ -3845,6 +3873,8 @@ bool MenuItem()
                     }
                     break;
                 case SDL_EVENT_MOUSE_WHEEL:
+                    // 手机触屏防误触: TouchWalk关闭时(防误触模式)滚轮（手指滑动）无效
+                    if (CellPhone != 0 && !TouchWalk) { break; }
                     if (event.wheel.y < 0)
                     {
                         y++;
@@ -3876,6 +3906,8 @@ bool MenuItem()
                     break;
                 case SDL_EVENT_MOUSE_MOTION:
                 {
+                    // 手机触屏防误触: TouchWalk关闭时(防误触模式)鼠标移动无效
+                    if (CellPhone != 0 && !TouchWalk) { break; }
                     int mx = (int)(event.motion.x / ((float)RESOLUTIONX / screen->w));
                     int my = (int)(event.motion.y / ((float)RESOLUTIONY / screen->h));
                     if (mx >= 110 && mx < 110 + w && my > 90 && my < 308)
@@ -4330,7 +4362,7 @@ void ShowStatus(int rnum, int x, int y)
         LoadFreshScreen(0, 0, screen->w, screen->h);
     }
 
-    DrawRectangle(screen, x, y, 525, 315, 0, ColColor(255), 50);
+    DrawRectangle(screen, x, y, 555, 315, 0, ColColor(255), 50);
 
     DrawHeadPic(Rrole[rnum].HeadNum, x + 60, y + 80);
     std::string Name = cp950toutf8(Rrole[rnum].Name, 5);
@@ -4466,10 +4498,18 @@ void ShowStatus(int rnum, int x, int y)
     {
         if (Rrole[rnum].Magic[i] > 0 && Rrole[rnum].Magic[i] < 999)
         {
-            std::string mname = cp950toutf8(Rmagic[Rrole[rnum].Magic[i]].Name);
+            int mnum = Rrole[rnum].Magic[i];
+            int levelIdx = Rrole[rnum].MagLevel[i] / 100;  // 0-based index
+            std::string mname = cp950toutf8(Rmagic[mnum].Name);
             DrawShadowText(mname, x + 360, y + 26 + 21 * i, ColColor(0x5), ColColor(0x7));
-            buf = std::format("{:4d}", Rrole[rnum].MagLevel[i] / 100 + 1);
-            DrawEngShadowText(buf, x + 470, y + 26 + 21 * i, ColColor(0x64), ColColor(0x66));
+            buf = std::format("{:2d}", levelIdx + 1);
+            DrawEngShadowText(buf, x + 455, y + 26 + 21 * i, ColColor(0x64), ColColor(0x66));
+            int curPower = Rmagic[mnum].Attack[levelIdx];
+            buf = std::format("{:4d}", curPower);
+            DrawEngShadowText(buf, x + 475, y + 26 + 21 * i, ColColor(0x5), ColColor(0x7));
+            int areaType = Rmagic[mnum].AttAreaType;
+            const char* areaStr = (areaType == 0) ? "點" : (areaType == 1) ? "線" : (areaType == 2) ? "十字" : (areaType == 3) ? "面" : "?";
+            DrawShadowText(areaStr, x + 520, y + 26 + 21 * i, ColColor(0x50), ColColor(0x4E));
         }
     }
 
@@ -4522,7 +4562,7 @@ void ShowStatus(int rnum, int x, int y)
         DrawEngShadowText(buf, x + 380, y + 282, ColColor(0x64), ColColor(0x66));
     }
 
-    UpdateScreen(screen, x, y, 526, 316);
+    UpdateScreen(screen, x, y, 556, 316);
 }
 
 void ShowSimpleStatus(int rnum, int x, int y)
