@@ -789,8 +789,14 @@ bool MoveAmination(int bnum)
             }
             a--;
         }
-        for (int j = 1; j <= BField[3][Ax][Ay]; j++)
+        int j = 1;
+        while (SDL_PollEvent(&event) || true)
         {
+            CheckBasicEvent();
+            if (Brole[bnum].Step == 0 || (Bx == Ax && By == Ay))
+            {
+                break;
+            }
             if (linebx[j] > Bx && lineby[j] == By)
             {
                 Brole[bnum].Face = 3;
@@ -799,13 +805,13 @@ bool MoveAmination(int bnum)
             {
                 Brole[bnum].Face = 0;
             }
-            else if (linebx[j] == Bx && lineby[j] > By)
-            {
-                Brole[bnum].Face = 1;
-            }
             else if (linebx[j] == Bx && lineby[j] < By)
             {
                 Brole[bnum].Face = 2;
+            }
+            else
+            {
+                Brole[bnum].Face = 1;
             }
             if (BField[2][Bx][By] == bnum)
             {
@@ -817,14 +823,16 @@ bool MoveAmination(int bnum)
             {
                 BField[2][Bx][By] = bnum;
             }
+            j++;
+            Brole[bnum].Step--;
             Redraw();
             UpdateScreen(screen, 0, 0, screen->w, screen->h);
-            SDL_Delay(30);
+            SDL_Delay(BATTLE_SPEED);
         }
         Brole[bnum].X = Bx;
         Brole[bnum].Y = By;
         BField[2][Bx][By] = bnum;
-        Brole[bnum].Step = BField[5][Ax][Ay];
+        Brole[bnum].Acted = 2;
     }
     return result;
 }
