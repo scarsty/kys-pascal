@@ -1536,7 +1536,7 @@ void PlayMagicAmination(int bnum, int enumv, int ForTeam, int mode)
     int endPic = beginPic + EffectList[enumv] - 1;
 
     int p = beginPic;
-    while (true)
+    while (SDL_PollEvent(&event) || true)
     {
         CheckBasicEvent();
         DrawBFieldWithEft(p, beginPic, endPic, min_, bnum, ForTeam, 1, 0xFFFFFFFF);
@@ -1802,7 +1802,7 @@ void ShowHurtValue(int mode)
         Brole[i].ShowNumber = -1;
     }
     int i1 = 0;
-    while (true)
+    while (SDL_PollEvent(&event) || true)
     {
         CheckBasicEvent();
         Redraw();
@@ -1861,7 +1861,7 @@ void ClearDeadRolePic()
     if (needeffect)
     {
         int fade = 0;
-        while (true)
+        while ((SDL_PollEvent(&event) || true) && needeffect)
         {
             CheckBasicEvent();
             DrawBfieldWithoutRole();
@@ -2305,7 +2305,7 @@ void PlayActionAmination(int bnum, int mode, int mnum)
         int spic = beginPic + Rrole[rnum].SoundDealy[mode] - 1;
 
         int p = beginPic;
-        while (true)
+        while (SDL_PollEvent(&event) || true)
         {
             CheckBasicEvent();
             DrawBFieldWithAction(bnum, p);
