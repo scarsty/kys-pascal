@@ -5802,7 +5802,15 @@ void StartAmi()
 // EnterString (from event system, moved here for accessibility)
 bool EnterString(std::string& str, int x, int y, int w, int h)
 {
-    SDL_Rect r = { x, y, w, h };
+    int drawX = x;
+    int drawY = y;
+    if (CellPhone != 0)
+    {
+        // On phone, keep input box away from IME by pinning it near top-left.
+        drawX = 8;
+        drawY = 8;
+    }
+    SDL_Rect r = { drawX, drawY, w, h };
     SDL_StartTextInput(window);
     SDL_SetTextInputArea(window, &r, 0);
     int tick = 0;
@@ -5815,7 +5823,7 @@ bool EnterString(std::string& str, int x, int y, int w, int h)
         {
             display += "_";
         }
-        DrawTextWithRect(display, x, y, w, ColColor(0x66), ColColor(0x63));
+        DrawTextWithRect(display, drawX, drawY, w, ColColor(0x66), ColColor(0x63));
         SDL_PollEvent(&event);
         CheckBasicEvent();
         switch (event.type)
