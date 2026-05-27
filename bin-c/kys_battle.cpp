@@ -402,6 +402,7 @@ void BattleMainControl()
             i = 0;
         }
 
+        TBattleRole tempBrole = {};
         while (i < BRoleAmount && BattleResult == 0)
         {
             while (SDL_PollEvent(&event) || true)
@@ -422,7 +423,6 @@ void BattleMainControl()
                 Bx = Brole[i].X;
                 By = Brole[i].Y;
                 Redraw();
-                TBattleRole tempBrole;
                 if (Brole[i].Team == 0 && Brole[i].Auto == 0)
                 {
                     if (Brole[i].Acted == 0)
@@ -464,8 +464,15 @@ void BattleMainControl()
                     default:
                         if (tempBrole.rnum == Brole[i].rnum)
                         {
-                            BField[2][tempBrole.X][tempBrole.Y] = i;
-                            BField[2][Brole[i].X][Brole[i].Y] = -1;
+                            if (tempBrole.X >= 0 && tempBrole.X <= 63 && tempBrole.Y >= 0 && tempBrole.Y <= 63)
+                            {
+                                BField[2][tempBrole.X][tempBrole.Y] = i;
+                            }
+                            if ((Brole[i].X != tempBrole.X || Brole[i].Y != tempBrole.Y) &&
+                                Brole[i].X >= 0 && Brole[i].X <= 63 && Brole[i].Y >= 0 && Brole[i].Y <= 63)
+                            {
+                                BField[2][Brole[i].X][Brole[i].Y] = -1;
+                            }
                             Brole[i] = tempBrole;
                         }
                         break;
@@ -887,7 +894,7 @@ bool SelectAim(int bnum, int step, int AreaType, int AreaRange)
             {
                 Ax--;
             }
-            if (abs(Ax - Bx) + abs(Ay - By) > step || BField[3][Ax][Ay] < 0 || Ax < 0 || Ax > 63 || Ay < 0 || Ay > 63)
+            if (Ax < 0 || Ax > 63 || Ay < 0 || Ay > 63 || abs(Ax - Bx) + abs(Ay - By) > step || BField[3][Ax][Ay] < 0)
             {
                 Ax = px;
                 Ay = py;
@@ -898,6 +905,7 @@ bool SelectAim(int bnum, int step, int AreaType, int AreaRange)
         {
             if (event.button.button == SDL_BUTTON_RIGHT)
             {
+                event.button.button = 0;
                 BattleSelecting = false;
                 return false;
             }
@@ -913,7 +921,7 @@ bool SelectAim(int bnum, int step, int AreaType, int AreaRange)
             {
                 int axp = (int)(-(event.button.x / (RESOLUTIONX / (float)screen->w)) + CENTER_X + 2 * (event.button.y / (RESOLUTIONY / (float)screen->h)) - 2 * CENTER_Y + 18) / 36 + Bx;
                 int ayp = (int)((event.button.x / (RESOLUTIONX / (float)screen->w)) - CENTER_X + 2 * (event.button.y / (RESOLUTIONY / (float)screen->h)) - 2 * CENTER_Y + 18) / 36 + By;
-                if (abs(axp - Bx) + abs(ayp - By) <= step && BField[3][axp][ayp] >= 0)
+                if (axp >= 0 && axp <= 63 && ayp >= 0 && ayp <= 63 && abs(axp - Bx) + abs(ayp - By) <= step && BField[3][axp][ayp] >= 0)
                 {
                     Ax = axp;
                     Ay = ayp;
@@ -922,7 +930,7 @@ bool SelectAim(int bnum, int step, int AreaType, int AreaRange)
         }
         SetAminationPosition(AreaType, step, AreaRange);
         DrawBFieldWithCursor(step);
-        if (BField[2][Ax][Ay] >= 0)
+        if (Ax >= 0 && Ax <= 63 && Ay >= 0 && Ay <= 63 && BField[2][Ax][Ay] >= 0 && BField[2][Ax][Ay] < BRoleAmount)
         {
             ShowSimpleStatus(Brole[BField[2][Ax][Ay]].rnum, CENTER_X + 100, 50);
         }

@@ -22,7 +22,7 @@ TShop RShop[11] = {};
 int16_t SData[401][6][64][64] = {};
 int16_t DData[401][200][11] = {};
 
-// 战场
+//战场数据
 int16_t BField[8][64][64] = {};
 TWarData WarSta = {};
 

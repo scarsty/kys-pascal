@@ -916,6 +916,24 @@ void DrawRoleOnBfield(int x, int y, uint32_t mixColor, int mixAlpha, int alpha_)
         }
         DrawFPic(headnum, num, pos.x, pos.y, 0, alpha_, depth, mixColor, mixAlpha);
     }
+    // HP bar above head
+    {
+        int maxHP = Rrole[rnum].MaxHP;
+        int curHP = Rrole[rnum].CurrentHP;
+        if (maxHP > 0)
+        {
+            int bx = pos.x - 10, by = pos.y - 52;
+                DrawRectangleWithoutFrame(screen, bx, by, 20, 4, 0, 100);
+                int fw = 20 * curHP / maxHP;
+                if (fw < 0) fw = 0;
+                if (fw > 20) fw = 20;
+                if (fw > 0)
+                {
+                    uint32_t bc = (Brole[roleIdx].Team == 0) ? ColColor(0x30) : ColColor(0x14);
+                    DrawRectangleWithoutFrame(screen, bx, by, fw, 4, bc, 100);
+                }
+            }
+        }
 }
 
 void InitialBFieldImage()
@@ -1072,6 +1090,24 @@ void DrawBFieldWithCursor(int step)
                         }
                     }
                     DrawFPic(headnum, num, pos.x, pos.y, 0, 75, depth, mixcolor, mixalpha);
+                }
+                // HP bar above head
+                {
+                    int maxHP = Rrole[rnum].MaxHP;
+                    int curHP = Rrole[rnum].CurrentHP;
+                    if (maxHP > 0)
+                    {
+                        int bx = pos.x - 10, by = pos.y - 52;
+                        DrawRectangleWithoutFrame(screen, bx, by, 20, 4, 0, 100);
+                        int fw = 20 * curHP / maxHP;
+                        if (fw < 0) fw = 0;
+                        if (fw > 20) fw = 20;
+                        if (fw > 0)
+                        {
+                            uint32_t bc = (Brole[bnum2].Team == 0) ? ColColor(0x30) : ColColor(0x14);
+                            DrawRectangleWithoutFrame(screen, bx, by, fw, 4, bc, 100);
+                        }
+                    }
                 }
             }
         }

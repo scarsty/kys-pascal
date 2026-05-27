@@ -1442,7 +1442,9 @@ int WaitAnyKey()
                 int x, y;
                 SDL_GetMouseState2(x, y);
                 if (x > CENTER_X * 2 - 100 && y < 100)
+                {
                     result = SDLK_Y;    // 右上角触摸 -> Y键（用于脚本36号事件确认）
+                }
             }
         }
         if (event.button.button == SDL_BUTTON_RIGHT)
@@ -3153,7 +3155,10 @@ int CommonGridMenu(int x, int y, int cols, int cellW, int maxShowRows, int maxIt
             }
             if (event.key.key == SDLK_RETURN || event.key.key == SDLK_SPACE)
             {
-                if (disabled && disabled[menu]) break;
+                if (disabled && disabled[menu])
+                {
+                    break;
+                }
                 event.key.key = 0;
                 event.button.button = 0;
                 return menu;
@@ -3172,7 +3177,10 @@ int CommonGridMenu(int x, int y, int cols, int cellW, int maxShowRows, int maxIt
                 SDL_GetMouseState2(mx2, my2);
                 if (mx2 >= x && mx2 < x + cols * cellW && my2 >= y && my2 < y + areaH)
                 {
-                    if (disabled && disabled[menu]) break;
+                    if (disabled && disabled[menu])
+                    {
+                        break;
+                    }
                     event.key.key = 0;
                     event.button.button = 0;
                     return menu;
@@ -3236,7 +3244,7 @@ int CommonGridMenu(int x, int y, int cols, int cellW, int maxShowRows, int maxIt
 }
 
 // 严格按Pascal版: 返回team INDEX (0-5), 不是role编号
-int SelectOneTeamMember(int x, int y, const std::string& str, int list1, int list2)
+int SelectOneTeamMember(int x, int y, const std::string& str, int list1, int list2, int list3)
 {
     std::string menuString[6];
     int Amount = 0;
@@ -3248,7 +3256,7 @@ int SelectOneTeamMember(int x, int y, const std::string& str, int list1, int lis
             if (!str.empty())
             {
                 char buf[32];
-                snprintf(buf, sizeof(buf), str.c_str(), Rrole[TeamList[i]].Data[list1], Rrole[TeamList[i]].Data[list2]);
+                snprintf(buf, sizeof(buf), str.c_str(), Rrole[TeamList[i]].Data[list1], Rrole[TeamList[i]].Data[list2], list3 >= 0 ? (int)Rrole[TeamList[i]].Data[list3] : 0);
                 // Pascal 在 CP950 编码下做 format('%-8s%4s', [Name, engstr])，
                 // 中文字符在 CP950 中每个占 2 字节，此处需一致
                 char nameBuf[11];
@@ -3270,7 +3278,7 @@ int SelectOneTeamMember(int x, int y, const std::string& str, int list1, int lis
     {
         // 计算额外宽度
         char buf[32];
-        snprintf(buf, sizeof(buf), str.c_str(), 0, 0);
+        snprintf(buf, sizeof(buf), str.c_str(), 0, 0, 0);
         w2 = 105 + (int)strlen(buf) * 10 - 10;
     }
     return CommonMenu(x, y, w2, Amount - 1, menuString);
@@ -3401,9 +3409,9 @@ void MenuMedcine()
     if (menu >= 0)
     {
         int role1 = TeamList[menu];
-        str = "隊員目前生命";
-        DrawTextWithRect(str, 230, 30, 132, ColColor(0x21), ColColor(0x23));
-        int menu2 = SelectOneTeamMember(230, 65, "%4d/%4d", 17, 18);
+        str = "生命/受傷";
+        DrawTextWithRect(str, 230, 30, -1, ColColor(0x21), ColColor(0x23));
+        int menu2 = SelectOneTeamMember(230, 65, "%4d/%4d %3d", 17, 18, 19);
         if (menu2 >= 0)
         {
             int role2 = TeamList[menu2];
@@ -3715,7 +3723,7 @@ bool MenuItem()
                         {
                         case 0: areaStr = "點"; break;
                         case 1: areaStr = "線"; break;
-                        case 2: areaStr = "十字"; break;
+                        case 2: areaStr = "十"; break;
                         case 3: areaStr = "面"; break;
                         default: areaStr = std::format("{}", areaType); break;
                         }
@@ -4278,23 +4286,49 @@ void MenuLeave()
 
 void MenuStatus()
 {
-    std::string str = "查看隊員狀態";
     Redraw();
     RecordFreshScreen(0, 0, screen->w, screen->h);
     UpdateScreen(screen, 0, 0, screen->w, screen->h);
-    DrawTextWithRect(str, 10, 30, 132, ColColor(0x21), ColColor(0x23));
 
-    std::string menuStr[6];
-    int Amount = 0;
-    for (int i = 0; i < 6; i++)
+    if (Where == 2)
     {
-        if (TeamList[i] >= 0)
+        CalCanSelect(0,0, 32);
+        for (int i = 0; i < 64; i++)
         {
-            menuStr[i] = cp950toutf8(Rrole[TeamList[i]].Name);
-            Amount++;
+            for (int j = 0; j < 64; j++)
+            {
+                if (BField[2][i][j] >= 0)
+                {
+                    BField[3][i][j] = 0;
+                }
+            }
+        }
+        if (SelectAim(0, 32, 0, 0))
+        {
+            if (BField[2][Ax][Ay] >= 0 && BField[2][Ax][Ay] < BRoleAmount)
+            {
+                ShowStatus(Brole[BField[2][Ax][Ay]].rnum);
+                UpdateScreen(screen, 0, 0, screen->w, screen->h);
+                WaitAnyKey();
+            }
         }
     }
-    CommonMenu(10, 65, 85, Amount - 1, 0, menuStr, ShowStatusByTeam);
+    else
+    {
+        std::string str = "查看隊員狀態";
+        DrawTextWithRect(str, 10, 30, 132, ColColor(0x21), ColColor(0x23));
+        std::string menuStr[6];
+        int Amount = 0;
+        for (int i = 0; i < 6; i++)
+        {
+            if (TeamList[i] >= 0)
+            {
+                menuStr[i] = cp950toutf8(Rrole[TeamList[i]].Name);
+                Amount++;
+            }
+        }
+        CommonMenu(10, 65, 85, Amount - 1, 0, menuStr, ShowStatusByTeam);
+    }
     Redraw();
     UpdateScreen(screen, 0, 0, screen->w, screen->h);
 }
@@ -4313,7 +4347,7 @@ void ShowStatusByTeam(int tnum)
 
 void ShowStatus(int rnum)
 {
-    ShowStatus(rnum, CENTER_X - 273, 65);
+    ShowStatus(rnum, 97, 65);
 }
 
 void ShowStatus(int rnum, int x, int y)
@@ -4362,7 +4396,7 @@ void ShowStatus(int rnum, int x, int y)
         LoadFreshScreen(0, 0, screen->w, screen->h);
     }
 
-    DrawRectangle(screen, x, y, 555, 315, 0, ColColor(255), 50);
+    DrawRectangle(screen, x, y, 545, 315, 0, ColColor(255), 50);
 
     DrawHeadPic(Rrole[rnum].HeadNum, x + 60, y + 80);
     std::string Name = cp950toutf8(Rrole[rnum].Name, 5);
@@ -4374,9 +4408,9 @@ void ShowStatus(int rnum, int x, int y)
     }
     for (int i = 6; i <= 16; i++)
     {
-        DrawShadowText(strs[i], x + 180, y + 5 + 21 * (i - 6), ColColor(0x64), ColColor(0x66));
+        DrawShadowText(strs[i], x + 170, y + 5 + 21 * (i - 6), ColColor(0x64), ColColor(0x66));
     }
-    DrawShadowText(strs[19], x + 360, y + 5, ColColor(0x21), ColColor(0x23));
+    DrawShadowText(strs[19], x + 335, y + 5, ColColor(0x21), ColColor(0x23));
 
     int addatk = 0, adddef = 0, addspeed = 0;
     if (Rrole[rnum].Equip[0] >= 0)
@@ -4395,11 +4429,11 @@ void ShowStatus(int rnum, int x, int y)
     std::string buf;
     // 右列属性值
     buf = std::format("{:4d}", Rrole[rnum].Attack + addatk);
-    DrawEngShadowText(buf, x + 280, y + 5 + 21 * 0, ColColor(0x5), ColColor(0x7));
+    DrawEngShadowText(buf, x + 260, y + 5 + 21 * 0, ColColor(0x5), ColColor(0x7));
     buf = std::format("{:4d}", Rrole[rnum].Defence + adddef);
-    DrawEngShadowText(buf, x + 280, y + 5 + 21 * 1, ColColor(0x5), ColColor(0x7));
+    DrawEngShadowText(buf, x + 260, y + 5 + 21 * 1, ColColor(0x5), ColColor(0x7));
     buf = std::format("{:4d}", Rrole[rnum].Speed + addspeed);
-    DrawEngShadowText(buf, x + 280, y + 5 + 21 * 2, ColColor(0x5), ColColor(0x7));
+    DrawEngShadowText(buf, x + 260, y + 5 + 21 * 2, ColColor(0x5), ColColor(0x7));
     // 医疗~暗器
     int pdata[] = { 43, 45, 44, 46, 47, 48, 50, 51, 52, 53, 54 };
     for (int i = 0; i < 11; i++)
@@ -4409,7 +4443,7 @@ void ShowStatus(int rnum, int x, int y)
             continue;    // 攻防轻功已画
         }
         buf = std::format("{:4d}", Rrole[rnum].Data[pdata[i]]);
-        DrawEngShadowText(buf, x + 280, y + 5 + 21 * i, ColColor(0x5), ColColor(0x7));
+        DrawEngShadowText(buf, x + 260, y + 5 + 21 * i, ColColor(0x5), ColColor(0x7));
     }
 
     // 左列属性值
@@ -4499,38 +4533,33 @@ void ShowStatus(int rnum, int x, int y)
         if (Rrole[rnum].Magic[i] > 0 && Rrole[rnum].Magic[i] < 999)
         {
             int mnum = Rrole[rnum].Magic[i];
-            int levelIdx = Rrole[rnum].MagLevel[i] / 100;  // 0-based index
+            int levelIdx = Rrole[rnum].MagLevel[i] / 100;    // 0-based index
             std::string mname = cp950toutf8(Rmagic[mnum].Name);
-            DrawShadowText(mname, x + 360, y + 26 + 21 * i, ColColor(0x5), ColColor(0x7));
+            DrawShadowText(mname, x + 335, y + 26 + 21 * i, ColColor(0x5), ColColor(0x7));
             buf = std::format("{:2d}", levelIdx + 1);
-            DrawEngShadowText(buf, x + 455, y + 26 + 21 * i, ColColor(0x64), ColColor(0x66));
+            DrawEngShadowText(buf, x + 462, y + 26 + 21 * i, ColColor(0x64), ColColor(0x66));
             int curPower = Rmagic[mnum].Attack[levelIdx];
             buf = std::format("{:4d}", curPower);
-            DrawEngShadowText(buf, x + 475, y + 26 + 21 * i, ColColor(0x5), ColColor(0x7));
+            DrawEngShadowText(buf, x + 482, y + 26 + 21 * i, ColColor(0x5), ColColor(0x7));
             int areaType = Rmagic[mnum].AttAreaType;
-            const char* areaStr = (areaType == 0) ? "點" : (areaType == 1) ? "線" : (areaType == 2) ? "十字" : (areaType == 3) ? "面" : "?";
-            DrawShadowText(areaStr, x + 520, y + 26 + 21 * i, ColColor(0x50), ColColor(0x4E));
+            const char* areaStr = (areaType == 0) ? "點" : (areaType == 1) ? "線" :
+                (areaType == 2)                                            ? "十" :
+                (areaType == 3)                                            ? "面" :
+                                                                             "?";
+            DrawShadowText(areaStr, x + 522, y + 26 + 21 * i, ColColor(0x50), ColColor(0x4E));
         }
     }
 
-    // 受伤/中毒
-    DrawShadowText(strs[20], x + 10, y + 280, ColColor(0x21), ColColor(0x23));
-    buf = std::format("{:4d}", Rrole[rnum].Hurt);
-    DrawEngShadowText(buf, x + 90, y + 280, ColColor(0x10), ColColor(0x13));
-    DrawShadowText(strs[21], x + 10, y + 296, ColColor(0x21), ColColor(0x23));
-    buf = std::format("{:4d}", Rrole[rnum].Poison);
-    DrawEngShadowText(buf, x + 90, y + 296, ColColor(0x10), ColColor(0x13));
-
     // 装备物品 / 修炼物品
-    DrawShadowText(strs[17], x + 180, y + 240, ColColor(0x21), ColColor(0x23));
-    DrawShadowText(strs[18], x + 360, y + 240, ColColor(0x21), ColColor(0x23));
+    DrawShadowText(strs[17], x + 170, y + 240, ColColor(0x21), ColColor(0x23));
+    DrawShadowText(strs[18], x + 335, y + 240, ColColor(0x21), ColColor(0x23));
     if (Rrole[rnum].Equip[0] >= 0)
     {
-        DrawBig5ShadowText(Ritem[Rrole[rnum].Equip[0]].Name, x + 190, y + 261, ColColor(0x5), ColColor(0x7));
+        DrawBig5ShadowText(Ritem[Rrole[rnum].Equip[0]].Name, x + 180, y + 261, ColColor(0x5), ColColor(0x7));
     }
     if (Rrole[rnum].Equip[1] >= 0)
     {
-        DrawBig5ShadowText(Ritem[Rrole[rnum].Equip[1]].Name, x + 190, y + 282, ColColor(0x5), ColColor(0x7));
+        DrawBig5ShadowText(Ritem[Rrole[rnum].Equip[1]].Name, x + 180, y + 282, ColColor(0x5), ColColor(0x7));
     }
 
     // 修炼秘笈
@@ -4550,7 +4579,7 @@ void ShowStatus(int rnum, int x, int y)
             }
         }
         int needexp = mlevel * Ritem[Rrole[rnum].PracticeBook].NeedExp * (7 - Rrole[rnum].Aptitude / 15);
-        DrawBig5ShadowText(Ritem[Rrole[rnum].PracticeBook].Name, x + 370, y + 261, ColColor(0x5), ColColor(0x7));
+        DrawBig5ShadowText(Ritem[Rrole[rnum].PracticeBook].Name, x + 345, y + 261, ColColor(0x5), ColColor(0x7));
         if (mlevel == 10)
         {
             buf = std::format("{:5d}/=", (uint16_t)Rrole[rnum].ExpForBook);
@@ -4559,10 +4588,40 @@ void ShowStatus(int rnum, int x, int y)
         {
             buf = std::format("{:5d}/{:5d}", (uint16_t)Rrole[rnum].ExpForBook, needexp);
         }
-        DrawEngShadowText(buf, x + 380, y + 282, ColColor(0x64), ColColor(0x66));
+        DrawEngShadowText(buf, x + 352, y + 282, ColColor(0x64), ColColor(0x66));
     }
 
-    UpdateScreen(screen, x, y, 556, 316);
+    // 隐藏属性右侧小框
+    {
+        int hx = x + 550;
+        int hy = y;
+        DrawRectangle(screen, hx, hy, 140, 205, 0, ColColor(255), 50);
+        DrawShadowText("隱藏屬性", hx + 5, hy + 5, ColColor(0x21), ColColor(0x23));
+        struct
+        {
+            const char* label;
+            int val;
+            uint32_t c1;
+            uint32_t c2;
+        } hiddenAttrs[] = {
+            { "受傷", Rrole[rnum].Hurt, ColColor(0x10), ColColor(0x13) },
+            { "中毒", Rrole[rnum].Poison, ColColor(0x35), ColColor(0x37) },
+            { "抗毒", Rrole[rnum].DefPoi, ColColor(0x5), ColColor(0x7) },
+            { "攻擊帶毒", Rrole[rnum].AttPoi, ColColor(0x35), ColColor(0x37) },
+            { "資質", Rrole[rnum].Aptitude, ColColor(0x64), ColColor(0x66) },
+            { "體質", Rrole[rnum].IncLife, ColColor(0x64), ColColor(0x66) },
+            { "道德", Rrole[rnum].Ethics, ColColor(0x21), ColColor(0x23) },
+            { "聲望", Rrole[rnum].Repute, ColColor(0x21), ColColor(0x23) },
+        };
+        for (int i = 0; i < 8; i++)
+        {
+            DrawShadowText(hiddenAttrs[i].label, hx + 5, hy + 30 + 21 * i, ColColor(0x64), ColColor(0x66));
+            buf = std::format("{:4d}", hiddenAttrs[i].val);
+            DrawEngShadowText(buf, hx + 80, hy + 30 + 21 * i, hiddenAttrs[i].c1, hiddenAttrs[i].c2);
+        }
+    }
+
+    UpdateScreen(screen, x, y, 695, 316);
 }
 
 void ShowSimpleStatus(int rnum, int x, int y)
@@ -5725,7 +5784,7 @@ int TeleportByList()
     Redraw();
     DrawTextWithRect("傳送列表", 80, 30, 640, ColColor(0x21), ColColor(0x23));
     int max_show_rows = 16;
-    if (CellPhone==1)
+    if (CellPhone == 1)
     {
         max_show_rows = 8;
     }
