@@ -407,8 +407,9 @@ void BattleMainControl()
             while (SDL_PollEvent(&event) || true)
             {
                 CheckBasicEvent();
-                if (event.key.key == SDLK_ESCAPE || event.button.button == SDL_BUTTON_RIGHT)
+                if (BattleAutoEscapePressed || event.key.key == SDLK_ESCAPE || event.button.button == SDL_BUTTON_RIGHT)
                 {
+                    BattleAutoEscapePressed = false;
                     Brole[i].Auto = 0;
                     event.button.button = 0;
                     event.key.key = 0;

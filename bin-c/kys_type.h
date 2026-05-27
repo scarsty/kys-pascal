@@ -297,6 +297,7 @@ inline int WMP_4_PIC = 0;
 
 // SDL运行时对象
 inline SDL_Event event = {};
+inline bool BattleAutoEscapePressed = false;  // 自动战斗中ESC被按下的标志（防止事件被后续事件覆盖）
 inline TTF_Font* ChineseFont = nullptr;
 inline TTF_Font* EnglishFont = nullptr;
 

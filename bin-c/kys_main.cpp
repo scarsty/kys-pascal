@@ -3045,7 +3045,7 @@ scroll_done:
     return result;
 }
 
-int CommonGridMenu(int x, int y, int cols, int cellW, int maxShowRows, int maxItem, const std::string menuString[])
+int CommonGridMenu(int x, int y, int cols, int cellW, int maxShowRows, int maxItem, const std::string menuString[], const bool* disabled)
 {
     if (maxItem < 0)
     {
@@ -3058,6 +3058,8 @@ int CommonGridMenu(int x, int y, int cols, int cellW, int maxShowRows, int maxIt
 
     auto ShowGrid = [&]()
     {
+        uint32_t col_gray1 = SDL_MapRGB(SDL_GetPixelFormatDetails(screen->format), SDL_GetSurfacePalette(screen), 120, 120, 120);
+        uint32_t col_gray2 = SDL_MapRGB(SDL_GetPixelFormatDetails(screen->format), SDL_GetSurfacePalette(screen), 60, 60, 60);
         LoadFreshScreen(x, y, areaW, areaH);
         DrawRectangle(screen, x, y, cols * cellW, maxShowRows * 22 + 6, 0, ColColor(255), 50);
         for (int r = 0; r < maxShowRows; r++)
@@ -3069,7 +3071,11 @@ int CommonGridMenu(int x, int y, int cols, int cellW, int maxShowRows, int maxIt
                 {
                     continue;
                 }
-                if (idx == menu)
+                if (disabled && disabled[idx])
+                {
+                    DrawShadowText(menuString[idx], x + 3 + c * cellW, y + 3 + 22 * r, col_gray1, col_gray2);
+                }
+                else if (idx == menu)
                 {
                     DrawShadowText(menuString[idx], x + 3 + c * cellW, y + 3 + 22 * r, ColColor(0x64), ColColor(0x66));
                 }
@@ -3147,6 +3153,7 @@ int CommonGridMenu(int x, int y, int cols, int cellW, int maxShowRows, int maxIt
             }
             if (event.key.key == SDLK_RETURN || event.key.key == SDLK_SPACE)
             {
+                if (disabled && disabled[menu]) break;
                 event.key.key = 0;
                 event.button.button = 0;
                 return menu;
@@ -3165,6 +3172,7 @@ int CommonGridMenu(int x, int y, int cols, int cellW, int maxShowRows, int maxIt
                 SDL_GetMouseState2(mx2, my2);
                 if (mx2 >= x && mx2 < x + cols * cellW && my2 >= y && my2 < y + areaH)
                 {
+                    if (disabled && disabled[menu]) break;
                     event.key.key = 0;
                     event.button.button = 0;
                     return menu;
@@ -4248,29 +4256,21 @@ bool CanEquip(int rnum, int inum)
 
 void MenuLeave()
 {
-    if (Where == 0 || MODVersion == 22)
+    std::string str = (MODVersion == 22) ? "選擇一個隊友" : "要求誰離隊？";
+    DrawTextWithRect(str, 80, 30, 132, ColColor(0x21), ColColor(0x23));
+    int menu = SelectOneTeamMember(80, 65, "%3d", 15, 0);
+    if (menu >= 0)
     {
-        std::string str = (MODVersion == 22) ? "選擇一個隊友" : "要求誰離隊？";
-        DrawTextWithRect(str, 80, 30, 132, ColColor(0x21), ColColor(0x23));
-        int menu = SelectOneTeamMember(80, 65, "%3d", 15, 0);
-        if (menu >= 0)
+        for (int i = 0; i < 100; i++)
         {
-            for (int i = 0; i < 100; i++)
+            if (LeaveList[i] == TeamList[menu])
             {
-                if (LeaveList[i] == TeamList[menu])
-                {
-                    Redraw();
-                    CallEvent(BEGIN_LEAVE_EVENT + i * 2);
-                    UpdateScreen(screen, 0, 0, screen->w, screen->h);
-                    break;
-                }
+                Redraw();
+                CallEvent(BEGIN_LEAVE_EVENT + i * 2);
+                UpdateScreen(screen, 0, 0, screen->w, screen->h);
+                break;
             }
         }
-    }
-    else
-    {
-        DrawTextWithRect("子場景不可離隊！", 80, 30, 172, ColColor(0x21), ColColor(0x23));
-        WaitAnyKey();
     }
     Redraw();
     UpdateScreen(screen, 0, 0, screen->w, screen->h);
@@ -5715,6 +5715,13 @@ int TeleportByList()
         sceneMenu[i] = nameStr;
     }
 
+    // 构建禁用标志数组：未开放的场景灰度显示且不可选中
+    bool sceneDisabled[201] = {};
+    for (int i = 0; i < SceneAmount; i++)
+    {
+        sceneDisabled[i] = !CheckCanEnter(sceneIdx[i]);
+    }
+
     Redraw();
     DrawTextWithRect("傳送列表", 80, 30, 640, ColColor(0x21), ColColor(0x23));
     int max_show_rows = 16;
@@ -5722,36 +5729,27 @@ int TeleportByList()
     {
         max_show_rows = 8;
     }
-    int menu = CommonGridMenu(80, 60, 5, 128, max_show_rows, SceneAmount - 1, sceneMenu.data());
+    int menu = CommonGridMenu(80, 60, 5, 128, max_show_rows, SceneAmount - 1, sceneMenu.data(), sceneDisabled);
     if (menu < 0)
     {
         return 0;
     }
 
     int scene = sceneIdx[menu];
-    if (CheckCanEnter(scene))
+    // 已由CommonGridMenu禁止选中未开放场景，此处直接进入
+    instruct_14();
+    CurScene = scene;
+    SStep = 0;
+    Sx = Rscene[CurScene].EntranceX;
+    Sy = Rscene[CurScene].EntranceY;
+    if (Rscene[scene].MainEntranceX1 > 0 && Rscene[scene].MainEntranceY1 > 0)
     {
-        instruct_14();
-        CurScene = scene;
-        SStep = 0;
-        Sx = Rscene[CurScene].EntranceX;
-        Sy = Rscene[CurScene].EntranceY;
-        if (Rscene[scene].MainEntranceX1 > 0 && Rscene[scene].MainEntranceY1 > 0)
-        {
-            Mx = Rscene[scene].MainEntranceX1;
-            My = Rscene[scene].MainEntranceY1;
-        }
-        SaveR(11);
-        WalkInScene(0);
-        return 1;
+        Mx = Rscene[scene].MainEntranceX1;
+        My = Rscene[scene].MainEntranceY1;
     }
-    else
-    {
-        DrawTextWithRect("此場景目前不可進入!", 80, 30, 192, ColColor(0x21), ColColor(0x23));
-        UpdateScreen(screen, 0, 0, screen->w, screen->h);
-        WaitAnyKey();
-    }
-    return 0;
+    SaveR(11);
+    WalkInScene(0);
+    return 1;
 }
 
 // StartAmi: 显示开场文字(list/start.txt)

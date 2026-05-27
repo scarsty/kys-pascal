@@ -1339,6 +1339,12 @@ uint32_t CheckBasicEvent()
         VirtualKeyValue = 0;
     }
 
+    // 检测ESC键抬起，设置全局标志（防止自动战斗动画消耗事件后被后续事件覆盖）
+    if (event.type == SDL_EVENT_KEY_UP && event.key.key == SDLK_ESCAPE)
+    {
+        BattleAutoEscapePressed = true;
+    }
+
     uint32_t result = event.type;
     switch (event.type)
     {
