@@ -53,26 +53,17 @@ static void SaveSystemToggleSettings()
     SaveToggleOptionToIni("system", "SIMPLE", SIMPLE);
     SaveToggleOptionToIni("system", "FULLSCREEN", FULLSCREEN);
     SaveToggleOptionToIni("system", "SEMIREAL", SEMIREAL);
+    SaveToggleOptionToIni("system", "TOUCH_WALK", TouchWalk);
     SaveToggleOptionToIni("constant", "MAX_ADD_PRO", MAX_ADD_PRO);
     SaveToggleOptionToIni("system", "SHOW_SUBSCENE_NAME", SHOW_SUBSCENE_NAME);
-}
-
-static std::string BuildSettingMenuEntry(const std::string& label, const std::string& state, int alignWidth)
-{
-    int pad = alignWidth - DrawLength(label);
-    if (pad < 1)
-    {
-        pad = 1;
-    }
-    return label + std::string((size_t)pad, ' ') + state;
 }
 
 static void MenuSettings()
 {
     constexpr int settingsMenuX = 133;
     constexpr int settingsMenuY = 30;
-    constexpr int settingsMenuW = 240;
-    constexpr int settingsMenuMax = 5;
+    constexpr int settingsMenuW = 260;
+    constexpr int settingsMenuMax = 6;
     constexpr int settingsMenuH = settingsMenuMax * 22 + 29;
 
     SDL_Surface* settingsBackground = nullptr;
@@ -99,19 +90,152 @@ static void MenuSettings()
         SDL_BlitSurface(settingsBackground, &src, screen, &dst);
     };
 
-    int i = 0;
-    while (i >= 0)
+    auto ShowSettingsMenu = [&](int menu)
     {
         RestoreSettingsBackground();
-        std::string word[6];
-        constexpr int settingAlignWidth = 9;
-        word[0] = BuildSettingMenuEntry("簡繁體", SIMPLE ? "简體" : "繁體", settingAlignWidth);
-        word[1] = BuildSettingMenuEntry("全屏", FULLSCREEN ? "打開" : "關閉", settingAlignWidth);
-        word[2] = BuildSettingMenuEntry("半即時", SEMIREAL ? "打開" : "關閉", settingAlignWidth);
-        word[3] = BuildSettingMenuEntry("升級屬性固定", MAX_ADD_PRO ? "打開" : "關閉", settingAlignWidth);
-        word[4] = BuildSettingMenuEntry("顯示場景名", SHOW_SUBSCENE_NAME ? "打開" : "關閉", settingAlignWidth);
-        word[5] = "返回";
-        i = CommonMenu(settingsMenuX, settingsMenuY, settingsMenuW, settingsMenuMax, i, word);
+        DrawRectangle(screen, settingsMenuX, settingsMenuY, settingsMenuW, settingsMenuMax * 22 + 28, 0, ColColor(0xFF), 50);
+
+        const std::string labels[7] = {
+            "簡繁體", "全屏", "半即時", "觸摸行走", "升級屬性固定", "顯示場景名", "返回"
+        };
+        const std::string states[6] = {
+            SIMPLE ? "简體" : "繁體",
+            FULLSCREEN ? "打開" : "關閉",
+            SEMIREAL ? "打開" : "關閉",
+            TouchWalk ? "打開" : "關閉",
+            MAX_ADD_PRO ? "打開" : "關閉",
+            SHOW_SUBSCENE_NAME ? "打開" : "關閉"
+        };
+        const int stateRight = settingsMenuX + settingsMenuW - 10;
+
+        for (int row = 0; row <= settingsMenuMax; row++)
+        {
+            uint32_t col1 = (row == menu) ? ColColor(0x64) : ColColor(0x05);
+            uint32_t col2 = (row == menu) ? ColColor(0x66) : ColColor(0x07);
+            int y = settingsMenuY + 2 + 22 * row;
+            DrawShadowText(labels[row], settingsMenuX + 3, y, col1, col2);
+            if (row < settingsMenuMax)
+            {
+                int stateX = stateRight - DrawLength(states[row]) * 10;
+                DrawShadowText(states[row], stateX, y, col1, col2);
+            }
+        }
+
+        UpdateScreen(screen, settingsMenuX, settingsMenuY, settingsMenuW + 1, settingsMenuH);
+    };
+
+    int i = 0;
+    ShowSettingsMenu(i);
+    while (SDL_WaitEvent(&event))
+    {
+        bool activate = false;
+        CheckBasicEvent();
+        switch (event.type)
+        {
+        case SDL_EVENT_KEY_DOWN:
+            if (event.key.key == SDLK_DOWN)
+            {
+                i++;
+                if (i > settingsMenuMax)
+                {
+                    i = 0;
+                }
+                ShowSettingsMenu(i);
+            }
+            if (event.key.key == SDLK_UP)
+            {
+                i--;
+                if (i < 0)
+                {
+                    i = settingsMenuMax;
+                }
+                ShowSettingsMenu(i);
+            }
+            break;
+        case SDL_EVENT_KEY_UP:
+            if (event.key.key == SDLK_ESCAPE)
+            {
+                i = -1;
+            }
+            else if (event.key.key == SDLK_RETURN || event.key.key == SDLK_SPACE)
+            {
+                activate = true;
+            }
+            else
+            {
+                break;
+            }
+            break;
+        case SDL_EVENT_MOUSE_BUTTON_UP:
+            if (event.button.button == SDL_BUTTON_RIGHT)
+            {
+                i = -1;
+                break;
+            }
+            if (event.button.button == SDL_BUTTON_LEFT)
+            {
+                float sx = (float)RESOLUTIONX / screen->w;
+                float sy = (float)RESOLUTIONY / screen->h;
+                int emx = (int)(event.button.x / sx);
+                int emy = (int)(event.button.y / sy);
+                if (emx > settingsMenuX && emx < settingsMenuX + settingsMenuW && emy > settingsMenuY && emy < settingsMenuY + settingsMenuH)
+                {
+                    i = (emy - settingsMenuY - 2) / 22;
+                    if (i < 0)
+                    {
+                        i = 0;
+                    }
+                    if (i > settingsMenuMax)
+                    {
+                        i = settingsMenuMax;
+                    }
+                    ShowSettingsMenu(i);
+                    activate = true;
+                }
+                break;
+            }
+            continue;
+        case SDL_EVENT_MOUSE_MOTION:
+        {
+            float sx = (float)RESOLUTIONX / screen->w;
+            float sy = (float)RESOLUTIONY / screen->h;
+            int emx = (int)(event.motion.x / sx);
+            int emy = (int)(event.motion.y / sy);
+            if (emx >= settingsMenuX && emx < settingsMenuX + settingsMenuW && emy > settingsMenuY && emy < settingsMenuY + settingsMenuH)
+            {
+                int next = (emy - settingsMenuY - 2) / 22;
+                if (next < 0)
+                {
+                    next = 0;
+                }
+                if (next > settingsMenuMax)
+                {
+                    next = settingsMenuMax;
+                }
+                if (next != i)
+                {
+                    i = next;
+                    ShowSettingsMenu(i);
+                }
+            }
+            continue;
+        }
+        default:
+            continue;
+        }
+
+        if (i < 0)
+        {
+            break;
+        }
+
+        if (!activate)
+        {
+            event.key.key = 0;
+            event.button.button = 0;
+            continue;
+        }
+
         switch (i)
         {
         case 0:
@@ -127,17 +251,29 @@ static void MenuSettings()
             SaveSystemToggleSettings();
             break;
         case 3:
-            MAX_ADD_PRO = 1 - MAX_ADD_PRO;
+            TouchWalk = 1 - TouchWalk;
             SaveSystemToggleSettings();
             break;
         case 4:
-            SHOW_SUBSCENE_NAME = 1 - SHOW_SUBSCENE_NAME;
+            MAX_ADD_PRO = 1 - MAX_ADD_PRO;
             SaveSystemToggleSettings();
             break;
         case 5:
+            SHOW_SUBSCENE_NAME = 1 - SHOW_SUBSCENE_NAME;
+            SaveSystemToggleSettings();
+            break;
+        case 6:
             i = -1;
             break;
         }
+
+        if (i >= 0)
+        {
+            ShowSettingsMenu(i);
+        }
+
+        event.key.key = 0;
+        event.button.button = 0;
     }
 
     RestoreSettingsBackground();
