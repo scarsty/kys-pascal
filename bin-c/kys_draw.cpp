@@ -538,6 +538,36 @@ void DrawMMap()
         DrawMPic(BuildArray[i].b, pos.x, pos.y);
     }
 
+    if (SHOW_SUBSCENE_NAME != 0)
+    {
+        for (int snum = 0; snum < SceneAmount; snum++)
+        {
+            int sx = Rscene[snum].MainEntranceX1;
+            int sy = Rscene[snum].MainEntranceY1;
+            if (sx < 0 || sx >= 480 || sy < 0 || sy >= 480)
+            {
+                continue;
+            }
+
+            TPosition pos = GetPositionOnScreen(sx, sy, Mx, My);
+            std::string name = cp950toutf8(Rscene[snum].Name);
+            if (DrawLength(name) <= 0)
+            {
+                continue;
+            }
+            int nameWidth = DrawLength(name) * 10 + 7;
+            int nameX = pos.x - nameWidth / 2 + 18;
+            int nameY = pos.y - 26;
+
+            if (nameX + nameWidth < 0 || nameX >= CENTER_X * 2 || nameY + 28 < 0 || nameY >= CENTER_Y * 2)
+            {
+                continue;
+            }
+
+            DrawTextWithRectNoUpdate(name, nameX, nameY, nameWidth, ColColor(5), ColColor(7));
+        }
+    }
+
     DrawClouds();
     DrawVirtualKey();
 }

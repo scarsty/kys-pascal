@@ -36,6 +36,118 @@ static int signof(int x)
                                    0;
 }
 
+static void SaveToggleOptionToIni(const char* section, const char* key, int value)
+{
+    std::string filename = AppPath + "kysmod.ini";
+    INIReaderNormal ini;
+    if (ini.loadFile(filename) != 0)
+    {
+        return;
+    }
+    ini.setKey(section, key, std::to_string(value));
+    ini.saveFile(filename);
+}
+
+static void SaveSystemToggleSettings()
+{
+    SaveToggleOptionToIni("system", "SIMPLE", SIMPLE);
+    SaveToggleOptionToIni("system", "FULLSCREEN", FULLSCREEN);
+    SaveToggleOptionToIni("system", "SEMIREAL", SEMIREAL);
+    SaveToggleOptionToIni("constant", "MAX_ADD_PRO", MAX_ADD_PRO);
+    SaveToggleOptionToIni("system", "SHOW_SUBSCENE_NAME", SHOW_SUBSCENE_NAME);
+}
+
+static std::string BuildSettingMenuEntry(const std::string& label, const std::string& state, int alignWidth)
+{
+    int pad = alignWidth - DrawLength(label);
+    if (pad < 1)
+    {
+        pad = 1;
+    }
+    return label + std::string((size_t)pad, ' ') + state;
+}
+
+static void MenuSettings()
+{
+    constexpr int settingsMenuX = 133;
+    constexpr int settingsMenuY = 30;
+    constexpr int settingsMenuW = 240;
+    constexpr int settingsMenuMax = 5;
+    constexpr int settingsMenuH = settingsMenuMax * 22 + 29;
+
+    SDL_Surface* settingsBackground = nullptr;
+    if (screen)
+    {
+        settingsBackground = SDL_CreateSurface(settingsMenuW + 1, settingsMenuH,
+            SDL_GetPixelFormatForMasks(32, RMask, GMask, BMask, AMask));
+        if (settingsBackground)
+        {
+            SDL_Rect src = { settingsMenuX, settingsMenuY, settingsMenuW + 1, settingsMenuH };
+            SDL_Rect dst = { 0, 0, settingsMenuW + 1, settingsMenuH };
+            SDL_BlitSurface(screen, &src, settingsBackground, &dst);
+        }
+    }
+
+    auto RestoreSettingsBackground = [&]()
+    {
+        if (!screen || !settingsBackground)
+        {
+            return;
+        }
+        SDL_Rect src = { 0, 0, settingsMenuW + 1, settingsMenuH };
+        SDL_Rect dst = { settingsMenuX, settingsMenuY, settingsMenuW + 1, settingsMenuH };
+        SDL_BlitSurface(settingsBackground, &src, screen, &dst);
+    };
+
+    int i = 0;
+    while (i >= 0)
+    {
+        RestoreSettingsBackground();
+        std::string word[6];
+        constexpr int settingAlignWidth = 9;
+        word[0] = BuildSettingMenuEntry("簡繁體", SIMPLE ? "简體" : "繁體", settingAlignWidth);
+        word[1] = BuildSettingMenuEntry("全屏", FULLSCREEN ? "打開" : "關閉", settingAlignWidth);
+        word[2] = BuildSettingMenuEntry("半即時", SEMIREAL ? "打開" : "關閉", settingAlignWidth);
+        word[3] = BuildSettingMenuEntry("升級屬性固定", MAX_ADD_PRO ? "打開" : "關閉", settingAlignWidth);
+        word[4] = BuildSettingMenuEntry("顯示場景名", SHOW_SUBSCENE_NAME ? "打開" : "關閉", settingAlignWidth);
+        word[5] = "返回";
+        i = CommonMenu(settingsMenuX, settingsMenuY, settingsMenuW, settingsMenuMax, i, word);
+        switch (i)
+        {
+        case 0:
+            SIMPLE = 1 - SIMPLE;
+            SaveSystemToggleSettings();
+            break;
+        case 1:
+            SwitchFullscreen();
+            SaveSystemToggleSettings();
+            break;
+        case 2:
+            SEMIREAL = 1 - SEMIREAL;
+            SaveSystemToggleSettings();
+            break;
+        case 3:
+            MAX_ADD_PRO = 1 - MAX_ADD_PRO;
+            SaveSystemToggleSettings();
+            break;
+        case 4:
+            SHOW_SUBSCENE_NAME = 1 - SHOW_SUBSCENE_NAME;
+            SaveSystemToggleSettings();
+            break;
+        case 5:
+            i = -1;
+            break;
+        }
+    }
+
+    RestoreSettingsBackground();
+    if (settingsBackground)
+    {
+        SDL_DestroySurface(settingsBackground);
+    }
+    UpdateScreen(screen, settingsMenuX, settingsMenuY, settingsMenuW + 1, settingsMenuH);
+}
+
 // ---- 实现 ----
 
 void Run()
@@ -118,6 +230,11 @@ void Run()
     uint32_t screenFlag = SDL_WINDOW_RESIZABLE;
     window = SDL_CreateWindow(TitleString.c_str(), RESOLUTIONX, RESOLUTIONY, screenFlag);
     if (CellPhone == 1)
+    {
+        SDL_SetWindowFullscreen(window, true);
+        FULLSCREEN = 1;
+    }
+    else if (FULLSCREEN != 0)
     {
         SDL_SetWindowFullscreen(window, true);
         FULLSCREEN = 1;
@@ -329,7 +446,9 @@ void ReadFiles()
     VOLUMEWAV = ini.getInt("music", "VOLUMEWAV", 30);
     SOUND3D = ini.getInt("music", "SOUND3D", 1);
     MMAPAMI = ini.getInt("system", "MMAPAMI", 1);
+    SHOW_SUBSCENE_NAME = ini.getInt("system", "SHOW_SUBSCENE_NAME", 0);
     SEMIREAL = ini.getInt("system", "SEMIREAL", 0);
+    FULLSCREEN = ini.getInt("system", "FULLSCREEN", 0);
     MODVersion = ini.getInt("system", "MODVersion", 0);
     CHINESE_FONT_SIZE = ini.getInt("system", "CHINESE_FONT_SIZE", 20);
     ENGLISH_FONT_SIZE = ini.getInt("system", "ENGLISH_FONT_SIZE", 19);
@@ -4595,7 +4714,7 @@ void ShowStatus(int rnum, int x, int y)
     {
         int hx = x + 550;
         int hy = y;
-        DrawRectangle(screen, hx, hy, 140, 205, 0, ColColor(255), 50);
+        DrawRectangle(screen, hx, hy, 140, 292, 0, ColColor(255), 50);
         DrawShadowText("隱藏屬性", hx + 5, hy + 5, ColColor(0x21), ColColor(0x23));
         struct
         {
@@ -4604,21 +4723,39 @@ void ShowStatus(int rnum, int x, int y)
             uint32_t c1;
             uint32_t c2;
         } hiddenAttrs[] = {
+            { "序號", rnum, ColColor(0x64), ColColor(0x66) },
             { "受傷", Rrole[rnum].Hurt, ColColor(0x10), ColColor(0x13) },
             { "中毒", Rrole[rnum].Poison, ColColor(0x35), ColColor(0x37) },
             { "抗毒", Rrole[rnum].DefPoi, ColColor(0x5), ColColor(0x7) },
             { "攻擊帶毒", Rrole[rnum].AttPoi, ColColor(0x35), ColColor(0x37) },
             { "資質", Rrole[rnum].Aptitude, ColColor(0x64), ColColor(0x66) },
+            { "學識", Rrole[rnum].Knowledge, ColColor(0x64), ColColor(0x66) },
             { "體質", Rrole[rnum].IncLife, ColColor(0x64), ColColor(0x66) },
+            { "左右互博", Rrole[rnum].AttTwice, ColColor(0x64), ColColor(0x66) },
             { "道德", Rrole[rnum].Ethics, ColColor(0x21), ColColor(0x23) },
             { "聲望", Rrole[rnum].Repute, ColColor(0x21), ColColor(0x23) },
         };
-        for (int i = 0; i < 8; i++)
+        constexpr int hiddenAttrCount = sizeof(hiddenAttrs) / sizeof(hiddenAttrs[0]);
+        for (int i = 0; i < hiddenAttrCount; i++)
         {
             DrawShadowText(hiddenAttrs[i].label, hx + 5, hy + 30 + 21 * i, ColColor(0x64), ColColor(0x66));
             buf = std::format("{:4d}", hiddenAttrs[i].val);
             DrawEngShadowText(buf, hx + 80, hy + 30 + 21 * i, hiddenAttrs[i].c1, hiddenAttrs[i].c2);
         }
+
+        const char* sexText = "男";
+        if (Rrole[rnum].Sexual == 1)
+        {
+            sexText = "女";
+        }
+        else if (Rrole[rnum].Sexual == 2)
+        {
+            sexText = "太監";
+        }
+        int sexRow = hiddenAttrCount;
+        DrawShadowText("性別", hx + 5, hy + 30 + 21 * sexRow, ColColor(0x64), ColColor(0x66));
+        buf = sexText;
+        DrawShadowText(buf, hx + 120 - DrawLength(buf) * 10, hy + 30 + 21 * sexRow, ColColor(0x64), ColColor(0x66));
     }
 
     UpdateScreen(screen, x, y, 695, 316);
@@ -4709,17 +4846,17 @@ int MenuSystem()
     std::string word[4];
     word[0] = "讀取";
     word[1] = "存檔";
+    word[2] = "設置";
     word[3] = "離開";
     int i = 0;
     while (i >= 0)
     {
-        word[2] = FULLSCREEN ? "窗口" : "全屏";
-        i = CommonMenu(80, 30, 46, 3, word);
+        i = CommonMenu(80, 30, 46, 3, i, word);
         switch (i)
         {
         case 0: MenuLoad(); break;
         case 1: MenuSave(); break;
-        case 2: SwitchFullscreen(); break;
+        case 2: MenuSettings(); break;
         case 3: MenuQuit(); break;
         }
         if (Where == 3)
@@ -5719,14 +5856,21 @@ int TeleportByList()
         return 0;
     }
 
-    std::vector<std::string> sceneMenu(SceneAmount);
-    std::vector<int> sceneIdx(SceneAmount);
-    std::vector<std::string> sortKey(SceneAmount);
+    std::vector<std::string> sceneMenu;
+    std::vector<int> sceneIdx;
+    std::vector<std::string> sortKey;
+    sceneMenu.reserve(SceneAmount);
+    sceneIdx.reserve(SceneAmount);
+    sortKey.reserve(SceneAmount);
 
-    // 提取场景名称和排序键（末字符）
+    // 仅显示当前可进入的场景，并提取排序键（末字符）
     for (int i = 0; i < SceneAmount; i++)
     {
-        sceneIdx[i] = i;
+        if (!CheckCanEnter(i))
+        {
+            continue;
+        }
+        sceneIdx.push_back(i);
         std::string nameStr = cp950toutf8(Rscene[i].Name);
         if (DrawLength(nameStr) <= 0)
         {
@@ -5741,13 +5885,25 @@ int TeleportByList()
             {
                 k--;
             }
-            sortKey[i] = nameStr.substr(k);
+            sortKey.push_back(nameStr.substr(k));
         }
-        sceneMenu[i] = nameStr;    // 先存名字
+        else
+        {
+            sortKey.push_back("");
+        }
+        sceneMenu.push_back(nameStr);
+    }
+
+    if (sceneIdx.empty())
+    {
+        Redraw();
+        DrawTextWithRect("無可傳送場景", 80, 30, 172, ColColor(0x21), ColColor(0x23));
+        WaitAnyKey();
+        return 0;
     }
 
     // 插入排序（按末字符+编号）
-    for (int i = 1; i < SceneAmount; i++)
+    for (int i = 1; i < (int)sceneIdx.size(); i++)
     {
         int tmpI = sceneIdx[i];
         std::string tmpS = sortKey[i];
@@ -5763,7 +5919,7 @@ int TeleportByList()
     }
 
     // 重建菜单字符串（排序后）
-    for (int i = 0; i < SceneAmount; i++)
+    for (int i = 0; i < (int)sceneIdx.size(); i++)
     {
         int sc = sceneIdx[i];
         std::string nameStr = cp950toutf8(Rscene[sc].Name);
@@ -5774,13 +5930,6 @@ int TeleportByList()
         sceneMenu[i] = nameStr;
     }
 
-    // 构建禁用标志数组：未开放的场景灰度显示且不可选中
-    bool sceneDisabled[201] = {};
-    for (int i = 0; i < SceneAmount; i++)
-    {
-        sceneDisabled[i] = !CheckCanEnter(sceneIdx[i]);
-    }
-
     Redraw();
     DrawTextWithRect("傳送列表", 80, 30, 640, ColColor(0x21), ColColor(0x23));
     int max_show_rows = 16;
@@ -5788,7 +5937,7 @@ int TeleportByList()
     {
         max_show_rows = 8;
     }
-    int menu = CommonGridMenu(80, 60, 5, 128, max_show_rows, SceneAmount - 1, sceneMenu.data(), sceneDisabled);
+    int menu = CommonGridMenu(80, 60, 5, 128, max_show_rows, (int)sceneIdx.size() - 1, sceneMenu.data());
     if (menu < 0)
     {
         return 0;

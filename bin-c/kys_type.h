@@ -373,6 +373,7 @@ inline std::vector<TCloud> Cloud;
 // 系统设置
 inline int WALK_SPEED = 10, WALK_SPEED2 = 10, BATTLE_SPEED = 10;  // 行走时的主延时, 如果觉得行走速度慢可以修改这里
 inline int MMAPAMI = 1;       // 主地图动态效果
+inline int SHOW_SUBSCENE_NAME = 0;  // 主地图是否显示当前子场景名称
 inline int SEMIREAL = 0;      // 半即時
 inline int NIGHT_EFFECT = 0;  // 是否使用白昼和黑夜效果
 inline int EXIT_GAME = 1;     // 退出时的提问方式
