@@ -56,6 +56,7 @@ static void SaveSystemToggleSettings()
     SaveToggleOptionToIni("system", "TOUCH_WALK", TouchWalk);
     SaveToggleOptionToIni("constant", "MAX_ADD_PRO", MAX_ADD_PRO);
     SaveToggleOptionToIni("system", "SHOW_SUBSCENE_NAME", SHOW_SUBSCENE_NAME);
+    SaveToggleOptionToIni("system", "SHOW_BATTLE_HP", SHOW_BATTLE_HP);
 }
 
 static void MenuSettings()
@@ -63,7 +64,7 @@ static void MenuSettings()
     constexpr int settingsMenuX = 133;
     constexpr int settingsMenuY = 30;
     constexpr int settingsMenuW = 260;
-    constexpr int settingsMenuMax = 6;
+    constexpr int settingsMenuMax = 7;
     constexpr int settingsMenuH = settingsMenuMax * 22 + 29;
 
     SDL_Surface* settingsBackground = nullptr;
@@ -95,14 +96,15 @@ static void MenuSettings()
         RestoreSettingsBackground();
         DrawRectangle(screen, settingsMenuX, settingsMenuY, settingsMenuW, settingsMenuMax * 22 + 28, 0, ColColor(0xFF), 50);
 
-        const std::string labels[7] = {
-            "簡繁體", "全屏", "半即時", "觸摸行走", "升級屬性固定", "顯示場景名", "返回"
+        const std::string labels[8] = {
+            "簡繁體", "全屏", "半即時", "觸摸行走", "戰鬥顯示血條", "升級屬性固定", "顯示場景名", "返回"
         };
-        const std::string states[6] = {
+        const std::string states[7] = {
             SIMPLE ? "简體" : "繁體",
             FULLSCREEN ? "打開" : "關閉",
             SEMIREAL ? "打開" : "關閉",
             TouchWalk ? "打開" : "關閉",
+            SHOW_BATTLE_HP ? "打開" : "關閉",
             MAX_ADD_PRO ? "打開" : "關閉",
             SHOW_SUBSCENE_NAME ? "打開" : "關閉"
         };
@@ -255,14 +257,18 @@ static void MenuSettings()
             SaveSystemToggleSettings();
             break;
         case 4:
-            MAX_ADD_PRO = 1 - MAX_ADD_PRO;
+            SHOW_BATTLE_HP = 1 - SHOW_BATTLE_HP;
             SaveSystemToggleSettings();
             break;
         case 5:
-            SHOW_SUBSCENE_NAME = 1 - SHOW_SUBSCENE_NAME;
+            MAX_ADD_PRO = 1 - MAX_ADD_PRO;
             SaveSystemToggleSettings();
             break;
         case 6:
+            SHOW_SUBSCENE_NAME = 1 - SHOW_SUBSCENE_NAME;
+            SaveSystemToggleSettings();
+            break;
+        case 7:
             i = -1;
             break;
         }
@@ -583,6 +589,7 @@ void ReadFiles()
     SOUND3D = ini.getInt("music", "SOUND3D", 1);
     MMAPAMI = ini.getInt("system", "MMAPAMI", 1);
     SHOW_SUBSCENE_NAME = ini.getInt("system", "SHOW_SUBSCENE_NAME", 0);
+    SHOW_BATTLE_HP = ini.getInt("system", "SHOW_BATTLE_HP", 1);
     SEMIREAL = ini.getInt("system", "SEMIREAL", 0);
     FULLSCREEN = ini.getInt("system", "FULLSCREEN", 0);
     MODVersion = ini.getInt("system", "MODVersion", 0);

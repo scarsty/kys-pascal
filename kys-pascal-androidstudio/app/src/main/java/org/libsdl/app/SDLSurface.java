@@ -75,7 +75,7 @@ public class SDLSurface extends SurfaceView implements SurfaceHolder.Callback,
     }
 
     protected void handlePause() {
-        enableSensor(Sensor.TYPE_ACCELEROMETER, false);
+       // enableSensor(Sensor.TYPE_ACCELEROMETER, false);
     }
 
     protected void handleResume() {
@@ -85,7 +85,7 @@ public class SDLSurface extends SurfaceView implements SurfaceHolder.Callback,
         setOnApplyWindowInsetsListener(this);
         setOnKeyListener(this);
         setOnTouchListener(this);
-        enableSensor(Sensor.TYPE_ACCELEROMETER, true);
+       // enableSensor(Sensor.TYPE_ACCELEROMETER, true);
     }
 
     protected Surface getNativeSurface() {
@@ -296,7 +296,21 @@ public class SDLSurface extends SurfaceView implements SurfaceHolder.Callback,
                     p = 1.0f;
                 }
 
+                // ===== 鸿蒙(HarmonyOS 6)触屏虚拟键修正 (v2) =====
+                // 现象: 鸿蒙上点虚拟键会触发"和按下不一致"的按键, 必须在键范围内再挪一下才对; 安卓正常。
+                // 根因: 引擎(bin-c)判断按了哪个虚拟键, 不看触摸事件自带坐标, 而是用
+                //       SDL_GetMouseState() 实时读"当前光标在哪"。安卓在手指按下瞬间会把光标
+                //       warp 到落点; 鸿蒙的 SDL 触摸->鼠标合成在按下瞬间用的是【过期/上一次】的
+                //       坐标, 于是引擎读到旧坐标 -> 命中上一次那个键 -> 触发错键。挪动后产生 MOVE,
+                //       光标才被刷新到正确位置, 所以"挪一下才正常"。
+                // 上一版失败原因: 我们在 onNativeTouch 之前回写光标, 紧接着 SDL 自己合成的(过期)
+                //       鼠标移动又把它覆盖回旧值, 我们的修正被冲掉了。
+                // 本版做法: 在 onNativeTouch 之【后】回写光标, 让"正确落点"成为最后一次写入,
+                //       从而覆盖 SDL 的过期合成值。每个手指事件(按下/移动/抬起)都回写一次,
+                //       保证引擎任何时刻读到的光标 == 手指真实像素位置。
+                //       只发"移动"不发按键, 不会在菜单/战斗界面造成重复确认。
                 SDLActivity.onNativeTouch(touchDevId, pointerId, action, x, y, p);
+                SDLActivity.onNativeMouse(0, MotionEvent.ACTION_HOVER_MOVE, event.getX(i), event.getY(i), false);
             }
 
             // Non-primary up/down
@@ -329,6 +343,9 @@ public class SDLSurface extends SurfaceView implements SurfaceHolder.Callback,
 
     @Override
     public void onSensorChanged(SensorEvent event) {
+    
+    return;
+    /*
         if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
 
             // Since we may have an orientation set, we won't receive onConfigurationChanged events.
@@ -371,6 +388,7 @@ public class SDLSurface extends SurfaceView implements SurfaceHolder.Callback,
 
 
         }
+        */
     }
 
     // Prevent android internal NullPointerException (https://github.com/libsdl-org/SDL/issues/13306)

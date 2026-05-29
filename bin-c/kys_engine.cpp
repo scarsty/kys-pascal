@@ -1473,6 +1473,7 @@ uint32_t CheckBasicEvent()
             {
                 event.button.button = SDL_BUTTON_RIGHT;
                 event.key.key = SDLK_ESCAPE;
+                BattleAutoEscapePressed = true;
                 kyslog("Change to escape");
             }
             else if (inReturn(mx, my))

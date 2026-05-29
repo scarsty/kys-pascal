@@ -946,8 +946,9 @@ void DrawRoleOnBfield(int x, int y, uint32_t mixColor, int mixAlpha, int alpha_)
         }
         DrawFPic(headnum, num, pos.x, pos.y, 0, alpha_, depth, mixColor, mixAlpha);
     }
-    // HP bar above head
+    if (SHOW_BATTLE_HP != 0)
     {
+        // HP bar above head
         int maxHP = Rrole[rnum].MaxHP;
         int curHP = Rrole[rnum].CurrentHP;
         if (maxHP > 0)
@@ -1125,8 +1126,9 @@ void DrawBFieldWithCursor(int step)
                     }
                     DrawFPic(headnum, num, pos.x, pos.y, 0, 75, depth, mixcolor, mixalpha);
                 }
-                // HP bar above head
+                if (SHOW_BATTLE_HP != 0)
                 {
+                    // HP bar above head
                     int maxHP = Rrole[rnum].MaxHP;
                     int curHP = Rrole[rnum].CurrentHP;
                     if (maxHP > 0)
