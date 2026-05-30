@@ -273,10 +273,11 @@ static void MenuSettings()
             break;
         }
 
-        if (i >= 0)
+        if (i < 0)
         {
-            ShowSettingsMenu(i);
+            break;
         }
+        ShowSettingsMenu(i);
 
         event.key.key = 0;
         event.button.button = 0;
@@ -848,8 +849,6 @@ bool InitialRole()
         }
 
         Redraw();
-        std::string str = "資質";
-
         int key = 0;
         do {
             if (MODVersion != 21)
@@ -893,9 +892,6 @@ bool InitialRole()
 
             Redraw();
             ShowStatus(0);
-            DrawShadowText(str, CENTER_X - 273 + 10, CENTER_Y + 111, ColColor(0x21), ColColor(0x23));
-            auto buf = std::format("{:4d}", Rrole[0].Aptitude);
-            DrawEngShadowText(buf, CENTER_X - 273 + 110, CENTER_Y + 111, ColColor(0x64), ColColor(0x66));
             UpdateScreen(screen, 0, 0, screen->w, screen->h);
             key = WaitAnyKey();
         } while (key != SDLK_ESCAPE && key != SDLK_RETURN);
@@ -1459,9 +1455,6 @@ bool InitialRole()
         }
 
         ShowStatus(0);
-        DrawShadowText(str, 30, CENTER_Y + 111, ColColor(0x23), ColColor(0x21));
-        auto buf = std::format("{:4d}", Rrole[0].Aptitude);
-        DrawEngShadowText(buf, 150, CENTER_Y + 111, ColColor(0x66), ColColor(0x63));
         UpdateScreen(screen, 0, 0, screen->w, screen->h);
 
         StartAmi();

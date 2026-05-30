@@ -1783,7 +1783,7 @@ int instruct_50e(int code, int e1, int e2, int e3, int e4, int e5, int e6)
         DrawBig5ShadowText(p1, e3 + 3, e4 + 22 * i + 2, ColColor(e5 & 0xFF), ColColor((e5 & 0xFF00) << 8));
         UpdateScreen(screen, 0, 0, screen->w, screen->h);
         i = WaitAnyKey();
-        if (i == SDLK_Y)
+        if (i == SDLK_Y || i == SDLK_RETURN || i == SDLK_SPACE)
         {
             x50[0x7000] = 0;
         }
