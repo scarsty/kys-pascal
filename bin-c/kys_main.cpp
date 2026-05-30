@@ -3984,11 +3984,11 @@ bool MenuItem()
                         }
                         int magicY = ((len22 + 5) / 6 + (len32 + 5) / 6) * 20 + 346 + 5;
                         DrawRectangle(screen, 110, magicY, w2, 25, 0, ColColor(255), 50);
-                        DrawShadowText("修炼:", 117, magicY + 3, ColColor(0x50), ColColor(0x4E));
+                        DrawShadowText("修炼", 117, magicY + 3, ColColor(0x50), ColColor(0x4E));
                         DrawShadowText(magicName, 157, magicY + 3, ColColor(0x21), ColColor(0x23));
-                        DrawShadowText("威力:", 317, magicY + 3, ColColor(0x5), ColColor(0x7));
+                        DrawShadowText("威力", 317, magicY + 3, ColColor(0x5), ColColor(0x7));
                         DrawShadowText(std::format("{}", atk10), 357, magicY + 3, ColColor(0x64), ColColor(0x66));
-                        DrawShadowText("範圍:", 437, magicY + 3, ColColor(0x5), ColColor(0x7));
+                        DrawShadowText("範圍", 437, magicY + 3, ColColor(0x5), ColColor(0x7));
                         DrawShadowText(areaStr, 477, magicY + 3, ColColor(0x64), ColColor(0x66));
                     }
                 }
