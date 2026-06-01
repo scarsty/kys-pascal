@@ -3889,9 +3889,14 @@ bool MenuItem()
                         len32++;
                     }
 
-                    if (len22 + len32 > 0)
+                    int rows22 = (len22 + 5) / 6;
+                    int rows32 = (len32 + 5) / 6;
+                    bool hasOnlyPracRole = (Ritem[item2].OnlyPracRole >= 0 && Ritem[item2].OnlyPracRole < 2032);
+                    int extraRows = hasOnlyPracRole ? 1 : 0;
+
+                    if (len22 + len32 + extraRows > 0)
                     {
-                        DrawRectangle(screen, 110, 344, w2, 20 * ((len22 + 5) / 6 + (len32 + 5) / 6) + 5, 0, ColColor(255), 50);
+                        DrawRectangle(screen, 110, 344, w2, 20 * (rows22 + rows32 + extraRows) + 5, 0, ColColor(255), 50);
                     }
 
                     int i12 = 0;
@@ -3960,10 +3965,18 @@ bool MenuItem()
                                 c1 = ColColor(0x64);
                                 c2 = ColColor(0x66);
                             }
-                            DrawShadowText(words32[i3], 117 + (i12 % 6) * 95, ((len22 + 5) / 6 + i12 / 6) * 20 + 346, ColColor(0x50), ColColor(0x4E));
-                            DrawShadowText(buf2, 137 + (i12 % 6) * 95, ((len22 + 5) / 6 + i12 / 6) * 20 + 346, c1, c2);
+                            DrawShadowText(words32[i3], 117 + (i12 % 6) * 95, (rows22 + i12 / 6) * 20 + 346, ColColor(0x50), ColColor(0x4E));
+                            DrawShadowText(buf2, 137 + (i12 % 6) * 95, (rows22 + i12 / 6) * 20 + 346, c1, c2);
                             i12++;
                         }
+                    }
+
+                    if (hasOnlyPracRole)
+                    {
+                        std::string roleName = cp950toutf8(Rrole[Ritem[item2].OnlyPracRole].Name);
+                        int onlyRoleY = (rows22 + rows32) * 20 + 346;
+                        DrawShadowText("僅限修煉", 117, onlyRoleY, ColColor(0x50), ColColor(0x4E));
+                        DrawShadowText(roleName, 207, onlyRoleY, ColColor(0x64), ColColor(0x66));
                     }
 
                     // 如果可修炼出武功，显示武功名、10级威力、攻击范围
@@ -3982,7 +3995,7 @@ bool MenuItem()
                         case 3: areaStr = "面"; break;
                         default: areaStr = std::format("{}", areaType); break;
                         }
-                        int magicY = ((len22 + 5) / 6 + (len32 + 5) / 6) * 20 + 346 + 5;
+                        int magicY = (rows22 + rows32 + extraRows) * 20 + 346 + 5;
                         DrawRectangle(screen, 110, magicY, w2, 25, 0, ColColor(255), 50);
                         DrawShadowText("修炼", 117, magicY + 3, ColColor(0x50), ColColor(0x4E));
                         DrawShadowText(magicName, 157, magicY + 3, ColColor(0x21), ColColor(0x23));
