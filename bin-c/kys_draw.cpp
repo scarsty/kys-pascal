@@ -1338,6 +1338,7 @@ void DrawProgress()
 
 void DrawVirtualKey()
 {
+    return;
     if (ShowVirtualKey == 0)
     {
         return;

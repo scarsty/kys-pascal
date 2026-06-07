@@ -1328,6 +1328,7 @@ uint32_t CheckBasicEvent()
         SDL_FlushEvent(SDL_EVENT_MOUSE_MOTION);
     }
 
+    /*
     if (CellPhone == 1 && ShowVirtualKey != 0)
     {
         int mx, my;
@@ -1337,7 +1338,7 @@ uint32_t CheckBasicEvent()
     else
     {
         VirtualKeyValue = 0;
-    }
+    }*/
 
     // 检测ESC键抬起，设置全局标志（防止自动战斗动画消耗事件后被后续事件覆盖）
     if (event.type == SDL_EVENT_KEY_UP && event.key.key == SDLK_ESCAPE)
@@ -1408,7 +1409,7 @@ uint32_t CheckBasicEvent()
         StopMP3(0);
         break;
     case SDL_EVENT_FINGER_MOTION:
-        if (CellPhone == 1)
+        /*if (CellPhone == 1)
         {
             if (event.tfinger.fingerID == 1)
             {
@@ -1430,10 +1431,10 @@ uint32_t CheckBasicEvent()
                     event.key.key = AngleToDirection(event.tfinger.dy, event.tfinger.dx);
                 }
             }
-        }
+        }*/
         break;
     case SDL_EVENT_MOUSE_MOTION:
-        if (CellPhone == 1)
+        /*if (CellPhone == 1)
         {
             FingerCount = 0;
             int mx, my;
@@ -1447,10 +1448,10 @@ uint32_t CheckBasicEvent()
                 event.type = 0;
             }
             inVirtualKey(mx, my, VirtualKeyValue);
-        }
+        }*/
         break;
     case SDL_EVENT_MOUSE_BUTTON_DOWN:
-        if (CellPhone == 1 && ShowVirtualKey != 0)
+        /*if (CellPhone == 1 && ShowVirtualKey != 0)
         {
             int mx, my;
             SDL_GetMouseState2(mx, my);
@@ -1460,11 +1461,11 @@ uint32_t CheckBasicEvent()
                 event.type = SDL_EVENT_KEY_DOWN;
                 event.key.key = VirtualKeyValue;
             }
-        }
+        }*/
         break;    // 必须break，避免fallthrough到KEY_UP/MOUSE_BUTTON_UP
     case SDL_EVENT_KEY_UP:
     case SDL_EVENT_MOUSE_BUTTON_UP:
-        if (CellPhone == 1 && event.type == SDL_EVENT_MOUSE_BUTTON_UP && event.button.button == SDL_BUTTON_LEFT)
+        /*if (CellPhone == 1 && event.type == SDL_EVENT_MOUSE_BUTTON_UP && event.button.button == SDL_BUTTON_LEFT)
         {
             int mx, my;
             SDL_GetMouseState2(mx, my);
@@ -1495,7 +1496,7 @@ uint32_t CheckBasicEvent()
             {
                 event.button.button = 0;
             }
-        }
+        }*/
         if (event.key.key == SDLK_KP_ENTER)
         {
             event.key.key = SDLK_RETURN;
