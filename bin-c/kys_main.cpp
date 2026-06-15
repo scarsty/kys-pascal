@@ -4001,8 +4001,10 @@ bool MenuItem()
                         DrawShadowText(magicName, 157, magicY + 3, ColColor(0x21), ColColor(0x23));
                         DrawShadowText("威力", 317, magicY + 3, ColColor(0x5), ColColor(0x7));
                         DrawShadowText(std::format("{}", atk10), 357, magicY + 3, ColColor(0x64), ColColor(0x66));
-                        DrawShadowText("範圍", 437, magicY + 3, ColColor(0x5), ColColor(0x7));
-                        DrawShadowText(areaStr, 477, magicY + 3, ColColor(0x64), ColColor(0x66));
+                        DrawShadowText("經驗", 397, magicY + 3, ColColor(0x5), ColColor(0x7));
+                        DrawShadowText(std::format("{}", Ritem[item2].NeedExp), 437, magicY + 3, ColColor(0x64), ColColor(0x66));
+                        DrawShadowText("範圍", 477, magicY + 3, ColColor(0x5), ColColor(0x7));
+                        DrawShadowText(areaStr, 517, magicY + 3, ColColor(0x64), ColColor(0x66));
                     }
                 }
 
