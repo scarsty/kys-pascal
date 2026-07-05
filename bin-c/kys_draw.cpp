@@ -801,7 +801,89 @@ int CalBlock(int x, int y)
 
 void ExpandGroundOnImg(SDL_Surface* img, int imgW, int imgH)
 {
-    // 扩展地面到 64x64 外避免黑边 - 简化实现
+    if (EXPAND_GROUND == 0 || !img)
+    {
+        return;
+    }
+
+    memset(ExGround, 0, sizeof(ExGround));
+    for (int x = 0; x <= 63; x++)
+    {
+        for (int y = 0; y <= 63; y++)
+        {
+            if (Where == 1 && CurScene >= 0)
+            {
+                ExGround[x][y] = SData[CurScene][0][x][y];
+            }
+            else if (Where == 2)
+            {
+                ExGround[x][y] = BField[0][x][y];
+            }
+        }
+    }
+
+    for (int radius = 1; radius <= 31; radius++)
+    {
+        int left = 31 - radius;
+        int right = 32 + radius;
+        int top = 31 - radius;
+        int bottom = 32 + radius;
+        for (int y = top + 1; y < bottom; y++)
+        {
+            if (ExGround[left][y] <= 0)
+            {
+                ExGround[left][y] = ExGround[left + 1][y];
+            }
+            if (ExGround[right][y] <= 0)
+            {
+                ExGround[right][y] = ExGround[right - 1][y];
+            }
+        }
+        for (int x = left + 1; x < right; x++)
+        {
+            if (ExGround[x][top] <= 0)
+            {
+                ExGround[x][top] = ExGround[x][top + 1];
+            }
+            if (ExGround[x][bottom] <= 0)
+            {
+                ExGround[x][bottom] = ExGround[x][bottom - 1];
+            }
+        }
+        if (ExGround[left][top] <= 0)
+        {
+            ExGround[left][top] = ExGround[left + 1][top] > 0 ? ExGround[left + 1][top] : ExGround[left][top + 1];
+        }
+        if (ExGround[right][top] <= 0)
+        {
+            ExGround[right][top] = ExGround[right - 1][top] > 0 ? ExGround[right - 1][top] : ExGround[right][top + 1];
+        }
+        if (ExGround[left][bottom] <= 0)
+        {
+            ExGround[left][bottom] = ExGround[left + 1][bottom] > 0 ? ExGround[left + 1][bottom] : ExGround[left][bottom - 1];
+        }
+        if (ExGround[right][bottom] <= 0)
+        {
+            ExGround[right][bottom] = ExGround[right - 1][bottom] > 0 ? ExGround[right - 1][bottom] : ExGround[right][bottom - 1];
+        }
+    }
+
+    for (int x = 0; x <= 63; x++)
+    {
+        for (int y = 0; y <= 63; y++)
+        {
+            TPosition pos = CalPosOnImage(x, y);
+            int num = ExGround[x][y] / 2;
+            if (Where == 1)
+            {
+                InitialSPic(num, pos.x, pos.y, img, imgW, imgH, nullptr, 0, 0, 0);
+            }
+            else if (Where == 2)
+            {
+                InitialBPic(num, pos.x, pos.y, img, imgW, imgH, nullptr, 0, 0, 0);
+            }
+        }
+    }
 }
 
 void UpdateScene()
@@ -987,6 +1069,7 @@ void InitialBFieldImage()
         // Pascal: FillChar($FF) → 每个 int16_t = -1, 表示"无建筑"(最小深度)
         memset(BlockImg2.data(), 0xFF, BlockImg2.size() * sizeof(int16_t));
     }
+    ExpandGroundOnImg(ImgBField, ImageWidth, ImageHeight);
 
     // Pascal: diagonal order for sumi=0..126, i1=63 downto 0, i2=sumi-i1
     for (int sumi = 0; sumi <= 126; sumi++)
@@ -1006,7 +1089,7 @@ void InitialBFieldPosition(int x, int y)
 {
     TPosition pos = CalPosOnImage(x, y);
     int groundPic = BField[0][x][y] / 2;
-    if (groundPic > 0)
+    if (EXPAND_GROUND == 0 && groundPic > 0)
     {
         InitialBPic(groundPic, pos.x, pos.y, ImgBField, ImageWidth, ImageHeight, nullptr, 0, 0, 0);
     }

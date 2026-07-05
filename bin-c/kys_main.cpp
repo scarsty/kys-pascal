@@ -57,6 +57,8 @@ static void SaveSystemToggleSettings()
     SaveToggleOptionToIni("constant", "MAX_ADD_PRO", MAX_ADD_PRO);
     SaveToggleOptionToIni("system", "SHOW_SUBSCENE_NAME", SHOW_SUBSCENE_NAME);
     SaveToggleOptionToIni("system", "SHOW_BATTLE_HP", SHOW_BATTLE_HP);
+    SaveToggleOptionToIni("system", "WMP_4_PIC", WMP_4_PIC);
+    SaveToggleOptionToIni("system", "EXPAND_GROUND", EXPAND_GROUND);
 }
 
 static void MenuSettings()
@@ -64,7 +66,7 @@ static void MenuSettings()
     constexpr int settingsMenuX = 133;
     constexpr int settingsMenuY = 30;
     constexpr int settingsMenuW = 260;
-    constexpr int settingsMenuMax = 7;
+    constexpr int settingsMenuMax = 9;
     constexpr int settingsMenuH = settingsMenuMax * 22 + 29;
 
     SDL_Surface* settingsBackground = nullptr;
@@ -96,17 +98,19 @@ static void MenuSettings()
         RestoreSettingsBackground();
         DrawRectangle(screen, settingsMenuX, settingsMenuY, settingsMenuW, settingsMenuMax * 22 + 28, 0, ColColor(0xFF), 50);
 
-        const std::string labels[8] = {
-            "簡繁體", "全屏", "半即時", "觸摸行走", "戰鬥顯示血條", "升級屬性固定", "顯示場景名", "返回"
+        const std::string labels[10] = {
+            "簡繁體", "全屏", "半即時", "觸摸行走", "戰鬥顯示血條", "升級屬性固定", "顯示場景名", "WMP四向圖", "擴展地面", "返回"
         };
-        const std::string states[7] = {
+        const std::string states[9] = {
             SIMPLE ? "简體" : "繁體",
             FULLSCREEN ? "打開" : "關閉",
             SEMIREAL ? "打開" : "關閉",
             TouchWalk ? "打開" : "關閉",
             SHOW_BATTLE_HP ? "打開" : "關閉",
             MAX_ADD_PRO ? "打開" : "關閉",
-            SHOW_SUBSCENE_NAME ? "打開" : "關閉"
+            SHOW_SUBSCENE_NAME ? "打開" : "關閉",
+            WMP_4_PIC ? "打開" : "關閉",
+            EXPAND_GROUND ? "打開" : "關閉"
         };
         const int stateRight = settingsMenuX + settingsMenuW - 10;
 
@@ -269,6 +273,27 @@ static void MenuSettings()
             SaveSystemToggleSettings();
             break;
         case 7:
+            WMP_4_PIC = 1 - WMP_4_PIC;
+            SaveSystemToggleSettings();
+            if (Where == 2)
+            {
+                Redraw();
+            }
+            break;
+        case 8:
+            EXPAND_GROUND = 1 - EXPAND_GROUND;
+            SaveSystemToggleSettings();
+            if (Where == 1)
+            {
+                InitialScene();
+            }
+            else if (Where == 2)
+            {
+                InitialBFieldImage();
+            }
+            Redraw();
+            break;
+        case 9:
             i = -1;
             break;
         }
@@ -1873,19 +1898,22 @@ void Walk()
                         int by = BuildY[axp][ayp];
                         axp = bx;
                         ayp = by;
-                        for (int i1 = bx - 3; i1 <= bx; i1++)
+                        auto SetBuildingEntrance = [&]()
                         {
-                            for (int i2 = by - 3; i2 <= by; i2++)
+                            for (int i1 = bx - 3; i1 <= bx; i1++)
                             {
-                                if (i1 >= 0 && i2 >= 0 && Entrance[i1][i2] >= 0 && BuildX[i1][i2] == bx && BuildY[i1][i2] == by)
+                                for (int i2 = by - 3; i2 <= by; i2++)
                                 {
-                                    axp = i1;
-                                    ayp = i2;
-                                    goto found_entrance;
+                                    if (i1 >= 0 && i2 >= 0 && Entrance[i1][i2] >= 0 && BuildX[i1][i2] == bx && BuildY[i1][i2] == by)
+                                    {
+                                        axp = i1;
+                                        ayp = i2;
+                                        return;
+                                    }
                                 }
                             }
-                        }
-                    found_entrance:;
+                        };
+                        SetBuildingEntrance();
                     }
                     if (Entrance[axp][ayp] >= 0)
                     {
@@ -2902,7 +2930,13 @@ int CommonMenu(int x, int y, int w, int max, int default_, const std::string men
         fn(menu);
     }
 
-    int result = -1;
+    auto FinishCommonMenu = [&](int result)
+    {
+        event.key.key = 0;
+        event.button.button = 0;
+        return result;
+    };
+
     while (SDL_WaitEvent(&event))
     {
         CheckBasicEvent();
@@ -2941,25 +2975,21 @@ int CommonMenu(int x, int y, int w, int max, int default_, const std::string men
         case SDL_EVENT_KEY_UP:
             if (event.key.key == SDLK_ESCAPE)
             {
-                result = -1;
-                goto menu_done;
+                return FinishCommonMenu(-1);
             }
             if (event.key.key == SDLK_RETURN || event.key.key == SDLK_SPACE)
             {
-                result = menu;
-                goto menu_done;
+                return FinishCommonMenu(menu);
             }
             break;
         case SDL_EVENT_MOUSE_BUTTON_UP:
             if (event.button.button == SDL_BUTTON_LEFT)
             {
-                result = menu;
-                goto menu_done;
+                return FinishCommonMenu(menu);
             }
             if (event.button.button == SDL_BUTTON_RIGHT)
             {
-                result = -1;
-                goto menu_done;
+                return FinishCommonMenu(-1);
             }
             break;
         case SDL_EVENT_MOUSE_MOTION:
@@ -2994,10 +3024,7 @@ int CommonMenu(int x, int y, int w, int max, int default_, const std::string men
         }
         }
     }
-menu_done:
-    event.key.key = 0;
-    event.button.button = 0;
-    return result;
+    return FinishCommonMenu(-1);
 }
 
 // 仅有两个选项的横排选单 - 严格按Pascal版
@@ -3021,7 +3048,13 @@ int CommonMenu2(int x, int y, int w, const std::string menuString[])
     ShowCommonMenu2();
     UpdateScreen(screen, x, y, w + 1, 29);
 
-    int result = -1;
+    auto FinishCommonMenu2 = [&](int result)
+    {
+        event.key.key = 0;
+        event.button.button = 0;
+        return result;
+    };
+
     while (SDL_WaitEvent(&event))
     {
         CheckBasicEvent();
@@ -3038,20 +3071,17 @@ int CommonMenu2(int x, int y, int w, const std::string menuString[])
         case SDL_EVENT_KEY_UP:
             if (event.key.key == SDLK_ESCAPE)
             {
-                result = -1;
-                goto menu2_done;
+                return FinishCommonMenu2(-1);
             }
             if (event.key.key == SDLK_RETURN || event.key.key == SDLK_SPACE)
             {
-                result = menu;
-                goto menu2_done;
+                return FinishCommonMenu2(menu);
             }
             break;
         case SDL_EVENT_MOUSE_BUTTON_UP:
             if (event.button.button == SDL_BUTTON_RIGHT)
             {
-                result = -1;
-                goto menu2_done;
+                return FinishCommonMenu2(-1);
             }
             if (event.button.button == SDL_BUTTON_LEFT)
             {
@@ -3061,8 +3091,7 @@ int CommonMenu2(int x, int y, int w, const std::string menuString[])
                 int emy = (int)(event.button.y / sy);
                 if (emx >= x && emx < x + w && emy > y && emy < y + 29)
                 {
-                    result = menu;
-                    goto menu2_done;
+                    return FinishCommonMenu2(menu);
                 }
             }
             break;
@@ -3094,10 +3123,7 @@ int CommonMenu2(int x, int y, int w, const std::string menuString[])
         }
         }
     }
-menu2_done:
-    event.key.key = 0;
-    event.button.button = 0;
-    return result;
+    return FinishCommonMenu2(-1);
 }
 
 // 卷动选单 - 严格按Pascal版
@@ -3125,7 +3151,13 @@ int CommonScrollMenu(int x, int y, int w, int max, int maxshow, const std::strin
     ShowCommonScrollMenu();
     UpdateScreen(screen, x, y, w + 1, maxshow * 22 + 29);
 
-    int result = -1;
+    auto FinishCommonScrollMenu = [&](int result)
+    {
+        event.key.key = 0;
+        event.button.button = 0;
+        return result;
+    };
+
     while (SDL_WaitEvent(&event))
     {
         CheckBasicEvent();
@@ -3204,20 +3236,17 @@ int CommonScrollMenu(int x, int y, int w, int max, int maxshow, const std::strin
         case SDL_EVENT_KEY_UP:
             if (event.key.key == SDLK_ESCAPE)
             {
-                result = -1;
-                goto scroll_done;
+                return FinishCommonScrollMenu(-1);
             }
             if (event.key.key == SDLK_RETURN || event.key.key == SDLK_SPACE)
             {
-                result = menu;
-                goto scroll_done;
+                return FinishCommonScrollMenu(menu);
             }
             break;
         case SDL_EVENT_MOUSE_BUTTON_UP:
             if (event.button.button == SDL_BUTTON_RIGHT)
             {
-                result = -1;
-                goto scroll_done;
+                return FinishCommonScrollMenu(-1);
             }
             if (event.button.button == SDL_BUTTON_LEFT)
             {
@@ -3227,8 +3256,7 @@ int CommonScrollMenu(int x, int y, int w, int max, int maxshow, const std::strin
                 int emy = (int)(event.button.y / sy);
                 if (emx >= x && emx < x + w && emy > y && emy < y + max * 22 + 29)
                 {
-                    result = menu;
-                    goto scroll_done;
+                    return FinishCommonScrollMenu(menu);
                 }
             }
             break;
@@ -3296,10 +3324,7 @@ int CommonScrollMenu(int x, int y, int w, int max, int maxshow, const std::strin
         }
         }
     }
-scroll_done:
-    event.key.key = 0;
-    event.button.button = 0;
-    return result;
+    return FinishCommonScrollMenu(-1);
 }
 
 int CommonGridMenu(int x, int y, int cols, int cellW, int maxShowRows, int maxItem, const std::string menuString[], const bool* disabled)
@@ -4014,9 +4039,9 @@ bool MenuItem()
             ShowMenuItem();
             UpdateScreen(screen, 0, 0, screen->w, screen->h);
 
-            bool done = false;
-            bool result = false;
-            while (!done && SDL_WaitEvent(&event))
+            auto RunItemMenu = [&]()
+            {
+            while (SDL_WaitEvent(&event))
             {
                 CheckBasicEvent();
                 switch (event.type)
@@ -4112,8 +4137,7 @@ bool MenuItem()
                 case SDL_EVENT_KEY_UP:
                     if (event.key.key == SDLK_ESCAPE)
                     {
-                        result = false;
-                        done = true;
+                        return;
                     }
                     if (event.key.key == SDLK_RETURN || event.key.key == SDLK_SPACE)
                     {
@@ -4126,15 +4150,13 @@ bool MenuItem()
                                 UseItem(CurItem);
                             }
                         }
-                        result = true;
-                        done = true;
+                        return;
                     }
                     break;
                 case SDL_EVENT_MOUSE_BUTTON_UP:
                     if (event.button.button == SDL_BUTTON_RIGHT)
                     {
-                        result = false;
-                        done = true;
+                        return;
                     }
                     if (event.button.button == SDL_BUTTON_LEFT)
                     {
@@ -4153,80 +4175,82 @@ bool MenuItem()
                                     UseItem(CurItem);
                                 }
                             }
-                            result = true;
-                            done = true;
+                            return;
                         }
                     }
                     break;
-                case SDL_EVENT_MOUSE_WHEEL:
-                    // 手机触屏防误触: TouchWalk关闭时(防误触模式)滚轮（手指滑动）无效
-                    if (CellPhone != 0 && !TouchWalk) { break; }
-                    if (event.wheel.y < 0)
-                    {
-                        y++;
-                        if (y >= row)
+                    case SDL_EVENT_MOUSE_WHEEL:
+                        // 手机触屏防误触: TouchWalk关闭时(防误触模式)滚轮（手指滑动）无效
+                        if (CellPhone != 0 && !TouchWalk) { break; }
+                        if (event.wheel.y < 0)
                         {
-                            if (ItemList[atlu + col * row] >= 0)
+                            y++;
+                            if (y >= row)
                             {
-                                atlu += col;
+                                if (ItemList[atlu + col * row] >= 0)
+                                {
+                                    atlu += col;
+                                }
+                                y = row - 1;
                             }
-                            y = row - 1;
-                        }
-                        ShowMenuItem();
-                        UpdateScreen(screen, 0, 0, screen->w, screen->h);
-                    }
-                    if (event.wheel.y > 0)
-                    {
-                        y--;
-                        if (y < 0)
-                        {
-                            y = 0;
-                            if (atlu > 0)
-                            {
-                                atlu -= col;
-                            }
-                        }
-                        ShowMenuItem();
-                        UpdateScreen(screen, 0, 0, screen->w, screen->h);
-                    }
-                    break;
-                case SDL_EVENT_MOUSE_MOTION:
-                {
-                    // 手机触屏防误触: TouchWalk关闭时(防误触模式)鼠标移动无效
-                    if (CellPhone != 0 && !TouchWalk) { break; }
-                    int mx = (int)(event.motion.x / ((float)RESOLUTIONX / screen->w));
-                    int my = (int)(event.motion.y / ((float)RESOLUTIONY / screen->h));
-                    if (mx >= 110 && mx < 110 + w && my > 90 && my < 308)
-                    {
-                        int xp = x, yp = y;
-                        x = (mx - 115) / 42;
-                        y = (my - 95) / 42;
-                        if (x >= col)
-                        {
-                            x = col - 1;
-                        }
-                        if (y >= row)
-                        {
-                            y = row - 1;
-                        }
-                        if (x < 0)
-                        {
-                            x = 0;
-                        }
-                        if (y < 0)
-                        {
-                            y = 0;
-                        }
-                        if (x != xp || y != yp)
-                        {
                             ShowMenuItem();
                             UpdateScreen(screen, 0, 0, screen->w, screen->h);
                         }
+                        if (event.wheel.y > 0)
+                        {
+                            y--;
+                            if (y < 0)
+                            {
+                                y = 0;
+                                if (atlu > 0)
+                                {
+                                    atlu -= col;
+                                }
+                            }
+                            ShowMenuItem();
+                            UpdateScreen(screen, 0, 0, screen->w, screen->h);
+                        }
+                        break;
+                    case SDL_EVENT_MOUSE_MOTION:
+                        {
+                            // 手机触屏防误触: TouchWalk关闭时(防误触模式)鼠标移动无效
+                            if (CellPhone != 0 && !TouchWalk) { break; }
+                            int mx = (int)(event.motion.x / ((float)RESOLUTIONX / screen->w));
+                            int my = (int)(event.motion.y / ((float)RESOLUTIONY / screen->h));
+                            if (mx >= 110 && mx < 110 + w && my > 90 && my < 308)
+                            {
+                                int xp = x, yp = y;
+                                x = (mx - 115) / 42;
+                                y = (my - 95) / 42;
+                                if (x >= col)
+                                {
+                                    x = col - 1;
+                                }
+                                if (y >= row)
+                                {
+                                    y = row - 1;
+                                }
+                                if (x < 0)
+                                {
+                                    x = 0;
+                                }
+                                if (y < 0)
+                                {
+                                    y = 0;
+                                }
+                                if (x != xp || y != yp)
+                                {
+                                    ShowMenuItem();
+                                    UpdateScreen(screen, 0, 0, screen->w, screen->h);
+                                }
+                            }
+                            break;
+                        }
                     }
-                    break;
                 }
-                }
-            }
+            };
+
+            RunItemMenu();
         }
         Redraw();
         if (Where == 2)
@@ -5492,19 +5516,7 @@ void CallEvent(int num)
     SceneRolePic = BEGIN_WALKPIC + SFace * 7;
     NeedRefreshScene = 0;
 
-    // 优先尝试lua脚本
-    auto scriptBuf = std::format("script/event/ka{}.lua", num);
-    std::string scriptFile = AppPath + scriptBuf;
-    if (KDEF_SCRIPT != 0)
-    {
-        if (filefunc::fileExist(scriptFile))
-        {
-            ExecScript(scriptFile, "");
-            goto event_end;
-        }
-    }
-
-    // kdef二进制指令分发
+    auto RunKDefEvent = [&]()
     {
         int offset, len;
         if (num == 0)
@@ -5570,7 +5582,9 @@ void CallEvent(int num)
                 i += instruct_6(e[i + 1], e[i + 2], e[i + 3], e[i + 4]);
                 i += 5;
                 break;
-            case 7: i += 1; goto event_end;
+            case 7:
+                i += 1;
+                return;
             case 8:
                 instruct_8(e[i + 1]);
                 i += 2;
@@ -5602,7 +5616,7 @@ void CallEvent(int num)
             case 15:
                 instruct_15();
                 i += 1;
-                goto event_end;
+                return;
             case 16:
                 i += instruct_16(e[i + 1], e[i + 2], e[i + 3]);
                 i += 4;
@@ -5812,7 +5826,7 @@ void CallEvent(int num)
             case 62:
                 instruct_62(e[i + 1], e[i + 2], e[i + 3], e[i + 4], e[i + 5], e[i + 6]);
                 i += 7;
-                goto event_end;
+                return;
             case 63:
                 instruct_63(e[i + 1], e[i + 2]);
                 i += 3;
@@ -5833,9 +5847,19 @@ void CallEvent(int num)
             default: i += 1; break;
             }
         }
+    };
+
+    auto scriptBuf = std::format("script/event/ka{}.lua", num);
+    std::string scriptFile = AppPath + scriptBuf;
+    if (KDEF_SCRIPT != 0 && filefunc::fileExist(scriptFile))
+    {
+        ExecScript(scriptFile, "");
+    }
+    else
+    {
+        RunKDefEvent();
     }
 
-event_end:
     if (NeedRefreshScene == 1)
     {
         InitialScene(0);
@@ -5904,6 +5928,11 @@ int teleport()
     RecordFreshScreen(0, 0, screen->w, screen->h);
 
     int result = 0;
+    auto FinishTeleport = [&]()
+    {
+        return result;
+    };
+
     while (true)
     {
         // drawtelemap: 绘制场景标记点
@@ -5953,17 +5982,17 @@ int teleport()
         case SDL_EVENT_KEY_UP:
             if (event.key.key == SDLK_ESCAPE)
             {
-                goto teleport_done;
+                return FinishTeleport();
             }
             if (event.key.key == SDLK_RETURN || event.key.key == SDLK_SPACE)
             {
-                goto teleport_done;
+                return FinishTeleport();
             }
             break;
         case SDL_EVENT_MOUSE_BUTTON_UP:
             if (event.button.button == SDL_BUTTON_RIGHT)
             {
-                goto teleport_done;
+                return FinishTeleport();
             }
             if (event.button.button == SDL_BUTTON_LEFT)
             {
@@ -5990,14 +6019,12 @@ int teleport()
                     }
                     event.key.key = 0;
                     event.button.button = 0;
-                    goto teleport_done;
+                    return FinishTeleport();
                 }
             }
             break;
         }
     }
-teleport_done:
-    return result;
 }
 
 int TeleportByList()

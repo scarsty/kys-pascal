@@ -418,7 +418,7 @@ extern int PathCost[480][480];
 inline int16_t ItemList[501] = {};  // 物品显示使用的列表
 
 // 扩展地面
-extern int16_t ExGround[192][192];  // 用来使场景边缘的显示效果改善
+extern int16_t ExGround[64][64];  // 用来使场景边缘的显示效果改善
 inline int ImageWidth = 0, ImageHeight = 0;
 
 // 手柄
@@ -461,8 +461,3 @@ constexpr uint32 GMask = 0xFF00;
 constexpr uint32 BMask = 0xFF;
 constexpr uint32 AMask = 0xFF000000;
 
-// ExGround偏移访问辅助: Pascal中下标为 -64..127, C++中用 [0..191]
-inline int16_t& ExGroundAt(int x, int y)
-{
-    return ExGround[x + 64][y + 64];
-}

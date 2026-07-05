@@ -35,4 +35,4 @@ int16_t liney[480 * 480] = {};
 int PathCost[480][480] = {};
 
 // 扩展地面
-int16_t ExGround[192][192] = {};
+int16_t ExGround[64][64] = {};
