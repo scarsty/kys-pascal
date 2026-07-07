@@ -6,4 +6,9 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
     <StartWorkingDirectory>D:\kys-all\pascal复刻版\all-mod\</StartWorkingDirectory>
   </PropertyGroup>
+  <ItemGroup>
+    <Compile Update="frmconfig.cs">
+      <SubType>Form</SubType>
+    </Compile>
+  </ItemGroup>
 </Project>
