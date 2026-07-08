@@ -48,6 +48,18 @@ static void SaveToggleOptionToIni(const char* section, const char* key, int valu
     ini.saveFile(filename);
 }
 
+static void SaveOptionToIni(const char* section, const char* key, const std::string& value)
+{
+    std::string filename = AppPath + "kysmod.ini";
+    INIReaderNormal ini;
+    if (ini.loadFile(filename) != 0)
+    {
+        return;
+    }
+    ini.setKey(section, key, value);
+    ini.saveFile(filename);
+}
+
 static void SaveSystemToggleSettings()
 {
     SaveToggleOptionToIni("system", "SIMPLE", SIMPLE);
@@ -66,8 +78,71 @@ static void MenuSettings()
     constexpr int settingsMenuX = 133;
     constexpr int settingsMenuY = 30;
     constexpr int settingsMenuW = 260;
-    constexpr int settingsMenuMax = 9;
+    constexpr int settingsMenuMax = 15;
     constexpr int settingsMenuH = settingsMenuMax * 22 + 29;
+
+    auto ClampSetting = [](int value, int minValue, int maxValue)
+    {
+        if (value < minValue)
+        {
+            return minValue;
+        }
+        if (value > maxValue)
+        {
+            return maxValue;
+        }
+        return value;
+    };
+
+    auto SaveIntegerSetting = [&](const char* section, const char* key, int value)
+    {
+        SaveOptionToIni(section, key, std::to_string(value));
+    };
+
+    auto IsNumericSetting = [](int menu)
+    {
+        return menu >= 0 && menu <= 5;
+    };
+
+    auto FormatNumericState = [](int value)
+    {
+        return std::format("<{:3}>", value);
+    };
+
+    auto AdjustNumericSetting = [&](int menu, int delta)
+    {
+        switch (menu)
+        {
+        case 0:
+            WALK_SPEED = ClampSetting(WALK_SPEED + delta, 0, 100);
+            SaveIntegerSetting("system", "WALK_SPEED", WALK_SPEED);
+            return true;
+        case 1:
+            WALK_SPEED2 = ClampSetting(WALK_SPEED2 + delta, 0, 100);
+            SaveIntegerSetting("system", "WALK_SPEED2", WALK_SPEED2);
+            return true;
+        case 2:
+            BATTLE_SPEED = ClampSetting(BATTLE_SPEED + delta, 0, 100);
+            SaveIntegerSetting("system", "BATTLE_SPEED", BATTLE_SPEED);
+            return true;
+        case 3:
+            VOLUME = ClampSetting(VOLUME + delta, 0, 100);
+            SaveIntegerSetting("music", "VOLUME", VOLUME);
+            ApplyAudioVolume();
+            return true;
+        case 4:
+            VOLUMEWAV = ClampSetting(VOLUMEWAV + delta, 0, 100);
+            SaveIntegerSetting("music", "VOLUMEWAV", VOLUMEWAV);
+            ApplyAudioVolume();
+            return true;
+        case 5:
+            EXP_RATE = ClampSetting((int)std::lround(EXP_RATE) + delta, 1, 100);
+            SaveOptionToIni("system", "EXP_RATE", std::to_string((int)std::lround(EXP_RATE)));
+            return true;
+        default:
+            return false;
+        }
+    };
 
     SDL_Surface* settingsBackground = nullptr;
     if (screen)
@@ -98,10 +173,17 @@ static void MenuSettings()
         RestoreSettingsBackground();
         DrawRectangle(screen, settingsMenuX, settingsMenuY, settingsMenuW, settingsMenuMax * 22 + 28, 0, ColColor(0xFF), 50);
 
-        const std::string labels[10] = {
+        const std::string labels[16] = {
+            "地圖延時", "場景延時", "戰鬥延時", "音樂音量", "音效音量", "經驗倍率",
             "簡繁體", "全屏", "半即時", "觸摸行走", "戰鬥顯示血條", "升級屬性固定", "顯示場景名", "WMP四向圖", "擴展地面", "返回"
         };
-        const std::string states[9] = {
+        const std::string states[15] = {
+            FormatNumericState(WALK_SPEED),
+            FormatNumericState(WALK_SPEED2),
+            FormatNumericState(BATTLE_SPEED),
+            FormatNumericState(VOLUME),
+            FormatNumericState(VOLUMEWAV),
+            FormatNumericState((int)std::lround(EXP_RATE)),
             SIMPLE ? "简體" : "繁體",
             FULLSCREEN ? "打開" : "關閉",
             SEMIREAL ? "打開" : "關閉",
@@ -157,6 +239,20 @@ static void MenuSettings()
                 }
                 ShowSettingsMenu(i);
             }
+            if (event.key.key == SDLK_LEFT)
+            {
+                if (AdjustNumericSetting(i, -1))
+                {
+                    ShowSettingsMenu(i);
+                }
+            }
+            if (event.key.key == SDLK_RIGHT)
+            {
+                if (AdjustNumericSetting(i, 1))
+                {
+                    ShowSettingsMenu(i);
+                }
+            }
             break;
         case SDL_EVENT_KEY_UP:
             if (event.key.key == SDLK_ESCAPE)
@@ -196,6 +292,25 @@ static void MenuSettings()
                         i = settingsMenuMax;
                     }
                     ShowSettingsMenu(i);
+                    if (IsNumericSetting(i))
+                    {
+                        int numericTextLength = 5;
+                        int stateX = settingsMenuX + settingsMenuW - 10 - numericTextLength * 10;
+                        if (emx >= stateX && emx < stateX + 10)
+                        {
+                            AdjustNumericSetting(i, -1);
+                            ShowSettingsMenu(i);
+                            continue;
+                        }
+                        int rightBracketX = stateX + (numericTextLength - 1) * 10;
+                        if (emx >= rightBracketX && emx < rightBracketX + 10)
+                        {
+                            AdjustNumericSetting(i, 1);
+                            ShowSettingsMenu(i);
+                            continue;
+                        }
+                        break;
+                    }
                     activate = true;
                 }
                 break;
@@ -245,34 +360,41 @@ static void MenuSettings()
         switch (i)
         {
         case 0:
+        case 1:
+        case 2:
+        case 3:
+        case 4:
+        case 5:
+            break;
+        case 6:
             SIMPLE = 1 - SIMPLE;
             SaveSystemToggleSettings();
             break;
-        case 1:
+        case 7:
             SwitchFullscreen();
             SaveSystemToggleSettings();
             break;
-        case 2:
+        case 8:
             SEMIREAL = 1 - SEMIREAL;
             SaveSystemToggleSettings();
             break;
-        case 3:
+        case 9:
             TouchWalk = 1 - TouchWalk;
             SaveSystemToggleSettings();
             break;
-        case 4:
+        case 10:
             SHOW_BATTLE_HP = 1 - SHOW_BATTLE_HP;
             SaveSystemToggleSettings();
             break;
-        case 5:
+        case 11:
             MAX_ADD_PRO = 1 - MAX_ADD_PRO;
             SaveSystemToggleSettings();
             break;
-        case 6:
+        case 12:
             SHOW_SUBSCENE_NAME = 1 - SHOW_SUBSCENE_NAME;
             SaveSystemToggleSettings();
             break;
-        case 7:
+        case 13:
             WMP_4_PIC = 1 - WMP_4_PIC;
             SaveSystemToggleSettings();
             if (Where == 2)
@@ -280,7 +402,7 @@ static void MenuSettings()
                 Redraw();
             }
             break;
-        case 8:
+        case 14:
             EXPAND_GROUND = 1 - EXPAND_GROUND;
             SaveSystemToggleSettings();
             if (Where == 1)
@@ -293,7 +415,7 @@ static void MenuSettings()
             }
             Redraw();
             break;
-        case 9:
+        case 15:
             i = -1;
             break;
         }

@@ -7,6 +7,7 @@
 
 // 音频
 void InitialMusic();
+void ApplyAudioVolume();
 void PlayMP3(int MusicNum, int times, int frombeginning = 1);
 void PlayMP3(const char* filename, int times);
 void StopMP3(int frombeginning = 1);

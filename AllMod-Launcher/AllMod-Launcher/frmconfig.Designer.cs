@@ -559,7 +559,7 @@
             // 
             // frmconfig
             // 
-            AutoScaleDimensions = new System.Drawing.SizeF(13F, 28F);
+            AutoScaleDimensions = new System.Drawing.SizeF(9F, 17F);
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             ClientSize = new System.Drawing.Size(1432, 767);
             Controls.Add(comboGames);
@@ -569,6 +569,7 @@
             Controls.Add(groupBox3);
             Controls.Add(groupBox2);
             Controls.Add(groupBox1);
+            Font = new System.Drawing.Font("Microsoft YaHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, 134);
             FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
             MaximizeBox = false;

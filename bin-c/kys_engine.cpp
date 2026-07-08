@@ -198,6 +198,21 @@ void InitialMusic()
     }
 }
 
+void ApplyAudioVolume()
+{
+    if (MusicTrack)
+    {
+        MIX_SetTrackGain(MusicTrack, (float)VOLUME / 100.0f);
+    }
+    for (MIX_Track* track : SfxTracks)
+    {
+        if (track)
+        {
+            MIX_SetTrackGain(track, (float)VOLUMEWAV / 100.0f);
+        }
+    }
+}
+
 void PlayMP3(int MusicNum, int times, int frombeginning)
 {
     if (!gMixer)
