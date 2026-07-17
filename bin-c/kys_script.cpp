@@ -44,11 +44,276 @@ long long lua_tointeger_custom(lua_State* L, int pos)
 
 // ---- Lua函数实现 ----
 
+// ---- 初始化/销毁 ----
+
+void InitialScript()
+{
+    Lua_script = luaL_newstate();
+    luaL_openlibs(Lua_script);
+
+    auto R = [](const char* name, lua_CFunction f)
+    {
+        lua_register(Lua_script, name, f);
+    };
+
+    R("pause", Lua_Pause);
+    R("getmouseposition", Lua_GetMousePosition);
+    R("clearbutton", Lua_ClearButton);
+    R("checkbutton", Lua_CheckButton);
+    R("getbutton", Lua_GetButton);
+    R("gettime", Lua_GetTime);
+    R("execevent", Lua_ExecEvent);
+    R("clear", Lua_Clear);
+    R("talk", Lua_Talk);
+    R("getitem", Lua_GetItem);
+    R("additem", Lua_AddItem);
+    R("showstring", Lua_ShowString);
+    R("showstringwithbox", Lua_ShowStringWithBox);
+    R("menu", Lua_Menu);
+    R("askyesorno", Lua_AskYesOrNo);
+    R("modifyevent", Lua_ModifyEvent);
+    R("useitem", Lua_UseItem);
+    R("haveitem", Lua_HaveItemBool);
+    R("anothergetitem", Lua_AnotherGetItem);
+    R("compareprointeam", Lua_CompareProInTeam);
+    R("allleave", Lua_AllLeave);
+    R("askbattle", Lua_AskBattle);
+    R("trybattle", Lua_TryBattle);
+    R("askjoin", Lua_AskJoin);
+    R("join", Lua_Join);
+    R("askrest", Lua_AskRest);
+    R("rest", Lua_Rest);
+    R("lightscene", Lua_LightScene);
+    R("darkscene", Lua_DarkScene);
+    R("dead", Lua_Dead);
+    R("inteam", Lua_InTeam);
+    R("teamisfull", Lua_TeamIsFull);
+    R("leaveteam", Lua_LeaveTeam);
+    R("learnmagic", Lua_LearnMagic);
+    R("getmainmapposition", Lua_GetMainMapPosition);
+    R("setmainmapposition", Lua_SetMainMapPosition);
+    R("getsceneposition", Lua_GetScenePosition);
+    R("setsceneposition", Lua_SetScenePosition);
+    R("getsceneface", Lua_GetSceneFace);
+    R("setsceneface", Lua_SetSceneFace);
+    R("delay", Lua_Delay);
+    R("drawrect", Lua_DrawRect);
+    R("memberamount", Lua_MemberAmount);
+    R("getmember", Lua_GetMember);
+    R("setmember", Lua_SetMember);
+    R("judgesceneevent", Lua_JudgeSceneEvent);
+    R("playmusic", Lua_PlayMusic);
+    R("playwave", Lua_PlayWave);
+    R("walkfromto", Lua_WalkFromTo);
+    R("scenefromto", Lua_SceneFromTo);
+    R("playanimation", Lua_PlayAnimation);
+    R("getnameasstring", Lua_GetNameAsString);
+    R("changescene", Lua_ChangeScene);
+    R("showpicture", Lua_ShowPicture);
+    R("getitemlist", Lua_GetItemList);
+    R("getcurrentscene", Lua_GetCurrentScene);
+    R("getcurrentevent", Lua_GetCurrentEvent);
+    R("getbattlenumber", Lua_GetBattleNumber);
+    R("selectoneaim", Lua_SelectOneAim);
+    R("getbattlerolepro", Lua_GetBattleRolePro);
+    R("playaction", Lua_PlayAction);
+    R("playhurtvalue", Lua_PlayHurtValue);
+    R("setaminationlayer", Lua_SetAminationLayer);
+    R("clearrolefrombattle", Lua_ClearRoleFromBattle);
+    R("addroleintobattle", Lua_AddRoleIntoBattle);
+    R("forcebattleresult", Lua_ForceBattleResult);
+    R("changemmapmusic", Lua_ChangeMMapMusic);
+    R("asksoftstar", Lua_AskSoftStar);
+    R("showethics", Lua_ShowEthics);
+    R("showrepute", Lua_ShowRepute);
+    R("openallscene", Lua_OpenAllScene);
+
+    // instruct_N 别名
+    R("instruct_0", Lua_Clear);
+    R("instruct_1", Lua_OldTalk);
+    R("instruct_2", Lua_GetItem);
+    R("instruct_3", Lua_ModifyEvent);
+    R("instruct_4", Lua_UseItem);
+    R("instruct_5", Lua_AskBattle);
+    R("instruct_6", Lua_TryBattle);
+    R("instruct_7", Lua_Blank);
+    R("instruct_8", Lua_ChangeMMapMusic);
+    R("instruct_9", Lua_AskJoin);
+    R("instruct_10", Lua_Join);
+    R("instruct_11", Lua_AskRest);
+    R("instruct_12", Lua_Rest);
+    R("instruct_13", Lua_LightScene);
+    R("instruct_14", Lua_DarkScene);
+    R("instruct_15", Lua_Dead);
+    R("instruct_16", Lua_InTeam);
+    R("instruct_17", Lua_OldSetSceneMapPro);
+    R("instruct_18", Lua_HaveItemBool);
+    R("instruct_19", Lua_OldSetScenePosition);
+    R("instruct_20", Lua_TeamIsFull);
+    R("instruct_21", Lua_LeaveTeam);
+    R("instruct_22", Lua_ZeroAllMP);
+    R("zeroallmp", Lua_ZeroAllMP);
+    R("instruct_23", Lua_SetOneUsePoi);
+    R("instruct_24", Lua_Blank);
+    R("instruct_25", Lua_SceneFromTo);
+    R("instruct_26", Lua_Add3EventNum);
+    R("add3eventnum", Lua_Add3EventNum);
+    R("instruct_27", Lua_PlayAnimation);
+    R("instruct_28", Lua_JudgeEthics);
+    R("instruct_29", Lua_JudgeAttack);
+    R("instruct_30", Lua_WalkFromTo);
+    R("instruct_31", Lua_JudgeMoney);
+    R("instruct_32", Lua_AddItem);
+    R("instruct_33", Lua_OldLearnMagic);
+    R("instruct_34", Lua_AddAptitude);
+    R("instruct_35", Lua_SetOneMagic);
+    R("instruct_36", Lua_JudgeSexual);
+    R("instruct_37", Lua_AddEthics);
+    R("instruct_38", Lua_ChangeScenePic);
+    R("instruct_39", Lua_OpenScene);
+    R("instruct_40", Lua_SetRoleFace);
+    R("setroleface", Lua_SetRoleFace);
+    R("instruct_41", Lua_AnotherGetItem);
+    R("instruct_42", Lua_JudgeFemaleInTeam);
+    R("instruct_43", Lua_HaveItemBool);
+    R("instruct_44", Lua_Play2Animation);
+    R("instruct_45", Lua_AddSpeed);
+    R("addspeed", Lua_AddSpeed);
+    R("instruct_46", Lua_AddMP);
+    R("instruct_47", Lua_AddAttack);
+    R("addattack", Lua_AddAttack);
+    R("instruct_48", Lua_AddHP);
+    R("instruct_49", Lua_SetMPPro);
+    R("instruct_50", Lua_Judge5Item);
+    R("instruct_51", Lua_AskSoftStar);
+    R("instruct_52", Lua_ShowEthics);
+    R("instruct_53", Lua_ShowRepute);
+    R("instruct_54", Lua_OpenAllScene);
+    R("instruct_55", Lua_JudgeEventNum);
+    R("instruct_56", Lua_AddRepute);
+    R("instruct_57", Lua_BreakStoneGate);
+    R("instruct_58", Lua_FightForTop);
+    R("instruct_59", Lua_AllLeave);
+    R("instruct_60", Lua_JudgeScenePic);
+    R("instruct_61", Lua_Judge14BooksPlaced);
+    R("instruct_62", Lua_BackHome);
+    R("instruct_63", Lua_SetSexual);
+    R("instruct_64", Lua_WeiShop);
+    R("instruct_65", Lua_Blank);
+    R("instruct_66", Lua_PlayMusic);
+    R("instruct_67", Lua_PlayWave);
+
+    R("eatoneitem", Lua_EatOneItem);
+    R("selectoneteammember", Lua_SelectOneTeamMember);
+    R("setteam", Lua_SetTeam);
+    R("getteam", Lua_GetTeam);
+    R("read_mem", Lua_ReadMem);
+    R("write_mem", Lua_WriteMem);
+    R("getrolename", Lua_GetRoleName);
+    R("getitemname", Lua_GetItemName);
+    R("getmagicname", Lua_GetMagicName);
+    R("getsubmapname", Lua_GetSubMapName);
+    R("drawlength", Lua_DrawLengthS);
+    R("getkey", Lua_GetKey);
+
+    // pig3同步：set*/get* pro别名
+    R("getrolepro", Lua_GetRolePro);
+    R("setrolepro", Lua_SetRolePro);
+    R("getitempro", Lua_GetItemPro);
+    R("setitempro", Lua_SetItemPro);
+    R("getmagicpro", Lua_GetMagicPro);
+    R("setmagicpro", Lua_SetMagicPro);
+    R("getscenepro", Lua_GetScenePro);
+    R("setscenepro", Lua_SetScenePro);
+    R("getscenemappro", Lua_GetSceneMapPro);
+    R("setscenemappro", Lua_SetSceneMapPro);
+    R("getsceneeventpro", Lua_GetSceneEventPro);
+    R("setsceneeventpro", Lua_SetSceneEventPro);
+    R("setbattlerolepro", Lua_SetBattleRolePro);
+
+    // pig3同步：新增函数
+    R("getglobalvalue", Lua_GetGlobalValue);
+    R("setglobalvalue", Lua_SetGlobalValue);
+    R("getx50", Lua_GetX50);
+    R("setx50", Lua_SetX50);
+    R("showtitle", Lua_ShowTitle);
+    R("readtalkasstring", Lua_ReadTalkAsString);
+    R("checkjumpflag", Lua_CheckJumpFlag);
+    R("exit", Lua_ExitScript);
+    R("colcolor", Lua_ColColor);
+    R("showsimplestatus", Lua_ShowSimpleStatus);
+    R("updateallscreen", Lua_UpdateAllScreen);
+    R("setitemintro", Lua_SetItemIntro);
+    R("showstatus", Lua_ShowStatus);
+    R("setnameasstring", Lua_SetNameAsString);
+    R("setattribute", Lua_SetAttribute);
+    R("enternumber", Lua_EnterNumber);
+    R("haveitemamount", Lua_HaveItemAmount);
+    R("getscreensize", Lua_GetScreenSize);
+    R("endamination", Lua_BackHome);
+    R("npcgetitem", Lua_AnotherGetItem);
+    R("leave", Lua_LeaveTeam);
+    R("learnmagic2", Lua_OldLearnMagic);
+
+    ExecScriptString("x={}; for i=0,30000 do x[i]=0; end;", "");
+}
+
+void DestroyScript()
+{
+    lua_close(Lua_script);
+}
+
+int ExecScript(const std::string& filename, const std::string& functionname)
+{
+    std::string script = filefunc::readFileToString(filename);
+    if (script.empty())
+    {
+        return 0;
+    }
+    return ExecScriptString(script, functionname);
+}
+
+int ExecScriptString(const std::string& script_in, const std::string& functionname)
+{
+    std::string script = script_in;
+    // 去BOM
+    if (script.size() >= 3 && (uint8_t)script[0] == 0xEF && (uint8_t)script[1] == 0xBB && (uint8_t)script[2] == 0xBF)
+    {
+        script[0] = ' ';
+        script[1] = ' ';
+        script[2] = ' ';
+    }
+    // 转小写
+    std::transform(script.begin(), script.end(), script.begin(), [](unsigned char c)
+        {
+            return std::tolower(c);
+        });
+
+    int result = luaL_loadbuffer(Lua_script, script.c_str(), script.size(), "code");
+    if (result == 0)
+    {
+        result = lua_pcall(Lua_script, 0, 0, 0);
+        if (!functionname.empty())
+        {
+            lua_getglobal(Lua_script, functionname.c_str());
+            result = lua_pcall(Lua_script, 0, 1, 0);
+        }
+    }
+    if (result != 0)
+    {
+        kyslog(lua_tostring(Lua_script, -1));
+        lua_pop(Lua_script, 1);
+    }
+    return result;
+}
+
+
+
 int Lua_Blank(lua_State* L) { return 0; }
 
 int Lua_Pause(lua_State* L)
 {
-    lua_pushnumber(L, WaitAnyKey());
+    lua_pushinteger(L, WaitAnyKey());
     return 1;
 }
 
@@ -57,8 +322,8 @@ int Lua_GetMousePosition(lua_State* L)
     SDL_PollEvent(&event);
     float fx, fy;
     SDL_GetMouseState(&fx, &fy);
-    lua_pushnumber(L, (int)fx);
-    lua_pushnumber(L, (int)fy);
+    lua_pushinteger(L, (int)fx);
+    lua_pushinteger(L, (int)fy);
     return 2;
 }
 
@@ -72,21 +337,21 @@ int Lua_ClearButton(lua_State* L)
 int Lua_CheckButton(lua_State* L)
 {
     SDL_PollEvent(&event);
-    lua_pushnumber(L, (event.button.button > 0) ? 1 : 0);
+    lua_pushinteger(L, (event.button.button > 0) ? 1 : 0);
     SDL_Delay(10);
     return 1;
 }
 
 int Lua_GetButton(lua_State* L)
 {
-    lua_pushnumber(L, event.key.key);
-    lua_pushnumber(L, event.button.button);
+    lua_pushinteger(L, event.key.key);
+    lua_pushinteger(L, event.button.button);
     return 2;
 }
 
 int Lua_GetTime(lua_State* L)
 {
-    lua_pushnumber(L, (int)(SDL_GetTicks() / 1000));
+    lua_pushinteger(L, (int)(SDL_GetTicks() / 1000));
     return 1;
 }
 
@@ -99,12 +364,6 @@ int Lua_ExecEvent(lua_State* L)
         x50[0x7100 + i] = LI(-n + 1 + i);
     }
     CallEvent(e);
-    return 0;
-}
-
-int Lua_CallEvent_s(lua_State* L)
-{
-    CallEvent(LI(-1));
     return 0;
 }
 
@@ -214,7 +473,7 @@ int Lua_AskYesOrNo(lua_State* L)
 {
     std::string ms[3] = { " 否", " 是", "" };
     int y = LI(-2), x = LI(-1);
-    lua_pushnumber(L, CommonMenu2(x, y, 78, ms));
+    lua_pushinteger(L, CommonMenu2(x, y, 78, ms));
     return 1;
 }
 
@@ -257,21 +516,6 @@ int Lua_UseItem(lua_State* L)
     return 1;
 }
 
-int Lua_HaveItem(lua_State* L)
-{
-    int inum = LI(-1), n = 0;
-    for (int i = 0; i < MAX_ITEM_AMOUNT; i++)
-    {
-        if (RItemList[i].Number == inum)
-        {
-            n = RItemList[i].Amount;
-            break;
-        }
-    }
-    lua_pushnumber(L, n);
-    return 1;
-}
-
 int Lua_HaveItemBool(lua_State* L)
 {
     int n = lua_gettop(L);
@@ -295,7 +539,7 @@ int Lua_CompareProInTeam(lua_State* L)
             n++;
         }
     }
-    lua_pushnumber(L, n);
+    lua_pushinteger(L, n);
     return 1;
 }
 
@@ -407,8 +651,8 @@ int Lua_OldLearnMagic(lua_State* L)
 
 int Lua_GetMainMapPosition(lua_State* L)
 {
-    lua_pushnumber(L, My);
-    lua_pushnumber(L, Mx);
+    lua_pushinteger(L, My);
+    lua_pushinteger(L, Mx);
     return 2;
 }
 
@@ -421,8 +665,8 @@ int Lua_SetMainMapPosition(lua_State* L)
 
 int Lua_GetScenePosition(lua_State* L)
 {
-    lua_pushnumber(L, Sy);
-    lua_pushnumber(L, Sx);
+    lua_pushinteger(L, Sy);
+    lua_pushinteger(L, Sx);
     return 2;
 }
 
@@ -441,7 +685,7 @@ int Lua_OldSetScenePosition(lua_State* L)
 
 int Lua_GetSceneFace(lua_State* L)
 {
-    lua_pushnumber(L, SFace);
+    lua_pushinteger(L, SFace);
     return 1;
 }
 
@@ -490,18 +734,18 @@ int Lua_MemberAmount(lua_State* L)
             n++;
         }
     }
-    lua_pushnumber(L, n);
+    lua_pushinteger(L, n);
     return 1;
 }
 
 int Lua_GetMember(lua_State* L)
 {
     int n = LI(-1);
-    lua_pushnumber(L, (n >= 0 && n <= 5) ? TeamList[n] : 0);
+    lua_pushinteger(L, (n >= 0 && n <= 5) ? TeamList[n] : 0);
     return 1;
 }
 
-int Lua_PutMember(lua_State* L)
+int Lua_SetMember(lua_State* L)
 {
     TeamList[LI(-1)] = LI(-2);
     return 0;
@@ -509,11 +753,11 @@ int Lua_PutMember(lua_State* L)
 
 int Lua_GetRolePro(lua_State* L)
 {
-    lua_pushnumber(L, Rrole[LI(-2)].Data[LI(-1)]);
+    lua_pushinteger(L, Rrole[LI(-2)].Data[LI(-1)]);
     return 1;
 }
 
-int Lua_PutRolePro(lua_State* L)
+int Lua_SetRolePro(lua_State* L)
 {
     Rrole[LI(-3)].Data[LI(-2)] = LI(-1);
     return 0;
@@ -521,11 +765,11 @@ int Lua_PutRolePro(lua_State* L)
 
 int Lua_GetItemPro(lua_State* L)
 {
-    lua_pushnumber(L, Ritem[LI(-2)].Data[LI(-1)]);
+    lua_pushinteger(L, Ritem[LI(-2)].Data[LI(-1)]);
     return 1;
 }
 
-int Lua_PutItemPro(lua_State* L)
+int Lua_SetItemPro(lua_State* L)
 {
     Ritem[LI(-3)].Data[LI(-2)] = LI(-1);
     return 0;
@@ -533,11 +777,11 @@ int Lua_PutItemPro(lua_State* L)
 
 int Lua_GetMagicPro(lua_State* L)
 {
-    lua_pushnumber(L, Rmagic[LI(-2)].Data[LI(-1)]);
+    lua_pushinteger(L, Rmagic[LI(-2)].Data[LI(-1)]);
     return 1;
 }
 
-int Lua_PutMagicPro(lua_State* L)
+int Lua_SetMagicPro(lua_State* L)
 {
     Rmagic[LI(-3)].Data[LI(-2)] = LI(-1);
     return 0;
@@ -545,11 +789,11 @@ int Lua_PutMagicPro(lua_State* L)
 
 int Lua_GetScenePro(lua_State* L)
 {
-    lua_pushnumber(L, Rscene[LI(-2)].Data[LI(-1)]);
+    lua_pushinteger(L, Rscene[LI(-2)].Data[LI(-1)]);
     return 1;
 }
 
-int Lua_PutScenePro(lua_State* L)
+int Lua_SetScenePro(lua_State* L)
 {
     Rscene[LI(-3)].Data[LI(-2)] = LI(-1);
     return 0;
@@ -557,17 +801,17 @@ int Lua_PutScenePro(lua_State* L)
 
 int Lua_GetSceneMapPro(lua_State* L)
 {
-    lua_pushnumber(L, SData[LI(-4)][LI(-3)][LI(-2)][LI(-1)]);
+    lua_pushinteger(L, SData[LI(-4)][LI(-3)][LI(-2)][LI(-1)]);
     return 1;
 }
 
-int Lua_PutSceneMapPro(lua_State* L)
+int Lua_SetSceneMapPro(lua_State* L)
 {
     SData[LI(-5)][LI(-4)][LI(-3)][LI(2)] = LI(-1);
     return 0;
 }
 
-int Lua_OldPutSceneMapPro(lua_State* L)
+int Lua_OldSetSceneMapPro(lua_State* L)
 {
     std::vector<int> list(5);
     for (int i = 0; i < 5; i++)
@@ -580,11 +824,11 @@ int Lua_OldPutSceneMapPro(lua_State* L)
 
 int Lua_GetSceneEventPro(lua_State* L)
 {
-    lua_pushnumber(L, DData[LI(-3)][LI(-2)][LI(-1)]);
+    lua_pushinteger(L, DData[LI(-3)][LI(-2)][LI(-1)]);
     return 1;
 }
 
-int Lua_PutSceneEventPro(lua_State* L)
+int Lua_SetSceneEventPro(lua_State* L)
 {
     DData[LI(-4)][LI(-3)][LI(-2)] = LI(-1);
     return 0;
@@ -593,7 +837,7 @@ int Lua_PutSceneEventPro(lua_State* L)
 int Lua_JudgeSceneEvent(lua_State* L)
 {
     int t = (DData[CurScene][LI(-3)][2 + LI(-2)] == LI(-1)) ? 1 : 0;
-    lua_pushnumber(L, t);
+    lua_pushinteger(L, t);
     return 1;
 }
 
@@ -695,19 +939,19 @@ int Lua_ShowPicture(lua_State* L)
 int Lua_GetItemList(lua_State* L)
 {
     int i = LI(-1);
-    lua_pushnumber(L, RItemList[i].Number);
-    lua_pushnumber(L, RItemList[i].Amount);
+    lua_pushinteger(L, RItemList[i].Number);
+    lua_pushinteger(L, RItemList[i].Amount);
     return 2;
 }
 
 int Lua_GetCurrentScene(lua_State* L)
 {
-    lua_pushnumber(L, CurScene);
+    lua_pushinteger(L, CurScene);
     return 1;
 }
 int Lua_GetCurrentEvent(lua_State* L)
 {
-    lua_pushnumber(L, CurEvent);
+    lua_pushinteger(L, CurEvent);
     return 1;
 }
 
@@ -716,7 +960,7 @@ int Lua_GetBattleNumber(lua_State* L)
     int n = lua_gettop(L);
     if (n == 0)
     {
-        lua_pushnumber(L, x50[28005]);
+        lua_pushinteger(L, x50[28005]);
     }
     if (n == 1)
     {
@@ -729,7 +973,7 @@ int Lua_GetBattleNumber(lua_State* L)
                 break;
             }
         }
-        lua_pushnumber(L, t);
+        lua_pushinteger(L, t);
     }
     return 1;
 }
@@ -740,17 +984,17 @@ int Lua_SelectOneAim(lua_State* L)
     {
         SelectAim(LI(-3), LI(-2));
     }
-    lua_pushnumber(L, BField[2][Ax][Ay]);
+    lua_pushinteger(L, BField[2][Ax][Ay]);
     return 1;
 }
 
 int Lua_GetBattleRolePro(lua_State* L)
 {
-    lua_pushnumber(L, Brole[LI(-2)].Data[LI(-1)]);
+    lua_pushinteger(L, Brole[LI(-2)].Data[LI(-1)]);
     return 1;
 }
 
-int Lua_PutBattleRolePro(lua_State* L)
+int Lua_SetBattleRolePro(lua_State* L)
 {
     Brole[LI(-2)].Data[LI(-1)] = LI(-3);
     return 0;
@@ -803,7 +1047,7 @@ int Lua_AddRoleIntoBattle(lua_State* L)
     Brole[bnum].Acted = 1;
     Brole[bnum].ShowNumber = -1;
     Brole[bnum].ExpGot = 0;
-    lua_pushnumber(L, bnum);
+    lua_pushinteger(L, bnum);
     return 1;
 }
 
@@ -931,7 +1175,7 @@ int Lua_JudgeFemaleInTeam(lua_State* L)
     return 1;
 }
 
-int Lua_Play2Amination(lua_State* L)
+int Lua_Play2Animation(lua_State* L)
 {
     instruct_44(LI(-6), LI(-5), LI(-4), LI(-3), LI(-2), LI(-1));
     return 0;
@@ -1011,7 +1255,7 @@ int Lua_BackHome(lua_State* L)
     return 0;
 }
 
-int Lua_EatOneItemScript(lua_State* L)
+int Lua_EatOneItem(lua_State* L)
 {
     int n = lua_gettop(L);
     if (n == 2)
@@ -1021,33 +1265,33 @@ int Lua_EatOneItemScript(lua_State* L)
     return 0;
 }
 
-int Lua_SelectOneTeamMemberScript(lua_State* L)
+int Lua_SelectOneTeamMember(lua_State* L)
 {
     const char* s = lua_tostring(L, -3);
-    lua_pushnumber(L, SelectOneTeamMember(0, 0, s ? s : "", LI(-2), LI(-1)));
+    lua_pushinteger(L, SelectOneTeamMember(0, 0, s ? s : "", LI(-2), LI(-1)));
     return 1;
 }
 
-int Lua_setteam(lua_State* L)
+int Lua_SetTeam(lua_State* L)
 {
     TeamList[LI(-2)] = LI(-1);
     return 0;
 }
-int Lua_getteam(lua_State* L)
+int Lua_GetTeam(lua_State* L)
 {
-    lua_pushnumber(L, TeamList[LI(-1)]);
+    lua_pushinteger(L, TeamList[LI(-1)]);
     return 1;
 }
 
-int Lua_readmem(lua_State* L)
+int Lua_ReadMem(lua_State* L)
 {
     int x = LI(-1);
     instruct_50e(26, 0, 0, x % 65536, x / 65536, 9999, 0);
-    lua_pushnumber(L, x50[9999]);
+    lua_pushinteger(L, x50[9999]);
     return 1;
 }
 
-int Lua_writemem(lua_State* L)
+int Lua_WriteMem(lua_State* L)
 {
     int x = LI(-2);
     x50[9999] = LI(-1);
@@ -1055,48 +1299,40 @@ int Lua_writemem(lua_State* L)
     return 0;
 }
 
-int Lua_getrolename(lua_State* L)
+int Lua_GetRoleName(lua_State* L)
 {
     lua_pushstring(L, cp950toutf8(Rrole[LI(-1)].Name).c_str());
     return 1;
 }
 
-int Lua_getitemname(lua_State* L)
+int Lua_GetItemName(lua_State* L)
 {
     lua_pushstring(L, cp950toutf8(Ritem[LI(-1)].Name).c_str());
     return 1;
 }
 
-int Lua_getmagicname(lua_State* L)
+int Lua_GetMagicName(lua_State* L)
 {
     lua_pushstring(L, cp950toutf8(Rmagic[LI(-1)].Name).c_str());
     return 1;
 }
 
-int Lua_getsubmapname(lua_State* L)
+int Lua_GetSubMapName(lua_State* L)
 {
     lua_pushstring(L, cp950toutf8(Rscene[LI(-1)].Name).c_str());
     return 1;
 }
 
-int Lua_drawlength_s(lua_State* L)
+int Lua_DrawLengthS(lua_State* L)
 {
     const char* s = lua_tostring(L, -1);
     lua_pushinteger(L, DrawLength(s ? s : ""));
     return 1;
 }
 
-int Lua_getkey(lua_State* L)
+int Lua_GetKey(lua_State* L)
 {
     lua_pushinteger(L, WaitAnyKey());
-    return 1;
-}
-
-int Lua_gettalk(lua_State* L)
-{
-    int talknum = LI(-1);
-    std::string str = ReadTalk(talknum);
-    lua_pushstring(L, str.c_str());
     return 1;
 }
 
@@ -1276,330 +1512,4 @@ int Lua_GetScreenSize(lua_State* L)
     lua_pushinteger(L, CENTER_X * 2);
     lua_pushinteger(L, CENTER_Y * 2);
     return 2;
-}
-
-// ---- 初始化/销毁 ----
-
-void InitialScript()
-{
-    Lua_script = luaL_newstate();
-    luaL_openlibs(Lua_script);
-
-    auto R = [](const char* name, lua_CFunction f)
-    {
-        lua_register(Lua_script, name, f);
-    };
-
-    R("pause", Lua_Pause);
-    R("getmouseposition", Lua_GetMousePosition);
-    R("clearbutton", Lua_ClearButton);
-    R("checkbutton", Lua_CheckButton);
-    R("getbutton", Lua_GetButton);
-    R("gettime", Lua_GetTime);
-    R("execevent", Lua_ExecEvent);
-    R("callevent", Lua_CallEvent_s);
-    R("clear", Lua_Clear);
-    R("talk", Lua_Talk);
-    R("getitem", Lua_GetItem);
-    R("additem", Lua_GetItem);
-    R("showstring", Lua_ShowString);
-    R("drawstring", Lua_ShowString);
-    R("showstringwithbox", Lua_ShowStringWithBox);
-    R("showmessage", Lua_ShowStringWithBox);
-    R("menu", Lua_Menu);
-    R("askyesorno", Lua_AskYesOrNo);
-    R("modifyevent", Lua_ModifyEvent);
-    R("useitem", Lua_UseItem);
-    R("haveitem", Lua_HaveItem);
-    R("haveitembool", Lua_HaveItemBool);
-    R("anothergetitem", Lua_AnotherGetItem);
-    R("compareprointeam", Lua_CompareProInTeam);
-    R("allleave", Lua_AllLeave);
-    R("askbattle", Lua_AskBattle);
-    R("trybattle", Lua_TryBattle);
-    R("askjoin", Lua_AskJoin);
-    R("join", Lua_Join);
-    R("askrest", Lua_AskRest);
-    R("rest", Lua_Rest);
-    R("lightscene", Lua_LightScene);
-    R("darkscene", Lua_DarkScene);
-    R("dead", Lua_Dead);
-    R("inteam", Lua_InTeam);
-    R("teamisfull", Lua_TeamIsFull);
-    R("leaveteam", Lua_LeaveTeam);
-    R("learnmagic", Lua_LearnMagic);
-    R("getmainmapposition", Lua_GetMainMapPosition);
-    R("setmainmapposition", Lua_SetMainMapPosition);
-    R("getsceneposition", Lua_GetScenePosition);
-    R("setsceneposition", Lua_SetScenePosition);
-    R("getsceneface", Lua_GetSceneFace);
-    R("setsceneface", Lua_SetSceneFace);
-    R("delay", Lua_Delay);
-    R("lib.delay", Lua_Delay);
-    R("drawrect", Lua_DrawRect);
-    R("memberamount", Lua_MemberAmount);
-    R("getmember", Lua_GetMember);
-    R("setmember", Lua_PutMember);
-    R("getrole", Lua_GetRolePro);
-    R("setrole", Lua_PutRolePro);
-    R("getitem", Lua_GetItemPro);
-    R("setitem", Lua_PutItemPro);
-    R("getmagic", Lua_GetMagicPro);
-    R("setmagic", Lua_PutMagicPro);
-    R("getsubmapinfo", Lua_GetScenePro);
-    R("setsubmapinfo", Lua_PutScenePro);
-    R("gets", Lua_GetSceneMapPro);
-    R("sets", Lua_PutSceneMapPro);
-    R("getd", Lua_GetSceneEventPro);
-    R("setd", Lua_PutSceneEventPro);
-    R("judgesceneevent", Lua_JudgeSceneEvent);
-    R("playmusic", Lua_PlayMusic);
-    R("playwave", Lua_PlayWave);
-    R("walkfromto", Lua_WalkFromTo);
-    R("scenefromto", Lua_SceneFromTo);
-    R("playanimation", Lua_PlayAnimation);
-    R("getnameasstring", Lua_GetNameAsString);
-    R("changescene", Lua_ChangeScene);
-    R("showpicture", Lua_ShowPicture);
-    R("getitemlist", Lua_GetItemList);
-    R("getcurrentscene", Lua_GetCurrentScene);
-    R("getcurrentevent", Lua_GetCurrentEvent);
-    R("getbattlenumber", Lua_GetBattleNumber);
-    R("selectoneaim", Lua_SelectOneAim);
-    R("getbattlerolepro", Lua_GetBattleRolePro);
-    R("putbattlerolepro", Lua_PutBattleRolePro);
-    R("playaction", Lua_PlayAction);
-    R("playhurtvalue", Lua_PlayHurtValue);
-    R("setaminationlayer", Lua_SetAminationLayer);
-    R("clearrolefrombattle", Lua_ClearRoleFromBattle);
-    R("addroleintobattle", Lua_AddRoleIntoBattle);
-    R("forcebattleresult", Lua_ForceBattleResult);
-    R("changemmapmusic", Lua_ChangeMMapMusic);
-    R("changemainmapmusic", Lua_ChangeMMapMusic);
-    R("asksoftstar", Lua_AskSoftStar);
-    R("showethics", Lua_ShowEthics);
-    R("showrepute", Lua_ShowRepute);
-    R("openallscene", Lua_OpenAllScene);
-
-    // instruct_N 别名
-    R("instruct_0", Lua_Clear);
-    R("instruct_1", Lua_OldTalk);
-    R("instruct_2", Lua_GetItem);
-    R("instruct_3", Lua_ModifyEvent);
-    R("instruct_4", Lua_UseItem);
-    R("instruct_5", Lua_AskBattle);
-    R("instruct_6", Lua_TryBattle);
-    R("instruct_7", Lua_Blank);
-    R("instruct_8", Lua_ChangeMMapMusic);
-    R("instruct_9", Lua_AskJoin);
-    R("instruct_10", Lua_Join);
-    R("instruct_11", Lua_AskRest);
-    R("instruct_12", Lua_Rest);
-    R("instruct_13", Lua_LightScene);
-    R("instruct_14", Lua_DarkScene);
-    R("instruct_15", Lua_Dead);
-    R("instruct_16", Lua_InTeam);
-    R("instruct_17", Lua_OldPutSceneMapPro);
-    R("setsubmaplayerdata", Lua_OldPutSceneMapPro);
-    R("instruct_18", Lua_HaveItemBool);
-    R("instruct_19", Lua_OldSetScenePosition);
-    R("oldsetsceneposition", Lua_OldSetScenePosition);
-    R("instruct_20", Lua_TeamIsFull);
-    R("instruct_21", Lua_LeaveTeam);
-    R("instruct_22", Lua_ZeroAllMP);
-    R("zeroallmp", Lua_ZeroAllMP);
-    R("instruct_23", Lua_SetOneUsePoi);
-    R("setroleusepoison", Lua_SetOneUsePoi);
-    R("instruct_24", Lua_Blank);
-    R("submapviewfromto", Lua_SceneFromTo);
-    R("instruct_25", Lua_SceneFromTo);
-    R("instruct_26", Lua_Add3EventNum);
-    R("add3eventnum", Lua_Add3EventNum);
-    R("instruct_27", Lua_PlayAnimation);
-    R("instruct_28", Lua_JudgeEthics);
-    R("checkrolemorality", Lua_JudgeEthics);
-    R("instruct_29", Lua_JudgeAttack);
-    R("checkroleattack", Lua_JudgeAttack);
-    R("instruct_30", Lua_WalkFromTo);
-    R("instruct_31", Lua_JudgeMoney);
-    R("checkenoughmoney", Lua_JudgeMoney);
-    R("instruct_32", Lua_AddItem);
-    R("additemwithouthint", Lua_AddItem);
-    R("instruct_33", Lua_OldLearnMagic);
-    R("oldlearnmagic", Lua_OldLearnMagic);
-    R("instruct_34", Lua_AddAptitude);
-    R("addiq", Lua_AddAptitude);
-    R("instruct_35", Lua_SetOneMagic);
-    R("setrolemagic", Lua_SetOneMagic);
-    R("instruct_36", Lua_JudgeSexual);
-    R("checkrolesexual", Lua_JudgeSexual);
-    R("instruct_37", Lua_AddEthics);
-    R("addmorality", Lua_AddEthics);
-    R("instruct_38", Lua_ChangeScenePic);
-    R("changesubmappic", Lua_ChangeScenePic);
-    R("instruct_39", Lua_OpenScene);
-    R("opensubmap", Lua_OpenScene);
-    R("instruct_40", Lua_SetRoleFace);
-    R("setroleface", Lua_SetRoleFace);
-    R("settowards", Lua_SetSceneFace);
-    R("instruct_41", Lua_AnotherGetItem);
-    R("roleadditem", Lua_AnotherGetItem);
-    R("instruct_42", Lua_JudgeFemaleInTeam);
-    R("checkfemaleinteam", Lua_JudgeFemaleInTeam);
-    R("instruct_43", Lua_HaveItemBool);
-    R("instruct_44", Lua_Play2Amination);
-    R("instruct_45", Lua_AddSpeed);
-    R("addspeed", Lua_AddSpeed);
-    R("instruct_46", Lua_AddMP);
-    R("addmaxmp", Lua_AddMP);
-    R("instruct_47", Lua_AddAttack);
-    R("addattack", Lua_AddAttack);
-    R("instruct_48", Lua_AddHP);
-    R("addmaxhp", Lua_AddHP);
-    R("instruct_49", Lua_SetMPPro);
-    R("setmptype", Lua_SetMPPro);
-    R("instruct_50", Lua_Judge5Item);
-    R("instruct_50e", Lua_Judge5Item);
-    R("instruct_51", Lua_AskSoftStar);
-    R("showmorality", Lua_ShowEthics);
-    R("instruct_52", Lua_ShowEthics);
-    R("instruct_53", Lua_ShowRepute);
-    R("showfame", Lua_ShowRepute);
-    R("instruct_54", Lua_OpenAllScene);
-    R("openallsubmap", Lua_OpenAllScene);
-    R("instruct_55", Lua_JudgeEventNum);
-    R("checkeventid", Lua_JudgeEventNum);
-    R("instruct_56", Lua_AddRepute);
-    R("addfame", Lua_AddRepute);
-    R("instruct_57", Lua_BreakStoneGate);
-    R("breakstonegate", Lua_BreakStoneGate);
-    R("instruct_58", Lua_FightForTop);
-    R("instruct_59", Lua_AllLeave);
-    R("instruct_60", Lua_JudgeScenePic);
-    R("checksubmappic", Lua_JudgeScenePic);
-    R("instruct_61", Lua_Judge14BooksPlaced);
-    R("check14booksplaced", Lua_Judge14BooksPlaced);
-    R("instruct_62", Lua_BackHome);
-    R("backhome", Lua_BackHome);
-    R("instruct_63", Lua_SetSexual);
-    R("setsexual", Lua_SetSexual);
-    R("instruct_64", Lua_WeiShop);
-    R("shop", Lua_WeiShop);
-    R("instruct_65", Lua_Blank);
-    R("instruct_66", Lua_PlayMusic);
-    R("instruct_67", Lua_PlayWave);
-
-    R("eatoneitem", Lua_EatOneItemScript);
-    R("selectoneteammember", Lua_SelectOneTeamMemberScript);
-    R("setteam", Lua_setteam);
-    R("getteam", Lua_getteam);
-    R("read_mem", Lua_readmem);
-    R("write_mem", Lua_writemem);
-    R("getrolename", Lua_getrolename);
-    R("getitemname", Lua_getitemname);
-    R("getmagicname", Lua_getmagicname);
-    R("getsubmapname", Lua_getsubmapname);
-    R("drawlength", Lua_drawlength_s);
-    R("getkey", Lua_getkey);
-    R("gettalk", Lua_gettalk);
-
-    // pig3同步：set*/get* pro别名
-    R("getrolepro", Lua_GetRolePro);
-    R("setrolepro", Lua_PutRolePro);
-    R("putrolepro", Lua_PutRolePro);
-    R("getitempro", Lua_GetItemPro);
-    R("setitempro", Lua_PutItemPro);
-    R("putitempro", Lua_PutItemPro);
-    R("getmagicpro", Lua_GetMagicPro);
-    R("setmagicpro", Lua_PutMagicPro);
-    R("putmagicpro", Lua_PutMagicPro);
-    R("getscenepro", Lua_GetScenePro);
-    R("setscenepro", Lua_PutScenePro);
-    R("putscenepro", Lua_PutScenePro);
-    R("getscenemappro", Lua_GetSceneMapPro);
-    R("setscenemappro", Lua_PutSceneMapPro);
-    R("putscenemappro", Lua_PutSceneMapPro);
-    R("getsceneeventpro", Lua_GetSceneEventPro);
-    R("setsceneeventpro", Lua_PutSceneEventPro);
-    R("putsceneeventpro", Lua_PutSceneEventPro);
-    R("setbattlerolepro", Lua_PutBattleRolePro);
-    R("putmember", Lua_PutMember);
-
-    // pig3同步：新增函数
-    R("getglobalvalue", Lua_GetGlobalValue);
-    R("setglobalvalue", Lua_SetGlobalValue);
-    R("putglobalvalue", Lua_SetGlobalValue);
-    R("getx50", Lua_GetX50);
-    R("setx50", Lua_SetX50);
-    R("putx50", Lua_SetX50);
-    R("showtitle", Lua_ShowTitle);
-    R("readtalkasstring", Lua_ReadTalkAsString);
-    R("checkjumpflag", Lua_CheckJumpFlag);
-    R("exit", Lua_ExitScript);
-    R("colcolor", Lua_ColColor);
-    R("showsimplestatus", Lua_ShowSimpleStatus);
-    R("updateallscreen", Lua_UpdateAllScreen);
-    R("setitemintro", Lua_SetItemIntro);
-    R("putitemintro", Lua_SetItemIntro);
-    R("showstatus", Lua_ShowStatus);
-    R("setnameasstring", Lua_SetNameAsString);
-    R("setattribute", Lua_SetAttribute);
-    R("enternumber", Lua_EnterNumber);
-    R("haveitemamount", Lua_HaveItemAmount);
-    R("getscreensize", Lua_GetScreenSize);
-    R("endamination", Lua_BackHome);
-    R("npcgetitem", Lua_AnotherGetItem);
-    R("leave", Lua_LeaveTeam);
-    R("learnmagic2", Lua_OldLearnMagic);
-
-    ExecScriptString("x={}; for i=0,30000 do x[i]=0; end;", "");
-}
-
-void DestroyScript()
-{
-    lua_close(Lua_script);
-}
-
-int ExecScript(const std::string& filename, const std::string& functionname)
-{
-    std::string script = filefunc::readFileToString(filename);
-    if (script.empty())
-    {
-        return 0;
-    }
-    return ExecScriptString(script, functionname);
-}
-
-int ExecScriptString(const std::string& script_in, const std::string& functionname)
-{
-    std::string script = script_in;
-    // 去BOM
-    if (script.size() >= 3 && (uint8_t)script[0] == 0xEF && (uint8_t)script[1] == 0xBB && (uint8_t)script[2] == 0xBF)
-    {
-        script[0] = ' ';
-        script[1] = ' ';
-        script[2] = ' ';
-    }
-    // 转小写
-    std::transform(script.begin(), script.end(), script.begin(), [](unsigned char c)
-        {
-            return std::tolower(c);
-        });
-
-    int result = luaL_loadbuffer(Lua_script, script.c_str(), script.size(), "code");
-    if (result == 0)
-    {
-        result = lua_pcall(Lua_script, 0, 0, 0);
-        if (!functionname.empty())
-        {
-            lua_getglobal(Lua_script, functionname.c_str());
-            result = lua_pcall(Lua_script, 0, 1, 0);
-        }
-    }
-    if (result != 0)
-    {
-        kyslog(lua_tostring(Lua_script, -1));
-        lua_pop(Lua_script, 1);
-    }
-    return result;
 }
