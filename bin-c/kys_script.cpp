@@ -118,7 +118,7 @@ void InitialScript()
     R("getbattlerolepro", Lua_GetBattleRolePro);
     R("playaction", Lua_PlayAction);
     R("playhurtvalue", Lua_PlayHurtValue);
-    R("setaminationlayer", Lua_SetAminationLayer);
+    R("setanimationlayer", Lua_SetAnimationLayer);
     R("clearrolefrombattle", Lua_ClearRoleFromBattle);
     R("addroleintobattle", Lua_AddRoleIntoBattle);
     R("forcebattleresult", Lua_ForceBattleResult);
@@ -196,7 +196,7 @@ void InitialScript()
     R("instruct_59", Lua_AllLeave);
     R("instruct_60", Lua_JudgeScenePic);
     R("instruct_61", Lua_Judge14BooksPlaced);
-    R("instruct_62", Lua_BackHome);
+    R("instruct_62", Lua_EndAnimation);
     R("instruct_63", Lua_SetSexual);
     R("instruct_64", Lua_WeiShop);
     R("instruct_65", Lua_Blank);
@@ -250,7 +250,7 @@ void InitialScript()
     R("enternumber", Lua_EnterNumber);
     R("haveitemamount", Lua_HaveItemAmount);
     R("getscreensize", Lua_GetScreenSize);
-    R("endamination", Lua_BackHome);
+    R("endanimation", Lua_EndAnimation);
     R("npcgetitem", Lua_AnotherGetItem);
     R("leave", Lua_LeaveTeam);
     R("learnmagic2", Lua_OldLearnMagic);
@@ -1003,8 +1003,8 @@ int Lua_SetBattleRolePro(lua_State* L)
 int Lua_PlayAction(lua_State* L)
 {
     int bnum = LI(-3), mtype = LI(-2);
-    PlayActionAmination(bnum, mtype);
-    PlayMagicAmination(bnum, mtype);
+    PlayActionAnimation(bnum, mtype);
+    PlayMagicAnimation(bnum, mtype);
     return 0;
 }
 
@@ -1014,7 +1014,7 @@ int Lua_PlayHurtValue(lua_State* L)
     return 0;
 }
 
-int Lua_SetAminationLayer(lua_State* L)
+int Lua_SetAnimationLayer(lua_State* L)
 {
     int x = LI(-5), y = LI(-4), w = LI(-3), h = LI(-2), t = LI(-1);
     for (int i1 = x; i1 < x + w; i1++)
@@ -1249,7 +1249,7 @@ int Lua_SetSexual(lua_State* L)
     return 0;
 }
 
-int Lua_BackHome(lua_State* L)
+int Lua_EndAnimation(lua_State* L)
 {
     instruct_62(LI(-6), LI(-5), LI(-4), LI(-3), LI(-2), LI(-1));
     return 0;

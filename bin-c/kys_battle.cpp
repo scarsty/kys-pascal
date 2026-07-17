@@ -761,11 +761,11 @@ void MoveRole(int bnum)
     CalCanSelect(bnum, 0, Brole[bnum].Step);
     if (SelectAim(bnum, Brole[bnum].Step))
     {
-        MoveAmination(bnum);
+        MoveAnimation(bnum);
     }
 }
 
-bool MoveAmination(int bnum)
+bool MoveAnimation(int bnum)
 {
     bool result = abs(Ax - Bx) + abs(Ay - By) > 0;
     if (BField[3][Ax][Ay] > 0)
@@ -851,7 +851,7 @@ bool SelectAim(int bnum, int step, int AreaType, int AreaRange)
     Ay = By;
     BattleSelecting = true;
     Redraw();
-    SetAminationPosition(AreaType, step, AreaRange);
+    SetAnimationPosition(AreaType, step, AreaRange);
     DrawBFieldWithCursor(step);
     UpdateScreen(screen, 0, 0, screen->w, screen->h);
     while (SDL_WaitEvent(&event))
@@ -928,7 +928,7 @@ bool SelectAim(int bnum, int step, int AreaType, int AreaRange)
                 }
             }
         }
-        SetAminationPosition(AreaType, step, AreaRange);
+        SetAnimationPosition(AreaType, step, AreaRange);
         DrawBFieldWithCursor(step);
         if (Ax >= 0 && Ax <= 63 && Ay >= 0 && Ay <= 63 && BField[2][Ax][Ay] >= 0 && BField[2][Ax][Ay] < BRoleAmount)
         {
@@ -953,7 +953,7 @@ bool SelectDirector(int bnum, int step)
     case 3: Ax = Ax + 1; break;
     }
 
-    SetAminationPosition(1, step);
+    SetAnimationPosition(1, step);
     DrawBFieldWithCursor(-1);
 
     std::string str = "選擇攻擊方向";
@@ -1041,7 +1041,7 @@ bool SelectDirector(int bnum, int step)
                 }
             }
         }
-        SetAminationPosition(1, step);
+        SetAnimationPosition(1, step);
         DrawBFieldWithCursor(-1);
         UpdateScreen(screen, 0, 0, screen->w, screen->h);
     }
@@ -1187,7 +1187,7 @@ void Attack(int bnum)
             }
             break;
         case 2:
-            SetAminationPosition(AreaType, Rmagic[mnum].MoveDistance[level - 1], Rmagic[mnum].AttDistance[level - 1]);
+            SetAnimationPosition(AreaType, Rmagic[mnum].MoveDistance[level - 1], Rmagic[mnum].AttDistance[level - 1]);
             DrawBFieldWithCursor(-1);
             UpdateScreen(screen, 0, 0, screen->w, screen->h);
             {
@@ -1241,15 +1241,15 @@ void AttackAction(int bnum, int i, int mnum, int level)
 void AttackAction(int bnum, int mnum, int level)
 {
     ShowMagicName(mnum);
-    PlayActionAmination(bnum, Rmagic[mnum].MagicType, mnum);
-    PlayMagicAmination(bnum, Rmagic[mnum].AmiNum);
+    PlayActionAnimation(bnum, Rmagic[mnum].MagicType, mnum);
+    PlayMagicAnimation(bnum, Rmagic[mnum].AmiNum);
     CalHurtRole(bnum, mnum, level);
     ShowHurtValue(Rmagic[mnum].HurtType);
 }
 
 void AttackActionAll(int bnum, int mnum, int level)
 {
-    PlayMagicAmination(bnum, Rmagic[mnum].AmiNum);
+    PlayMagicAnimation(bnum, Rmagic[mnum].AmiNum);
     for (int i = 0; i < BRoleAmount; i++)
     {
         if (Brole[i].Dead == 0 && BField[4][Brole[i].X][Brole[i].Y] > 0)
@@ -1423,12 +1423,12 @@ int SelectMagic(int rnum)
     return -1;
 }
 
-void SetAminationPosition(int mode, int step, int range)
+void SetAnimationPosition(int mode, int step, int range)
 {
-    SetAminationPosition2(Bx, By, Ax, Ay, mode, step, range);
+    SetAnimationPosition2(Bx, By, Ax, Ay, mode, step, range);
 }
 
-void SetAminationPosition2(int bx1, int by1, int ax1, int ay1, int mode, int step, int range)
+void SetAnimationPosition2(int bx1, int by1, int ax1, int ay1, int mode, int step, int range)
 {
     memset(&BField[4][0][0], 0, sizeof(BField[4]));
     switch (mode)
@@ -1499,7 +1499,7 @@ void SetAminationPosition2(int bx1, int by1, int ax1, int ay1, int mode, int ste
     }
 }
 
-void PlayMagicAmination(int bnum, int enumv, int ForTeam, int mode)
+void PlayMagicAnimation(int bnum, int enumv, int ForTeam, int mode)
 {
     if (enumv < 0 || enumv > 199)
     {
@@ -2249,7 +2249,7 @@ void BattleMenuItem(int bnum)
     }
 }
 
-void PlayActionAmination(int bnum, int mode, int mnum)
+void PlayActionAnimation(int bnum, int mode, int mnum)
 {
     int rnum = Brole[bnum].rnum;
 
@@ -2388,9 +2388,9 @@ void UsePoison(int bnum)
             Rrole[rnum1].Poison += addpoi;
             Brole[bnum1].ShowNumber = addpoi;
             Brole[bnum1].ExpGot += addpoi;
-            SetAminationPosition(0, 0);
-            PlayActionAmination(bnum, 0);
-            PlayMagicAmination(bnum, 30, 0, 2);
+            SetAnimationPosition(0, 0);
+            PlayActionAnimation(bnum, 0);
+            PlayMagicAnimation(bnum, 30, 0, 2);
             ShowHurtValue(2);
         }
     }
@@ -2429,9 +2429,9 @@ void Medcine(int bnum)
             int addlife = EffectMedcine(rnum, rnum1);
             Brole[bnum1].ShowNumber = addlife;
             Brole[bnum1].ExpGot += addlife;
-            SetAminationPosition(0, 0);
-            PlayActionAmination(bnum, 0);
-            PlayMagicAmination(bnum, 0, 1, 3);
+            SetAnimationPosition(0, 0);
+            PlayActionAnimation(bnum, 0);
+            PlayMagicAnimation(bnum, 0, 1, 3);
             ShowHurtValue(3);
         }
     }
@@ -2470,9 +2470,9 @@ void MedPoison(int bnum)
             int minuspoi = EffectMedPoison(rnum, rnum1);
             Brole[bnum1].ShowNumber = minuspoi;
             Brole[bnum1].ExpGot += minuspoi;
-            SetAminationPosition(0, 0);
-            PlayActionAmination(bnum, 0);
-            PlayMagicAmination(bnum, 36, 1, 4);
+            SetAnimationPosition(0, 0);
+            PlayActionAnimation(bnum, 0);
+            PlayMagicAnimation(bnum, 36, 1, 4);
             ShowHurtValue(4);
         }
     }
@@ -2560,10 +2560,10 @@ void UseHiddenWeapon(int bnum, int inum)
                 Brole[bnum1].ExpGot += hurt;
                 Rrole[rnum1].Hurt = std::min<int>(Rrole[rnum1].Hurt + hurt / LIFE_HURT, 99);
                 Rrole[rnum1].Poison = std::min<int>(Rrole[rnum1].Poison + Ritem[inum].AddPoi * (100 - Rrole[rnum1].DefPoi) / 100, 99);
-                SetAminationPosition(0, 0);
+                SetAnimationPosition(0, 0);
                 ShowMagicName(inum, 1);
-                PlayActionAmination(bnum, 0);
-                PlayMagicAmination(bnum, Ritem[inum].AmiNum);
+                PlayActionAnimation(bnum, 0);
+                PlayMagicAnimation(bnum, Ritem[inum].AmiNum);
                 ShowHurtValue(0);
             }
         }
@@ -2821,7 +2821,7 @@ void AutoBattle(int bnum)
                 {
                     Ax = moveX;
                     Ay = moveY;
-                    MoveAmination(bnum);
+                    MoveAnimation(bnum);
                     Ax = targetX;
                     Ay = targetY;
                     Medcine(bnum);
@@ -2838,7 +2838,7 @@ void AutoBattle(int bnum)
                 {
                     Ax = moveX;
                     Ay = moveY;
-                    MoveAmination(bnum);
+                    MoveAnimation(bnum);
                     Ax = targetX;
                     Ay = targetY;
                     MedPoison(bnum);
@@ -2855,7 +2855,7 @@ void AutoBattle(int bnum)
                 {
                     Ax = moveX;
                     Ay = moveY;
-                    MoveAmination(bnum);
+                    MoveAnimation(bnum);
                     Ax = targetX;
                     Ay = targetY;
                     UsePoison(bnum);
@@ -2883,7 +2883,7 @@ void AutoBattle(int bnum)
             {
                 Ax = moveX;
                 Ay = moveY;
-                MoveAmination(bnum);
+                MoveAnimation(bnum);
                 Ax = targetX;
                 Ay = targetY;
                 UseHiddenWeapon(bnum, -1);
@@ -2935,10 +2935,10 @@ void AutoBattle(int bnum)
         {
             Ax = curBx1;
             Ay = curBy1;
-            MoveAmination(bnum);
+            MoveAnimation(bnum);
             Ax = curAx1;
             Ay = curAy1;
-            SetAminationPosition(Rmagic[curMnum].AttAreaType, Rmagic[curMnum].MoveDistance[curlevel - 1], Rmagic[curMnum].AttDistance[curlevel - 1]);
+            SetAnimationPosition(Rmagic[curMnum].AttAreaType, Rmagic[curMnum].MoveDistance[curlevel - 1], Rmagic[curMnum].AttDistance[curlevel - 1]);
             Brole[bnum].Acted = 1;
             AttackAction(bnum, chosenMagicIndex, curMnum, curlevel);
         }
@@ -2949,7 +2949,7 @@ void AutoBattle(int bnum)
         if (((Brole[bnum].Team == 0) && ((Brole[bnum].AutoMode == 1) || (Brole[bnum].AutoMode == 2))) || (Brole[bnum].Team != 0))
         {
             NearestMove(Ax, Ay, bnum);
-            MoveAmination(bnum);
+            MoveAnimation(bnum);
         }
         Rest(bnum);
     }
@@ -3056,7 +3056,7 @@ void TryMoveAttack(int& Mx1, int& My1, int& Ax1, int& Ay1, int& tempmaxhurt, int
                     {
                         if (areaType != 3)
                         {
-                            SetAminationPosition2(curX, curY, i1, i2, areaType, distance, range);
+                            SetAnimationPosition2(curX, curY, i1, i2, areaType, distance, range);
                         }
 
                         int temphurt = 0;

@@ -1938,8 +1938,8 @@ int instruct_50e(int code, int e1, int e2, int e3, int e4, int e5, int e6)
         e2 = e_GetValue(0, e1, e2);
         e3 = e_GetValue(1, e1, e3);
         e4 = e_GetValue(2, e1, e4);
-        PlayActionAmination(e2, e3);
-        PlayMagicAmination(e2, e4);
+        PlayActionAnimation(e2, e3);
+        PlayMagicAnimation(e2, e4);
     }
     break;
     case 45:

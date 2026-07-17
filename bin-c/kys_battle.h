@@ -18,7 +18,7 @@ void ReArrangeBRole();
 int BattleStatus();
 int BattleMenu(int bnum);
 void MoveRole(int bnum);
-bool MoveAmination(int bnum);
+bool MoveAnimation(int bnum);
 bool SelectAim(int bnum, int step, int AreaType = 0, int AreaRange = 0);
 bool SelectDirector(int bnum, int step);
 void SeekPath2(int x, int y, int step, int myteam, int mode);
@@ -31,9 +31,9 @@ void AttackAction(int bnum, int mnum, int level);
 void AttackActionAll(int bnum, int mnum, int level);
 void ShowMagicName(int mnum, int mode = 0);
 int SelectMagic(int rnum);
-void SetAminationPosition(int mode, int step, int range = 0);
-void SetAminationPosition2(int bx1, int by1, int ax1, int ay1, int mode, int step, int range = 0);
-void PlayMagicAmination(int bnum, int enumv, int ForTeam = 0, int mode = 0);
+void SetAnimationPosition(int mode, int step, int range = 0);
+void SetAnimationPosition2(int bx1, int by1, int ax1, int ay1, int mode, int step, int range = 0);
+void PlayMagicAnimation(int bnum, int enumv, int ForTeam = 0, int mode = 0);
 
 // 伤害计算
 void CalHurtRole(int bnum, int mnum, int level);
@@ -56,7 +56,7 @@ int CalRNum(int team);
 // 战斗物品/武功使用
 void BattleMenuItem(int bnum);
 void UsePoison(int bnum);
-void PlayActionAmination(int bnum, int mode, int mnum = -1);
+void PlayActionAnimation(int bnum, int mode, int mnum = -1);
 void Medcine(int bnum);
 void MedPoison(int bnum);
 void UseHiddenWeapon(int bnum, int inum);
