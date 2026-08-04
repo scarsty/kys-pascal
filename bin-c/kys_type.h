@@ -74,11 +74,11 @@ struct TRole
             int16_t Sexual, Level;
             uint16 Exp;
             int16_t CurrentHP, MaxHP, Hurt, Poison, PhyPower;
-            uint16 ExpForItem;
+            uint16 ExpForMakeItem;
             int16_t Equip[2];
-            int16_t AmiFrameNum[5], AmiDelay[5], SoundDealy[5];
+            int16_t AmiFrameNum[5], AmiDelay[5], SoundDelay[5];
             int16_t MPType, CurrentMP, MaxMP;
-            int16_t Attack, Speed, Defence, Medcine, UsePoi, MedPoi, DefPoi;
+            int16_t Attack, Speed, Defence, Medicine, UsePoi, MedPoi, DefPoi;
             int16_t Fist, Sword, Knife, Unusual, HidWeapon;
             int16_t Knowledge, Ethics, AttPoi, AttTwice, Repute, Aptitude, PracticeBook;
             uint16 ExpForBook;
@@ -99,11 +99,11 @@ struct TItem
             char Name[20];
             char Name1[20];
             char Introduction[30];
-            int16_t Magic, AmiNum, User, EquipType, ShowIntro, ItemType, UnKnow5, UnKnow6, UnKnow7;
+            int16_t Magic, AmiNum, User, EquipType, ShowIntro, ItemType, Unknown5, Unknown6, Unknown7;
             int16_t AddCurrentHP, AddMaxHP, AddPoi, AddPhyPower, ChangeMPType, AddCurrentMP, AddMaxMP;
-            int16_t AddAttack, AddSpeed, AddDefence, AddMedcine, AddUsePoi, AddMedPoi, AddDefPoi;
+            int16_t AddAttack, AddSpeed, AddDefence, AddMedicine, AddUsePoi, AddMedPoi, AddDefPoi;
             int16_t AddFist, AddSword, AddKnife, AddUnusual, AddHidWeapon, AddKnowledge, AddEthics, AddAttTwice, AddAttPoi;
-            int16_t OnlyPracRole, NeedMPType, NeedMP, NeedAttack, NeedSpeed, NeedUsePoi, NeedMedcine, NeedMedPoi;
+            int16_t OnlyPracRole, NeedMPType, NeedMP, NeedAttack, NeedSpeed, NeedUsePoi, NeedMedicine, NeedMedPoi;
             int16_t NeedFist, NeedSword, NeedKnife, NeedUnusual, NeedHidWeapon, NeedAptitude;
             int16_t NeedExp, NeedExpForItem, NeedMaterial;
             int16_t GetItem[5], NeedMatAmount[5];
@@ -139,7 +139,7 @@ struct TMagic
         {
             int16_t ListNum;
             char Name[10];
-            int16_t UnKnow[5];
+            int16_t Unknown[5];
             int16_t SoundNum, MagicType, AmiNum, HurtType, AttAreaType, NeedMP, Poison;
             int16_t Attack[10], MoveDistance[10], AttDistance[10], AddMP[10], HurtMP[10];
         };

@@ -57,7 +57,7 @@ int CalRNum(int team);
 void BattleMenuItem(int bnum);
 void UsePoison(int bnum);
 void PlayActionAnimation(int bnum, int mode, int mnum = -1);
-void Medcine(int bnum);
+void Medicine(int bnum);
 void MedPoison(int bnum);
 void UseHiddenWeapon(int bnum, int inum);
 void Rest(int bnum);

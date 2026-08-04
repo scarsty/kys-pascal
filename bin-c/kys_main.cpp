@@ -1009,7 +1009,7 @@ bool InitialRole()
                 Rrole[0].Attack = 25 + rand() % 6;
                 Rrole[0].Speed = 25 + rand() % 6;
                 Rrole[0].Defence = 25 + rand() % 6;
-                Rrole[0].Medcine = 25 + rand() % 6;
+                Rrole[0].Medicine = 25 + rand() % 6;
                 Rrole[0].UsePoi = 25 + rand() % 6;
                 Rrole[0].MedPoi = 25 + rand() % 6;
                 Rrole[0].Fist = 25 + rand() % 6;
@@ -1057,7 +1057,7 @@ bool InitialRole()
                 Rrole[0].Attack = 30;
                 Rrole[0].Speed = 30;
                 Rrole[0].Defence = 30;
-                Rrole[0].Medcine = 30;
+                Rrole[0].Medicine = 30;
                 Rrole[0].UsePoi = 30;
                 Rrole[0].MedPoi = 30;
                 Rrole[0].Fist = 30;
@@ -1091,7 +1091,7 @@ bool InitialRole()
                 Rrole[0].Attack = 150;
                 Rrole[0].Speed = 150;
                 Rrole[0].Defence = 130;
-                Rrole[0].Medcine = 130;
+                Rrole[0].Medicine = 130;
                 Rrole[0].UsePoi = 130;
                 Rrole[0].MedPoi = 130;
                 Rrole[0].Fist = 130;
@@ -1117,7 +1117,7 @@ bool InitialRole()
                 Rrole[0].Attack = 130;
                 Rrole[0].Speed = 130;
                 Rrole[0].Defence = 130;
-                Rrole[0].Medcine = 130;
+                Rrole[0].Medicine = 130;
                 Rrole[0].UsePoi = 130;
                 Rrole[0].MedPoi = 130;
                 Rrole[0].Fist = 130;
@@ -1144,7 +1144,7 @@ bool InitialRole()
                 Rrole[0].Attack = 130;
                 Rrole[0].Speed = 130;
                 Rrole[0].Defence = 130;
-                Rrole[0].Medcine = 130;
+                Rrole[0].Medicine = 130;
                 Rrole[0].UsePoi = 130;
                 Rrole[0].MedPoi = 130;
                 Rrole[0].Fist = 130;
@@ -1169,7 +1169,7 @@ bool InitialRole()
                 Rrole[0].Attack = 230;
                 Rrole[0].Speed = 230;
                 Rrole[0].Defence = 230;
-                Rrole[0].Medcine = 230;
+                Rrole[0].Medicine = 230;
                 Rrole[0].UsePoi = 230;
                 Rrole[0].MedPoi = 230;
                 Rrole[0].Fist = 230;
@@ -1206,7 +1206,7 @@ bool InitialRole()
                     Rrole[i].Attack = 300;
                     Rrole[i].Speed = 100;
                     Rrole[i].Defence = 130;
-                    Rrole[i].Medcine = 130;
+                    Rrole[i].Medicine = 130;
                     Rrole[i].UsePoi = 130;
                     Rrole[i].MedPoi = 130;
                     Rrole[i].Fist = 130;
@@ -1232,7 +1232,7 @@ bool InitialRole()
                 Rrole[0].Attack = 10;
                 Rrole[0].Speed = 10;
                 Rrole[0].Defence = 30;
-                Rrole[0].Medcine = 30;
+                Rrole[0].Medicine = 30;
                 Rrole[0].UsePoi = 30;
                 Rrole[0].MedPoi = 30;
                 Rrole[0].Fist = 30;
@@ -1263,7 +1263,7 @@ bool InitialRole()
                 Rrole[0].Attack = 30;
                 Rrole[0].Speed = 30;
                 Rrole[0].Defence = 30;
-                Rrole[0].Medcine = 30;
+                Rrole[0].Medicine = 30;
                 Rrole[0].UsePoi = 30;
                 Rrole[0].MedPoi = 30;
                 Rrole[0].Fist = 30;
@@ -1298,7 +1298,7 @@ bool InitialRole()
                 Rrole[0].Attack = 70;
                 Rrole[0].Speed = 90;
                 Rrole[0].Defence = 30;
-                Rrole[0].Medcine = 30;
+                Rrole[0].Medicine = 30;
                 Rrole[0].UsePoi = 30;
                 Rrole[0].MedPoi = 30;
                 Rrole[0].Fist = 30;
@@ -1325,7 +1325,7 @@ bool InitialRole()
                 Rrole[0].Attack = 30;
                 Rrole[0].Speed = 30;
                 Rrole[0].Defence = 30;
-                Rrole[0].Medcine = 30;
+                Rrole[0].Medicine = 30;
                 Rrole[0].UsePoi = 30;
                 Rrole[0].MedPoi = 30;
                 Rrole[0].Fist = 30;
@@ -1350,7 +1350,7 @@ bool InitialRole()
                 Rrole[0].Attack = 30;
                 Rrole[0].Speed = 30;
                 Rrole[0].Defence = 30;
-                Rrole[0].Medcine = 30;
+                Rrole[0].Medicine = 30;
                 Rrole[0].UsePoi = 30;
                 Rrole[0].MedPoi = 30;
                 Rrole[0].Fist = 30;
@@ -1375,7 +1375,7 @@ bool InitialRole()
                 Rrole[0].Attack = 90;
                 Rrole[0].Speed = 90;
                 Rrole[0].Defence = 90;
-                Rrole[0].Medcine = 90;
+                Rrole[0].Medicine = 90;
                 Rrole[0].UsePoi = 90;
                 Rrole[0].MedPoi = 90;
                 Rrole[0].Fist = 90;
@@ -1402,7 +1402,7 @@ bool InitialRole()
                 Rrole[0].Attack = 10;
                 Rrole[0].Speed = 10;
                 Rrole[0].Defence = 30;
-                Rrole[0].Medcine = 30;
+                Rrole[0].Medicine = 30;
                 Rrole[0].UsePoi = 30;
                 Rrole[0].MedPoi = 30;
                 Rrole[0].Fist = 30;
@@ -1459,7 +1459,7 @@ bool InitialRole()
                 Rrole[0].Attack = 30;
                 Rrole[0].Speed = 30;
                 Rrole[0].Defence = 30;
-                Rrole[0].Medcine = 30;
+                Rrole[0].Medicine = 30;
                 Rrole[0].UsePoi = 30;
                 Rrole[0].MedPoi = 30;
                 Rrole[0].Fist = 30;
@@ -1481,7 +1481,7 @@ bool InitialRole()
                 Rrole[0].Attack = 30;
                 Rrole[0].Speed = 30;
                 Rrole[0].Defence = 30;
-                Rrole[0].Medcine = 30;
+                Rrole[0].Medicine = 30;
                 Rrole[0].UsePoi = 30;
                 Rrole[0].MedPoi = 30;
                 Rrole[0].Fist = 30;
@@ -1507,7 +1507,7 @@ bool InitialRole()
                 Rrole[0].Attack = 30;
                 Rrole[0].Speed = 30;
                 Rrole[0].Defence = 30;
-                Rrole[0].Medcine = 30;
+                Rrole[0].Medicine = 30;
                 Rrole[0].UsePoi = 30;
                 Rrole[0].MedPoi = 30;
                 Rrole[0].Fist = 30;
@@ -1528,7 +1528,7 @@ bool InitialRole()
                 Rrole[0].Attack = 60;
                 Rrole[0].Speed = 30;
                 Rrole[0].Defence = 60;
-                Rrole[0].Medcine = 30;
+                Rrole[0].Medicine = 30;
                 Rrole[0].UsePoi = 30;
                 Rrole[0].MedPoi = 30;
                 Rrole[0].Fist = 30;
@@ -1553,7 +1553,7 @@ bool InitialRole()
                 Rrole[0].Attack = 300;
                 Rrole[0].Speed = 30;
                 Rrole[0].Defence = 300;
-                Rrole[0].Medcine = 300;
+                Rrole[0].Medicine = 300;
                 Rrole[0].UsePoi = 30;
                 Rrole[0].MedPoi = 30;
                 Rrole[0].Fist = 30;
@@ -1579,7 +1579,7 @@ bool InitialRole()
                 Rrole[0].Attack = 30;
                 Rrole[0].Speed = 30;
                 Rrole[0].Defence = 30;
-                Rrole[0].Medcine = 30;
+                Rrole[0].Medicine = 30;
                 Rrole[0].UsePoi = 30;
                 Rrole[0].MedPoi = 30;
                 Rrole[0].Fist = 30;
@@ -4427,9 +4427,9 @@ void UseItem(int inum)
     {
     case 0:
     {    // 剧情物品
-        if (Ritem[inum].UnKnow7 > 0)
+        if (Ritem[inum].Unknown7 > 0)
         {
-            CallEvent(Ritem[inum].UnKnow7);
+            CallEvent(Ritem[inum].Unknown7);
         }
         else if (Where == 1)
         {
@@ -4593,7 +4593,7 @@ bool CanEquip(int rnum, int inum)
     {
         result = false;
     }
-    if (signof(Ritem[inum].NeedMedcine) * Rrole[rnum].Medcine < Ritem[inum].NeedMedcine)
+    if (signof(Ritem[inum].NeedMedicine) * Rrole[rnum].Medicine < Ritem[inum].NeedMedicine)
     {
         result = false;
     }
@@ -5270,8 +5270,8 @@ void MenuQuit()
 
 int EffectMedcine(int role1, int role2)
 {
-    int addlife = Rrole[role1].Medcine * MED_LIFE * (10 - Rrole[role2].Hurt / 15) / 10;
-    if (Rrole[role2].Hurt - Rrole[role1].Medcine > 20)
+    int addlife = Rrole[role1].Medicine * MED_LIFE * (10 - Rrole[role2].Hurt / 15) / 10;
+    if (Rrole[role2].Hurt - Rrole[role1].Medicine > 20)
     {
         addlife = 0;
     }

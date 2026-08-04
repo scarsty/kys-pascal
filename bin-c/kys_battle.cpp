@@ -436,7 +436,7 @@ void BattleMainControl()
                     case 1: Attack(i); break;
                     case 2: UsePoison(i); break;
                     case 3: MedPoison(i); break;
-                    case 4: Medcine(i); break;
+                    case 4: Medicine(i); break;
                     case 5: BattleMenuItem(i); break;
                     case 6: Wait(i); break;
                     case 7: MenuStatus(); break;
@@ -626,7 +626,7 @@ int BattleMenu(int bnum)
         MenuStat |= 8;
         max++;
     }
-    if (Rrole[rnum].Medcine > 0 && Rrole[rnum].PhyPower >= 50)
+    if (Rrole[rnum].Medicine > 0 && Rrole[rnum].PhyPower >= 50)
     {
         MenuStat |= 16;
         max++;
@@ -1227,9 +1227,9 @@ void AttackAction(int bnum, int i, int mnum, int level)
         {
             Rrole[rnum].MagLevel[i] = 999;
         }
-        if (Rmagic[mnum].UnKnow[4] > 0)
+        if (Rmagic[mnum].Unknown[4] > 0)
         {
-            CallEvent(Rmagic[mnum].UnKnow[4]);
+            CallEvent(Rmagic[mnum].Unknown[4]);
         }
         else
         {
@@ -1996,8 +1996,8 @@ void AddExp()
         Rrole[rnum].Exp = p;
         p = std::min(Rrole[rnum].ExpForBook + basicvalue / 5 * 4, pmax);
         Rrole[rnum].ExpForBook = p;
-        p = std::min(Rrole[rnum].ExpForItem + basicvalue / 5 * 3, pmax);
-        Rrole[rnum].ExpForItem = p;
+        p = std::min(Rrole[rnum].ExpForMakeItem + basicvalue / 5 * 3, pmax);
+        Rrole[rnum].ExpForMakeItem = p;
 
         if (amount > 0)
         {
@@ -2015,8 +2015,8 @@ void AddExp()
             Rrole[rnum].Exp = p;
             p = std::min(Rrole[rnum].ExpForBook + basicvalue / 5 * 4, pmax);
             Rrole[rnum].ExpForBook = p;
-            p = std::min(Rrole[rnum].ExpForItem + basicvalue / 5 * 3, pmax);
-            Rrole[rnum].ExpForItem = p;
+            p = std::min(Rrole[rnum].ExpForMakeItem + basicvalue / 5 * 3, pmax);
+            Rrole[rnum].ExpForMakeItem = p;
             ShowSimpleStatus(rnum, 100, 50);
             DrawRectangle(screen, 100, 235, 145, 25, 0, ColColor(255), 50);
             std::string str = "得經驗";
@@ -2169,7 +2169,7 @@ void CheckBook()
             }
         }
         // 是否能够炼出物品
-        if (Rrole[rnum].ExpForItem >= Ritem[inum].NeedExpForItem
+        if (Rrole[rnum].ExpForMakeItem >= Ritem[inum].NeedExpForItem
             && Ritem[inum].NeedExpForItem > 0
             && Brole[i].Team == 0)
         {
@@ -2205,7 +2205,7 @@ void CheckBook()
                     UpdateScreen(screen, 0, 0, screen->w, screen->h);
                     instruct_2(Ritem[inum].GetItem[p2], 1 + rand() % 5);
                     instruct_32(needitem, -needitemamount);
-                    Rrole[rnum].ExpForItem = 0;
+                    Rrole[rnum].ExpForMakeItem = 0;
                     WaitAnyKey();
                 }
             }
@@ -2312,7 +2312,7 @@ void PlayActionAnimation(int bnum, int mode, int mnum)
             endPic = 0;
         }
 
-        int spic = beginPic + Rrole[rnum].SoundDealy[mode] - 1;
+        int spic = beginPic + Rrole[rnum].SoundDelay[mode] - 1;
 
         int p = beginPic;
         while (SDL_PollEvent(&event) || true)
@@ -2396,10 +2396,10 @@ void UsePoison(int bnum)
     }
 }
 
-void Medcine(int bnum)
+void Medicine(int bnum)
 {
     int rnum = Brole[bnum].rnum;
-    int med = Rrole[rnum].Medcine;
+    int med = Rrole[rnum].Medicine;
     int step = med / 15 + 1;
     if (step > 15)
     {
@@ -2485,7 +2485,7 @@ void UseHiddenWeapon(int bnum, int inum)
     int step = hidden / 15 + 1;
     CalCanSelect(bnum, 1, step);
     bool select = false;
-    int eventnum = (inum < 0) ? -1 : Ritem[inum].UnKnow7;
+    int eventnum = (inum < 0) ? -1 : Ritem[inum].Unknown7;
     if (eventnum > 0)
     {
         CallEvent(eventnum);
@@ -2777,9 +2777,9 @@ void AutoBattle(int bnum)
         {
             if (rand() % 100 < 70)
             {
-                if (Rrole[rnum].Medcine >= 50 && Rrole[rnum].PhyPower >= 50 && rand() % 100 < 50)
+                if (Rrole[rnum].Medicine >= 50 && Rrole[rnum].PhyPower >= 50 && rand() % 100 < 50)
                 {
-                    Medcine(bnum);
+                    Medicine(bnum);
                 }
                 else
                 {
@@ -2812,7 +2812,7 @@ void AutoBattle(int bnum)
         int targetX = -1;
         int targetY = -1;
 
-        if (Brole[bnum].Acted != 1 && Rrole[rnum].Medcine > 50 && Rrole[rnum].PhyPower >= 70)
+        if (Brole[bnum].Acted != 1 && Rrole[rnum].Medicine > 50 && Rrole[rnum].PhyPower >= 70)
         {
             if (rand() % 100 < 50)
             {
@@ -2824,7 +2824,7 @@ void AutoBattle(int bnum)
                     MoveAnimation(bnum);
                     Ax = targetX;
                     Ay = targetY;
-                    Medcine(bnum);
+                    Medicine(bnum);
                 }
             }
         }
