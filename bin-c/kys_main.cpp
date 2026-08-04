@@ -4577,7 +4577,7 @@ void UseItem(int inum)
 bool CanEquip(int rnum, int inum)
 {
     bool result = true;
-    if (signof(Ritem[inum].NeedMP) * Rrole[rnum].CurrentMP < Ritem[inum].NeedMP)
+    if (signof(Ritem[inum].NeedMP) * Rrole[rnum].MaxMP < Ritem[inum].NeedMP)
     {
         result = false;
     }
