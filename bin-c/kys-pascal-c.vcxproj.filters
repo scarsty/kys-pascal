@@ -30,9 +30,6 @@
     <ClCompile Include="kys_main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="kys_script.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="kys_type.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -66,9 +63,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="kys_main.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="kys_script.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="kys_type.h">

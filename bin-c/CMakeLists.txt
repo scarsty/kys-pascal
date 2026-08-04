@@ -28,7 +28,6 @@ add_executable(kys
     kys_main.cpp
     kys_event.cpp
     kys_battle.cpp
-    kys_script.cpp
     "${MLCC_DIR}/filefunc.cpp"
     "${MLCC_DIR}/PotConv.cpp"
     "${MLCC_DIR}/SimpleCC.cpp"
@@ -39,11 +38,9 @@ add_executable(kys
 find_package(SDL3 REQUIRED)
 find_package(SDL3_ttf REQUIRED)
 find_package(SDL3_mixer REQUIRED)
-find_package(Lua REQUIRED)
 find_package(Iconv REQUIRED)
 
 target_include_directories(kys PRIVATE
-    ${LUA_INCLUDE_DIR}
     "${MLCC_DIR}"
 )
 
@@ -51,7 +48,6 @@ target_link_libraries(kys PRIVATE
     SDL3::SDL3
     SDL3_ttf::SDL3_ttf
     SDL3_mixer::SDL3_mixer
-    ${LUA_LIBRARIES}
     Iconv::Iconv
 )
 

@@ -6,7 +6,6 @@
 #include "kys_engine.h"
 #include "kys_event.h"
 #include "kys_main.h"
-#include "kys_script.h"
 #include "kys_type.h"
 
 #include <SDL3/SDL.h>

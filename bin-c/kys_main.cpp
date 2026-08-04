@@ -8,7 +8,6 @@
 #include "kys_draw.h"
 #include "kys_engine.h"
 #include "kys_event.h"
-#include "kys_script.h"
 #include "kys_type.h"
 
 #include <SDL3/SDL.h>
@@ -578,7 +577,6 @@ void Run()
     BlockImg.resize(ImageWidth * ImageHeight, 0);
     BlockImg2.resize(ImageWidth * ImageHeight, 0);
 
-    InitialScript();
     InitialMusic();
 
     SDL_AddEventWatch((SDL_EventFilter)EventFilter, nullptr);
@@ -597,7 +595,6 @@ void Quit()
     }
     fonts.clear();
     FreeAllSurface();
-    DestroyScript();
     if (ChineseFont)
     {
         TTF_CloseFont(ChineseFont);
@@ -743,7 +740,6 @@ void ReadFiles()
     MODVersion = ini.getInt("system", "MODVersion", 0);
     CHINESE_FONT_SIZE = ini.getInt("system", "CHINESE_FONT_SIZE", 20);
     ENGLISH_FONT_SIZE = ini.getInt("system", "ENGLISH_FONT_SIZE", 19);
-    KDEF_SCRIPT = ini.getInt("system", "KDEF_SCRIPT", 1);
     NIGHT_EFFECT = ini.getInt("system", "NIGHT_EFFECT", 0);
     EXPAND_GROUND = ini.getInt("system", "EXPAND_GROUND", 0);
     WMP_4_PIC = ini.getInt("system", "WMP_4_PIC", 0);
@@ -5243,26 +5239,14 @@ void MenuSave()
 
 void MenuQuit()
 {
-    std::string menuStr[3];
+    std::string menuStr[2];
     menuStr[0] = "取消";
     menuStr[1] = "確認";
-    menuStr[2] = "腳本";
-    int menu = CommonMenu(133, 30, 45, 2, menuStr);
+    int menu = CommonMenu(133, 30, 45, 1, menuStr);
     if (menu == 1)
     {
         Where = 3;
         return;
-    }
-    if (menu == 2)
-    {
-        int i = EnterNumber(0, 99, 300, 100, 1);
-        std::string scriptFile = AppPath + "script/1.lua";
-        if (ExecScript(scriptFile, "f" + std::to_string(i)) != 0)
-        {
-            std::string err = "  Script fail!";
-            DrawTextWithRect(err, 100, 200, 150, 0xFFFFFFFF, 0xFFFFFFFF);
-            WaitAnyKey();
-        }
     }
 }
 
@@ -5971,16 +5955,7 @@ void CallEvent(int num)
         }
     };
 
-    auto scriptBuf = std::format("script/event/ka{}.lua", num);
-    std::string scriptFile = AppPath + scriptBuf;
-    if (KDEF_SCRIPT != 0 && filefunc::fileExist(scriptFile))
-    {
-        ExecScript(scriptFile, "");
-    }
-    else
-    {
-        RunKDefEvent();
-    }
+    RunKDefEvent();
 
     if (NeedRefreshScene == 1)
     {

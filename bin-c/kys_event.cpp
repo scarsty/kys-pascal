@@ -9,7 +9,6 @@
 #include "kys_draw.h"
 #include "kys_engine.h"
 #include "kys_main.h"
-#include "kys_script.h"
 #include "kys_type.h"
 
 #include <SDL3/SDL.h>
@@ -1652,8 +1651,6 @@ int instruct_50e(int code, int e1, int e2, int e3, int e4, int e5, int e6)
     case 32:
     {
         e3 = e_GetValue(0, e1, e3);
-        Script5032Pos = e3;
-        Script5032Value = x50[e2];
         return 655360 * (e3 + 1) + x50[e2];
     }
     case 33:
@@ -2031,13 +2028,7 @@ int instruct_50e(int code, int e1, int e2, int e3, int e4, int e5, int e6)
         }
     }
     break;
-    case 60:
-    {    // Call scripts
-        e2 = e_GetValue(0, e1, e2);
-        e3 = e_GetValue(1, e1, e3);
-        ExecScript("script/" + std::to_string(e2) + ".lua", "f" + std::to_string(e3));
-    }
-    break;
+    case 60: break;
     default: break;
     }
     return 0;

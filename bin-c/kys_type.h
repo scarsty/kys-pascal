@@ -14,9 +14,6 @@
 using uint32 = uint32_t;
 using uint16 = uint16_t;
 
-// Forward declarations
-struct lua_State;
-
 // ---- 结构体定义 ----
 
 struct TPosition
@@ -354,12 +351,8 @@ inline int StartMusic = 16;
 inline int ExitSceneMusicNum = 0;  // 离开场景的音乐
 inline int NowMusic = -1;          // 正在播放的音乐
 
-// 脚本系统
+// 事件变量
 extern int16_t x50[0x8000];  // 扩充指令50所使用的变量
-inline int KDEF_SCRIPT = 0;          // 使用脚本处理事件
-inline lua_State* Lua_script = nullptr;  // lua脚本
-inline int Script5032Pos = -100;     // 脚本用于处理50 32使用
-inline int Script5032Value = -1;
 
 // 场景动画
 inline int SceneRolePic = 0;         // 主角场景内当前贴图编号, 引入该常量主要用途是25指令事件号为-1的情况

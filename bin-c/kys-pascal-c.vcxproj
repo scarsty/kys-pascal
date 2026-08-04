@@ -137,7 +137,6 @@
     <ClCompile Include="kys_engine.cpp" />
     <ClCompile Include="kys_event.cpp" />
     <ClCompile Include="kys_main.cpp" />
-    <ClCompile Include="kys_script.cpp" />
     <ClCompile Include="kys_type.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
@@ -152,7 +151,6 @@
     <ClInclude Include="kys_engine.h" />
     <ClInclude Include="kys_event.h" />
     <ClInclude Include="kys_main.h" />
-    <ClInclude Include="kys_script.h" />
     <ClInclude Include="kys_type.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
