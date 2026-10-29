@@ -222,7 +222,7 @@ int SelectTeamMembers()
     {
         if (TeamList[i] >= 0)
         {
-            menuStr[i + 1] = cp950toutf8(Rrole[TeamList[i]].Name);
+            menuStr[i + 1] = cp950toutf8(Rrole[TeamList[i]].Name, sizeof(Rrole[TeamList[i]].Name));
             max++;
         }
     }
@@ -789,12 +789,19 @@ bool MoveAnimation(int bnum)
                     linebx[a] = tx;
                     lineby[a] = ty;
                     seekError = false;
-                    break;
+                    // Equal-distance paths may enter an enemy's adjacency.
+                    // Prefer a predecessor that can be traversed without
+                    // stopping, as in Pascal MoveAmination.
+                    if (BField[7][tx][ty] == 0 ||
+                        (BField[7][tx][ty] == 1 && tx == Ax && ty == Ay))
+                    {
+                        break;
+                    }
                 }
             }
             if (seekError)
             {
-                break;
+                return false;
             }
             a--;
         }
@@ -1053,7 +1060,8 @@ bool SelectDirector(int bnum, int step)
 
 void SeekPath2(int x, int y, int step, int myteam, int mode)
 {
-    // BFS寻路
+    // Pascal movement rules: water and living actors block movement; entering
+    // enemy adjacency ends a route. Subsequent moves retain the first range.
     struct QNode
     {
         int x, y, s;
@@ -1070,27 +1078,63 @@ void SeekPath2(int x, int y, int step, int myteam, int mode)
         {
             continue;
         }
+        int kind[4]{};
         for (int d = 0; d < 4; d++)
         {
             int nx = cur.x + dx[d], ny = cur.y + dy[d];
             if (nx < 0 || nx >= 64 || ny < 0 || ny >= 64)
             {
+                kind[d] = 4;
                 continue;
             }
             if (BField[3][nx][ny] >= 0)
             {
-                continue;
+                kind[d] = 5;
             }
-            bool canPass = true;
-            if (mode == 0)
+            else if (BField[1][nx][ny] > 0)
             {
-                if (BField[1][nx][ny] > 0 || (BField[2][nx][ny] >= 0 && BField[2][nx][ny] != -1))
+                kind[d] = 1;
+            }
+            else if (BField[2][nx][ny] >= 0 && Brole[BField[2][nx][ny]].Dead == 0)
+            {
+                kind[d] = Brole[BField[2][nx][ny]].Team == myteam ? 2 : 3;
+            }
+            else
+            {
+                int ground = BField[0][nx][ny] / 2;
+                if ((ground >= 179 && ground <= 190) || ground == 261 || ground == 511 ||
+                    (ground >= 224 && ground <= 232) || (ground >= 662 && ground <= 674))
                 {
-                    canPass = false;
+                    kind[d] = 6;
+                }
+                else if (BField[6][nx][ny] < 0)
+                {
+                    kind[d] = 8;
                 }
             }
-            if (canPass)
+            for (int j = 0; j < 4; ++j)
             {
+                int ex = nx + dx[j], ey = ny + dy[j];
+                // Retain Pascal's adjacency-marker bounds while avoiding its
+                // possible write outside the field for an invalid neighbor.
+                if (ex >= 0 && ex < 63 && ey >= 0 && ey < 63 && BField[2][ex][ey] >= 0 &&
+                    Brole[BField[2][ex][ey]].Dead == 0 && Brole[BField[2][ex][ey]].Team != myteam)
+                {
+                    BField[7][nx][ny] = 1;
+                }
+            }
+        }
+        bool canContinue = mode != 0 || cur.s == 0 ||
+            std::none_of(std::begin(kind), std::end(kind), [](int value) { return value == 3; });
+        if (!canContinue)
+        {
+            continue;
+        }
+        for (int d = 0; d < 4; ++d)
+        {
+            if (kind[d] == 0 || (mode != 0 && (kind[d] == 2 || kind[d] == 3)))
+            {
+                int nx = cur.x + dx[d], ny = cur.y + dy[d];
                 BField[3][nx][ny] = cur.s + 1;
                 queue.push_back({ nx, ny, cur.s + 1 });
             }
@@ -1111,8 +1155,17 @@ void CalCanSelect(int bnum, int mode, int step)
 
     if (mode == 0)
     {
+        std::memset(BField[7], 0, sizeof(BField[7]));
+        if (Brole[bnum].Acted == 0)
+        {
+            std::memset(BField[6], 0, sizeof(BField[6]));
+        }
         BField[3][x][y] = 0;
         SeekPath2(x, y, step, Brole[bnum].Team, mode);
+        if (Brole[bnum].Acted == 0)
+        {
+            std::memcpy(BField[6], BField[3], sizeof(BField[3]));
+        }
     }
 
     if (mode == 1)
@@ -1268,11 +1321,11 @@ void ShowMagicName(int mnum, int mode)
     std::string str;
     if (mode == 1)
     {
-        str = cp950toutf8(Ritem[mnum].Name);
+        str = cp950toutf8(Ritem[mnum].Name, sizeof(Ritem[mnum].Name));
     }
     else
     {
-        str = cp950toutf8(Rmagic[mnum].Name);
+        str = cp950toutf8(Rmagic[mnum].Name, sizeof(Rmagic[mnum].Name));
     }
     int l = DrawLength(str);
     DrawTextWithRectNoUpdate(str, CENTER_X - l * 5, CENTER_Y - 150, l * 10 + 7, ColColor(0x14), ColColor(0x16));
@@ -1292,7 +1345,7 @@ int SelectMagic(int rnum)
         if (Rrole[rnum].Magic[i] > 0)
         {
             menuStatus |= (1 << i);
-            menuString[i] = cp950toutf8(Rmagic[Rrole[rnum].Magic[i]].Name);
+            menuString[i] = cp950toutf8(Rmagic[Rrole[rnum].Magic[i]].Name, sizeof(Rmagic[Rrole[rnum].Magic[i]].Name));
             menuEngString[i] = std::format("{:3d}", Rrole[rnum].MagLevel[i] / 100 + 1);
             maxMenu++;
         }
@@ -2565,7 +2618,11 @@ void UseHiddenWeapon(int bnum, int inum)
                 Brole[bnum1].ShowNumber = hurt;
                 Brole[bnum1].ExpGot += hurt;
                 Rrole[rnum1].Hurt = std::min<int>(Rrole[rnum1].Hurt + hurt / LIFE_HURT, 99);
-                Rrole[rnum1].Poison = std::min<int>(Rrole[rnum1].Poison + Ritem[inum].AddPoi * (100 - Rrole[rnum1].DefPoi) / 100, 99);
+                // Mods can legitimately raise resistance above 100. A hostile
+                // poisoned weapon must not create negative poison or cleanse
+                // existing poison when the resistance multiplier becomes negative.
+                int poisonAdded = Ritem[inum].AddPoi * std::max(0, 100 - Rrole[rnum1].DefPoi) / 100;
+                Rrole[rnum1].Poison = std::clamp<int>(Rrole[rnum1].Poison + poisonAdded, 0, 99);
                 SetAnimationPosition(0, 0);
                 ShowMagicName(inum, 1);
                 PlayActionAnimation(bnum, 0);
@@ -2600,7 +2657,7 @@ bool TeamModeMenu(int bnum)
     {
         if (Brole[i].Team == 0 && Brole[i].Dead == 0)
         {
-            namestr.push_back(std::string(" ") + cp950toutf8(Rrole[Brole[i].rnum].Name));
+            namestr.push_back(std::string(" ") + cp950toutf8(Rrole[Brole[i].rnum].Name, sizeof(Rrole[Brole[i].rnum].Name)));
             a.push_back(i);
             amount++;
         }

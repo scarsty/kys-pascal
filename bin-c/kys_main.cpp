@@ -960,14 +960,14 @@ bool InitialRole()
     std::string str1 = "請輸入主角之姓名";
     DrawTextWithRect(str1, CENTER_X - 83, CENTER_Y - 30, 166, ColColor(0x21), ColColor(0x23));
 
-    std::string input_name = cp950toutf8(Rrole[0].Name);
+    std::string input_name = cp950toutf8(Rrole[0].Name, sizeof(Rrole[0].Name));
     bool named = EnterString(input_name, CENTER_X - 43, CENTER_Y + 10, 86, 100);
 
     if (named)
     {
         if (input_name.empty())
         {
-            input_name = cp950toutf8(Rrole[0].Name);
+            input_name = cp950toutf8(Rrole[0].Name, sizeof(Rrole[0].Name));
         }
 
         input_name = Simplified2Traditional(input_name);
@@ -2295,7 +2295,12 @@ bool CheckCanEnter(int snum)
     {
         return true;
     }
-    return (Rscene[snum].EnCondition == 2);
+    if (Rscene[snum].EnCondition == 2)
+    {
+        for (int role : TeamList)
+            if (role >= 0 && Rrole[role].Speed > 70) return true;
+    }
+    return false;
 }
 
 uint32_t UpdateSceneAmi(void* param, SDL_TimerID timerid, uint32_t interval)
@@ -3000,8 +3005,9 @@ void ShowSceneName(int snum)
         return;
     }
     UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
-    std::string name = cp950toutf8(Rscene[snum].Name);
-    int nameLen = (int)strlen((const char*)Rscene[snum].Name);
+    std::string name = cp950toutf8(Rscene[snum].Name, sizeof(Rscene[snum].Name));
+    int nameLen = static_cast<int>(std::find(std::begin(Rscene[snum].Name),
+        std::end(Rscene[snum].Name), '\0') - std::begin(Rscene[snum].Name));
     DrawTextWithRect(name, CENTER_X - nameLen * 5 + 7, 100, nameLen * 10 + 6, ColColor(5), ColColor(7));
     if (Rscene[snum].EntranceMusic >= 0)
     {
@@ -3671,7 +3677,7 @@ int SelectOneTeamMember(int x, int y, const std::string& str, int list1, int lis
     {
         if (TeamList[i] >= 0)
         {
-            menuString[i] = cp950toutf8(Rrole[TeamList[i]].Name);
+            menuString[i] = cp950toutf8(Rrole[TeamList[i]].Name, sizeof(Rrole[TeamList[i]].Name));
             if (!str.empty())
             {
                 char buf[32];
@@ -3986,10 +3992,10 @@ bool MenuItem()
                     auto buf = std::format("{:5d}", RItemList[listnum2].Amount);
                     DrawEngShadowText(buf, 110 + w2 - 80, 32, ColColor(0x64), ColColor(0x66));
 
-                    std::string itemName = cp950toutf8(Ritem[item2].Name);
+                    std::string itemName = cp950toutf8(Ritem[item2].Name, sizeof(Ritem[item2].Name));
                     DrawShadowText(itemName, 110 + w2 / 2 - (int)DrawLength(itemName) * 5, 32, ColColor(0x21), ColColor(0x23));
 
-                    std::string intro = cp950toutf8(Ritem[item2].Introduction);
+                    std::string intro = cp950toutf8(Ritem[item2].Introduction, sizeof(Ritem[item2].Introduction));
                     DrawShadowText(intro, 110 + w2 / 2 - (int)DrawLength(intro) * 5, 62, ColColor(0x5), ColColor(0x7));
 
                     std::string typeNames[] = { "劇情物品", "神兵寶甲", "武功秘笈", "靈丹妙藥", "傷人暗器" };
@@ -4001,7 +4007,7 @@ bool MenuItem()
                     if (Ritem[item2].User >= 0)
                     {
                         DrawShadowText("使用人：", 207, 315, ColColor(0x21), ColColor(0x23));
-                        std::string userName = cp950toutf8(Rrole[Ritem[item2].User].Name);
+                        std::string userName = cp950toutf8(Rrole[Ritem[item2].User].Name, sizeof(Rrole[Ritem[item2].User].Name));
                         DrawShadowText(userName, 297, 315, ColColor(0x64), ColColor(0x66));
                     }
                     if (item2 == COMPASS_ID)
@@ -4137,7 +4143,7 @@ bool MenuItem()
 
                     if (hasOnlyPracRole)
                     {
-                        std::string roleName = cp950toutf8(Rrole[Ritem[item2].OnlyPracRole].Name);
+                        std::string roleName = cp950toutf8(Rrole[Ritem[item2].OnlyPracRole].Name, sizeof(Rrole[Ritem[item2].OnlyPracRole].Name));
                         int onlyRoleY = (rows22 + rows32) * 20 + 346;
                         DrawShadowText("僅限修煉", 117, onlyRoleY, ColColor(0x50), ColColor(0x4E));
                         DrawShadowText(roleName, 207, onlyRoleY, ColColor(0x64), ColColor(0x66));
@@ -4147,7 +4153,7 @@ bool MenuItem()
                     if (Ritem[item2].Magic > 0 && Ritem[item2].Magic < 999)
                     {
                         int mnum = Ritem[item2].Magic;
-                        std::string magicName = cp950toutf8(Rmagic[mnum].Name);
+                        std::string magicName = cp950toutf8(Rmagic[mnum].Name, sizeof(Rmagic[mnum].Name));
                         int atk10 = Rmagic[mnum].Attack[9];
                         int areaType = Rmagic[mnum].AttAreaType;
                         std::string areaStr;
@@ -4490,7 +4496,7 @@ void UseItem(int inum)
         if (menu == 1)
         {
             Redraw();
-            std::string str1 = cp950toutf8(Ritem[inum].Name);
+            std::string str1 = cp950toutf8(Ritem[inum].Name, sizeof(Ritem[inum].Name));
             DrawTextWithRect("誰要裝備", 80, 30, (int)str1.size() * 11 + 80, ColColor(0x21), ColColor(0x23));
             DrawShadowText(str1, 160, 32, ColColor(0x64), ColColor(0x66));
             UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
@@ -4539,7 +4545,7 @@ void UseItem(int inum)
         if (menu == 1)
         {
             Redraw();
-            std::string str1 = cp950toutf8(Ritem[inum].Name);
+            std::string str1 = cp950toutf8(Ritem[inum].Name, sizeof(Ritem[inum].Name));
             DrawTextWithRect("誰要修煉", 80, 30, (int)str1.size() * 11 + 80, ColColor(0x21), ColColor(0x23));
             DrawShadowText(str1, 160, 32, ColColor(0x64), ColColor(0x66));
             UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
@@ -4575,7 +4581,7 @@ void UseItem(int inum)
         int sel = -1;
         if (Where != 2)
         {
-            std::string str1 = cp950toutf8(Ritem[inum].Name);
+            std::string str1 = cp950toutf8(Ritem[inum].Name, sizeof(Ritem[inum].Name));
             DrawTextWithRect("誰要服用", 80, 30, (int)str1.size() * 11 + 80, ColColor(0x21), ColColor(0x23));
             DrawShadowText(str1, 160, 32, ColColor(0x64), ColColor(0x66));
             UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
@@ -4760,7 +4766,7 @@ void MenuStatus()
         {
             if (TeamList[i] >= 0)
             {
-                menuStr[i] = cp950toutf8(Rrole[TeamList[i]].Name);
+                menuStr[i] = cp950toutf8(Rrole[TeamList[i]].Name, sizeof(Rrole[TeamList[i]].Name));
                 Amount++;
             }
         }
@@ -4837,7 +4843,7 @@ void ShowStatus(int rnum, int x, int y)
     DrawRectangle(screen, x, y, 545, 315, 0, ColColor(255), 50);
 
     DrawHeadPic(Rrole[rnum].HeadNum, x + 60, y + 80);
-    std::string Name = cp950toutf8(Rrole[rnum].Name, 5);
+    std::string Name = cp950toutf8(Rrole[rnum].Name, sizeof(Rrole[rnum].Name));
     DrawShadowText(Name, x + 88 - DrawLength(Name) * 5, y + 85, ColColor(0x66), ColColor(0x63));
 
     for (int i = 0; i <= 5; i++)
@@ -4972,7 +4978,7 @@ void ShowStatus(int rnum, int x, int y)
         {
             int mnum = Rrole[rnum].Magic[i];
             int levelIdx = Rrole[rnum].MagLevel[i] / 100;    // 0-based index
-            std::string mname = cp950toutf8(Rmagic[mnum].Name);
+            std::string mname = cp950toutf8(Rmagic[mnum].Name, sizeof(Rmagic[mnum].Name));
             DrawShadowText(mname, x + 335, y + 26 + 21 * i, ColColor(0x5), ColColor(0x7));
             buf = std::format("{:2d}", levelIdx + 1);
             DrawEngShadowText(buf, x + 462, y + 26 + 21 * i, ColColor(0x64), ColColor(0x66));
@@ -5088,7 +5094,7 @@ void ShowSimpleStatus(int rnum, int x, int y)
 
     DrawRectangle(screen, x, y, 145, 173, 0, ColColor(255), 50);
     DrawHeadPic(Rrole[rnum].HeadNum, x + 50, y + 63);
-    std::string Name = cp950toutf8(Rrole[rnum].Name, 5);
+    std::string Name = cp950toutf8(Rrole[rnum].Name, sizeof(Rrole[rnum].Name));
     DrawShadowText(Name, x + 80 - DrawLength(Name) * 5, y + 65, ColColor(0x64), ColColor(0x66));
     for (int i = 0; i <= 3; i++)
     {
@@ -5516,7 +5522,7 @@ int EatOneItem(int rnum, int inum, int times, int display)
         };
 
         // 显示"服用"或"練成N次"
-        std::string itemName = cp950toutf8(Ritem[inum].Name, 20);
+        std::string itemName = cp950toutf8(Ritem[inum].Name, sizeof(Ritem[inum].Name));
         int nameW = 100 + DrawLength(itemName) * 10;
         DrawRectangle(screen, 100, 70, nameW, 25, 0, ColColor(255), 50);
         std::string headerStr;
@@ -5738,7 +5744,7 @@ int teleport()
         if (hoverScene >= 0)
         {
             DrawRectangleWithoutFrame(screen, hx, hy, 5, 5, 0xFFFFFFFF, 50);
-            std::string name = cp950toutf8(Rscene[hoverScene].Name);
+            std::string name = cp950toutf8(Rscene[hoverScene].Name, sizeof(Rscene[hoverScene].Name));
             DrawTextWithRect(name, hx + 7, hy - 5, -1, ColColor(5), ColColor(7));
         }
         SDL_Delay(16);
@@ -5821,7 +5827,7 @@ int TeleportByList()
             continue;
         }
         sceneIdx.push_back(i);
-        std::string nameStr = cp950toutf8(Rscene[i].Name);
+        std::string nameStr = cp950toutf8(Rscene[i].Name, sizeof(Rscene[i].Name));
         if (DrawLength(nameStr) <= 0)
         {
             nameStr = std::format("場景{}", i);
@@ -5872,7 +5878,7 @@ int TeleportByList()
     for (int i = 0; i < (int)sceneIdx.size(); i++)
     {
         int sc = sceneIdx[i];
-        std::string nameStr = cp950toutf8(Rscene[sc].Name);
+        std::string nameStr = cp950toutf8(Rscene[sc].Name, sizeof(Rscene[sc].Name));
         if (DrawLength(nameStr) <= 0)
         {
             nameStr = std::format("場景{}", sc);

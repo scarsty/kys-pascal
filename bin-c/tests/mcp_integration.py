@@ -77,6 +77,7 @@ class DragonIntegration(unittest.TestCase):
         q = g.call("navigate", x=31, y=41)
         self.assertFalse(q["action_result"]["reached"])
         self.assertEqual(q["state"]["where"], 0)
+        self.rejects_unchanged(g, "travel", scene=2)
         self.rejects_unchanged(g, "travel", scene=0)
 
     def test_native_training_items_loss_manual_and_replay(self):
@@ -433,6 +434,7 @@ class DragonIntegration(unittest.TestCase):
             ex, ey = scene["exits"][0]
             q = g.call("navigate", x=ex, y=ey)
             self.assertEqual(q["state"]["where"], 0)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)

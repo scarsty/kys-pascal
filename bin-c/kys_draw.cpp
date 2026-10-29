@@ -582,7 +582,7 @@ void DrawMMap()
             }
 
             TPosition pos = GetPositionOnScreen(sx, sy, Mx, My);
-            std::string name = cp950toutf8(Rscene[snum].Name);
+            std::string name = cp950toutf8(Rscene[snum].Name, sizeof(Rscene[snum].Name));
             if (DrawLength(name) <= 0)
             {
                 continue;

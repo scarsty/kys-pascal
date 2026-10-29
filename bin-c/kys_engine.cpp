@@ -962,11 +962,16 @@ std::string cp950toutf8(const char* str, int len)
         return "";
     }
     int slen = (len < 0) ? (int)strlen(str) : len;
+    if (len >= 0)
+    {
+        const char* end = static_cast<const char*>(memchr(str, '\0', slen));
+        if (end) slen = static_cast<int>(end - str);
+    }
     if (slen == 0)
     {
         return "";
     }
-    return PotConv::cp950toutf8(std::string(str));    //这里暂时不处理len参数了，后续如果有需要再加上
+    return PotConv::cp950toutf8(std::string(str, slen));
 }
 
 std::string utf8tocp950(const std::string& str)

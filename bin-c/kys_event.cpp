@@ -728,10 +728,11 @@ void instruct_32(int inum, int amount)
         return;
     }
     int i = 0;
-    while (RItemList[i].Number >= 0 && i < MAX_ITEM_AMOUNT)
+    while (i < MAX_ITEM_AMOUNT && RItemList[i].Number >= 0)
     {
         if (RItemList[i].Number == inum)
         {
+            int previousAmount=RItemList[i].Amount;
             RItemList[i].Amount += amount;
             if (RItemList[i].Amount < 0 && amount >= 0)
             {
@@ -740,6 +741,17 @@ void instruct_32(int inum, int amount)
             if (RItemList[i].Amount < 0 && amount < 0)
             {
                 RItemList[i].Amount = 0;
+            }
+            // Quest handovers must not leave an unowned weapon/armor granting
+            // bonuses. Only an actual last-unit removal changes these links;
+            // existing save inconsistencies and practice books stay untouched.
+            if (amount<0 && previousAmount>0 && RItemList[i].Amount==0 &&
+                inum>=0 && inum<static_cast<int>(std::size(Ritem)) && Ritem[inum].ItemType==1)
+            {
+                for (auto& role:Rrole)
+                    for (auto& equipped:role.Equip)
+                        if (equipped==inum) equipped=-1;
+                Ritem[inum].User=-1;
             }
             break;
         }
@@ -1239,7 +1251,7 @@ void instruct_64()
     {
         if (RShop[shopnum].Amount[i] > 0)
         {
-            auto buf = std::format("{:<20s}{:5d}", cp950toutf8(Ritem[RShop[shopnum].Item[i]].Name), RShop[shopnum].Price[i]);
+            auto buf = std::format("{:<20s}{:5d}", cp950toutf8(Ritem[RShop[shopnum].Item[i]].Name, sizeof(Ritem[RShop[shopnum].Item[i]].Name)), RShop[shopnum].Price[i]);
             menuStr[amount] = buf;
             list[amount] = i;
             amount++;
@@ -2206,7 +2218,7 @@ void NewTalk(int headnum, int talknum, int namenum, int place, int showhead, int
             {
                 if (Rrole[i].HeadNum == HeadNumR || (i == 0 && HeadNumR == 0))
                 {
-                    NameStr = cp950toutf8(Rrole[i].Name, 20);
+                    NameStr = cp950toutf8(Rrole[i].Name, sizeof(Rrole[i].Name));
                     break;
                 }
             }
@@ -2222,7 +2234,7 @@ void NewTalk(int headnum, int talknum, int namenum, int place, int showhead, int
     }
 
     // 分析主角名字并替换
-    std::string FullNameStr = cp950toutf8(Rrole[0].Name, 20);
+    std::string FullNameStr = cp950toutf8(Rrole[0].Name, sizeof(Rrole[0].Name));
     if (TalkStr.find(FullNameCode) != std::string::npos)
     {
         std::string result;
