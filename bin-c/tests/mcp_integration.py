@@ -460,6 +460,74 @@ class DragonIntegration(unittest.TestCase):
         self.assertEqual(sum(a!=b for a,b in zip(original, repaired)), 12)
         self.assertEqual((self.mod / "save/ranger.grp").read_bytes(), original)
 
+    def test_debug_lingjiu_picture_counter_original_and_repaired(self):
+        from dragon_audit import audit, repair_pictures
+        originals = {name: (self.mod / name).read_bytes()
+                     for name in ("save/alldef.grp", "resource/kdef.idx", "resource/kdef.grp")}
+        files, patch = repair_pictures(*originals.values())
+        self.assertEqual((patch["after"], patch["reward_script"]), (1087, 1094))
+        self.assertEqual(patch["changed_event_bytes"], 2)
+        self.assertEqual(patch["appended_index_bytes"], 32)
+        self.assertEqual(patch["appended_script_bytes"], 102)
+        for name in ("resource/kdef.idx", "resource/kdef.grp"):
+            self.assertTrue(files[name].startswith(originals[name]))
+        with self.assertRaises(ValueError):
+            repair_pictures(files["save/alldef.grp"], originals["resource/kdef.idx"],
+                            originals["resource/kdef.grp"])
+        with self.assertRaises(ValueError):
+            repair_pictures(originals["save/alldef.grp"], originals["resource/kdef.idx"],
+                            originals["resource/kdef.grp"] + b"\0\0")
+        repaired_mod = self.scratch / "pictures-repaired-mod"
+        shutil.copytree(self.mod, repaired_mod)
+        for name, data in files.items():
+            (repaired_mod / name).write_bytes(data)
+        report, _, _ = audit(repaired_mod)
+        self.assertEqual(report["script_issues"], [])
+        self.assertEqual(report["invalid_triggers"], [])
+        ascending = (15, 16, 17, 18, 20, 21, 22)
+        for modified, order in ((False, ascending), (True, ascending),
+                                (True, tuple(reversed(ascending)))):
+            with self.subTest(repaired=modified, order=order):
+                g, _ = self.game(debug=True, mod=repaired_mod if modified else self.mod)
+                # Explicit scene/ethics fixture; not campaign progression evidence.
+                g.call("debug", scene=60, field=56, value=80)
+                g.call("interact", slot=15)
+                q = g.call("choose", index=1)
+                self.assertIn(49, party(q["state"]))
+                aptitude = next(r for r in q["state"]["party"] if r["id"] == 49)["aptitude"]
+
+                def interact_picture(slot):
+                    scene = g.call("inspect_scene", scene=12)
+                    event = next(e for e in scene["events"] if e["slot"] == slot)
+                    x, y = event["xy"]
+                    # Place the fixture beside the actual event and still use
+                    # normal event dispatch, not arbitrary script invocation.
+                    g.call("debug", scene=12, x=x, y=y+1)
+                    return g.call("interact", slot=slot)
+
+                q = interact_picture(19)
+                self.assertEqual(amount(q["state"], 79), 0)
+                for count, slot in enumerate(order, 1):
+                    interact_picture(slot)
+                    if modified and count < 7:
+                        q = interact_picture(19)
+                        self.assertEqual(amount(q["state"], 79), 0)
+                        self.assertEqual(amount(q["state"], 99), 0)
+                q = interact_picture(19)
+                monk = next(r for r in q["state"]["party"] if r["id"] == 49)
+                self.assertEqual(amount(q["state"], 79), 1 if modified else 0)
+                self.assertEqual(amount(q["state"], 99), 0 if modified else 1)
+                self.assertEqual(monk["aptitude"], aptitude + (10 if modified else 0))
+                self.assertIn(101 if modified else 14, [m["id"] for m in monk["magic"]])
+                # The independent chest must retain its original reward.
+                q = interact_picture(23)
+                self.assertEqual(amount(q["state"], 99), 1 if modified else 2)
+                self.rejects_unchanged(g, "interact", slot=23)
+                self.rejects_unchanged(g, "interact", slot=19)
+                g.close()
+        for name, original in originals.items():
+            self.assertEqual((self.mod / name).read_bytes(), original)
+
     def test_debug_chuang_saber_caves_original_and_repaired(self):
         from dragon_audit import audit, repair_saber_event
         report, _, _ = audit(self.mod)

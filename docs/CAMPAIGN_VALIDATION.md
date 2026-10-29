@@ -7,7 +7,7 @@ the wrong trigger, outside the played scenarios. The earlier completed-goal
 designation must not be read as a stability finding.
 
 The primary native campaign has completed all fourteen books and the actual
-ending. The alternate combined campaign has thirteen books; supplementary
+ending. The alternate combined campaign also has all fourteen books; supplementary
 branch campaigns continue. All use actual stdio MCP with `--debug` absent
 and **苍龙逐曰完全攻略** as the reference.
 The original supplied mod remains the reference. A data repair must first be
@@ -43,20 +43,20 @@ It would not prove every possible event order or every graphical behavior.
 | 飞狐外传 | 苗人凤 duel4 won6; book144/map/manual | Evil duel0 manually won9 on0.2.3; book144/map/manual | Both 田归农 choices played |
 | 雪山飞狐 | Scene85 guards, saber gate and four rewards | Scene85 passed | All original variants reached; scene84 failed as reported. Fresh repaired84 passed separately |
 | 连城诀 | 狄云, ethics81, book146/神照71 | Evil route passed in combined and independent branch campaigns | Important poem wrong-item, consumption and repeat checks passed |
-| 天龙八部 | 聚贤庄/少林 fights; book147/降龙86 | Evil formations; book147/慕容/王 | 虚竹/灵鹫宫 subsidiary branches need separate accounting |
-| 射雕英雄传 |176 won4;177 manual clean replay won6; book148 | Kill一灯68 passed;187/183/184 won,185 lost, retry pending | Root spare一灯175 won2/一阳96; final186 still lost, no book |
-| 白马啸西风 | Spare route, ruins and weapon-gated door passed | Evil route passed on0.2.2 | Alternate final-build combat replay remains due |
-| 鹿鼎记 | Scene91 guards and book150 passed | Scene91 required1076/1075 and book150 passed | Optional1074 and later recruitments need separate coverage |
+| 天龙八部 | 聚贤庄/少林 fights; book147/降龙86 | Evil formations; book147/慕容/王 | 虚竹/灵鹫/丁春秋/薛 sidequests passed; all-seven picture reward is defective |
+| 射雕英雄传 |176 won4;177 manual clean replay won6; book148 | Kill一灯68 and finals187/183/184/185 passed;148/九阴84 | Root spare一灯175 won2/一阳96; final186 still lost, no book |
+| 白马啸西风 | Spare route, ruins and weapon-gated door passed | Evil route passed on0.2.2 | Final-build replay92/91 and actual ruins approach passed |
+| 鹿鼎记 | Scene91 guards and book150 passed | Scene91 required1076/1075 and book150 passed | Primary1074 confirmed; both wives separately recruited, mutual party exclusion verified |
 | 笑傲江湖 | Righteous chain, 东方54 won2 and book151 passed | Evil chain,54 won3; Five Mountains fights and151 passed | Trust/menu variations recorded; branch ledger still needs final reconciliation |
-| 书剑恩仇录 |141/142/143; book152 |138/139/144/140; book152/张召重 | Full-party 霍青桐 recruitment reward remains to check |
+| 书剑恩仇录 |141/142/143; book152 |138/139/144/140; book152/张召重 | Full-party sends her home; actual later join correctly grants132 |
 | 神雕侠侣 | Refused金轮; group fights and153 | Accepted金轮;75 won1,153/降魔170 | Both main book routes passed |
 | 侠客行 | 石破天 and scholar conversations;154/太玄80 |170 retry won3;154 | Important酒/令 transitions played; guide side branches still need reconciliation |
-| 倚天屠龙记 | 成昆/head219→谢逊;155/鹰爪109 | 成昆/head219→玄慈;155 | Battle80 genuinely lost but script progressed. Full6+2 allies 崆峒 waves passed; guide warning not reproduced. Optional buried九阳 remains |
+| 倚天屠龙记 | 成昆/head219→谢逊;155/鹰爪109 | 成昆/head219→玄慈;155 | Battle80 genuinely lost but script progressed. Full6+2 allies 崆峒 waves passed; guide warning not reproduced. Buried九阳 actual wrong-compass/correct-shovel passed |
 | 碧血剑 | Physician route passed;156 | Evil corpse route passed;156 | Independent no-doctor high/exact75/74-fight branches passed |
 | 鸳鸯刀 | Both blades,157/夫妻140 | Kill route132/137 won1;157 | Wrong compass also places owned blades in both orders; shared script behavior, no repair |
 | 华山/钓鱼岛 ending | Completed:18 solo opponents, group133,14 altars,神杖205,128–131 and native terminal ending | Not repeated | Primary has full transcript and final checkpoint; mixed-build lineage explicit |
 | Hidden room | 松風→神山 passed independently from earned all14 checkpoint | Not played | 南贤 activation required. Three alternative starter-manual arts unplayed |
-| Other guide sidequests | Partially covered | Partially covered | Explicit unvisited branches below remain; no full-game stability claim |
+| Other guide sidequests | Partially covered | Partially covered | Detailed optional results below; remaining hidden starter alternatives unplayed |
 
 Detailed live journals, coverage records, native RPC transcripts and saves are
 under `tmp/campaign/reference/` and `tmp/campaign/alternate/`. These are gameplay
@@ -67,8 +67,7 @@ Both main campaigns restarted from a fresh strict `new_game(seed=7)` after
 the world-travel fix. A third strict run under `tmp/campaign/sidequests/`
 is exercising the duplicate caves and sidequests, including both Western
 village shovel rewards and the refusal branch. The righteous combined run earned all fourteen books and completed the native
-ending. The alternate combined run has thirteen books, with only 射雕 still
-pending. The primary pre-ending `all14books` checkpoint is preserved for
+ending. The alternate combined run also has all fourteen books after native final185. The primary pre-ending `all14books` checkpoint is preserved for
 independent branches. The alternate native ruins map names coordinates `(80,212)` and opens
 scene 87; the route includes fights 92 and 91, linked ruin scene 89, the owned
 玄鐵劍 stone-door check, and a book chest that gives no duplicate reward.
@@ -131,7 +130,7 @@ last-unit links clear. Earlier campaigns retain their original caveat.
 | Only automatic event approach exposed | Difficult to compare an exact position/facing with player input | `step`, `face`, current-facing `interact`, per-tile inspection added and retested |
 | Out-of-battle recovery skills unavailable | Poisoned/injured roles could not use the native treatment menus | Native `party_action` medicine/detox added; real actor/recipient menu and effects regression passes |
 
-Build 0.2.7 passes the asset-free core checks and eighteen MCP integration cases.
+Build 0.2.7 passes the asset-free core checks and nineteen MCP integration cases.
 Actual manual play identified another observation gap: line/area attacks aimed
 at empty direction tiles did not expose affected enemies before later turns
 or battle-end restoration. `affected` now captures every changed target's
@@ -235,15 +234,46 @@ author intent is unverified and no speculative repair is applied.
 
 ## Outstanding acceptance work
 
-- Finish 射雕 kill一灯 final185 and the separate spare一灯 final186.
-- Replay the alternate 白马 combat on the corrected movement build and
-  reconcile any other pre-fix fight-specific obligations.
-- Reconcile every guide side branch against exact transcript evidence, including
-  虚竹/灵鹫宫, optional 鹿鼎 guardians/recruitment, full-party 霍青桐, buried
-  九阳, football practice, and remaining starter schools/hidden arts.
+- Finish the separate spare一灯 final186; kill一灯 final185 has passed.
+- Complete fresh repaired 灵鹫宫 progression after its native regression.
+- Reconcile any remaining pre-fix fight-specific obligations. The requested
+  older 白马92/91 replay on the corrected build has passed.
+- Validate the remaining exclusive starter-manual hidden arts with naturally
+  obtained manuals; existing 松風→神山 evidence covers only one alternative.
 - Resolve the unverified scene10/slot0 item-trigger candidate through actual
   play; do not patch a heuristic flag as if it were a proven bug.
 - Preserve failed attempts, build/data provenance and unvisited statuses.
 
 The goal remains active. A primary ending plus selected opposite branches
 does not establish every branch, every approach or all-game stability.
+
+## Reconciled optional guide coverage
+
+The alternate combined campaign now has all14 books:187/183/184/185 won
+1/1/4/4 rounds, final185 manually and without a forced result. Natural shovel
+九阳, prior earned book experience and ordinary fights developed the needed
+art; 王 survived with owned armor/medicine and legal retreat. Exact lines2254–
+2257 establish148/84 and fourteen owned books. The original low-level 白马
+checkpoint was replayed on0.2.7:92 won5,91 won4, native approach/jump, owned
+玄铁 gate and one-time149 reward. Lin revenge, both Huo alternatives and the
+pre一灯 Mei quest also passed. Starting 一灯 removes Mei's cave event before
+the moral choice; the guide omits that deadline. See alternate/strict/handoff.md.
+
+The primary supplementary run used four hashed earned checkpoints and current
+binary47A1. Native results include delayed 霍132; separate 苏荃/阿珂 recruitment
+and their mutual party exclusion; 虚竹 inheritance, 灵鹫202, 丁86, 苏回报 and
+薛188; all six wooden/copper solo fights and168/85; 瑛姑/周235 and speed+20;
+小龙女/读172; early 蓝凤凰 healing and later173 recruitment; football win/loss;
+and merit-box donation/withdrawal. The actual guide timing/threshold differences
+are recorded without speculative patches in reference-sidequests/findings.md.
+
+The 灵鹫 all-seven picture sequence fails as a mod-data defect:624+7 routes
+to unrelated631 instead of630. Two independent actual replays, the clean
+pre-picture checkpoint and native original/repaired fixture are retained. The
+guarded separate repair appends dedicated counter states and retains all
+existing scripts. Fresh repaired progression is pending; see DRAGON_FINDINGS.md.
+
+The new armored root186 attempt killed four enemies with a real manual玄鐵
+opening but 王 still died before her first turn; remaining native AI lost6.
+`spare186_armored_loss` records it. The earned pre-fight state was restored
+without retaining loss growth. Further normal preparation remains necessary.

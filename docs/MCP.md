@@ -263,6 +263,24 @@ trigger candidates alone. This file is a **new-game event template**; existing
 graphical save `dN.grp` files contain separate event state. The regression
 tests the original failure and repaired success through actual MCP calls.
 
+The independently reproduced 灵鹫宫 seven-picture counter needs a three-file
+new-game repair package:
+
+```powershell
+python tools/dragon_audit.py tmp/runtime/kys-Dragon `
+  --report tmp/validation/lingjiu-repair.json `
+  --repair-pictures-output tmp/repairs/lingjiu
+```
+
+The output directory must be new. Copy its `save/alldef.grp` and both
+`resource/kdef.*` files together into a separate complete runtime. This package
+contains only the picture repair; it is an alternative event template to the
+standalone saber repair, so blindly copying both templates would overwrite one
+repair with the other. The guarded Python repair functions can compose edits
+to an event buffer before writing a combined template. Original-data MCP
+checkpoints cannot be imported into a changed-data run without violating their
+identity checks.
+
 No game assets are tracked
 by this change. Temporary extraction, reports, checkpoints and diagnostic
 material belong under the single ignored `tmp/` root. Integration tests clean

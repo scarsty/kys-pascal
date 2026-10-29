@@ -153,6 +153,58 @@ def repair_saber_event(original: bytes, candidates: list[dict]):
     return bytes(repaired), patch
 
 
+def repair_pictures(original_events: bytes, original_index: bytes, original_scripts: bytes):
+    """Give Dragon's seven paintings a dedicated counter-script range.
+
+    Reuse the exact native no-op and reward payloads. Existing scripts,
+    including the folding-hand chest, are unchanged. The old 624-based counter
+    reaches the reward at six pictures and an unrelated script at seven.
+    """
+    expected_hashes = (
+        "c123ade12d6554fb1539a7a0ad27dfff8f64a1446e3a2b350c4479f29910086b",
+        "d03c428d470db54f557f2c4a2a6081aea955ab32e8a623d607d045b155823c67",
+    )
+    if (sha256(original_index), sha256(original_scripts)) != expected_hashes:
+        raise ValueError("Script files differ from the verified Dragon reference")
+    offset = (12 * 200 + 19) * 22
+    expected = (0, 19, 624, 0, 0, 0, 0, 0, 0, 20, 10)
+    if words(original_events[offset:offset+22]) != expected:
+        raise ValueError("Scene-12 central painting differs; refusing an unverified repair")
+    for slot, script in ((15, 617), (16, 618), (17, 620), (18, 619),
+                         (20, 623), (21, 622), (22, 621)):
+        if struct.unpack_from("<h", original_events, (12 * 200 + slot) * 22 + 4)[0] != script:
+            raise ValueError("Scene-12 painting sequence differs from the reference")
+    index = struct.unpack(f"<{len(original_index)//4}i", original_index)
+
+    def script_bytes(number):
+        return original_scripts[index[number-1] if number else 0:index[number]]
+
+    first = len(index)
+    appended = [script_bytes(624)] * 7 + [script_bytes(630)]
+    new_index = bytearray(original_index)
+    new_scripts = bytearray(original_scripts)
+    for payload in appended:
+        new_scripts.extend(payload)
+        new_index.extend(struct.pack("<i", len(new_scripts)))
+    events = bytearray(original_events)
+    struct.pack_into("<h", events, offset + 4, first)
+    files = {"save/alldef.grp": bytes(events),
+             "resource/kdef.idx": bytes(new_index),
+             "resource/kdef.grp": bytes(new_scripts)}
+    patch = {"scene": 12, "slot": 19, "talk_offset": offset + 4,
+             "before": 624, "after": first, "reward_script": first + 7,
+             "appended_scripts": len(appended),
+             "appended_index_bytes": len(new_index) - len(original_index),
+             "appended_script_bytes": len(new_scripts) - len(original_scripts),
+             "changed_event_bytes": sum(a != b for a, b in zip(original_events, events)),
+             "files": {name: {"sha256": sha256(data), "bytes": len(data)}
+                       for name, data in files.items()},
+             "original_hashes": {"events": sha256(original_events),
+                                 "index": sha256(original_index),
+                                 "scripts": sha256(original_scripts)}}
+    return files, patch
+
+
 def validate_outputs(mod: Path, outputs: dict[str, Path | None]):
     """Keep all generated files outside the reference and mutually distinct."""
     seen = set()
@@ -176,14 +228,29 @@ def main():
     parser.add_argument("--scripts", type=Path, help="Optional full decoded bytecode, for guide investigations")
     parser.add_argument("--repair-output", type=Path, help="NEW ranger.grp; never overwrite the input")
     parser.add_argument("--repair-event-output", type=Path, help="NEW alldef.grp; fix only confirmed scene-84 saber trigger")
+    parser.add_argument("--repair-pictures-output", type=Path,
+                        help="NEW directory with save/alldef.grp and resource/kdef.*; fix seven-picture counter")
     args = parser.parse_args()
     try:
-        validate_outputs(args.mod, {"report": args.report, "scripts": args.scripts,
-                                    "repair_names": args.repair_output,
-                                    "repair_event": args.repair_event_output})
+        outputs = {"report": args.report, "scripts": args.scripts,
+                   "repair_names": args.repair_output, "repair_event": args.repair_event_output,
+                   "repair_pictures": args.repair_pictures_output}
+        if args.repair_pictures_output:
+            outputs.update({"repair_picture_" + name: args.repair_pictures_output / name
+                            for name in ("save/alldef.grp", "resource/kdef.idx", "resource/kdef.grp")})
+        validate_outputs(args.mod, outputs)
     except ValueError as error:
         parser.error(str(error))
     report, scripts, original = audit(args.mod)
+    if args.repair_pictures_output:
+        files, patch = repair_pictures((args.mod / "save/alldef.grp").read_bytes(),
+                                      (args.mod / "resource/kdef.idx").read_bytes(),
+                                      (args.mod / "resource/kdef.grp").read_bytes())
+        for name, data in files.items():
+            output = args.repair_pictures_output / name
+            output.parent.mkdir(parents=True, exist_ok=True)
+            output.write_bytes(data)
+        report["pictures_repair"] = {"output": str(args.repair_pictures_output.resolve()), **patch}
     if args.repair_output:
         repaired, patches = repair_names(original, report["item_name_defects"])
         args.repair_output.parent.mkdir(parents=True, exist_ok=True)

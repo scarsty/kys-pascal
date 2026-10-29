@@ -193,6 +193,46 @@ load `d1.grp`, `d2.grp`, etc., so replacing only `alldef.grp` does not update
 their already-saved event records. Old save files were not patched. MCP
 checkpoints also preserve their own event state and check the mod fingerprint.
 
+## Actual-play defect: 灵鹫宫 pictures advance past the intended reward
+
+Two independent native playthroughs reproduced scene12's counter error. The
+seven other pictures (slots15/16/17/18/20/21/22, scripts617–623) each increment
+slot19's ordinary-interaction script by one. Its original value is624. After
+six pictures it reaches630 and gives 八荒六合唯我独尊功79; with 虚竹 present
+it teaches magic101 and raises aptitude by10. Reading all seven, as the guide
+instructs, advances it to631 instead: 天山折梅手99, magic14 and no aptitude
+increase. The independent chest at slot23 also uses631, so the original
+all-seven sequence can award99 twice while missing79.
+
+This is shared mod-script routing, not an MCP or C++ opcode26 discrepancy.
+Early interaction at624 is a no-op. Repeated interaction with a cleared
+picture does not advance the counter. Changing the initial value to623 is
+unsafe because623 is a live picture script that clears the current event.
+
+The guarded repair appends seven exact copies of native no-op624 followed
+by the unchanged native630 reward payload. The new range is1087–1094;
+slot19 starts at1087 and reaches1094 only after all seven distinct pictures.
+All pre-existing script bytes and indices, the picture scripts, the separate
+folding-hand chest, reward conditions and graphical presentation are retained.
+The event template changes two bytes at53222; the script files append102 data
+bytes and32 index bytes. All three files must be installed together into a
+separate new-game mod copy. Existing progressed saves are not migrated.
+
+- Repaired `alldef.grp`: `5c49c7cd00d91252eb69513dfd944ea5ea4f1994c7edcebb128e0127c14dd2d9`.
+- Repaired `kdef.idx`: `c641d42083f37ade387585afe1175e337e0a5545eda322462a12ea080b5ce4e2`.
+- Repaired `kdef.grp`: `b08810e0656d8d5ac8e073aa56d1df89fe92f87517741143e3eadf16e1f3854e`.
+
+The tool verifies exact original script-file hashes, the central record and
+all seven picture references before writing a new package. The native
+regression reproduces the original wrong reward and duplicate chest. It checks
+both picture orders, early central clicks after0–6 pictures, the corrected
+manual/martial/aptitude reward at7, unchanged chest reward and repeat rejection.
+These explicitly labeled debug fixtures are not campaign progression evidence.
+The actual original failure is at primary sidequest RPC239–253, with a clean
+pre-picture checkpoint; independent replay is under
+`tmp/campaign/fidelity-pictures/`. A fresh repaired-data campaign is in progress
+without importing original-data checkpoints.
+
 ## Actual-play finding: wrong selected item places the paired sabers
 
 The guide instructs the player to place 鴛刀217 and 鴦刀218 in their separate
@@ -260,7 +300,7 @@ graphical semi-real-time initiative. The final assessment is retained at
 
 ## Validation and retained material
 
-The repeatable asset-free core tests and eighteen-case Dragon integration suite
+The repeatable asset-free core tests and nineteen-case Dragon integration suite
 live under `bin-c/tests/`. Integration uses a real MCP handshake and checks
 opening, invalid-input atomicity, native item exchanges/training combat,
 checkpoint/RNG replay, fresh-process restore, corrupted-save rejection,
@@ -277,7 +317,7 @@ omitted level-up tables and silently produced a1→60 level jump; that attempt
 is excluded, preserved separately, and restarted with the complete runtime.
 It cleans up checkpoint files and the temporary repaired mod under `tmp/`.
 
-Both CTest targets pass with eighteen real stdio integration cases. The
+Both CTest targets pass with nineteen real stdio integration cases. The
 primary ending completed on campaign build0.2.7, SHA-256
 `372DC2F44B4EFBC9DE8206233A77B0049AD002432BE70F974F9C9EAAFA415AB2`.
 Earlier progress retains its own build identity and explicit checkpoint
