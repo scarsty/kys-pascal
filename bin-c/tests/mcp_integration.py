@@ -288,6 +288,106 @@ class DragonIntegration(unittest.TestCase):
         finally:
             path.write_bytes(original)
 
+    def test_dos_profile_native_training_and_durable_rules_state(self):
+        mod = self.scratch / "dos-profile"
+        saves = self.scratch / "dos-profile-saves"
+        shutil.copytree(self.mod, mod)
+        ini = mod / "kysmod.ini"
+        original = ini.read_bytes()
+        preset = b"\n[rules]\nprofile=dragon_dos12\n"
+        ini.write_bytes(original + preset)
+        g, q = self.game(mod=mod, save_dir=saves)
+        before = g.call("state")
+        rules = g.call("rules")
+        self.assertEqual(g.call("state"), before)  # inspection consumes no RNG
+        self.assertEqual((rules["max_level"], rules["max_hp"], rules["max_mp"]), (30, 999, 9999))
+        self.assertEqual(rules["xp_mode"], "cumulative")
+        self.assertEqual((len(rules["xp_thresholds"]), rules["xp_thresholds"][-1]), (29, 52000))
+        self.assertEqual(q["state"]["party"][0]["next_level_exp"], 50)
+        self.training(g)
+        g.call("interact", slot=0)
+        q = g.call("choose", index=1)
+        # The fresh hero has no martial art yet. Complete the first native
+        # sparring attempt so book practice can actually teach 松風劍法.
+        for _ in range(10):
+            if not q["state"]["pending"]:
+                break
+            q = g.call("choose", index=2)
+        self.assertIsNone(q["state"]["pending"])
+        self.assertTrue(q["state"]["party"][0]["magic"])
+        g.call("interact", slot=0)
+        q = g.call("choose", index=1)
+        observed = g.call("inspect_battle", radius=0)
+        art = observed["magic"][0]
+        detail = g.call("search", kind="magic", id=art["id"])["results"][0]
+        self.assertGreaterEqual(art["effective_level"], 1)
+        self.assertLessEqual(art["effective_level"], art["level"])
+        self.assertEqual(art["mp_cost"], detail["base_mp_cost"] * (art["effective_level"] // 2))
+        for _ in range(10):
+            if not q["state"]["pending"]:
+                break
+            self.assertEqual(q["state"]["pending"]["kind"], "battle_turn")
+            q = g.call("choose", index=2)
+        self.assertIsNone(q["state"]["pending"], "DOS training exceeded 1000 rounds")
+        self.assertTrue(any(" won " in m["text"] for m in q["messages"]), q["messages"][-5:])
+        hero = q["state"]["party"][0]
+        self.assertGreater(hero["exp"], 0)
+        expected_level = 1 + sum(hero["exp"] >= xp for xp in rules["xp_thresholds"])
+        self.assertEqual(hero["level"], expected_level)
+        self.assertGreater(g.call("rules")["dos_mp_cost_cache"], 0)
+        saved = g.call("state")
+        g.call("checkpoint", action="save", label="after_training")
+        g.close()
+        data = (saves / "after_training.kys-save").read_bytes()
+        # Even a correctly checksummed V3 payload cannot describe DOS cost
+        # state. Explicit legacy-import permission must not bypass that gap.
+        old_format = bytearray(data[:-12] + data[-8:])
+        cache = struct.unpack_from("<i", data, len(data)-12)[0]
+        struct.pack_into("<Q", old_format, 8, 3)
+        checksum = struct.unpack_from("<Q", old_format, len(old_format)-8)[0] ^ cache
+        struct.pack_into("<Q", old_format, len(old_format)-8, checksum)
+        (saves / "missing_cache.kys-save").write_bytes(old_format)
+        h, _ = self.game(mod=mod, save_dir=saves)
+        self.rejects_unchanged(h, "checkpoint", action="load", label="missing_cache")
+        q = h.call("checkpoint", action="load", label="after_training")
+        self.assertEqual(q["checkpoint_format"], 4)
+        self.assertEqual(q["state"], saved)
+        h.close()
+        # Every knob lives in the already-fingerprinted INI. The original
+        # runtime remains unchanged, and a changed profile rejects this save.
+        ini.write_bytes(original + preset + b"max_hp=1000\n")
+        h, _ = self.game(mod=mod, save_dir=saves)
+        self.rejects_unchanged(h, "checkpoint", action="load", label="after_training")
+        h.close()
+
+    def test_rules_configuration_validation(self):
+        mod = self.scratch / "rules-config"
+        shutil.copytree(self.mod, mod)
+        ini = mod / "kysmod.ini"
+        original = ini.read_bytes()
+        for config, diagnostic in (
+            ("profile=typo", "Unknown rules mode"),
+            ("profile=dragon_dos12\nmax_level=31", "XP table"),
+            ("profile=dragon_dos12\nmax_level=0", "max_level"),
+            ("profile=dragon_dos12\nmax_mp=0", "max_mp"),
+            ("profile=dragon_dos12\nhp_growth_factor=abc", "hp_growth_factor"),
+            ("profile=dragon_dos12\nxp_thresholds=50,50", "strictly increasing"),
+            ("profile=dragon_dos12\nxp_thresholds=50,", "Trailing comma"),
+            ("combat=typo", "Unknown rules mode"),
+        ):
+            with self.subTest(config=config):
+                ini.write_bytes(original + ("\n[rules]\n" + config + "\n").encode())
+                with Game(self.executable, mod) as g:
+                    with self.assertRaisesRegex(RuntimeError, diagnostic):
+                        g.call("new_game", seed=7)
+        ini.write_bytes(original + b"\n[rules]\nprogression=dragon_dos12\ncombat=legacy\nmax_level=3\nxp_thresholds=10,20\nhp_growth_factor=5\nmp_growth_factor=6\nattack_growth_factor=2\nspeed_growth_factor=0\ndefence_growth_factor=3\n")
+        g, _ = self.game(mod=mod)
+        rules = g.call("rules")
+        self.assertEqual((rules["progression"], rules["combat"]), ("dragon_dos12", "legacy"))
+        self.assertEqual(rules["xp_thresholds"], [10, 20])
+        self.assertEqual((rules["max_level"], rules["hp_growth_factor"], rules["mp_growth_factor"]), (3, 5, 6))
+        self.assertEqual((rules["attack_growth_factor"], rules["speed_growth_factor"], rules["defence_growth_factor"]), (2, 0, 3))
+
     def test_checkpoint_rejects_changed_rules_and_world(self):
         mod = self.scratch / "rules-identity"
         saves = self.scratch / "rules-identity-saves"
@@ -318,11 +418,13 @@ class DragonIntegration(unittest.TestCase):
         saved = g.call("state")
         g.close()
         data = (saves / "modern.kys-save").read_bytes()
-        self.assertEqual(struct.unpack_from("<Q", data, 8)[0], 3)
-        # V2 has the same native payload, without V3's final lineage word.
-        # A false lineage word XORs zero into the checksum, so stripping it
-        # reconstructs the historical format without altering native state.
-        legacy = bytearray(data[:-16] + data[-8:])
+        self.assertEqual(struct.unpack_from("<Q", data, 8)[0], 4)
+        v3 = bytearray(data[:-12] + data[-8:])
+        struct.pack_into("<Q", v3, 8, 3)
+        (saves / "v3.kys-save").write_bytes(v3)
+        # Legacy mode has a zero DOS cache and a false lineage word; removing
+        # both reconstructs V2 without changing its checksum.
+        legacy = bytearray(data[:-20] + data[-8:])
         identity = 14695981039346656037
         for relative in ("kysmod.ini", "save/ranger.idx", "save/ranger.grp", "save/allsin.grp",
                          "save/alldef.grp", "resource/kdef.idx", "resource/kdef.grp",
@@ -333,6 +435,9 @@ class DragonIntegration(unittest.TestCase):
         struct.pack_into("<QQ", legacy, 8, 2, identity)
         (saves / "legacy.kys-save").write_bytes(legacy)
         h, _ = self.game(save_dir=saves)
+        q = h.call("checkpoint", action="load", label="v3")
+        self.assertEqual(q["checkpoint_format"], 3)
+        self.assertEqual(q["state"], saved)
         self.rejects_unchanged(h, "checkpoint", action="load", label="legacy")
         h.close()
         h, _ = self.game(save_dir=saves, allow_legacy_checkpoints=True)
@@ -345,7 +450,7 @@ class DragonIntegration(unittest.TestCase):
         h.close()
         h, _ = self.game(save_dir=saves)
         q = h.call("checkpoint", action="load", label="migrated")
-        self.assertEqual(q["checkpoint_format"], 3)
+        self.assertEqual(q["checkpoint_format"], 4)
         self.assertTrue(q["state"]["legacy_checkpoint_lineage"])
         self.assertEqual(q["state"], saved)
 

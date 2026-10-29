@@ -3,6 +3,7 @@
 #include "kys_main.h"
 #include "kys_event.h"
 #include "kys_battle.h"
+#include "kys_rules.h"
 #include "kys_engine.h"
 #include "kys_script.h"
 #include "INIReader.h"
@@ -70,7 +71,7 @@ const char* attackTargeting(int area)
 struct Snapshot
 {
     bool legacyLineage{};
-    uint64_t sourceVersion=3;
+    uint64_t sourceVersion=4;
     std::vector<TRole> roles{std::begin(Rrole), std::end(Rrole)};
     std::vector<TItem> items{std::begin(Ritem), std::end(Ritem)};
     std::vector<TScene> scenes{std::begin(Rscene), std::end(Rscene)};
@@ -82,6 +83,7 @@ struct Snapshot
     std::array<int,20> location;
     std::array<int,2> jumpGuard{HeadlessJumpGuardX, HeadlessJumpGuardY};
     unsigned rng = HeadlessRandomState;
+    int32_t dosEffectiveLevel=DosLastEffectiveLevel;
     Snapshot()
     {
         auto copy = [](auto& to, auto& from) { to.resize(sizeof(from) / sizeof(int16_t)); std::memcpy(to.data(), &from, sizeof(from)); };
@@ -99,15 +101,17 @@ struct Snapshot
         Where=location[0]; CurScene=location[1]; Sx=location[2]; Sy=location[3]; SFace=location[4]; Mx=location[5]; My=location[6]; MFace=location[7]; InShip=location[8];
         ShipX=location[9]; ShipY=location[10]; ShipX1=location[11]; ShipY1=location[12]; ShipFace=location[13]; CurEvent=location[14]; CurItem=location[15]; Cx=location[16]; Cy=location[17]; SavedSceneIndex=location[18]; SceneRolePic=location[19];
         HeadlessJumpGuardX=jumpGuard[0];HeadlessJumpGuardY=jumpGuard[1];
+        DosLastEffectiveLevel=dosEffectiveLevel;
     }
     void file(const fs::path& path, uint64_t identity, bool load, uint64_t legacyIdentity=0, bool allowLegacy=false)
     {
         std::fstream stream(path,std::ios::binary|(load?std::ios::in:std::ios::out|std::ios::trunc));
         require(stream.is_open(),"Cannot open checkpoint file");
-        std::array<uint64_t,3> header{0x3150414e5353594bull,3,identity},expected=header;
+        std::array<uint64_t,3> header{0x3150414e5353594bull,4,identity},expected=header;
         auto bytes=[&](void* data,size_t length){if(load)stream.read(static_cast<char*>(data),length);else stream.write(static_cast<const char*>(data),length);require(stream.good(),"Checkpoint read/write failed");};
-        bytes(header.data(),sizeof(header));require(header[0]==expected[0] && header[1]>=1 && header[1]<=3,"Checkpoint format differs");
+        bytes(header.data(),sizeof(header));require(header[0]==expected[0] && header[1]>=1 && header[1]<=4,"Checkpoint format differs");
         sourceVersion=header[1];
+        require(sourceVersion>=4 || ActiveRules.combat==RulesMode::Legacy,"DOS combat requires a V4 checkpoint with its MP-cost cache");
         if(load && sourceVersion<3)
         {
             require(allowLegacy,"Legacy checkpoint omits world/list fingerprints; verify its source files and restart with --allow-legacy-checkpoints to import explicitly");
@@ -125,6 +129,8 @@ struct Snapshot
         bytes(&rng,sizeof(rng));checksum^=rng;
         if(header[1]>=2)block(jumpGuard);else jumpGuard={-1,-1};
         if(header[1]>=3){uint64_t lineage=legacyLineage?1:0;bytes(&lineage,sizeof(lineage));require(lineage<=1,"Invalid checkpoint lineage");legacyLineage=lineage!=0;checksum^=lineage;}
+        if(header[1]>=4){bytes(&dosEffectiveLevel,sizeof(dosEffectiveLevel));require(dosEffectiveLevel>=0&&dosEffectiveLevel<=10,"Invalid DOS effective-level cache");checksum^=static_cast<uint32_t>(dosEffectiveLevel);}
+        else dosEffectiveLevel=0;
         uint64_t stored=checksum;bytes(&stored,sizeof(stored));require(checksum==stored,"Checkpoint checksum mismatch");
         if(load)require(stream.peek()==std::char_traits<char>::eof(),"Checkpoint has trailing bytes");
     }
@@ -310,6 +316,26 @@ public:
         A magic; for(int i=0;i<10;++i) if(r.Magic[i]>0 && r.Magic[i]<magicCount) magic.push_back(obj({{"slot",i},{"id",r.Magic[i]},{"name",name(Rmagic[r.Magic[i]].Name)},{"level",r.MagLevel[i]/100+1},{"proficiency",r.MagLevel[i]}}));
         return obj({{"id",id},{"name",name(r.Name)},{"level",r.Level},{"hp",arr({r.CurrentHP,r.MaxHP})},{"mp",arr({r.CurrentMP,r.MaxMP})},{"mp_type",r.MPType},{"stamina",r.PhyPower},{"injury",r.Hurt},{"poison",r.Poison},{"attack",r.Attack},{"defence",r.Defence},{"speed",r.Speed},{"ethics",r.Ethics},{"repute",r.Repute},{"aptitude",r.Aptitude},{"exp",r.Exp},{"equipment",numbers(r.Equip)},{"practice_book",r.PracticeBook},{"book_exp",r.ExpForBook},{"skills",obj({{"medicine",r.Medicine},{"detox",r.MedPoi},{"use_poison",r.UsePoi},{"poison_resistance",r.DefPoi},{"fist",r.Fist},{"sword",r.Sword},{"knife",r.Knife},{"unusual",r.Unusual},{"hidden_weapon",r.HidWeapon},{"knowledge",r.Knowledge}})},{"magic",magic}});
     }
+    J rules()
+    {
+        bool dos=ActiveRules.progression==RulesMode::DragonDos12;
+        J out=obj({{"profile",ActiveRules.profile},{"progression",RulesModeName(ActiveRules.progression)},
+            {"combat",RulesModeName(ActiveRules.combat)},{"revision",1},{"max_level",MAX_LEVEL},
+            {"max_hp",MAX_HP},{"max_mp",MAX_MP},{"max_stamina",MAX_PHYSICAL_POWER},
+            {"xp_mode",dos?"cumulative":"deduct_per_level"},{"growth_roll",dos?"once_per_level_batch":"once_per_level"},
+            {"min_knowledge",MIN_KNOWLEDGE},{"life_hurt",LIFE_HURT},{"poison_hurt",POISON_HURT},
+            {"dos_mp_cost_cache",DosLastEffectiveLevel}});
+        if(dos)
+        {
+            out["xp_thresholds"]=numbers(ActiveRules.xpThresholds);
+            out["hp_growth_factor"]=ActiveRules.hpGrowthFactor;out["mp_growth_factor"]=ActiveRules.mpGrowthFactor;
+            out["attack_growth_factor"]=ActiveRules.attackGrowthFactor;out["speed_growth_factor"]=ActiveRules.speedGrowthFactor;out["defence_growth_factor"]=ActiveRules.defenceGrowthFactor;
+            out["level_stat_caps"]="Medicine/use-poison/detox 100; attack/speed/defence/fist/sword/knife/hidden weapon retain original 16-bit growth without a 100 cap. Resistance/unusual do not grow.";
+        }
+        else out["level_stat_caps"]=numbers(MaxProList);
+        out["scope"]="Progression, HP/MP damage, poison, hidden weapons, medicine, detox and rest. AI, movement, item/book/event rules and starting data retain remake behavior.";
+        return out;
+    }
     J inventory()
     {
         A out; for(auto v:RItemList) if(v.Number>=0 && v.Amount>0) out.push_back(obj({{"id",v.Number},{"name",name(Ritem[v.Number].Name)},{"quantity",v.Amount}})); return out;
@@ -345,6 +371,13 @@ public:
         {
             auto& m=Rmagic[r.Magic[slot]];int lv=r.MagLevel[slot]/100;
             magic.push_back(obj({{"slot",slot},{"id",r.Magic[slot]},{"name",name(m.Name)},{"level",lv+1},{"area_type",m.AttAreaType},{"move_distance",m.MoveDistance[lv]},{"attack_distance",m.AttDistance[lv]},{"mp_cost",m.NeedMP*((lv+2)/2)},{"minimum_stamina",10}}));
+            if(ActiveRules.combat==RulesMode::DragonDos12)
+            {
+                int effective=DosEffectiveLevel(r,m,lv+1);
+                magic.back()["effective_level"]=m.HurtType==0?effective:lv+1;
+                magic.back()["mp_cost"]=m.NeedMP*((m.HurtType==0?effective:DosLastEffectiveLevel)/2);
+                magic.back()["mp_cost_uses_cached_hp_tier"]=m.HurtType==1;
+            }
             magic.back()["shape"]=attackShape(m.AttAreaType);magic.back()["targeting"]=attackTargeting(m.AttAreaType);
         }
         return obj({{"battle",battleState()},{"actor",actor},{"role",role(Brole[actor].rnum)},{"magic",magic},{"reachable_columns",arr({"x","y","movement_cost"})},{"reachable",reachable},{"tile_columns",arr({"x","y","ground","building","occupant_actor"})},{"tiles",tiles},{"center",arr({x,y})},{"radius",radius},{"rules","Movement/terrain from native CalCanSelect. Building>0 blocks movement; occupant -1 is empty. Low MP permits native weak attacks. Targeting uses native x/y."}});
@@ -353,6 +386,8 @@ public:
     {
         A party; for(int i=0;i<6;++i) if(TeamList[i]>=0) party.push_back(role(TeamList[i]));
         J out=obj({{"loaded",loaded},{"where",Where},{"scene",CurScene},{"scene_name",CurScene>=0?name(Rscene[CurScene].Name):""},{"xy",Where==0?arr({Mx,My}):arr({Sx,Sy})},{"data_xy",Where==0?arr({My,Mx}):arr({Sy,Sx})},{"face",Where==0?MFace:SFace},{"world_xy",arr({Mx,My})},{"world_face",MFace},{"in_ship",InShip},{"ship_xy",arr({ShipY,ShipX})},{"party",party},{"inventory",inventory()},{"pending",prompt},{"rng_state",HeadlessRandomState},{"debug_enabled",debug},{"legacy_checkpoint_lineage",legacyCheckpointLineage}});
+        out["active_rules"]=obj({{"profile",ActiveRules.profile},{"progression",RulesModeName(ActiveRules.progression)},{"combat",RulesModeName(ActiveRules.combat)},{"dos_mp_cost_cache",DosLastEffectiveLevel}});
+        for(auto& member:out["party"].get_array())member["next_level_exp"]=NextLevelExperience(Rrole[integer(member,"id")]);
         if(Where==2) out["battle"]=battleState(); return out;
     }
     J changes()
@@ -613,6 +648,12 @@ public:
                     v["shape"]=attackShape(m.AttAreaType);v["targeting"]=attackTargeting(m.AttAreaType);
                     v["base_mp_cost"]=m.NeedMP;v["stamina_cost_per_strike"]=3;v["minimum_stamina"]=10;v["poison"]=m.Poison;
                     A levels;for(int lv=0;lv<10;++lv)levels.push_back(obj({{"level",lv+1},{"attack",m.Attack[lv]},{"move_distance",m.MoveDistance[lv]},{"attack_distance",m.AttDistance[lv]},{"mp_cost",m.NeedMP*((lv+2)/2)},{"add_mp",m.AddMP[lv]},{"hurt_mp",m.HurtMP[lv]}}));v["levels"]=levels;
+                    if(ActiveRules.combat==RulesMode::DragonDos12)
+                    {
+                        v["stamina_cost_per_action"]=3;v["stamina_cost_per_strike"]=J{};
+                        v["mp_cost_uses_cached_hp_tier"]=m.HurtType==1;
+                        for(int lv=0;lv<10;++lv)v["levels"].get_array()[lv]["mp_cost"]=m.NeedMP*((m.HurtType==0?lv+1:DosLastEffectiveLevel)/2);
+                    }
                 }
             }
             out.push_back(v);
@@ -662,6 +703,7 @@ public:
         });
         require(loaded,"Call new_game first");
         if(method=="state")return state();
+        if(method=="rules")return rules();
         if(method=="choose")return resume(integer(a,"index"));
         if(method=="battle_action")return prepareManual(a);
         // Read-only observation is allowed at a suspended native stack.
@@ -739,6 +781,7 @@ J tools()
     auto add=[&](const char* n,const char* d,J s){out.push_back(obj({{"name",n},{"description",d},{"inputSchema",s}}));};
     add("new_game","Start native character generation and opening event. Deterministic seed; mod directory is supplied on command line.",schema({{"seed",num}}));
     add("state","Compact native state, party stats, inventory, pending decision and battle roster.",schema({}));
+    add("rules","Read active progression/combat profiles, caps, XP thresholds and DOS MP-cost cache. Configuration is in mod kysmod.ini [rules].",schema({}));
     add("search","Find IDs by exact CP950 decoded name substring. kind=item/scene/role/magic. Specify id for raw fields, item effects and requirements, equipment eligibility. Paginated.",schema({{"kind",str},{"query",str},{"id",num},{"offset",num},{"limit",num}}));
     add("inspect_scene","Sparse event slots, actual map tiles, script IDs, gates, entries/exits/jumps. Optional x,y adds one tile's six layers and keyboard passability; include_inactive=1 adds raw records. Native xy axes; data_xy swaps for guide/editor.",schema({{"scene",num},{"include_inactive",num},{"x",num},{"y",num}}));
     add("inspect_world","Read world tiles around internal x,y (default current), radius0..3 (default1). Shows terrain, building anchor, actual entrance scene and native keyboard passability without moving or changing ship state.",schema({{"x",num},{"y",num},{"radius",num}}));
@@ -751,9 +794,9 @@ J tools()
     add("choose","Resume suspended native input using displayed zero-based option index. Battle offers native AI turn/rest/whole battle; combat, losses, experience and books use native calculations.",schema({{"index",num}}));
     add("battle_action","Act at a pending battle_turn using native move/attack/medicine/detox/poison/consume/hidden_weapon. Internal x,y target; magic_slot from party.magic[].slot for attack, item ID for consume/hidden_weapon. For area_type=1 aim at an adjacent cardinal direction, not a distant enemy; search magic ID exposes ranges/costs. Movement preserves remaining turn. Party selection uses choose(index=bitmask), e.g. slots 0,2 -> 5.",schema({{"action",str},{"x",num},{"y",num},{"magic_slot",num},{"item",num}}));
     add("use_item","Use an owned item through native equipment/practice/medicine/plot flow; further character/menu choices suspend as needed.",schema({{"item",num}}));
-    add("party_action","Use native out-of-battle medicine or detox skill. Native menus ask actor then recipient via choose; preserves native effects and costs (outside battle these skills are free). Poison or injury>33 prevents sleep recovery until treated.",schema({{"action",str}}));
+    add("party_action","Use out-of-battle medicine or detox. Menus ask actor then recipient via choose. Legacy skills are free outside battle; DOS medicine costs 2 stamina and requires 50. Poison or injury>33 prevents sleep recovery until treated.",schema({{"action",str}}));
     add("dismiss","Dismiss a party member through the native mod leave event.",schema({{"role",num}}));
-    add("checkpoint","Save/load all mutations and RNG. Idle only: save BEFORE one-shot interactions. Memory cache holds12 labels; --save-dir retains unlimited durable branch labels. V3 verifies world/list rules plus mod fingerprint/checksum; V1/V2 require explicit --allow-legacy-checkpoints and retain legacy lineage. Label uses ASCII letters/digits/underscore/hyphen.",schema({{"action",str},{"label",str}}));
+    add("checkpoint","Save/load all mutations, RNG and DOS MP-cost cache. Idle only: save BEFORE one-shot interactions. Cache holds12 labels; --save-dir retains unlimited labels. V4 verifies world/list/mod fingerprints and checksum. V3 loads in legacy mode; V1/V2 require --allow-legacy-checkpoints. Label uses ASCII letters/digits/underscore/hyphen.",schema({{"action",str},{"label",str}}));
     add("audit","Read-only current-data audit for control characters in item names, blocked/invalid entry candidates and invalid event script references. Candidates need investigation.",schema({}));
     add("inspect_script","Read native event bytecode without executing it. Paginated instructions with word offset/opcode/args. include_text=1 expands dialogue for guide comparisons. Negative terminators may have other branch blocks after them.",schema({{"id",num},{"offset",num},{"limit",num},{"include_text",num}}));
     add("debug","Explicit opt-in debug shortcut; requires --debug. Teleport, mutate a role Data[field], or invoke a script. Result marks evidence as debug.",schema({{"scene",num},{"x",num},{"y",num},{"role",num},{"field",num},{"value",num},{"script",num}}));
@@ -779,7 +822,7 @@ int main(int argc,char** argv)
             try
             {
                 auto method=string(request,"method");J result;
-                if(method=="initialize")result=obj({{"protocolVersion","2024-11-05"},{"capabilities",obj({{"tools",obj({})}})},{"serverInfo",obj({{"name","kys-pascal-c"},{"version","0.2.7"}})},{"instructions","Use new_game first; complete world/list gameplay files are required. Coordinates use native x/y; data_xy swaps to guide/editor. Decisions suspend native stacks; choose explicitly. Save before one-shot choices. travel uses native world approach and entrance; check reached for interruptions. step/face and interact without slot expose direct controls. inspect_battle exposes terrain/reachable tiles and skills for manual tactics. party_action exposes native out-of-battle medicine/detox. V1/V2 checkpoints require explicit legacy import; lineage remains visible. No graphics are initialized."}});
+                if(method=="initialize")result=obj({{"protocolVersion","2024-11-05"},{"capabilities",obj({{"tools",obj({})}})},{"serverInfo",obj({{"name","kys-pascal-c"},{"version","0.3.0"}})},{"instructions","Use new_game first; complete world/list gameplay files are required. Coordinates use native x/y; data_xy swaps to guide/editor. Decisions suspend native stacks; choose explicitly. Save before one-shot choices. travel uses native world approach and entrance; check reached for interruptions. step/face and interact without slot expose direct controls. inspect_battle exposes terrain/reachable tiles and skills for manual tactics. party_action exposes native out-of-battle medicine/detox. V1/V2 checkpoints require explicit legacy import; lineage remains visible. No graphics are initialized."}});
                 else if(method=="ping")result=obj({});
                 else if(method=="tools/list")result=obj({{"tools",tools()}});
                 else if(method=="tools/call")

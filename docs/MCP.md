@@ -6,6 +6,13 @@ entry gates and combat calculations with `kys.exe`. It creates no SDL window,
 renderer, audio device or substitute screen. SDL libraries are still linked
 because the shared native source uses SDL types and utility functions.
 
+Version 0.3.0 adds read-only `rules` inspection, active rule modes and next-level
+XP in `state`, and effective tier/cost in `inspect_battle`. The selectable
+original DOS progression/combat profile is documented in [DOS_RULES.md](DOS_RULES.md).
+It is shared with the graphical engine; default rules remain `legacy`.
+Checkpoint V4 also stores the original DOS MP-cost cache. V3 remains readable
+in legacy mode, while DOS combat requires V4. V1/V2 import policy is unchanged.
+
 ## Build on this Windows workspace
 
 The tested checkout started at `e541bad`. The following uses the installed
@@ -33,8 +40,9 @@ The fresh manifest dependency installation was not rerun here. Set
 The existing Visual Studio project includes the extracted shared sources;
 CMake is the tested route for the new MCP executable and tests.
 
-`KYS_TEST_MOD` is optional. With no mod supplied, CTest runs only the asset-free
-core checks. When provided, it also runs `tests/mcp_integration.py` against the
+`KYS_TEST_MOD` is optional. With no mod supplied, CTest runs the asset-free
+core checks and (when MCP is enabled) original DOS rule vectors. When provided,
+it also runs `tests/mcp_integration.py` against the
 **unmodified** supplied Dragon mod. The integration suite expects that dataset,
 including its three malformed names. It does not run against the repaired copy.
 
@@ -182,8 +190,10 @@ graphical inspection or guessed legal moves.
 
 For recovery outside battle call `party_action(action="medicine")` or
 `party_action(action="detox")`, then answer the actor and recipient menus.
-These call the same native menus/effects as the graphical game. Outside battle
-they consume no stamina or items, as in Pascal. Sleep skips poisoned roles and
+These call the same shared menus/effects as the graphical game. With legacy
+rules they consume no stamina or items outside battle, as in Pascal. The DOS
+profile's medicine requires 50 stamina and costs 2; detox remains free outside
+battle. Sleep skips poisoned roles and
 roles with injury above 33, so treatment may be necessary before resting.
 Named skill values are available in each party member's `skills` object.
 
@@ -196,12 +206,13 @@ The memory cache holds at most 12 labels. With `--save-dir`, durable labels
 are unlimited and an evicted label is loaded from disk on demand. Without a
 save directory, the session is limited to 12 labels. Labels accept ASCII letters, digits,
 underscore and hyphen. `--save-dir` creates binary `.kys-save` files with
-version, gameplay-data fingerprint and checksum checks. V3 fingerprints the
+version, gameplay-data fingerprint and checksum checks. V4 fingerprints the
 five world maps and four `list/*.bin` gameplay tables as well as the original
 mod/script/battle data. It includes the scene jump guard and a checksummed
-legacy-lineage flag. V1/V2 import requires the explicit command-line option
+legacy-lineage flag, and persists the DOS MP-cost cache. V3 remains readable
+with legacy combat; DOS combat requires V4. V1/V2 import requires the explicit command-line option
 `--allow-legacy-checkpoints` and a matching old mod fingerprint. Imported state
-reports `legacy_checkpoint_lineage: true`, including after V3 resave/reload;
+reports `legacy_checkpoint_lineage: true`, including after V4 resave/reload;
 import cannot retroactively verify files omitted by the old fingerprint.
 Checkpoint responses expose the source `checkpoint_format`. A failed load leaves
 the live game unchanged. These are private MCP checkpoints for this build,
