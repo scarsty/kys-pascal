@@ -230,7 +230,45 @@ isolating a quest, but such results do not prove that the normal route unlocks
 that state. Do not treat a debug recruitment as a complete campaign playthrough.
 
 The native script VM has a 250,000-instruction budget per top-level action.
-Native action exceptions restore the snapshot taken before that top-level
-action. This is
+Malformed opcodes/operand lengths or byte ranges are rejected. Native action
+exceptions restore the snapshot taken before that top-level action. This is
 an investigation frontend for trusted legacy mod files; it is not a sandbox
 for arbitrary hostile bytecode, and it does not replace every graphical menu.
+
+## Reproducible data audit and repair
+
+```powershell
+python tools/dragon_audit.py tmp/runtime/kys-Dragon `
+  --report tmp/dragon-audit.json `
+  --repair-output tmp/repairs/ranger.grp
+```
+
+All outputs, including reports and decoded scripts, must be outside the
+reference mod directory and have distinct paths. Repairs must be new files;
+the tool refuses an existing repair. Copy the repaired file into a separate mod copy's `save/`
+directory if you want to play with cleaned names.
+
+The user-reported 闖王軍刀 cave defect is a separate `alldef.grp` repair:
+
+```powershell
+python tools/dragon_audit.py tmp/runtime/kys-Dragon `
+  --report tmp/validation/dragon-audit.json `
+  --repair-event-output tmp/repairs/alldef.grp
+```
+
+This narrowly repairs scene 84/slot 8, moving script 18 from ordinary
+interaction to item use. It verifies the exact original record and refuses
+unverified/progressed data. It changes two bytes and leaves other semantic
+trigger candidates alone. This file is a **new-game event template**; existing
+graphical save `dN.grp` files contain separate event state. The regression
+tests the original failure and repaired success through actual MCP calls.
+
+No game assets are tracked
+by this change. Temporary extraction, reports, checkpoints and diagnostic
+material belong under the single ignored `tmp/` root. Integration tests clean
+up their own scratch directory on exit.
+
+See [the investigation report](DRAGON_FINDINGS.md) for source fixes, exact
+data defects, guide coverage, hashes and independent review results.
+See [the campaign ledger](CAMPAIGN_VALIDATION.md) for the completed primary
+ending and remaining alternate-branch acceptance work.

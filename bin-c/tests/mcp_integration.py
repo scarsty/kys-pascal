@@ -435,6 +435,82 @@ class DragonIntegration(unittest.TestCase):
             q = g.call("navigate", x=ex, y=ey)
             self.assertEqual(q["state"]["where"], 0)
 
+    def test_pristine_data_audit(self):
+        g, _ = self.game()
+        q = g.call("audit")
+        self.assertEqual([v["item"] for v in q["item_name_control_characters"]], [88, 89, 178])
+        self.assertEqual(q["invalid_script_references"], [])
+        from dragon_audit import audit, repair_names, validate_outputs
+        report, _, original = audit(self.mod)
+        self.assertEqual(report["script_issues"], [])
+        self.assertEqual(report["invalid_triggers"], [])
+        # Even diagnostic outputs must not overwrite the reference or each other.
+        for output in (self.mod / "save/ranger.grp", self.mod / "new-report.json"):
+            with self.assertRaises(ValueError):
+                validate_outputs(self.mod, {"report": output})
+        with self.assertRaises(ValueError):
+            validate_outputs(self.mod, {"report": self.scratch / "same",
+                                        "scripts": self.scratch / "same"})
+        existing = self.scratch / "existing-repair"
+        existing.write_bytes(b"preserve")
+        with self.assertRaises(ValueError):
+            validate_outputs(self.mod, {"repair_names": existing})
+        self.assertEqual(existing.read_bytes(), b"preserve")
+        repaired, _ = repair_names(original, report["item_name_defects"])
+        self.assertEqual(sum(a!=b for a,b in zip(original, repaired)), 12)
+        self.assertEqual((self.mod / "save/ranger.grp").read_bytes(), original)
+
+    def test_debug_chuang_saber_caves_original_and_repaired(self):
+        from dragon_audit import audit, repair_saber_event
+        report, _, _ = audit(self.mod)
+        original = (self.mod / "save/alldef.grp").read_bytes()
+        repaired, patch = repair_saber_event(original, report["item_trigger_candidates"])
+        self.assertEqual(sum(a!=b for a,b in zip(original, repaired)), 2)
+        self.assertEqual(patch["talk"]["offset"], 369780)
+        self.assertEqual(patch["item"]["offset"], 369782)
+        with self.assertRaises(ValueError):
+            repair_saber_event(repaired, report["item_trigger_candidates"])
+        with self.assertRaises(ValueError):
+            repair_saber_event(original, [])
+        # A distinct temporary mod copy proves the saved data repair loads and
+        # works in the native interpreter. The reference assets stay untouched.
+        repaired_mod = self.scratch / "saber-repaired-mod"
+        shutil.copytree(self.mod, repaired_mod)
+        (repaired_mod / "save/alldef.grp").write_bytes(repaired)
+        for modified, mod in ((False, self.mod), (True, repaired_mod)):
+            g, _ = self.game(debug=True, mod=mod)
+            g.call("debug", scene=0)
+            g.call("interact", slot=4)
+            q = g.call("choose", index=1)
+            self.assertEqual(amount(q["state"], 202), 1)
+            g.call("checkpoint", action="save", label="with_saber")
+            for scene in (5, 84, 85):
+                with self.subTest(repaired=modified, scene=scene):
+                    g.call("checkpoint", action="load", label="with_saber")
+                    g.call("debug", scene=scene, x=22, y=20)
+                    gate = next(e for e in g.call("inspect_scene")["events"] if e["slot"]==8)
+                    broken = scene==84 and not modified
+                    self.assertEqual((gate["talk"], gate["item"]), (18,0) if broken else (0,18))
+                    self.rejects_unchanged(g, "navigate", x=21, y=21)
+                    # A different owned plot item must not unlock the door.
+                    g.call("interact", slot=8, item=234)
+                    self.rejects_unchanged(g, "navigate", x=21, y=21)
+                    q = g.call("interact", slot=8, item=202)
+                    self.assertEqual(amount(q["state"], 202), 1)
+                    if broken:
+                        self.assertEqual({row[0] for row in q["trace"]}, {0})
+                        self.assertEqual(q["changes"]["events"], [])
+                        self.rejects_unchanged(g, "navigate", x=21, y=21)
+                        # Both engines retain CurItem: subsequent ordinary
+                        # interaction can accidentally reach the misplaced gate.
+                        q = g.call("interact", slot=8)
+                        self.assertEqual({row[0] for row in q["trace"]}, {18})
+                    else:
+                        self.assertEqual({row[0] for row in q["trace"]}, {18})
+                    self.assertTrue(g.call("navigate", x=21, y=21)["action_result"]["reached"])
+            g.close()
+        self.assertEqual((self.mod / "save/alldef.grp").read_bytes(), original)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)

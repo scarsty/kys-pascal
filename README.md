@@ -75,7 +75,7 @@ SDL一般是在java部分调用SDL_main这个函数，可以查找以下两个�
 ### 原生 MCP 调试模式
 
 CMake 也可构建 `kys_mcp`，通过 stdio MCP 操作原生事件、物品、队伍、场景与战斗逻辑，不创建图形窗口。
-构建方法、工具用法及明确的流程捷径见 [MCP 文档](docs/MCP.md)。
+构建方法、工具用法及明确的流程捷径见 [MCP 文档](docs/MCP.md)；苍龙逐日的数据检查、Pascal 对照修复和攻略验证范围见 [调查记录](docs/DRAGON_FINDINGS.md)。
 
 
 ## 字符串的处理
