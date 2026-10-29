@@ -39,24 +39,24 @@ It would not prove every possible event order or every graphical behavior.
 
 | Guide chapter | Righteous/reference run | Evil/alternate run | Remaining scope / qualifications |
 | --- | --- | --- | --- |
-| Opening/school | Passed strict opening and 青城 training | Passed strict opening and training | Other starter schools and their hidden arts remain |
+| Opening/school | Passed strict opening and 青城 training | Passed strict opening and training | Fresh 罗汉/柴刀 all14 and hidden rewards passed; 杨家 run continues |
 | 飞狐外传 | 苗人凤 duel4 won6; book144/map/manual | Evil duel0 manually won9 on0.2.3; book144/map/manual | Both 田归农 choices played |
 | 雪山飞狐 | Scene85 guards, saber gate and four rewards | Scene85 passed | All original variants reached; scene84 failed as reported. Fresh repaired84 passed separately |
 | 连城诀 | 狄云, ethics81, book146/神照71 | Evil route passed in combined and independent branch campaigns | Important poem wrong-item, consumption and repeat checks passed |
 | 天龙八部 | 聚贤庄/少林 fights; book147/降龙86 | Evil formations; book147/慕容/王 | 虚竹/灵鹫/丁春秋/薛 sidequests passed. Original all-seven picture reward is defective; separate fresh repaired progression passed |
-| 射雕英雄传 |176 won4;177 manual clean replay won6; book148 | Kill一灯68 and finals187/183/184/185 passed;148/九阴84 | Root spare一灯175 won2/一阳96; final186 still lost, no book |
+| 射雕英雄传 |176 won4;177 manual clean replay won6; book148 | Kill一灯68 and finals187/183/184/185 passed;148/九阴84 | Fresh 罗汉 spare一灯175/186 won1/6 and earned148; earlier failed186 attempts remain recorded |
 | 白马啸西风 | Spare route, ruins and weapon-gated door passed | Evil route passed on0.2.2 | Final-build replay92/91 and actual ruins approach passed |
-| 鹿鼎记 | Scene91 guards and book150 passed | Scene91 required1076/1075 and book150 passed | Primary1074 confirmed; both wives separately recruited, mutual party exclusion verified |
-| 笑傲江湖 | Righteous chain, 东方54 won2 and book151 passed | Evil chain,54 won3; Five Mountains fights and151 passed | Trust/menu variations recorded; branch ledger still needs final reconciliation |
+| 鹿鼎记 | Scene91 guards and book150 passed | Scene91 required1076/1075 and book150 passed | Fresh 罗汉 reached90; fresh 杨家 earned10095silver and reached67, guards won4/6/4 and150 awarded1807. Both wives separately recruited, mutual party exclusion verified |
+| 笑傲江湖 | Righteous chain, 东方54 won2 and book151 passed | Evil chain,54 won3; Five Mountains fights and151 passed | Trust/menu variations and 林复仇 reconciled against actual evidence |
 | 书剑恩仇录 |141/142/143; book152 |138/139/144/140; book152/张召重 | Full-party sends her home; actual later join correctly grants132 |
 | 神雕侠侣 | Refused金轮; group fights and153 | Accepted金轮;75 won1,153/降魔170 | Both main book routes passed |
-| 侠客行 | 石破天 and scholar conversations;154/太玄80 |170 retry won3;154 | Important酒/令 transitions played; guide side branches still need reconciliation |
+| 侠客行 | 石破天 and scholar conversations;154/太玄80 |170 retry won3;154 | Important酒/令 transitions played and guide branches reconciled |
 | 倚天屠龙记 | 成昆/head219→谢逊;155/鹰爪109 | 成昆/head219→玄慈;155 | Battle80 genuinely lost but script progressed. Full6+2 allies 崆峒 waves passed; guide warning not reproduced. Buried九阳 actual wrong-compass/correct-shovel passed |
 | 碧血剑 | Physician route passed;156 | Evil corpse route passed;156 | Independent no-doctor high/exact75/74-fight branches passed |
 | 鸳鸯刀 | Both blades,157/夫妻140 | Kill route132/137 won1;157 | Wrong compass also places owned blades in both orders; shared script behavior, no repair |
 | 华山/钓鱼岛 ending | Completed:18 solo opponents, group133,14 altars,神杖205,128–131 and native terminal ending | Not repeated | Primary has full transcript and final checkpoint; mixed-build lineage explicit |
-| Hidden room | 松風→神山 passed independently from earned all14 checkpoint | Not played | 南贤 activation required. Three alternative starter-manual arts unplayed |
-| Other guide sidequests | Partially covered | Partially covered | Detailed optional results below; remaining hidden starter alternatives unplayed |
+| Hidden room | 松風→神山 passed independently from earned all14 checkpoint | Fresh 罗汉→野球拳 and 柴刀→西瓜刀法 passed after all14 | 南贤 activation required. 杨家 alternative remains in progress |
+| Other guide sidequests | Named substantive quests reconciled against actual evidence | Named substantive quests reconciled against actual evidence | Remaining 杨家 books/hidden/ending continue; all three 鹿鼎山 variants now reached |
 
 Detailed live journals, coverage records, native RPC transcripts and saves are
 under `tmp/campaign/reference/` and `tmp/campaign/alternate/`. These are gameplay
@@ -130,7 +130,7 @@ last-unit links clear. Earlier campaigns retain their original caveat.
 | Only automatic event approach exposed | Difficult to compare an exact position/facing with player input | `step`, `face`, current-facing `interact`, per-tile inspection added and retested |
 | Out-of-battle recovery skills unavailable | Poisoned/injured roles could not use the native treatment menus | Native `party_action` medicine/detox added; real actor/recipient menu and effects regression passes |
 
-Build 0.2.7 passes the asset-free core checks and nineteen MCP integration cases.
+Build 0.2.7 passes the asset-free core checks and twenty-one MCP integration cases.
 Actual manual play identified another observation gap: line/area attacks aimed
 at empty direction tiles did not expose affected enemies before later turns
 or battle-end restoration. `affected` now captures every changed target's
@@ -183,9 +183,9 @@ earned pre-choice checkpoint. Native guardians179–182 each won in1round,
 spare choice led battle175 (won2) and 一阳指96. Final186's cancel branch
 awarded nothing; acceptance led a real7round loss and no book. Further legitimate 天龙 recruitment, owned food, spider fights and party
 reordering were followed by real AI/manual losses. The latest saved
-`spare186_reformed_ready` still has no 射雕 book. This branch needs further
-normal growth/tactics before a retry. It is not merged into
-either combined campaign.
+`spare186_reformed_ready` still has no 射雕 book. Those failures are preserved
+and not merged into either combined campaign. The separate fresh 罗汉 run
+subsequently won186 and earned148, as detailed below.
 
 These regressions and supplementary branch saves support fidelity, not campaign
 completion. Native AI can stall after learning an MP-draining art: primary177
@@ -222,8 +222,8 @@ with exact provenance. Western shovel teaching clears the event flag; normal
 conversations the passage was legitimately blocked, not a confirmed data bug.
 After activation, actual keyboard corridor steps reached the stone and
 script882 replaced the first martial slot with 神山110, retaining manual134.
-Repeat stepping gave no further reward. The other starter-manual alternatives
-remain unplayed.
+Repeat stepping gave no further reward. The fresh 罗汉 and 柴刀 alternatives
+subsequently passed; the 杨家 alternative is being played separately.
 
 Independent `sidequests/paired-saber/` play placed both earned knives using
 the wrong compass182 in both orders. Current-facing RPC14 confirmed no slot
@@ -234,15 +234,17 @@ author intent is unverified and no speculative repair is applied.
 
 ## Outstanding acceptance work
 
-- Finish the separate spare一灯 final186; kill一灯 final185 has passed.
-- Reconcile any remaining pre-fix fight-specific obligations. The requested
-  older 白马92/91 replay on the corrected build has passed.
-- Validate the remaining exclusive starter-manual hidden arts with naturally
-  obtained manuals; existing 松風→神山 evidence covers only one alternative.
-- Keep the scene10 wine candidate scoped to the recorded runtime plus
-  reachability/source analysis below. No pre-clear item-use failure was
-  reproduced and no repair is justified by the heuristic alone.
-- Preserve failed attempts, build/data provenance and unvisited statuses.
+- Finish the 杨家 exclusive hidden art with its naturally obtained manual;
+  松風→神山 and fresh 罗汉→野球拳/柴刀→西瓜刀法 alternatives have passed.
+- Complete the fresh current-build 杨家 ending to remove the earlier primary
+  ending's mixed-build qualification for that separate run.
+- Finalize the current coverage index, retain failed attempts and provenance,
+  then close the remaining process and remove its disposable bridge files.
+
+The requested older 白马92/91 fight replay on the corrected build has passed.
+The scene10 wine candidate remains scoped to recorded runtime plus source/map
+analysis. No pre-clear item-use failure was reproduced; no repair is justified
+by the heuristic alone.
 
 The goal remains active. A primary ending plus selected opposite branches
 does not establish every branch, every approach or all-game stability.
@@ -278,7 +280,8 @@ a failing original route, not a silently converted pass.
 The new armored root186 attempt killed four enemies with a real manual玄鐵
 opening but 王 still died before her first turn; remaining native AI lost6.
 `spare186_armored_loss` records it. The earned pre-fight state was restored
-without retaining loss growth. Further normal preparation remains necessary.
+without retaining loss growth. The later fresh 罗汉 victory closes this branch's
+book-award obligation without changing the historical failed attempt.
 
 ## Fresh repaired 灵鹫宫 campaign
 
@@ -319,3 +322,82 @@ validation of the repaired prerequisite/reward chain and two reading orders,
 not a fresh final-build whole-game run or exhaustive order/tactics coverage.
 Graphical behavior and the later 星宿/薛 quests were not replayed by this
 fresh repaired run; their original-data evidence remains separately labeled.
+
+## Fresh final-build 罗汉 route and the spare一灯 closure
+
+`tmp/campaign/starter-luohan/` records a separate original-data campaign from
+`new_game(seed=7)` on the current47A1 executable0.2.7. Its provenance identifies
+the complete runtime, naturally obtained starter112 and no imported checkpoint,
+debug call or legacy lineage. Normal training, owned books/items, native
+medicine/rest, real losses and own-checkpoint retries earned all fourteen books.
+
+The previously uncompleted spare一灯 branch now passed: native175 won1 and
+final186 won6 at RPC2016, granting148. The manual opening used owned 九阳
+with legal movement; 王 survived the first hit, retreated and died in round2.
+The remaining native combat still won. This is an actual victory, not an
+inference from the other two 射雕 routes or a misleading checkpoint label.
+The all14 checkpoint was saved at2017.
+
+Owned-shovel teaching, 南贤's normal activation, the native 大功坊 staircase,
+keyboard corridor and stone step then invoked882 at2076. The first martial
+slot became109 野球拳 at proficiency0/level1; starter112 and all14books
+remained owned. Immediate repeat2077–78 gave no further reward. The final
+clean checkpoint is `all14_hidden_yeqiu` at2079; the process closed with exit0.
+`final-evidence.json`, `journal.md`, `provenance.json` and the complete wire
+transcript preserve the result and every failed attempt. No ending is claimed
+for this fresh run; the primary ending remains separately identified.
+
+## Earned-state manual combat detox
+
+`tmp/campaign/manual-detox/` fills the manual detox action gap identified by
+the independent review. It loads an unchanged, hashed copy of the fresh
+Yangjia verified175 victory checkpoint on the same current executable and
+original assets. That earned state already contains naturally poisoned 霍青桐.
+The new process bootstrapped normally, loaded the copy without a fingerprint
+bypass, walked into the first spider fight and selected hero/霍 only.
+
+RPC14 manually targeted native `(40,22)` with `battle_action(detox)`: 霍's
+poison99→0, hero stamina100→95 and inventory was unchanged. The immediate
+MCP effects include the affected target's before/after values. Native61 then
+won2; `manual_detox_completed` was saved and the process closed normally.
+The transcript, source/build hashes and scoped assertions are retained. This
+branch is not merged into the main campaign and does not establish every
+detox range/eligibility boundary or an exhaustive combat-action matrix.
+
+## Fresh final-build 柴刀 route and independent guide reconciliation
+
+`tmp/campaign/starter-chaidao/` records another original-data campaign on the
+same current47A1 executable, one `new_game(seed=7)`, no checkpoint imports,
+no debug and no legacy lineage. The introduction letter naturally earned
+starter166 at RPC13. Final state3549 owns each book144–157 and starter166
+at quantity1. The all14 checkpoint was saved3519.
+
+The native hidden stone step882 at3543 replaced slot0 magic50 with111
+西瓜刀法, proficiency0/level1. 南贤692→693, the cellar transition and actual
+keyboard corridor supplied the prerequisites and approach. Stepping away and
+back3546–47 produced no further dialogue, rewards, event changes or skill
+replacement. Final checkpoint3548 is `knife_xigua_repeat_checked`, SHA-256
+`346877a0da30954facfb23cfc7db1055422155df7b6502b1372b1f56bd177d4f`.
+
+The transcript preserves the actual 东方54 loss6 at3136, earned-checkpoint
+restore, normal training/equipment/consumables and manual victory8 at3289.
+The 五岳 solo fights required actual manual attacks and positioning; final
+34/56 awarded151 at3518. The process closed with exit0. Its private binary
+directory was removed after separate path/process validation, without Force;
+hashes, saves, transcript and scoped evidence remain retained.
+
+An independent reconciliation against the complete supplied guide article is
+retained at `tmp/campaign/starter-luohan/guide-reconciliation.md`. Its matrix
+maps every named major book route and substantive sidequest to actual RPCs
+or an explicitly preserved original-data failure. At its audit time, the
+concrete remaining items were 鹿鼎山67, the two later starter alternatives
+and a fresh single-build ending. The 柴刀 result above supersedes its pending
+柴刀 status. Fresh 杨家 later earned10095silver without sales/grants, used229
+on the candle at1787 and reached67 through ordinary world approach. Its
+three guard fights6 won4/6/4 at1798/1802/1806; chest1807 awarded150. This
+supersedes the matrix's unvisited67 status without altering its historical
+audit. Later 杨家 hidden/ending results must be recorded separately. It does not
+certify every event order, boundary, loot object, tactic or approach. Original84
+and the original seven-picture reward remain failing data routes with separate
+repair evidence; the combined package still has fixture/composition coverage
+and separate fresh component campaigns, not a full fresh combined-data run.

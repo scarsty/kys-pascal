@@ -2,8 +2,10 @@
 
 The C++ rewrite builds with a native MCP frontend. A strict guide-driven
 righteous campaign has earned all fourteen books and reached the actual native
-ending. The alternate campaign and supplementary branch checks remain in
-progress, so overall stability remains unverified. The route uses native
+ending. The alternate campaign also has all fourteen books; independent
+guide reconciliation and supplementary fresh runs have covered the named
+major branches. The final fresh 杨家 run is still completing its last book,
+hidden art and ending, so validation remains open. The route uses native
 walking, item dispatch, choices, damage, recovery and rewards; no debug grants
 or forced wins count as progression.
 
@@ -16,7 +18,7 @@ detailed below; its author intent is unverified and no speculative patch is
 applied. Original inputs remain unchanged.
 
 The [campaign ledger](CAMPAIGN_VALIDATION.md) records completed routes and
-remaining branches. Static checks missed a valid script in the wrong trigger
+the remaining fresh-run work. Static checks missed a valid script in the wrong trigger
 field; the earlier completion claim overstated the evidence. No computer use,
 graphics inspection or graphical runtime validation was performed. Both
 graphical and MCP targets compile.
@@ -337,7 +339,7 @@ The alternate campaign independently reproduced the same wrong-item behavior.
 | --- | --- | --- |
 | 94 長樂幫 | Entry internal `(43,24)` is on building tile 3084 and fails destination passability | From the exact spawn, native navigation reaches `(42,24)` and `(43,25)`, and exits `(44,24)` / `(44,25)`. It is not a trapped spawn. Its plot gate was bypassed explicitly for this fixture. No coordinate repair. |
 | 2 雪山 | Entry `(49,28)` overlaps blocking event slot 1, step script 41 | Moving away to `(48,28)` or `(50,28)` and reaching exits works. Actual `travel` retains its entry step event. This overlap is insufficient evidence of a defect. No coordinate repair. |
-| 98 明霞島 | Guide says public world `(390,173)`; data says `(389,173)` | One-tile discrepancy may describe an adjacent approach tile; world walking was not validated. The scene spawn itself has walkable neighbors and an exit. No coordinate repair. |
+| 98 明霞島 | Guide says public world `(390,173)`; building data says `(389,173)` | Fresh 杨家 RPC916 actually walked94 world steps and entered from public `(390,173)`, spawning at native `(27,43)`. RPC918 walked to the story trigger and922 won171. The guide names a valid adjacent approach tile; no coordinate repair. |
 
 Coordinates in this table are native internal axes except the explicitly
 public world coordinates. The MCP exposes both conventions.
@@ -359,10 +361,12 @@ The immediate medicine effect now exposes HP 44→46 even when the next enemy
 hit returns it to 44. The review's suggested named magic costs/ranges/target
 conventions and actual slot IDs have also been added.
 
-The independent reviewer did not exercise every combat action: poison,
-detox, hidden weapons and teammate healing remain outside its trial. It also
-did not complete the campaign. Idle-only checkpoints and explicit debug
-fixtures are documented limits, not claims of normal quest progression.
+The initial independent reviewer did not exercise every combat action or
+complete the campaign. Later earned-state campaigns separately exercised
+hidden weapons and manual teammate detox, with immediate before/after effects;
+those results do not make the initial trial exhaustive. Idle-only checkpoints
+and explicit debug fixtures are documented limits, not claims of normal quest
+progression.
 
 A subsequent independent fidelity review actually played all original cave
 variants and the fresh repaired scene84 route, then the hidden-room and
@@ -375,7 +379,7 @@ graphical semi-real-time initiative. The final assessment is retained at
 
 ## Validation and retained material
 
-The repeatable asset-free core tests and nineteen-case Dragon integration suite
+The repeatable asset-free core tests and twenty-one-case Dragon integration suite
 live under `bin-c/tests/`. Integration uses a real MCP handshake and checks
 opening, invalid-input atomicity, native item exchanges/training combat,
 checkpoint/RNG replay, fresh-process restore, corrupted-save rejection,
