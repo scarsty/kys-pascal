@@ -1,4 +1,4 @@
-# Campaign validation — in progress, stability unverified
+# Campaign validation — recorded guide scope complete
 
 The preceding static scan and focused integration checks were preliminary.
 They did not complete the user's requested guide-driven campaign validation.
@@ -7,8 +7,11 @@ the wrong trigger, outside the played scenarios. The earlier completed-goal
 designation must not be read as a stability finding.
 
 The primary native campaign has completed all fourteen books and the actual
-ending. The alternate combined campaign also has all fourteen books; supplementary
-branch campaigns continue. All use actual stdio MCP with `--debug` absent
+ending. The alternate combined campaign also has all fourteen books. Fresh
+current-build 罗汉、柴刀、杨家 campaigns each have all fourteen books and
+their exclusive hidden arts. The fresh 杨家 run also completed the native
+ending on the same current executable, with no imported checkpoint.
+All use actual stdio MCP with `--debug` absent
 and **苍龙逐曰完全攻略** as the reference.
 The original supplied mod remains the reference. A data repair must first be
 reproduced on that reference and then validated on a separately identified
@@ -32,14 +35,15 @@ into a passing one.
   passed/failed/blocked/unvisited status for each result. A passing script
   fixture is a regression test; it is not a substitute for reaching it.
 
-Completion would validate the recorded routes on the identified build/data.
-It would not prove every possible event order or every graphical behavior.
+The results validate the recorded routes on the identified build/data, while
+preserving the known original-data failures and separate repair evidence.
+They do not prove every possible event order or every graphical behavior.
 
 ## Progress ledger
 
 | Guide chapter | Righteous/reference run | Evil/alternate run | Remaining scope / qualifications |
 | --- | --- | --- | --- |
-| Opening/school | Passed strict opening and 青城 training | Passed strict opening and training | Fresh 罗汉/柴刀 all14 and hidden rewards passed; 杨家 run continues |
+| Opening/school | Passed strict opening and 青城 training | Passed strict opening and training | Fresh 罗汉/柴刀/杨家 all14 and hidden rewards passed |
 | 飞狐外传 | 苗人凤 duel4 won6; book144/map/manual | Evil duel0 manually won9 on0.2.3; book144/map/manual | Both 田归农 choices played |
 | 雪山飞狐 | Scene85 guards, saber gate and four rewards | Scene85 passed | All original variants reached; scene84 failed as reported. Fresh repaired84 passed separately |
 | 连城诀 | 狄云, ethics81, book146/神照71 | Evil route passed in combined and independent branch campaigns | Important poem wrong-item, consumption and repeat checks passed |
@@ -54,9 +58,9 @@ It would not prove every possible event order or every graphical behavior.
 | 倚天屠龙记 | 成昆/head219→谢逊;155/鹰爪109 | 成昆/head219→玄慈;155 | Battle80 genuinely lost but script progressed. Full6+2 allies 崆峒 waves passed; guide warning not reproduced. Buried九阳 actual wrong-compass/correct-shovel passed |
 | 碧血剑 | Physician route passed;156 | Evil corpse route passed;156 | Independent no-doctor high/exact75/74-fight branches passed |
 | 鸳鸯刀 | Both blades,157/夫妻140 | Kill route132/137 won1;157 | Wrong compass also places owned blades in both orders; shared script behavior, no repair |
-| 华山/钓鱼岛 ending | Completed:18 solo opponents, group133,14 altars,神杖205,128–131 and native terminal ending | Not repeated | Primary has full transcript and final checkpoint; mixed-build lineage explicit |
-| Hidden room | 松風→神山 passed independently from earned all14 checkpoint | Fresh 罗汉→野球拳 and 柴刀→西瓜刀法 passed after all14 | 南贤 activation required. 杨家 alternative remains in progress |
-| Other guide sidequests | Named substantive quests reconciled against actual evidence | Named substantive quests reconciled against actual evidence | Remaining 杨家 books/hidden/ending continue; all three 鹿鼎山 variants now reached |
+| 华山/钓鱼岛 ending | Completed:18 solo opponents, group133,14 altars,神杖205,128–131 and native terminal ending | Fresh 杨家 independently completed the same ending on current47A1 | Fresh terminal3020/3021 and checkpoint3022 close the single-build gap; older primary mixed-build lineage remains explicit |
+| Hidden room | 松風→神山 passed independently from earned all14 checkpoint | Fresh 罗汉→野球拳、柴刀→西瓜刀法、杨家→犽月流空 passed after all14 | 南贤 activation and repeat checks passed for all four alternatives |
+| Other guide sidequests | Named substantive quests reconciled against actual evidence | Named substantive quests reconciled against actual evidence | Declared guide scope closed; original data failures and broader limits retained |
 
 Detailed live journals, coverage records, native RPC transcripts and saves are
 under `tmp/campaign/reference/` and `tmp/campaign/alternate/`. These are gameplay
@@ -223,7 +227,7 @@ conversations the passage was legitimately blocked, not a confirmed data bug.
 After activation, actual keyboard corridor steps reached the stone and
 script882 replaced the first martial slot with 神山110, retaining manual134.
 Repeat stepping gave no further reward. The fresh 罗汉 and 柴刀 alternatives
-subsequently passed; the 杨家 alternative is being played separately.
+subsequently passed; the fresh 杨家 result below closes the fourth alternative.
 
 Independent `sidequests/paired-saber/` play placed both earned knives using
 the wrong compass182 in both orders. Current-facing RPC14 confirmed no slot
@@ -232,22 +236,27 @@ inventory opcode18 rather than selected-item opcode4 in both native versions.
 This shared mod behavior disagrees with the guide's explicit blade selection;
 author intent is unverified and no speculative repair is applied.
 
-## Outstanding acceptance work
+## Acceptance closure and scope limits
 
-- Finish the 杨家 exclusive hidden art with its naturally obtained manual;
-  松風→神山 and fresh 罗汉→野球拳/柴刀→西瓜刀法 alternatives have passed.
-- Complete the fresh current-build 杨家 ending to remove the earlier primary
-  ending's mixed-build qualification for that separate run.
-- Finalize the current coverage index, retain failed attempts and provenance,
-  then close the remaining process and remove its disposable bridge files.
+The fresh current-build 杨家 ending has passed independently of the earlier
+mixed-build primary. The current coverage index and final independent audit
+are retained under `tmp/campaign/acceptance.json` and
+`tmp/campaign/fidelity/final-guide-acceptance.md`. Failed attempts and exact
+provenance remain intact. All owned MCP processes exited0, all private binary
+directories were removed, and the final disposable bridge directory was
+removed after its watcher closed and queue drained. Each deletion was its own
+literal command without Force, following a separate path/process check.
 
 The requested older 白马92/91 fight replay on the corrected build has passed.
 The scene10 wine candidate remains scoped to recorded runtime plus source/map
 analysis. No pre-clear item-use failure was reproduced; no repair is justified
 by the heuristic alone.
 
-The goal remains active. A primary ending plus selected opposite branches
-does not establish every branch, every approach or all-game stability.
+The declared guide campaign and substantive named branches have actual
+execution or explicitly preserved original-data failures with repair evidence.
+This is a bounded acceptance result, not all-game stability. A full fresh
+campaign on the combined repair package and graphical runtime/initiative
+coverage remain outside this completed audit.
 
 ## Reconciled optional guide coverage
 
@@ -396,8 +405,66 @@ and a fresh single-build ending. The 柴刀 result above supersedes its pending
 on the candle at1787 and reached67 through ordinary world approach. Its
 three guard fights6 won4/6/4 at1798/1802/1806; chest1807 awarded150. This
 supersedes the matrix's unvisited67 status without altering its historical
-audit. Later 杨家 hidden/ending results must be recorded separately. It does not
+audit. The later 杨家 hidden/ending results are recorded below. It does not
 certify every event order, boundary, loot object, tactic or approach. Original84
 and the original seven-picture reward remain failing data routes with separate
 repair evidence; the combined package still has fixture/composition coverage
 and separate fresh component campaigns, not a full fresh combined-data run.
+
+## Fresh current-build 杨家 all-fourteen-books and hidden art
+
+The same original-data process PID49888 has now earned all fourteen books on
+current executable47A1, with one `new_game(seed=7)`, no imported checkpoints,
+debug calls, grants, forced results or legacy lineage. Final 笑傲34/56 won1/2
+at2594/2598 and awarded151. Checkpoint2600,
+`fourteen_books_smile_righteous_native`, owns every144–157 at quantity1 and
+retains the naturally earned starter186. This is verified from the checkpoint
+RPC's actual inventory, not inferred from a sequence of award messages.
+
+After native 南贤693 at2610, the normal staircase entered83 at2618. Actual
+keyboard corridor2623–2628 led to the stone step882 at2630. The owned186
+branch replaced slot0 with112 犽月流空, level1/proficiency0; starter186 and
+all fourteen books remained owned. Repeated steps2633–2634 produced no event
+and the party/inventory comparison2635 was unchanged. Checkpoint2636 is
+`all14_yangjia_hidden_verified_native`.
+
+The campaign retains maxMP9149 earned during one bounded native AI interval
+in battle33, followed by manual recovery and victory. It is explicitly
+documented in DRAGON_FINDINGS.md and `fidelity/ai-drain-parity.md`, and is
+distinct from the earlier excluded primary3012-round trial. The live original
+transcript is canonical. A stale temporary bridge response after an operator
+counter reset was diagnosed against that transcript: real2157/2158 both had
+scene81 and thirteen books. The driver now uses unique timestamp/random IDs;
+no stale response caused a game mutation or state rollback.
+
+The fresh ending subsequently completed on this same transcript and build,
+independently of the earlier mixed-build primary:
+
+- Eighteen actual solo tournament wins102–119, with119 after112, followed by
+  native team133 won3 at2853. The guide's15 differs from both observed18-fight
+  sequences. Owned 九阳 practice at2662 taught106 and raised maxMP to9549.
+- Actual book placements2857–2870 consumed every144–157 once;2871 awarded205.
+  Crisis2874 relocated the companions to the island through native events.
+- Island128/129/130/131 won4/5/5/3 at2912/2951/2983/3020, with native one-use
+  companion rotations. Manual 九阳3017 killed guide-priority support577
+  (HP100→−487) before the final native continuation.
+- Native ending3020 and state3021 report `Where=3`, scene104, no pending input.
+  Final checkpoint3022 is `fresh_yangjia_native_ending`, SHA-256
+  `be2477104b02cd74e247435594fe95147c52b7678b45d7496523494be8e354ba`.
+
+The 3022-RPC transcript SHA-256 is
+`e0862953499bfba9362090d5a554c324cbef133a6fa9ae5360ad9c8ff49dab5d`.
+Root's final audit checked2414 observed clean states, one seeded new game,
+no debug calls, and only one load1083 of its own earlier `mingxia_seal` save932.
+All21 gameplay-file hashes remained original; the independent audit also
+matched all476 files recorded in the initial runtime provenance. Its19 scoped
+checks passed. These checks preserve the documented native absorption growth
+and the limits on event orders, thresholds, tactics and graphical behavior.
+
+The final process PID49888 closed normally with exit0. Its canonical
+transcript, provenance, root-final-validation.json, independent final wire
+audit and earned saves remain. The3250 redundant bridge exchange files were
+removed separately after path/reparse/process validation. No owned MCP
+process, private executable directory or one-off temporary script remains.
+`tmp/validation/final-cleanup.json` records the verified cleanup; normal build
+outputs remain available under ignored `bin-c/build/`.

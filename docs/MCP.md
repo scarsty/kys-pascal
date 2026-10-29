@@ -319,5 +319,9 @@ up their own scratch directory on exit.
 
 See [the investigation report](DRAGON_FINDINGS.md) for source fixes, exact
 data defects, guide coverage, hashes and independent review results.
-See [the campaign ledger](CAMPAIGN_VALIDATION.md) for the completed primary
-ending and remaining alternate-branch acceptance work.
+See [the campaign ledger](CAMPAIGN_VALIDATION.md) for the completed original
+primary/alternate routes, all four hidden starter alternatives, the fresh
+current-build all-fourteen-books/ending campaign and the independent guide
+acceptance review. These are bounded route/build/data results; known original
+data failures, shared native AI limitations, the absence of a full combined-data
+campaign and graphical/initiative coverage limits remain explicit.

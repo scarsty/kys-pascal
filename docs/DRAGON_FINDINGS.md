@@ -1,11 +1,14 @@
-# 苍龙逐日 investigation — 2026-10-29
+# 苍龙逐日 investigation — 2026-10-29–30
 
 The C++ rewrite builds with a native MCP frontend. A strict guide-driven
 righteous campaign has earned all fourteen books and reached the actual native
 ending. The alternate campaign also has all fourteen books; independent
 guide reconciliation and supplementary fresh runs have covered the named
-major branches. The final fresh 杨家 run is still completing its last book,
-hidden art and ending, so validation remains open. The route uses native
+major branches. Fresh current-build 罗汉、柴刀、杨家 campaigns each have all
+fourteen books and their exclusive hidden arts. The fresh 杨家 run also
+completed the actual ending on the same current executable. The declared
+guide audit is complete with known original-data failures and explicit scope
+limits; this is not an all-game stability claim. The route uses native
 walking, item dispatch, choices, damage, recovery and rewards; no debug grants
 or forced wins count as progression.
 
@@ -18,7 +21,7 @@ detailed below; its author intent is unverified and no speculative patch is
 applied. Original inputs remain unchanged.
 
 The [campaign ledger](CAMPAIGN_VALIDATION.md) records completed routes and
-the remaining fresh-run work. Static checks missed a valid script in the wrong trigger
+the final fresh-run evidence. Static checks missed a valid script in the wrong trigger
 field; the earlier completion claim overstated the evidence. No computer use,
 graphics inspection or graphical runtime validation was performed. Both
 graphical and MCP targets compile.
@@ -377,6 +380,34 @@ steps differ in native height rules. Ordinary round scheduling does not cover
 graphical semi-real-time initiative. The final assessment is retained at
 `tmp/campaign/fidelity/final-usability.md`.
 
+### Shared automatic-combat drain behavior observed in the fresh run
+
+Fresh 杨家 battle33 reached its first automatic-combat budget at RPC2562.
+At2561 the enemy had HP734/MP2045 and the hero MP1092/1612. One ordinary
+AI continuation returned at round100: enemy HP734/MP0 and hero MP9149/9149.
+The agent inspected that pause and switched to manual play. A native 玄鐵
+attack2566 reduced enemy HP to324; another attack was rejected at stamina9,
+native rest2570 restored action eligibility, and attack2572 won at round102.
+The run retains this naturally earned MP growth and identifies it explicitly.
+It did not blindly continue AI or edit stats. The older primary3012-round
+trial remains separately excluded; it is not the source of this fresh state.
+
+Independent source comparison finds the same relevant behavior in active
+Pascal. `CalHurtValue2` scores MP-drain arts by nominal MP damage without
+checking the target's current MP; `TryMoveAttack` includes living MP0 targets,
+and `AutoBattle` selects the highest score. `CalHurtRole` credits the full
+nominal drain, experience and random maximum-MP growth even when target MP
+is clamped to0. This explains an AI stall with continuing growth in both
+versions; author intent is unknown and no rewrite-specific selection defect
+or speculative repair is claimed. The automatic interval records endpoints,
+not a complete trace of every internal attack.
+
+One small source difference remains: C++ uses a growth random range including
+`hurt / 2`, while Pascal's positive-bound `random(hurt div 2)` excludes that
+upper endpoint. It does not cause the shared MP0 eligibility/transfer behavior.
+Exact stochastic parity is not claimed. Source lines, direct observations and
+inference are distinguished in `tmp/campaign/fidelity/ai-drain-parity.md`.
+
 ## Validation and retained material
 
 The repeatable asset-free core tests and twenty-one-case Dragon integration suite
@@ -407,6 +438,18 @@ lineage. The current validation rebuild also includes bounded scene-name
 reads; SHA-256 is
 `47A1C01338C1C8005D2079D9CF7EEF60195068E9DA2A5510D10C5831A29EB522`,
 also recorded in `tmp/validation/build.json`.
+The later fresh 杨家 campaign used this exact current executable from its one
+seeded new game through all14books, hidden112, eighteen solo tournament wins,
+team133, fourteen book placements and native island128–131 victories. Final
+3020/3021 reached `Where=3` without pending input; checkpoint3022 is
+`fresh_yangjia_native_ending`. It imported no checkpoint, retained clean lineage,
+and only loaded its own earlier save once. All21 gameplay-file hashes and
+all476 initially recorded runtime hashes remained unchanged. The independent
+final review passed19 scoped checks and found no additional bounded-guide
+blocker. The source/runtime AI-drain behavior above remains explicitly retained.
+See `tmp/campaign/fidelity/final-guide-acceptance.md` and the campaign ledger
+for exact RPCs, checkpoint/transcript hashes and scope limits. This closes the
+fresh single-build ending gap without relabeling the older mixed-build run.
 The earlier eight-case
 suite also passed in a separate MSVC AddressSanitizer build
 (`/fsanitize=address /EHsc /O1 /Z7`), with no sanitizer findings in that
