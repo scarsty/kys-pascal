@@ -31,6 +31,7 @@ add_library(kys_core STATIC
     kys_main.cpp
     kys_event.cpp
     kys_battle.cpp
+    kys_rules.cpp
     "${MLCC_DIR}/filefunc.cpp"
     "${MLCC_DIR}/PotConv.cpp"
     "${MLCC_DIR}/SimpleCC.cpp"
@@ -74,6 +75,15 @@ if(KYS_BUILD_MCP)
 endif()
 
 if(BUILD_TESTING)
+    if(KYS_BUILD_MCP)
+        add_executable(kys_rules_tests tests/rules_tests.cpp)
+        target_link_libraries(kys_rules_tests PRIVATE kys_core glaze::glaze)
+        if(MSVC)
+            target_compile_options(kys_rules_tests PRIVATE /utf-8)
+        endif()
+        add_test(NAME dos_rules_native_vectors COMMAND kys_rules_tests
+            "${CMAKE_CURRENT_SOURCE_DIR}/tests/dragon_dos12_vectors.json")
+    endif()
     add_executable(kys_core_tests tests/core_tests.cpp)
     target_link_libraries(kys_core_tests PRIVATE kys_core)
     if(MSVC)

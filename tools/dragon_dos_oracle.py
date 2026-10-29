@@ -1,0 +1,262 @@
+"""Recover isolated rules from the ORIGINAL CLZR 1.2 Watcom LE executable.
+
+Only instructions in a hash-verified Z.dat run in Unicorn's isolated memory.
+No installer, DOS environment, filesystem interrupts or graphics are executed.
+Install unicorn (and capstone for --disasm) in your analysis Python environment.
+See docs/DOS_RULES.md for provenance, boundaries and reproduction commands.
+"""
+from pathlib import Path
+import argparse
+import hashlib
+import struct
+import json
+
+ORIGINAL_SHA256 = '60ff7e91d7be7a848242e2ddc2ef105b906e160e19f3086bf13ff55d8e951928'
+
+
+class LE:
+    def __init__(self, path):
+        self.path = Path(path)
+        self.data = self.path.read_bytes()
+        if hashlib.sha256(self.data).hexdigest() != ORIGINAL_SHA256:
+            raise ValueError('Expected the original installer Z.dat; enhancement patches are different rules')
+        self.h = struct.unpack_from('<I', self.data, 0x3c)[0]
+        assert self.data[self.h:self.h+4] == b'LE\0\0'
+        self.u = lambda o: struct.unpack_from('<I', self.data, self.h+o)[0]
+        self.objects = [struct.unpack_from('<6I', self.data, self.h+self.u(0x40)+24*i)
+                        for i in range(self.u(0x44))]
+        self.page_size = self.u(0x28)
+        self.image = bytearray(self.objects[1][0])
+        self.file_pages = []
+        for p in range(self.objects[1][4]):
+            m = self.h+self.u(0x48)+(self.objects[1][3]-1+p)*4
+            n = int.from_bytes(self.data[m:m+3], 'big')
+            flags = self.data[m+3]
+            assert flags == 0 and n > 0
+            at = self.u(0x80)+(n-1)*self.page_size
+            amount = self.u(0x2c) if n == self.u(0x14) else self.page_size
+            self.image[p*self.page_size:p*self.page_size+amount] = self.data[at:at+amount]
+            self.file_pages.append(at)
+
+    def disasm(self, start, end):
+        from capstone import Cs, CS_ARCH_X86, CS_MODE_32
+        md = Cs(CS_ARCH_X86, CS_MODE_32)
+        return '\n'.join(f'obj2+{i.address:06x} file+{self.file_pages[i.address//4096]+i.address%4096:06x}  {i.bytes.hex():24} {i.mnemonic:8} {i.op_str}'
+                         for i in md.disasm(bytes(self.image[start:end]), start))
+
+    def emulate(self, start, args, roles, randoms, writes=(), extra_stops=(), registers=()):
+        from unicorn import Uc, UC_ARCH_X86, UC_MODE_32, UC_HOOK_CODE
+        from unicorn.x86_const import UC_X86_REG_ESP, UC_X86_REG_EIP, UC_X86_REG_EAX
+        uc = Uc(UC_ARCH_X86, UC_MODE_32)
+        uc.mem_map(0, 0x500000)
+        uc.mem_write(0, bytes(self.image))
+        uc.mem_map(0x800000, 0x100000)
+        sentinel = 0x8f0000
+        sp = 0x8e0000
+        uc.mem_write(sp, struct.pack('<'+str(len(args)+1)+'I', sentinel, *args))
+        uc.reg_write(UC_X86_REG_ESP, sp)
+        for register, value in registers:
+            uc.reg_write(register, value)
+        for role, words in roles.items():
+            uc.mem_write(0x7014c+role*182, struct.pack('<91h', *words))
+        for at, data in writes:
+            uc.mem_write(at, data)
+        rng = iter(randoms)
+        calls = []
+        def hook(uc, address, size, data):
+            if address == sentinel or address in extra_stops:
+                uc.emu_stop()
+                return
+            if address not in (0x1ed1e, 0x1d612):
+                return
+            esp = uc.reg_read(UC_X86_REG_ESP)
+            ret, arg = struct.unpack('<2I', uc.mem_read(esp, 8))
+            if address == 0x1ed1e:
+                uc.reg_write(UC_X86_REG_ESP, esp+8)
+            else:
+                # This game's wrapper returns zero for bounds <=1 or >30000.
+                value = 0 if arg <= 1 or arg > 30000 else next(rng)
+                assert 0 <= value < max(1, arg), (value, arg)
+                calls.append({'bound': arg, 'value': value})
+                uc.reg_write(UC_X86_REG_EAX, value)
+                uc.reg_write(UC_X86_REG_ESP, esp+4)
+            uc.reg_write(UC_X86_REG_EIP, ret)
+        uc.hook_add(UC_HOOK_CODE, hook)
+        uc.emu_start(start, sentinel+1, count=1000000)
+        assert uc.reg_read(UC_X86_REG_EIP) in (sentinel, *extra_stops), 'Routine did not return/stop'
+        result = {str(role): list(struct.unpack('<91h', uc.mem_read(0x7014c+role*182, 182)))
+                  for role in roles}
+        return {'eax': uc.reg_read(UC_X86_REG_EAX), 'eip': uc.reg_read(UC_X86_REG_EIP),
+                'roles': result, 'rng': calls,
+                'battle_exp': struct.unpack('<h', uc.mem_read(0xbc746, 2))[0],
+                'effective_level': struct.unpack('<h', uc.mem_read(0xc6ec2, 2))[0]}
+
+
+def words(size, fields):
+    out = [0]*size
+    for key, value in fields.items():
+        out[int(key)] = value if value < 32768 else value-65536
+    return out
+
+
+def pack(fields, size):
+    return struct.pack('<'+str(size)+'h', *words(size, fields))
+
+
+def case(le, name, kind, roles, randoms, magic=None, items=(), actors=None, distance=1, match=0, step=0, cache=0, seed=-1):
+    """Inputs are sparse record words; outputs are obtained only from native instructions."""
+    actors = actors or [{0:0}, {0:1, 1:1}][:len(roles)]
+    writes = [(0x356d2, struct.pack('<h', len(actors))),
+              (0xc6eba, struct.pack('<h', match)), (0xc6ec2, struct.pack('<h', cache))]
+    for i, actor in enumerate(actors):
+        writes.append((0xbc72c+i*28, pack(actor, 14)))
+    if magic is not None:
+        writes.append((0x7f5dc+136, pack(magic, 68)))
+    for i, item in enumerate(items):
+        writes.append((0x82744+i*190, pack(item, 95)))
+    entries = {'level':0x1b6be, 'hp':0x19188, 'mp':0x195ec,
+               'poison':0x19a45, 'detox':0x19da3, 'heal':0x1a10c,
+               'rest':0x1a8a4, 'tick':0x1c563, 'hidden':0x1a537, 'cost':0x184ed}
+    args = [0,1] if kind=='level' else [0,1,0,1,0,distance]
+    stops = []
+    regs = []
+    if kind in ('rest', 'tick'):
+        args = [0]
+        if kind=='rest':
+            actors[0][6] = step
+            writes.append((0xbc72c, pack(actors[0], 14)))
+    if kind=='hidden':
+        # Isolated effect slice inside item orchestration: EBX=target role;
+        # locals at SP+12/SP+16 are attacker role/item. Stop before rendering.
+        from unicorn.x86_const import UC_X86_REG_EBX
+        regs = [(UC_X86_REG_EBX, 1)]
+        writes.extend([(0x8e000c, struct.pack('<2I', 0, 0)),
+                       (0x356da, struct.pack('<2h', 0, 0)),
+                       (0xc4a04, struct.pack('<h', 1))])
+        stops = [0x1a839]
+    if kind=='cost':
+        # Cost slice in attack orchestration: SP+64 = attacker battle index.
+        writes.extend([(0x8e0040, struct.pack('<I', 0)), (0xc6ed6, struct.pack('<h', 0))])
+        stops = [0x18551]
+    result = le.emulate(entries[kind], args, {i:words(91,r) for i,r in enumerate(roles)},
+                        randoms, writes, stops, regs)
+    output = {**result}
+    del output['eip']
+    if kind in ('level', 'rest', 'tick', 'hidden', 'cost'):
+        output.pop('eax') # No defined value (slice returns no EAX contract).
+    return dict(name=name, kind=kind, roles=roles, magic=magic or {}, items=items,
+                actors=actors, distance=distance, match=match, step=step, cache=cache, seed=seed, expected=output)
+
+
+def vectors(le):
+    import random
+    rng = random.Random(12006)
+    out = []
+    a = {2:3,15:1,16:150,17:100,18:100,19:40,20:50,21:100,23:-1,24:-1,
+         41:200,42:200,43:50,44:50,45:50,46:21,47:20,48:30,49:30,
+         50:20,51:21,52:0,53:30,54:0,60:56,63:1,73:500}
+    b = {15:12,17:1000,18:1000,21:100,23:-1,24:-1,41:500,42:500,45:40}
+    m = {16:20,17:30,**{18+i:100+i*70 for i in range(10)},
+         **{48+i:40+i*2 for i in range(10)}, **{58+i:70+i*3 for i in range(10)}}
+    def add(name,kind,rs,randoms=(),**kw):
+        out.append(case(le,name,kind,rs,randoms,**kw))
+    for ap in (0,29,30,49,50,69,70,89,90,100):
+        for roll in (0,1):
+            tier = 2 if ap<30 else 3 if ap<50 else 4 if ap<70 else 5 if ap<90 else 6
+            add(f'aptitude_{ap}_edge_{roll}','level', [{**a,60:ap}],
+                [0 if roll==0 else tier-1,roll,2,1,0,2,1,0])
+    for xp in (49,50,149,150,51999,52000,65535):
+        add(f'xp_{xp}','level',[{**a,16:xp}], [1]*10)
+    add('level_uncapped_and_medicine_caps','level', [{**a,16:52000,18:990,42:9990,
+        43:990,44:990,45:990,46:100,47:99,48:100,50:101,51:101,52:101,54:101}], [1]*20)
+    for level in (0,100,500,900,999):
+        for mp in (0,19,20,39,40,99,100):
+            add(f'hp_skill_{level}_mp_{mp}','hp',[{**a,73:level,41:mp},b],
+                [10,7,2,1], magic=m)
+    for distance in (0,1,2,10,11,30):
+        add(f'hp_distance_{distance}','hp',[a,b],[10,7,2,1], magic=m, distance=distance)
+    for attack,defence in ((0,999),(1,999),(400,0),(10,900),(800,200)):
+        for noise in ((0,19,0,3),(19,0,3,0)):
+            add(f'hp_attack_{attack}_def_{defence}_noise_{noise[0]}','hp',
+                [{**a,43:attack},{**b,45:defence,19:75}],noise,magic=m)
+    for resistance in (0,89,90,99,100,120):
+        for poison in (0,90,99):
+            add(f'hp_poison_res_{resistance}_before_{poison}','hp',
+                [{**a,57:45},{**b,49:resistance,20:poison}], [0]*4,magic=m)
+    add('hp_poison_exact_100','hp',[{**a,57:0},{**b,49:0,20:88}], [0]*4,magic=m)
+    for hp in (1,100,506):
+        add(f'hp_kill_{hp}','hp',[a,{**b,17:hp}], [0]*4,magic=m)
+    for k in (80,81,100):
+        rs = [{**a,55:k},{**b,55:k},{**b,55:95},{**b,55:99,17:0},{**b,55:100}]
+        actors = [{0:0},{0:1,1:1},{0:2},{0:3,1:1},{0:4,1:1,5:1}]
+        add(f'knowledge_{k}_dead_excluded','hp',rs,[10,7,2,1],magic=m,actors=actors)
+    add('equipment_both_slots_and_match','hp', [{**a,23:0,24:1},{**b,23:0,24:1}],
+        [10,7,2,1], magic=m,items=[{52:17,54:5},{52:13,54:7}],match=63)
+    for i in range(30):
+        aa = {**a,43:rng.randrange(500),19:rng.randrange(100),21:rng.randrange(101),
+              41:rng.randrange(150),73:rng.randrange(1000),57:rng.randrange(101)}
+        bb = {**b,45:rng.randrange(250),19:rng.randrange(100),49:rng.randrange(120),20:rng.randrange(100)}
+        add(f'hp_seeded_{i}','hp',[aa,bb],[rng.randrange(20),rng.randrange(20),rng.randrange(4),rng.randrange(4)],
+            magic=m,distance=rng.randrange(1,20))
+    for level in (0,500,999):
+        for target in (0,1,80,500):
+            add(f'mp_skill_{level}_target_{target}','mp', [{**a,73:level},{**b,41:target}],
+                [2,1,3,0,2],magic=m)
+    add('mp_max_cap_and_refill','mp',[{**a,41:9998,42:9998},b],[2,1,3,2,1],magic=m)
+    for cache in (0,1,2,5,10):
+        for mp in (0,1,39,100):
+            add(f'cost_cache_{cache}_mp_{mp}','cost',[{**a,41:mp}],magic=m,cache=cache)
+    add('mp_zero_tables_negative_noise','mp',[a,{**b,41:1}],[0,2,0,2],magic={})
+    for skill in (0,20,90,100,200):
+        for resistance in (0,90,100,120):
+            add(f'poison_skill_{skill}_res_{resistance}','poison',[{**a,47:skill},{**b,49:resistance,20:90}])
+    for skill in (0,30,90):
+        for poison in (0,20,50,51,99):
+            add(f'detox_{skill}_poison_{poison}','detox',[{**a,48:skill},{**b,20:poison}],[8,2])
+    for med in (0,30,90):
+        for injury in (0,25,26,50,51,75,76,99):
+            add(f'heal_{med}_injury_{injury}','heal',[{**a,46:med},{**b,17:800,19:injury}],[3])
+    add('heal_low_stamina','heal',[{**a,21:49},b])
+    add('heal_near_full','heal',[{**a,46:90},{**b,17:999,19:25}],[3])
+    for stamina in (0,25,27,29,95,99):
+        for step in (0,5):
+            add(f'rest_stamina_{stamina}_step_{step}','rest',[{**a,21:stamina,44:50}], [2,1,0], step=step)
+    for injury in (0,19,20,99):
+        for poison in (0,1,99):
+            add(f'tick_injury_{injury}_poison_{poison}','tick',[{**a,19:injury,20:poison,17:30}])
+    add('tick_exact_zero','tick',[{**a,19:0,20:30,17:30}])
+    add('tick_poison_no_stamina','tick',[{**a,19:0,20:30,21:0}])
+    for injury in (0,1,33,34,66,67,99):
+        for hidden in (0,90):
+            add(f'hidden_injury_{injury}_skill_{hidden}','hidden',
+                [{**a,54:hidden},{**b,19:injury,20:20,49:0}], [3,2,1], items=[{45:-80,47:80}])
+    add('hidden_unpoisoned_item','hidden',[a,{**b,19:0,20:50}], [3,2,1], items=[{45:-80}])
+    class GameDraws:
+        def __init__(self, seed): self.state=seed
+        def __iter__(self): return self
+        def __next__(self):
+            self.state=(self.state*1664525+1013904223)&0xffffffff
+            return self.state>>1
+    # Production adapters use the shared headless LCG. Inject its exact draws
+    # into native code as independent expected results, including RNG order.
+    for kind,bounds in (('level',[4,3,3,3,3,3]),('hp',[20,20,4,4]),('mp',[3,3,25,3,3])):
+        draws=GameDraws(7)
+        randoms=[next(draws)%bound for bound in bounds]
+        add(f'{kind}_shared_engine_seed7',kind,[a] if kind=='level' else [a,b],randoms,magic=m,seed=7)
+    return out
+
+
+if __name__ == '__main__':
+    a = argparse.ArgumentParser()
+    a.add_argument('--binary', type=Path, required=True)
+    a.add_argument('--disasm', nargs=2)
+    a.add_argument('--vectors', type=Path)
+    o = a.parse_args()
+    le = LE(o.binary)
+    if o.disasm:
+        print(le.disasm(*[int(s, 16) for s in o.disasm]))
+    if o.vectors:
+        out = dict(binary_sha256=ORIGINAL_SHA256,
+                   xp_table=list(struct.unpack_from('<30H', le.image, 0x3458e)), cases=vectors(le))
+        o.vectors.write_bytes((json.dumps(out,ensure_ascii=False,separators=(',',':'))+'\n').encode('utf-8'))
+        print(f'Wrote {len(out["cases"])} native vectors to {o.vectors}')

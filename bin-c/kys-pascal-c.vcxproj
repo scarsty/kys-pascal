@@ -133,6 +133,7 @@
     <ClCompile Include="C:\project\mlcc\SimpleCC.cpp" />
     <ClCompile Include="C:\project\mlcc\strfunc.cpp" />
     <ClCompile Include="kys_battle.cpp" />
+    <ClCompile Include="kys_rules.cpp" />
     <ClCompile Include="kys_draw.cpp" />
     <ClCompile Include="kys_engine.cpp" />
     <ClCompile Include="kys_event.cpp" />
@@ -149,6 +150,7 @@
     <ClInclude Include="C:\project\mlcc\SimpleCC.h" />
     <ClInclude Include="C:\project\mlcc\strfunc.h" />
     <ClInclude Include="kys_battle.h" />
+    <ClInclude Include="kys_rules.h" />
     <ClInclude Include="kys_draw.h" />
     <ClInclude Include="kys_engine.h" />
     <ClInclude Include="kys_event.h" />

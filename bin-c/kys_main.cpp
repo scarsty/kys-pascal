@@ -6,6 +6,7 @@
 #include "INIReader.h"
 #include "filefunc.h"
 #include "kys_battle.h"
+#include "kys_rules.h"
 #include "kys_draw.h"
 #include "kys_engine.h"
 #include "kys_event.h"
@@ -800,6 +801,7 @@ void ReadFiles()
     ReadFileToBuffer((char*)LeaveList, AppPath + "list/leave.bin", 200, 0);
     ReadFileToBuffer((char*)EffectList, AppPath + "list/effect.bin", 400, 0);
     ReadFileToBuffer((char*)LevelUpList, AppPath + "list/levelup.bin", 200, 0);
+    LoadGameRules(filename);
     ReadFileToBuffer((char*)MatchList, AppPath + "list/match.bin", MAX_WEAPON_MATCH * 3 * 2, 0);
 
     HeadSurface.resize(999, nullptr);
@@ -4960,10 +4962,9 @@ void ShowStatus(int rnum, int x, int y)
     buf = std::format("{:5d}", (uint16_t)Rrole[rnum].Exp);
     DrawEngShadowText(buf, x + 100, y + 194, ColColor(0x5), ColColor(0x7));
     // 升级所需经验
-    int lvl = Rrole[rnum].Level;
-    if (lvl >= 1 && lvl <= 100)
+    if (NextLevelExperience(Rrole[rnum]) >= 0)
     {
-        buf = std::format("{:5d}", (uint16_t)LevelUpList[lvl - 1]);
+        buf = std::format("{:5d}", NextLevelExperience(Rrole[rnum]));
     }
     else
     {
@@ -5287,26 +5288,35 @@ void MenuQuit()
 
 int EffectMedcine(int role1, int role2)
 {
-    int addlife = Rrole[role1].Medicine * MED_LIFE * (10 - Rrole[role2].Hurt / 15) / 10;
-    if (Rrole[role2].Hurt - Rrole[role1].Medicine > 20)
+    int addlife=0,minushurt=0;
+    if(ActiveRules.combat==RulesMode::DragonDos12)
     {
-        addlife = 0;
+        int injury=Rrole[role2].Hurt;
+        addlife=DosHeal(Rrole[role1],Rrole[role2]);minushurt=injury-Rrole[role2].Hurt;
     }
-    int minushurt = addlife / LIFE_HURT;
-    if (minushurt > Rrole[role2].Hurt)
+    else
     {
-        minushurt = Rrole[role2].Hurt;
+        addlife = Rrole[role1].Medicine * MED_LIFE * (10 - Rrole[role2].Hurt / 15) / 10;
+        if (Rrole[role2].Hurt - Rrole[role1].Medicine > 20)
+        {
+            addlife = 0;
+        }
+        minushurt = addlife / LIFE_HURT;
+        if (minushurt > Rrole[role2].Hurt)
+        {
+            minushurt = Rrole[role2].Hurt;
+        }
+        Rrole[role2].Hurt -= minushurt;
+        if (Rrole[role2].Hurt < 0)
+        {
+            Rrole[role2].Hurt = 0;
+        }
+        if (addlife > Rrole[role2].MaxHP - Rrole[role2].CurrentHP)
+        {
+            addlife = Rrole[role2].MaxHP - Rrole[role2].CurrentHP;
+        }
+        Rrole[role2].CurrentHP += addlife;
     }
-    Rrole[role2].Hurt -= minushurt;
-    if (Rrole[role2].Hurt < 0)
-    {
-        Rrole[role2].Hurt = 0;
-    }
-    if (addlife > Rrole[role2].MaxHP - Rrole[role2].CurrentHP)
-    {
-        addlife = Rrole[role2].MaxHP - Rrole[role2].CurrentHP;
-    }
-    Rrole[role2].CurrentHP += addlife;
 
     if (Where != 2)
     {
@@ -5329,12 +5339,18 @@ int EffectMedcine(int role1, int role2)
 
 int EffectMedPoison(int role1, int role2)
 {
-    int minuspoi = Rrole[role1].MedPoi;
-    if (minuspoi > Rrole[role2].Poison)
+    int minuspoi;
+    if(ActiveRules.combat==RulesMode::DragonDos12)
+        minuspoi=DosDetox(Rrole[role1],Rrole[role2]);
+    else
     {
-        minuspoi = Rrole[role2].Poison;
+        minuspoi = Rrole[role1].MedPoi;
+        if (minuspoi > Rrole[role2].Poison)
+        {
+            minuspoi = Rrole[role2].Poison;
+        }
+        Rrole[role2].Poison -= minuspoi;
     }
-    Rrole[role2].Poison -= minuspoi;
 
     if (Where != 2)
     {
