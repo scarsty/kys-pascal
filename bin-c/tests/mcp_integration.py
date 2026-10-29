@@ -387,6 +387,13 @@ class DragonIntegration(unittest.TestCase):
         self.assertEqual(rules["xp_thresholds"], [10, 20])
         self.assertEqual((rules["max_level"], rules["hp_growth_factor"], rules["mp_growth_factor"]), (3, 5, 6))
         self.assertEqual((rules["attack_growth_factor"], rules["speed_growth_factor"], rules["defence_growth_factor"]), (2, 0, 3))
+        g.close()
+        ini.write_bytes(original + b"\n[rules]\nprofile=dragon_dos12\nprogression=legacy\n")
+        g, _ = self.game(mod=mod)
+        rules = g.call("rules")
+        self.assertEqual((rules["progression"], rules["combat"]), ("legacy", "dragon_dos12"))
+        self.assertEqual((rules["max_level"], rules["xp_mode"]), (60, "deduct_per_level"))
+        self.assertEqual((rules["min_knowledge"], rules["life_hurt"], rules["poison_hurt"]), (80, 10, 1))
 
     def test_checkpoint_rejects_changed_rules_and_world(self):
         mod = self.scratch / "rules-identity"

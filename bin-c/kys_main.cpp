@@ -5288,35 +5288,9 @@ void MenuQuit()
 
 int EffectMedcine(int role1, int role2)
 {
-    int addlife=0,minushurt=0;
-    if(ActiveRules.combat==RulesMode::DragonDos12)
-    {
-        int injury=Rrole[role2].Hurt;
-        addlife=DosHeal(Rrole[role1],Rrole[role2]);minushurt=injury-Rrole[role2].Hurt;
-    }
-    else
-    {
-        addlife = Rrole[role1].Medicine * MED_LIFE * (10 - Rrole[role2].Hurt / 15) / 10;
-        if (Rrole[role2].Hurt - Rrole[role1].Medicine > 20)
-        {
-            addlife = 0;
-        }
-        minushurt = addlife / LIFE_HURT;
-        if (minushurt > Rrole[role2].Hurt)
-        {
-            minushurt = Rrole[role2].Hurt;
-        }
-        Rrole[role2].Hurt -= minushurt;
-        if (Rrole[role2].Hurt < 0)
-        {
-            Rrole[role2].Hurt = 0;
-        }
-        if (addlife > Rrole[role2].MaxHP - Rrole[role2].CurrentHP)
-        {
-            addlife = Rrole[role2].MaxHP - Rrole[role2].CurrentHP;
-        }
-        Rrole[role2].CurrentHP += addlife;
-    }
+    int injury=Rrole[role2].Hurt;
+    int addlife=BattleRules().heal(Rrole[role1],Rrole[role2]);
+    int minushurt=injury-Rrole[role2].Hurt;
 
     if (Where != 2)
     {
@@ -5339,18 +5313,7 @@ int EffectMedcine(int role1, int role2)
 
 int EffectMedPoison(int role1, int role2)
 {
-    int minuspoi;
-    if(ActiveRules.combat==RulesMode::DragonDos12)
-        minuspoi=DosDetox(Rrole[role1],Rrole[role2]);
-    else
-    {
-        minuspoi = Rrole[role1].MedPoi;
-        if (minuspoi > Rrole[role2].Poison)
-        {
-            minuspoi = Rrole[role2].Poison;
-        }
-        Rrole[role2].Poison -= minuspoi;
-    }
+    int minuspoi=BattleRules().detox(Rrole[role1],Rrole[role2]);
 
     if (Where != 2)
     {

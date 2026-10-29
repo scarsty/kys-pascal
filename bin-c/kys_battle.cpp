@@ -1271,41 +1271,16 @@ void Attack(int bnum)
 void AttackAction(int bnum, int i, int mnum, int level)
 {
     int rnum = Brole[bnum].rnum;
-    if (i < 0 || i >= 10 || Brole[bnum].Acted != 1)
+    if (i < 0 || i >= 10 || Brole[bnum].Acted != 1)return;
+    const auto& rules=BattleRules();
+    for(int strike=0;strike<rules.strikeCount(Rrole[rnum]);++strike)
     {
-        return;
+        int tier=rules.beginStrike(Rrole[rnum],i,level);
+        if(Rmagic[mnum].Unknown[4]>0)CallEvent(Rmagic[mnum].Unknown[4]);
+        else AttackAction(bnum,mnum,tier);
+        rules.finishStrike(Rrole[rnum],i);
     }
-
-    if(ActiveRules.combat==RulesMode::DragonDos12)
-    {
-        // DOS damage precedes proficiency growth; stamina is paid once after
-        // both strikes. Target area continues to use the trained tier.
-        for(int strike=0;strike<(Rrole[rnum].AttTwice==1?2:1);++strike)
-        {
-            if(Rmagic[mnum].Unknown[4]>0)CallEvent(Rmagic[mnum].Unknown[4]);
-            else AttackAction(bnum,mnum,Rrole[rnum].MagLevel[i]/100+1);
-            Rrole[rnum].MagLevel[i]=std::min<int>(Rrole[rnum].MagLevel[i]+RulesRandomDraw(2)+1,999);
-        }
-        Rrole[rnum].PhyPower=std::max<int>(Rrole[rnum].PhyPower-3,0);
-        return;
-    }
-
-    for (int i1 = 0; i1 <= (Rrole[rnum].AttTwice > 0 ? 1 : 0); i1++)
-    {
-        Rrole[rnum].MagLevel[i] += GameRandom() % 2 + 1;
-        if (Rrole[rnum].MagLevel[i] > 999)
-        {
-            Rrole[rnum].MagLevel[i] = 999;
-        }
-        if (Rmagic[mnum].Unknown[4] > 0)
-        {
-            CallEvent(Rmagic[mnum].Unknown[4]);
-        }
-        else
-        {
-            AttackAction(bnum, mnum, level);
-        }
-    }
+    rules.finishAttack(Rrole[rnum]);
 }
 
 void AttackAction(int bnum, int mnum, int level)
@@ -1632,230 +1607,14 @@ void PlayMagicAnimation(int bnum, int enumv, int ForTeam, int mode)
     Brole[bnum].Pic = 0;
 }
 
-static DosHitContext DosBattleHitContext(int bnum1,int bnum2,int mnum)
-{
-    DosHitContext context;
-    auto& attacker=Rrole[Brole[bnum1].rnum];auto& defender=Rrole[Brole[bnum2].rnum];
-    context.distance=abs(Brole[bnum1].X-Brole[bnum2].X)+abs(Brole[bnum1].Y-Brole[bnum2].Y);
-    for(int id:attacker.Equip)if(id>=0 && id<725)context.attackEquipment+=Ritem[id].AddAttack;
-    for(int id:defender.Equip)if(id>=0 && id<725)context.defenceEquipment+=Ritem[id].AddDefence;
-    for(int i=0;i<MAX_WEAPON_MATCH;++i)
-        if(attacker.Equip[0]==MatchList[i][0] && mnum==MatchList[i][1])context.weaponMatch=MatchList[i][2];
-    for(int i=0;i<BRoleAmount;++i)
-    {
-        auto& role=Rrole[Brole[i].rnum];
-        if(Brole[i].Dead || role.CurrentHP<=0 || role.Knowledge<=MIN_KNOWLEDGE)continue;
-        if(Brole[i].Team==Brole[bnum1].Team)context.attackKnowledge+=role.Knowledge*2;
-        else context.defenceKnowledge+=role.Knowledge*2;
-    }
-    return context;
-}
-
 void CalHurtRole(int bnum, int mnum, int level)
 {
-    int rnum = Brole[bnum].rnum;
-    if(ActiveRules.combat==RulesMode::DragonDos12)
-    {
-        auto& attacker=Rrole[rnum];auto& magic=Rmagic[mnum];
-        for(int i=0;i<BRoleAmount;++i)
-        {
-            Brole[i].ShowNumber=-1;
-            if(BField[4][Brole[i].X][Brole[i].Y]==0 || Brole[bnum].Team==Brole[i].Team || Brole[i].Dead)continue;
-            auto& defender=Rrole[Brole[i].rnum];
-            if(magic.HurtType==0)
-            {
-                DosLastEffectiveLevel=DosEffectiveLevel(attacker,magic,level);
-                Brole[i].ShowNumber=DosApplyHpHit(attacker,defender,magic,level,
-                    DosBattleHitContext(bnum,i,mnum),Brole[bnum].ExpGot);
-            }
-            else if(magic.HurtType==1)Brole[i].ShowNumber=DosApplyMpHit(attacker,defender,magic,level);
-        }
-        // Original obj2+18520 consumes this HP cache even on an MP attack.
-        DosPayMagicCost(attacker,magic,DosLastEffectiveLevel);
-        Brole[bnum].ExpGot+=2;
-        return;
-    }
-    Rrole[rnum].PhyPower -= 3;
-    // 根据内力调整等级
-    if (Rrole[rnum].CurrentMP < Rmagic[mnum].NeedMP * ((level + 1) / 2))
-    {
-        level = Rrole[rnum].CurrentMP / Rmagic[mnum].NeedMP * 2;
-    }
-    if (level > 10)
-    {
-        level = 10;
-    }
-    Rrole[rnum].CurrentMP -= Rmagic[mnum].NeedMP * ((level + 1) / 2);
-
-    for (int i = 0; i < BRoleAmount; i++)
-    {
-        Brole[i].ShowNumber = -1;
-        if (BField[4][Brole[i].X][Brole[i].Y] != 0 && Brole[bnum].Team != Brole[i].Team && Brole[i].Dead == 0)
-        {
-            // 生命伤害
-            if (Rmagic[mnum].HurtType == 0)
-            {
-                int hurt = CalHurtValue(bnum, i, mnum, level);
-                Brole[i].ShowNumber = hurt;
-                Rrole[Brole[i].rnum].CurrentHP -= hurt;
-                Rrole[Brole[i].rnum].Hurt += hurt / LIFE_HURT;
-                if (Rrole[Brole[i].rnum].Hurt > 99)
-                {
-                    Rrole[Brole[i].rnum].Hurt = 99;
-                }
-                Brole[bnum].ExpGot += hurt / 2;
-                if (Rrole[Brole[i].rnum].CurrentHP <= 0)
-                {
-                    Brole[bnum].ExpGot += hurt / 2;
-                }
-                if (Brole[bnum].ExpGot < 0)
-                {
-                    Brole[bnum].ExpGot = 32767;
-                }
-            }
-            // 内力伤害
-            if (Rmagic[mnum].HurtType == 1)
-            {
-                int hurt = Rmagic[mnum].HurtMP[level - 1] + GameRandom() % 5 - GameRandom() % 5;
-                Brole[i].ShowNumber = hurt;
-                Rrole[Brole[i].rnum].CurrentMP -= hurt;
-                if (Rrole[Brole[i].rnum].CurrentMP <= 0)
-                {
-                    Rrole[Brole[i].rnum].CurrentMP = 0;
-                }
-                // 增加己方内力及最大值
-                Rrole[rnum].CurrentMP += hurt;
-                Brole[bnum].ExpGot += hurt;
-                Rrole[rnum].MaxMP += GameRandom() % (hurt / 2 + 1);
-                if (Rrole[rnum].MaxMP > MAX_MP)
-                {
-                    Rrole[rnum].MaxMP = MAX_MP;
-                }
-                if (Rrole[rnum].CurrentMP > Rrole[rnum].MaxMP)
-                {
-                    Rrole[rnum].CurrentMP = Rrole[rnum].MaxMP;
-                }
-            }
-            // 中毒
-            int addpoi = Rrole[rnum].AttPoi / 5 + Rmagic[mnum].Poison * level / 2 * (100 - Rrole[Brole[i].rnum].DefPoi) / 100;
-            if (addpoi + Rrole[Brole[i].rnum].Poison > 99)
-            {
-                addpoi = 99 - Rrole[Brole[i].rnum].Poison;
-            }
-            if (addpoi < 0)
-            {
-                addpoi = 0;
-            }
-            if (Rrole[Brole[i].rnum].DefPoi >= 99)
-            {
-                addpoi = 0;
-            }
-            Rrole[Brole[i].rnum].Poison += addpoi;
-        }
-    }
+    BattleRules().resolveMagic(bnum,mnum,level);
 }
 
 int CalHurtValue(int bnum1, int bnum2, int mnum, int level)
 {
-    int rnum1 = Brole[bnum1].rnum, rnum2 = Brole[bnum2].rnum;
-    if(ActiveRules.combat==RulesMode::DragonDos12)
-        return DosHpDamage(Rrole[rnum1],Rrole[rnum2],Rmagic[mnum],
-            DosEffectiveLevel(Rrole[rnum1],Rmagic[mnum],level),DosBattleHitContext(bnum1,bnum2,mnum));
-
-    // 计算双方武学常识
-    int k1 = 0, k2 = 0;
-    for (int i = 0; i < BRoleAmount; i++)
-    {
-        if (Brole[i].Team == Brole[bnum1].Team && Brole[i].Dead == 0 && Rrole[Brole[i].rnum].Knowledge > MIN_KNOWLEDGE)
-        {
-            k1 += Rrole[Brole[i].rnum].Knowledge;
-        }
-        if (Brole[i].Team == Brole[bnum2].Team && Brole[i].Dead == 0 && Rrole[Brole[i].rnum].Knowledge > MIN_KNOWLEDGE)
-        {
-            k2 += Rrole[Brole[i].rnum].Knowledge;
-        }
-    }
-
-    int mhurt = 0;
-    if (level > 0)
-    {
-        mhurt = Rmagic[mnum].Attack[level - 1];
-    }
-
-    int att = Rrole[rnum1].Attack + k1 * 3 / 2 + mhurt / 3;
-    int def = Rrole[rnum2].Defence * 2 + k2 * 3;
-
-    // 武功类型加成
-    switch (Rmagic[mnum].MagicType)
-    {
-    case 1:
-        att += Rrole[rnum1].Fist;
-        def += Rrole[rnum2].Fist;
-        break;
-    case 2:
-        att += Rrole[rnum1].Sword;
-        def += Rrole[rnum2].Sword;
-        break;
-    case 3:
-        att += Rrole[rnum1].Knife;
-        def += Rrole[rnum2].Knife;
-        break;
-    case 4:
-        att += Rrole[rnum1].Unusual;
-        def += Rrole[rnum2].Unusual;
-        break;
-    }
-
-    // 按受伤折扣
-    att = att * (100 - Rrole[rnum1].Hurt / 2) / 100;
-    def = def * (100 - Rrole[rnum2].Hurt / 2) / 100;
-
-    // 武器加攻击 + 配合列表
-    if (Rrole[rnum1].Equip[0] >= 0)
-    {
-        att += Ritem[Rrole[rnum1].Equip[0]].AddAttack;
-        for (int i = 0; i < MAX_WEAPON_MATCH; i++)
-        {
-            if (Rrole[rnum1].Equip[0] == MatchList[i][0] && mnum == MatchList[i][1])
-            {
-                att += MatchList[i][2] * 2 / 3;
-                break;
-            }
-        }
-    }
-    // 防具加攻击
-    if (Rrole[rnum1].Equip[1] >= 0)
-    {
-        att += Ritem[Rrole[rnum1].Equip[1]].AddAttack;
-    }
-    // 对方武器防具加防御
-    if (Rrole[rnum2].Equip[0] >= 0)
-    {
-        def += Ritem[Rrole[rnum2].Equip[0]].AddDefence;
-    }
-    if (Rrole[rnum2].Equip[1] >= 0)
-    {
-        def += Ritem[Rrole[rnum2].Equip[1]].AddDefence;
-    }
-
-    int result = att - def + GameRandom() % 20 - GameRandom() % 20;
-    int dis = abs(Brole[bnum1].X - Brole[bnum2].X) + abs(Brole[bnum1].Y - Brole[bnum2].Y);
-    if (dis > 10)
-    {
-        dis = 10;
-    }
-
-    result = std::max(result, att / 10 + GameRandom() % 10 - GameRandom() % 10);
-    result = result * (100 - (dis - 1) * 3) / 100;
-    if (result <= 0 || level <= 0)
-    {
-        result = GameRandom() % 10 + 1;
-    }
-    if (result > 9999)
-    {
-        result = 9999;
-    }
-    return result;
+    return BattleRules().hpDamage(bnum1,bnum2,mnum,level);
 }
 
 int CalHurtValue2(int bnum1, int bnum2, int mnum, int level)
@@ -1954,25 +1713,10 @@ void ShowHurtValue(int mode)
 
 void CalPoiHurtLife()
 {
-    for (int i = 0; i < BRoleAmount; i++)
+    for(int i=0;i<BRoleAmount;++i)
     {
-        Brole[i].ShowNumber = -1;
-        if(ActiveRules.combat==RulesMode::DragonDos12)
-        {
-            DosRoundStatus(Rrole[Brole[i].rnum],Brole[i].Dead!=0);
-            continue;
-        }
-        if (Rrole[Brole[i].rnum].Poison > 0 && Brole[i].Dead == 0 && Brole[i].Acted == 1)
-        {
-            if (POISON_HURT != 0)
-            {
-                Rrole[Brole[i].rnum].CurrentHP -= Rrole[Brole[i].rnum].Poison / POISON_HURT + 1;
-            }
-            if (Rrole[Brole[i].rnum].CurrentHP <= 0)
-            {
-                Rrole[Brole[i].rnum].CurrentHP = 1;
-            }
-        }
+        Brole[i].ShowNumber=-1;
+        BattleRules().roundEnd(i);
     }
 }
 
@@ -2164,65 +1908,8 @@ void CheckLevelUp()
 {
     Redraw();
     RecordFreshScreen(0, 0, ScreenWidth(), ScreenHeight());
-    for (int i = 0; i < BRoleAmount; i++)
-    {
-        int rnum = Brole[i].rnum;
-        if(ActiveRules.progression==RulesMode::DragonDos12)
-        {
-            if(DosLevelUp(Rrole[rnum])>0)ShowLevelUp(i);
-            continue;
-        }
-        while (NextLevelExperience(Rrole[rnum])>=0 && Rrole[rnum].Exp >= NextLevelExperience(Rrole[rnum]))
-        {
-            Rrole[rnum].Exp -= LevelUpList[Rrole[rnum].Level - 1];
-            Rrole[rnum].Level++;
-            LevelUp(i);
-        }
-    }
-}
-
-void LevelUp(int bnum)
-{
-    int rnum = Brole[bnum].rnum;
-    // MaxHP: IncLife * 3 + random(6)
-    Rrole[rnum].MaxHP = Rrole[rnum].MaxHP + Rrole[rnum].IncLife * 3 + GameRandom() % 6;
-    Rrole[rnum].MaxHP = std::min((int)Rrole[rnum].MaxHP, MAX_HP);
-    Rrole[rnum].CurrentHP = Rrole[rnum].MaxHP;
-
-    int add = Rrole[rnum].Aptitude / 15 + 1;
-    if (MAX_ADD_PRO == 0)
-    {
-        add = GameRandom() % add + 1;
-    }
-
-    // MaxMP: (9 - add) * 3
-    Rrole[rnum].MaxMP = Rrole[rnum].MaxMP + (9 - add) * 3;
-    Rrole[rnum].MaxMP = std::min((int)Rrole[rnum].MaxMP, MAX_MP);
-    Rrole[rnum].CurrentMP = Rrole[rnum].MaxMP;
-
-    Rrole[rnum].Attack += add;
-    Rrole[rnum].Speed += add;
-    Rrole[rnum].Defence += add;
-
-    // 抗性成长 Data[46..54]
-    for (int j = 46; j <= 54; j++)
-    {
-        if (Rrole[rnum].Data[j] > 0)
-        {
-            Rrole[rnum].Data[j] += GameRandom() % 3 + 1;
-        }
-    }
-    // 属性上限 Data[43..58]
-    for (int j = 43; j <= 58; j++)
-    {
-        Rrole[rnum].Data[j] = std::min((int)Rrole[rnum].Data[j], MaxProList[j - 43]);
-    }
-
-    Rrole[rnum].PhyPower = MAX_PHYSICAL_POWER;
-    Rrole[rnum].Hurt = 0;
-    Rrole[rnum].Poison = 0;
-
-    ShowLevelUp(bnum);
+    for(int i=0;i<BRoleAmount;++i)
+        while(AdvanceRoleLevels(Rrole[Brole[i].rnum])>0)ShowLevelUp(i);
 }
 
 void CheckBook()
@@ -2502,24 +2189,13 @@ void UsePoison(int bnum)
     if (BField[2][Ax][Ay] >= 0 && select)
     {
         Brole[bnum].Acted = 1;
-        Rrole[rnum].PhyPower -= ActiveRules.combat==RulesMode::DragonDos12?2:3;
+        BattleRules().paySkillCost(Rrole[rnum],BattleSkill::Poison);
         int bnum1 = BField[2][Ax][Ay];
         if (Brole[bnum1].Team != Brole[bnum].Team)
         {
             int rnum1 = Brole[bnum1].rnum;
-            int addpoi;
-            if(ActiveRules.combat==RulesMode::DragonDos12)
-            {
-                addpoi=DosUsePoison(Rrole[rnum],Rrole[rnum1]);
-                Brole[bnum].ExpGot++;
-            }
-            else
-            {
-                addpoi=std::max(Rrole[rnum].UsePoi/3-Rrole[rnum1].DefPoi/4,0);
-                if(addpoi+Rrole[rnum1].Poison>99)addpoi=99-Rrole[rnum1].Poison;
-                Rrole[rnum1].Poison+=addpoi;
-                Brole[bnum1].ExpGot+=addpoi;
-            }
+            int addpoi=BattleRules().poison(Rrole[rnum],Rrole[rnum1]);
+            BattleRules().awardSkillExperience(bnum,bnum1,addpoi);
             Brole[bnum1].ShowNumber = addpoi;
             SetAnimationPosition(0, 0);
             PlayActionAnimation(bnum, 0);
@@ -2554,15 +2230,14 @@ void Medicine(int bnum)
     if (BField[2][Ax][Ay] >= 0 && select)
     {
         Brole[bnum].Acted = 1;
-        if(ActiveRules.combat!=RulesMode::DragonDos12)Rrole[rnum].PhyPower-=5;
+        BattleRules().paySkillCost(Rrole[rnum],BattleSkill::Medicine);
         int bnum1 = BField[2][Ax][Ay];
         if (Brole[bnum1].Team == Brole[bnum].Team)
         {
             int rnum1 = Brole[bnum1].rnum;
             int addlife = EffectMedcine(rnum, rnum1);
             Brole[bnum1].ShowNumber = addlife;
-            if(ActiveRules.combat==RulesMode::DragonDos12)Brole[bnum].ExpGot++;
-            else Brole[bnum1].ExpGot+=addlife;
+            BattleRules().awardSkillExperience(bnum,bnum1,addlife);
             SetAnimationPosition(0, 0);
             PlayActionAnimation(bnum, 0);
             PlayMagicAnimation(bnum, 0, 1, 3);
@@ -2596,15 +2271,14 @@ void MedPoison(int bnum)
     if (BField[2][Ax][Ay] >= 0 && select)
     {
         Brole[bnum].Acted = 1;
-        Rrole[rnum].PhyPower-=ActiveRules.combat==RulesMode::DragonDos12?2:5;
+        BattleRules().paySkillCost(Rrole[rnum],BattleSkill::Detox);
         int bnum1 = BField[2][Ax][Ay];
         if (Brole[bnum1].Team == Brole[bnum].Team)
         {
             int rnum1 = Brole[bnum1].rnum;
             int minuspoi = EffectMedPoison(rnum, rnum1);
             Brole[bnum1].ShowNumber = minuspoi;
-            if(ActiveRules.combat==RulesMode::DragonDos12)Brole[bnum].ExpGot++;
-            else Brole[bnum1].ExpGot+=minuspoi;
+            BattleRules().awardSkillExperience(bnum,bnum1,minuspoi);
             SetAnimationPosition(0, 0);
             PlayActionAnimation(bnum, 0);
             PlayMagicAnimation(bnum, 36, 1, 4);
@@ -2687,23 +2361,7 @@ void UseHiddenWeapon(int bnum, int inum)
             int bnum1 = BField[2][Ax][Ay];
             if (Brole[bnum1].Team != Brole[bnum].Team)
             {
-                int rnum1 = Brole[bnum1].rnum;
-                int hurt;
-                if(ActiveRules.combat==RulesMode::DragonDos12)
-                    hurt=DosHiddenWeapon(Rrole[rnum],Rrole[rnum1],Ritem[inum]);
-                else
-                {
-                    hurt = hidden / 2 - Ritem[inum].AddCurrentHP / 3 - Rrole[rnum1].HidWeapon;
-                    hurt = std::max(hurt * (Rrole[rnum1].Hurt / 33 + 1), 1 + GameRandom() % 10);
-                    Rrole[rnum1].CurrentHP -= hurt;
-                    Brole[bnum1].ExpGot += hurt;
-                    Rrole[rnum1].Hurt = std::min<int>(Rrole[rnum1].Hurt + hurt / LIFE_HURT, 99);
-                    // Mods can legitimately raise resistance above 100. A hostile
-                    // poisoned weapon must not create negative poison or cleanse
-                    // existing poison when the resistance multiplier becomes negative.
-                    int poisonAdded = Ritem[inum].AddPoi * std::max(0, 100 - Rrole[rnum1].DefPoi) / 100;
-                    Rrole[rnum1].Poison = std::clamp<int>(Rrole[rnum1].Poison + poisonAdded, 0, 99);
-                }
+                int hurt=BattleRules().hiddenWeapon(bnum,bnum1,Ritem[inum]);
                 Brole[bnum1].ShowNumber=hurt;
                 SetAnimationPosition(0, 0);
                 ShowMagicName(inum, 1);
@@ -2717,16 +2375,8 @@ void UseHiddenWeapon(int bnum, int inum)
 
 void Rest(int bnum)
 {
-    int rnum = Brole[bnum].rnum;
-    Brole[bnum].Acted = 1;
-    if(ActiveRules.combat==RulesMode::DragonDos12)
-    {
-        DosRest(Rrole[rnum],Brole[bnum].Step);
-        return;
-    }
-    Rrole[rnum].CurrentHP = std::min<int>(Rrole[rnum].CurrentHP + (5 + Brole[bnum].Step) * Rrole[rnum].MaxHP / 200, Rrole[rnum].MaxHP);
-    Rrole[rnum].CurrentMP = std::min<int>(Rrole[rnum].CurrentMP + (5 + Brole[bnum].Step) * Rrole[rnum].MaxMP / 200, Rrole[rnum].MaxMP);
-    Rrole[rnum].PhyPower = std::min<int>(Rrole[rnum].PhyPower + (5 + Brole[bnum].Step) * MAX_PHYSICAL_POWER / 200, MAX_PHYSICAL_POWER);
+    Brole[bnum].Acted=1;
+    BattleRules().rest(bnum);
 }
 
 bool TeamModeMenu(int bnum)

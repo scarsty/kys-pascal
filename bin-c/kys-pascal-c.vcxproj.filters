@@ -24,6 +24,12 @@
     <ClCompile Include="kys_battle.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="rules\legacy.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rules\dragon_dos12.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="kys_rules.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -66,6 +72,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="kys_battle.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="rules\rules_internal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="rules\dragon_dos12.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="kys_rules.h">

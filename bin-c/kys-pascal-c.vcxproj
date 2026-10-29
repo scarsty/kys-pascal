@@ -77,6 +77,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
+      <AdditionalIncludeDirectories>$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <WarningLevel>Level3</WarningLevel>
     </ClCompile>
@@ -89,7 +90,7 @@
     <ClCompile>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>C:\project\mlcc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);C:\project\mlcc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <SDLCheck>false</SDLCheck>
       <AdditionalOptions>/FS /utf-8 %(AdditionalOptions)</AdditionalOptions>
@@ -101,6 +102,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
+      <AdditionalIncludeDirectories>$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <WarningLevel>Level3</WarningLevel>
     </ClCompile>
@@ -115,7 +117,7 @@
     <ClCompile>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>C:\project\mlcc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);C:\project\mlcc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <SDLCheck>false</SDLCheck>
       <AdditionalOptions>/FS /utf-8 %(AdditionalOptions)</AdditionalOptions>
@@ -134,6 +136,8 @@
     <ClCompile Include="C:\project\mlcc\strfunc.cpp" />
     <ClCompile Include="kys_battle.cpp" />
     <ClCompile Include="kys_rules.cpp" />
+    <ClCompile Include="rules\legacy.cpp" />
+    <ClCompile Include="rules\dragon_dos12.cpp" />
     <ClCompile Include="kys_draw.cpp" />
     <ClCompile Include="kys_engine.cpp" />
     <ClCompile Include="kys_event.cpp" />
@@ -151,6 +155,8 @@
     <ClInclude Include="C:\project\mlcc\strfunc.h" />
     <ClInclude Include="kys_battle.h" />
     <ClInclude Include="kys_rules.h" />
+    <ClInclude Include="rules\rules_internal.h" />
+    <ClInclude Include="rules\dragon_dos12.h" />
     <ClInclude Include="kys_draw.h" />
     <ClInclude Include="kys_engine.h" />
     <ClInclude Include="kys_event.h" />

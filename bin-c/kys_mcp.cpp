@@ -83,7 +83,7 @@ struct Snapshot
     std::array<int,20> location;
     std::array<int,2> jumpGuard{HeadlessJumpGuardX, HeadlessJumpGuardY};
     unsigned rng = HeadlessRandomState;
-    int32_t dosEffectiveLevel=DosLastEffectiveLevel;
+    int32_t ruleCostTier=CaptureRuleState().magicCostTier;
     Snapshot()
     {
         auto copy = [](auto& to, auto& from) { to.resize(sizeof(from) / sizeof(int16_t)); std::memcpy(to.data(), &from, sizeof(from)); };
@@ -101,7 +101,7 @@ struct Snapshot
         Where=location[0]; CurScene=location[1]; Sx=location[2]; Sy=location[3]; SFace=location[4]; Mx=location[5]; My=location[6]; MFace=location[7]; InShip=location[8];
         ShipX=location[9]; ShipY=location[10]; ShipX1=location[11]; ShipY1=location[12]; ShipFace=location[13]; CurEvent=location[14]; CurItem=location[15]; Cx=location[16]; Cy=location[17]; SavedSceneIndex=location[18]; SceneRolePic=location[19];
         HeadlessJumpGuardX=jumpGuard[0];HeadlessJumpGuardY=jumpGuard[1];
-        DosLastEffectiveLevel=dosEffectiveLevel;
+        RestoreRuleState({ruleCostTier});
     }
     void file(const fs::path& path, uint64_t identity, bool load, uint64_t legacyIdentity=0, bool allowLegacy=false)
     {
@@ -111,7 +111,7 @@ struct Snapshot
         auto bytes=[&](void* data,size_t length){if(load)stream.read(static_cast<char*>(data),length);else stream.write(static_cast<const char*>(data),length);require(stream.good(),"Checkpoint read/write failed");};
         bytes(header.data(),sizeof(header));require(header[0]==expected[0] && header[1]>=1 && header[1]<=4,"Checkpoint format differs");
         sourceVersion=header[1];
-        require(sourceVersion>=4 || ActiveRules.combat==RulesMode::Legacy,"DOS combat requires a V4 checkpoint with its MP-cost cache");
+        require(sourceVersion>=static_cast<uint64_t>(BattleRules().minimumCheckpointVersion()),"Selected combat rules require a newer checkpoint with complete runtime state");
         if(load && sourceVersion<3)
         {
             require(allowLegacy,"Legacy checkpoint omits world/list fingerprints; verify its source files and restart with --allow-legacy-checkpoints to import explicitly");
@@ -129,8 +129,8 @@ struct Snapshot
         bytes(&rng,sizeof(rng));checksum^=rng;
         if(header[1]>=2)block(jumpGuard);else jumpGuard={-1,-1};
         if(header[1]>=3){uint64_t lineage=legacyLineage?1:0;bytes(&lineage,sizeof(lineage));require(lineage<=1,"Invalid checkpoint lineage");legacyLineage=lineage!=0;checksum^=lineage;}
-        if(header[1]>=4){bytes(&dosEffectiveLevel,sizeof(dosEffectiveLevel));require(dosEffectiveLevel>=0&&dosEffectiveLevel<=10,"Invalid DOS effective-level cache");checksum^=static_cast<uint32_t>(dosEffectiveLevel);}
-        else dosEffectiveLevel=0;
+        if(header[1]>=4){bytes(&ruleCostTier,sizeof(ruleCostTier));require(ruleCostTier>=0&&ruleCostTier<=10,"Invalid rule runtime state");checksum^=static_cast<uint32_t>(ruleCostTier);}
+        else ruleCostTier=0;
         uint64_t stored=checksum;bytes(&stored,sizeof(stored));require(checksum==stored,"Checkpoint checksum mismatch");
         if(load)require(stream.peek()==std::char_traits<char>::eof(),"Checkpoint has trailing bytes");
     }
@@ -318,20 +318,22 @@ public:
     }
     J rules()
     {
-        bool dos=ActiveRules.progression==RulesMode::DragonDos12;
-        J out=obj({{"profile",ActiveRules.profile},{"progression",RulesModeName(ActiveRules.progression)},
-            {"combat",RulesModeName(ActiveRules.combat)},{"revision",1},{"max_level",MAX_LEVEL},
+        auto info=DescribeGameRules();
+        J out=obj({{"profile",info.profile},{"progression",info.progression},
+            {"combat",info.combat},{"revision",1},{"max_level",MAX_LEVEL},
             {"max_hp",MAX_HP},{"max_mp",MAX_MP},{"max_stamina",MAX_PHYSICAL_POWER},
-            {"xp_mode",dos?"cumulative":"deduct_per_level"},{"growth_roll",dos?"once_per_level_batch":"once_per_level"},
+            {"xp_mode",info.cumulativeExperience?"cumulative":"deduct_per_level"},
+            {"growth_roll",info.batchGrowth?"once_per_level_batch":"once_per_level"},
             {"min_knowledge",MIN_KNOWLEDGE},{"life_hurt",LIFE_HURT},{"poison_hurt",POISON_HURT},
-            {"dos_mp_cost_cache",DosLastEffectiveLevel}});
-        if(dos)
+            {"dos_mp_cost_cache",CaptureRuleState().magicCostTier}});
+        if(info.growth)
         {
-            out["xp_thresholds"]=numbers(ActiveRules.xpThresholds);
-            out["hp_growth_factor"]=ActiveRules.hpGrowthFactor;out["mp_growth_factor"]=ActiveRules.mpGrowthFactor;
-            out["attack_growth_factor"]=ActiveRules.attackGrowthFactor;out["speed_growth_factor"]=ActiveRules.speedGrowthFactor;out["defence_growth_factor"]=ActiveRules.defenceGrowthFactor;
-            out["level_stat_caps"]="Medicine/use-poison/detox 100; attack/speed/defence/fist/sword/knife/hidden weapon retain original 16-bit growth without a 100 cap. Resistance/unusual do not grow.";
+            out["xp_thresholds"]=numbers(info.xpThresholds);
+            out["hp_growth_factor"]=info.growth->hp;out["mp_growth_factor"]=info.growth->mp;
+            out["attack_growth_factor"]=info.growth->attack;out["speed_growth_factor"]=info.growth->speed;
+            out["defence_growth_factor"]=info.growth->defence;
         }
+        if(info.levelStatCaps)out["level_stat_caps"]=*info.levelStatCaps;
         else out["level_stat_caps"]=numbers(MaxProList);
         out["scope"]="Progression, HP/MP damage, poison, hidden weapons, medicine, detox and rest. AI, movement, item/book/event rules and starting data retain remake behavior.";
         return out;
@@ -370,13 +372,12 @@ public:
         for(int slot=0;slot<10;++slot)if(r.Magic[slot]>0&&r.Magic[slot]<magicCount)
         {
             auto& m=Rmagic[r.Magic[slot]];int lv=r.MagLevel[slot]/100;
-            magic.push_back(obj({{"slot",slot},{"id",r.Magic[slot]},{"name",name(m.Name)},{"level",lv+1},{"area_type",m.AttAreaType},{"move_distance",m.MoveDistance[lv]},{"attack_distance",m.AttDistance[lv]},{"mp_cost",m.NeedMP*((lv+2)/2)},{"minimum_stamina",10}}));
-            if(ActiveRules.combat==RulesMode::DragonDos12)
+            auto info=BattleRules().inspectMagic(&r,m,lv+1);
+            magic.push_back(obj({{"slot",slot},{"id",r.Magic[slot]},{"name",name(m.Name)},{"level",lv+1},{"area_type",m.AttAreaType},{"move_distance",m.MoveDistance[lv]},{"attack_distance",m.AttDistance[lv]},{"mp_cost",info.mpCost},{"minimum_stamina",10}}));
+            if(info.reportsEffectiveLevel)
             {
-                int effective=DosEffectiveLevel(r,m,lv+1);
-                magic.back()["effective_level"]=m.HurtType==0?effective:lv+1;
-                magic.back()["mp_cost"]=m.NeedMP*((m.HurtType==0?effective:DosLastEffectiveLevel)/2);
-                magic.back()["mp_cost_uses_cached_hp_tier"]=m.HurtType==1;
+                magic.back()["effective_level"]=info.effectiveLevel;
+                magic.back()["mp_cost_uses_cached_hp_tier"]=info.usesCachedTier;
             }
             magic.back()["shape"]=attackShape(m.AttAreaType);magic.back()["targeting"]=attackTargeting(m.AttAreaType);
         }
@@ -386,7 +387,8 @@ public:
     {
         A party; for(int i=0;i<6;++i) if(TeamList[i]>=0) party.push_back(role(TeamList[i]));
         J out=obj({{"loaded",loaded},{"where",Where},{"scene",CurScene},{"scene_name",CurScene>=0?name(Rscene[CurScene].Name):""},{"xy",Where==0?arr({Mx,My}):arr({Sx,Sy})},{"data_xy",Where==0?arr({My,Mx}):arr({Sy,Sx})},{"face",Where==0?MFace:SFace},{"world_xy",arr({Mx,My})},{"world_face",MFace},{"in_ship",InShip},{"ship_xy",arr({ShipY,ShipX})},{"party",party},{"inventory",inventory()},{"pending",prompt},{"rng_state",HeadlessRandomState},{"debug_enabled",debug},{"legacy_checkpoint_lineage",legacyCheckpointLineage}});
-        out["active_rules"]=obj({{"profile",ActiveRules.profile},{"progression",RulesModeName(ActiveRules.progression)},{"combat",RulesModeName(ActiveRules.combat)},{"dos_mp_cost_cache",DosLastEffectiveLevel}});
+        auto info=DescribeGameRules();
+        out["active_rules"]=obj({{"profile",info.profile},{"progression",info.progression},{"combat",info.combat},{"dos_mp_cost_cache",CaptureRuleState().magicCostTier}});
         for(auto& member:out["party"].get_array())member["next_level_exp"]=NextLevelExperience(Rrole[integer(member,"id")]);
         if(Where==2) out["battle"]=battleState(); return out;
     }
@@ -646,14 +648,18 @@ public:
                     auto& m=Rmagic[i];v["data"]=numbers(m.Data);
                     v["type"]=m.MagicType;v["hurt_type"]=m.HurtType;v["area_type"]=m.AttAreaType;
                     v["shape"]=attackShape(m.AttAreaType);v["targeting"]=attackTargeting(m.AttAreaType);
-                    v["base_mp_cost"]=m.NeedMP;v["stamina_cost_per_strike"]=3;v["minimum_stamina"]=10;v["poison"]=m.Poison;
-                    A levels;for(int lv=0;lv<10;++lv)levels.push_back(obj({{"level",lv+1},{"attack",m.Attack[lv]},{"move_distance",m.MoveDistance[lv]},{"attack_distance",m.AttDistance[lv]},{"mp_cost",m.NeedMP*((lv+2)/2)},{"add_mp",m.AddMP[lv]},{"hurt_mp",m.HurtMP[lv]}}));v["levels"]=levels;
-                    if(ActiveRules.combat==RulesMode::DragonDos12)
+                    auto info=BattleRules().inspectMagic(nullptr,m,1);
+                    v["base_mp_cost"]=m.NeedMP;v["minimum_stamina"]=10;v["poison"]=m.Poison;
+                    v["stamina_cost_per_strike"]=info.staminaPerStrike?J(info.staminaPerStrike):J{};
+                    if(info.staminaPerAction)v["stamina_cost_per_action"]=info.staminaPerAction;
+                    if(info.reportsEffectiveLevel)v["mp_cost_uses_cached_hp_tier"]=info.usesCachedTier;
+                    A levels;
+                    for(int lv=0;lv<10;++lv)
                     {
-                        v["stamina_cost_per_action"]=3;v["stamina_cost_per_strike"]=J{};
-                        v["mp_cost_uses_cached_hp_tier"]=m.HurtType==1;
-                        for(int lv=0;lv<10;++lv)v["levels"].get_array()[lv]["mp_cost"]=m.NeedMP*((m.HurtType==0?lv+1:DosLastEffectiveLevel)/2);
+                        auto tier=BattleRules().inspectMagic(nullptr,m,lv+1);
+                        levels.push_back(obj({{"level",lv+1},{"attack",m.Attack[lv]},{"move_distance",m.MoveDistance[lv]},{"attack_distance",m.AttDistance[lv]},{"mp_cost",tier.mpCost},{"add_mp",m.AddMP[lv]},{"hurt_mp",m.HurtMP[lv]}}));
                     }
+                    v["levels"]=levels;
                 }
             }
             out.push_back(v);
