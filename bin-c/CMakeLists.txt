@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 project(kys LANGUAGES CXX)
+include(CTest)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -16,12 +17,14 @@ if(NOT DEFINED MLCC_DIR)
         message(FATAL_ERROR "Cannot find mlcc. Set -DMLCC_DIR=<path> or clone https://github.com/scarsty/mlcc")
     endif()
 endif()
+
 file(TO_CMAKE_PATH "${MLCC_DIR}" MLCC_DIR)
 message(STATUS "Using mlcc from: ${MLCC_DIR}")
 
 # --- 源文件 ---
-add_executable(kys
-    main.cpp
+add_library(kys_core STATIC
+    kys_frontend.cpp
+    kys_script.cpp
     kys_type.cpp
     kys_engine.cpp
     kys_draw.cpp
@@ -40,11 +43,12 @@ find_package(SDL3_ttf REQUIRED)
 find_package(SDL3_mixer REQUIRED)
 find_package(Iconv REQUIRED)
 
-target_include_directories(kys PRIVATE
+target_include_directories(kys_core PUBLIC
+    "${CMAKE_CURRENT_SOURCE_DIR}"
     "${MLCC_DIR}"
 )
 
-target_link_libraries(kys PRIVATE
+target_link_libraries(kys_core PUBLIC
     SDL3::SDL3
     SDL3_ttf::SDL3_ttf
     SDL3_mixer::SDL3_mixer
@@ -54,5 +58,34 @@ target_link_libraries(kys PRIVATE
 # simplecc 动态加载 (SDL_LoadObject)，不需要链接
 
 if(MSVC)
-    target_compile_options(kys PRIVATE /utf-8)
+    target_compile_options(kys_core PRIVATE /utf-8)
+endif()
+
+option(KYS_BUILD_MCP "Build the native stdio MCP frontend" ON)
+add_executable(kys main.cpp)
+target_link_libraries(kys PRIVATE kys_core)
+if(KYS_BUILD_MCP)
+    find_package(glaze CONFIG REQUIRED)
+    add_executable(kys_mcp kys_mcp.cpp)
+    target_link_libraries(kys_mcp PRIVATE kys_core glaze::glaze)
+    if(MSVC)
+        target_compile_options(kys_mcp PRIVATE /utf-8)
+    endif()
+endif()
+
+if(BUILD_TESTING)
+    add_executable(kys_core_tests tests/core_tests.cpp)
+    target_link_libraries(kys_core_tests PRIVATE kys_core)
+    if(MSVC)
+        target_compile_options(kys_core_tests PRIVATE /utf-8)
+    endif()
+    add_test(NAME core_regressions COMMAND kys_core_tests)
+    set(KYS_TEST_MOD "" CACHE PATH "External unmodified kys-Dragon directory for MCP integration tests")
+    if(KYS_BUILD_MCP AND KYS_TEST_MOD)
+        find_package(Python3 REQUIRED COMPONENTS Interpreter)
+        add_test(NAME dragon_mcp_integration COMMAND "${Python3_EXECUTABLE}"
+            "${CMAKE_CURRENT_SOURCE_DIR}/tests/mcp_integration.py"
+            --executable $<TARGET_FILE:kys_mcp> --mod "${KYS_TEST_MOD}")
+        set_tests_properties(dragon_mcp_integration PROPERTIES TIMEOUT 120)
+    endif()
 endif()

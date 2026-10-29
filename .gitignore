@@ -64,6 +64,8 @@ kys-pascal-androidstudio/build
 *.apk
 cc
 bin-c/build
+/tmp/
+**/__pycache__/
 bin-c/.vs
 bin-c/x64
 bin-c/out

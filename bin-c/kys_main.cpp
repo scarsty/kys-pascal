@@ -1,4 +1,5 @@
-﻿// kys_main.cpp - 游戏主流程实现
+﻿#include "kys_frontend.h"
+// kys_main.cpp - 游戏主流程实现
 // 对应 kys_main.pas
 
 #include "kys_main.h"
@@ -21,6 +22,7 @@
 #include <cstring>
 #include <ctime>
 #include <format>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -275,8 +277,8 @@ static void MenuSettings()
             }
             if (event.button.button == SDL_BUTTON_LEFT)
             {
-                float sx = (float)RESOLUTIONX / screen->w;
-                float sy = (float)RESOLUTIONY / screen->h;
+                float sx = (float)RESOLUTIONX / ScreenWidth();
+                float sy = (float)RESOLUTIONY / ScreenHeight();
                 int emx = (int)(event.button.x / sx);
                 int emy = (int)(event.button.y / sy);
                 if (emx > settingsMenuX && emx < settingsMenuX + settingsMenuW && emy > settingsMenuY && emy < settingsMenuY + settingsMenuH)
@@ -317,8 +319,8 @@ static void MenuSettings()
             continue;
         case SDL_EVENT_MOUSE_MOTION:
         {
-            float sx = (float)RESOLUTIONX / screen->w;
-            float sy = (float)RESOLUTIONY / screen->h;
+            float sx = (float)RESOLUTIONX / ScreenWidth();
+            float sy = (float)RESOLUTIONY / ScreenHeight();
             int emx = (int)(event.motion.x / sx);
             int emy = (int)(event.motion.y / sy);
             if (emx >= settingsMenuX && emx < settingsMenuX + settingsMenuW && emy > settingsMenuY && emy < settingsMenuY + settingsMenuH)
@@ -813,9 +815,9 @@ void Start()
     PlayMP3(StartMusic, -1);
     Where = 3;
     Redraw();
-    UpdateScreen(screen, 0, 0, screen->w, screen->h);
+    UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
 
-    BeginTime = rand() % 1440;
+    BeginTime = GameRandom() % 1440;
     NowTime = BeginTime;
     for (int i = 0; i < 480; i++)
     {
@@ -837,7 +839,7 @@ void Start()
     Redraw();
     DrawTitlePic(0, x, y);
     DrawTitlePic(menu + 1, x, y + menu * 20);
-    UpdateScreen(screen, 0, 0, screen->w, screen->h);
+    UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
 
     bool selected = false;
     while (SDL_WaitEvent(&event))
@@ -860,7 +862,7 @@ void Start()
                 Redraw();
                 DrawTitlePic(0, x, y);
                 DrawTitlePic(menu + 1, x, y + menu * 20);
-                UpdateScreen(screen, 0, 0, screen->w, screen->h);
+                UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
             }
             if (event.key.key == SDLK_DOWN)
             {
@@ -872,14 +874,14 @@ void Start()
                 Redraw();
                 DrawTitlePic(0, x, y);
                 DrawTitlePic(menu + 1, x, y + menu * 20);
-                UpdateScreen(screen, 0, 0, screen->w, screen->h);
+                UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
             }
             break;
         case SDL_EVENT_MOUSE_BUTTON_UP:
             if (event.button.button == SDL_BUTTON_LEFT)
             {
-                int mx = (int)(event.button.x / ((float)RESOLUTIONX / screen->w));
-                int my = (int)(event.button.y / ((float)RESOLUTIONY / screen->h));
+                int mx = (int)(event.button.x / ((float)RESOLUTIONX / ScreenWidth()));
+                int my = (int)(event.button.y / ((float)RESOLUTIONY / ScreenHeight()));
                 if (mx > x && mx < x + 80 && my > y && my < y + 60)
                 {
                     selected = true;
@@ -889,8 +891,8 @@ void Start()
             break;
         case SDL_EVENT_MOUSE_MOTION:
         {
-            int mx = (int)(event.motion.x / ((float)RESOLUTIONX / screen->w));
-            int my = (int)(event.motion.y / ((float)RESOLUTIONY / screen->h));
+            int mx = (int)(event.motion.x / ((float)RESOLUTIONX / ScreenWidth()));
+            int my = (int)(event.motion.y / ((float)RESOLUTIONY / ScreenHeight()));
             if (mx > x && mx < x + 80 && my > y && my < y + 60)
             {
                 int menup = menu;
@@ -899,7 +901,7 @@ void Start()
                 {
                     DrawTitlePic(0, x, y);
                     DrawTitlePic(menu + 1, x, y + menu * 20);
-                    UpdateScreen(screen, 0, 0, screen->w, screen->h);
+                    UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
                 }
             }
             break;
@@ -941,7 +943,7 @@ void Start()
             Redraw();
             DrawTitlePic(0, x, y);
             DrawTitlePic(menu + 1, x, y + menu * 20);
-            UpdateScreen(screen, 0, 0, screen->w, screen->h);
+            UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
             selected = false;
         }
     }
@@ -996,37 +998,37 @@ bool InitialRole()
         do {
             if (MODVersion != 21)
             {
-                Rrole[0].MaxHP = 25 + rand() % 26;
+                Rrole[0].MaxHP = 25 + GameRandom() % 26;
                 Rrole[0].CurrentHP = Rrole[0].MaxHP;
-                Rrole[0].MaxMP = 25 + rand() % 26;
+                Rrole[0].MaxMP = 25 + GameRandom() % 26;
                 Rrole[0].CurrentMP = Rrole[0].MaxMP;
-                Rrole[0].MPType = rand() % 2;
-                Rrole[0].IncLife = 1 + rand() % 10;
-                Rrole[0].Attack = 25 + rand() % 6;
-                Rrole[0].Speed = 25 + rand() % 6;
-                Rrole[0].Defence = 25 + rand() % 6;
-                Rrole[0].Medicine = 25 + rand() % 6;
-                Rrole[0].UsePoi = 25 + rand() % 6;
-                Rrole[0].MedPoi = 25 + rand() % 6;
-                Rrole[0].Fist = 25 + rand() % 6;
-                Rrole[0].Sword = 25 + rand() % 6;
-                Rrole[0].Knife = 25 + rand() % 6;
-                Rrole[0].Unusual = 25 + rand() % 6;
-                Rrole[0].HidWeapon = 25 + rand() % 6;
+                Rrole[0].MPType = GameRandom() % 2;
+                Rrole[0].IncLife = 1 + GameRandom() % 10;
+                Rrole[0].Attack = 25 + GameRandom() % 6;
+                Rrole[0].Speed = 25 + GameRandom() % 6;
+                Rrole[0].Defence = 25 + GameRandom() % 6;
+                Rrole[0].Medicine = 25 + GameRandom() % 6;
+                Rrole[0].UsePoi = 25 + GameRandom() % 6;
+                Rrole[0].MedPoi = 25 + GameRandom() % 6;
+                Rrole[0].Fist = 25 + GameRandom() % 6;
+                Rrole[0].Sword = 25 + GameRandom() % 6;
+                Rrole[0].Knife = 25 + GameRandom() % 6;
+                Rrole[0].Unusual = 25 + GameRandom() % 6;
+                Rrole[0].HidWeapon = 25 + GameRandom() % 6;
             }
-            Rrole[0].Aptitude = 1 + rand() % 100;
+            Rrole[0].Aptitude = 1 + GameRandom() % 100;
 
             if (MODVersion == 0)
             {
                 Rrole[0].Magic[0] = 1;
-                if (rand() % 100 < 70)
+                if (GameRandom() % 100 < 70)
                 {
-                    Rrole[0].Magic[0] = rand() % 93;
+                    Rrole[0].Magic[0] = GameRandom() % 93;
                 }
             }
             if (MODVersion == 31)
             {
-                Rrole[0].Ethics = rand() % 50 + rand() % 50;
+                Rrole[0].Ethics = GameRandom() % 50 + GameRandom() % 50;
             }
             if (MODVersion == 41)
             {
@@ -1035,7 +1037,7 @@ bool InitialRole()
 
             Redraw();
             ShowStatus(0);
-            UpdateScreen(screen, 0, 0, screen->w, screen->h);
+            UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
             key = WaitAnyKey();
         } while (key != SDLK_ESCAPE && key != SDLK_RETURN);
 
@@ -1598,7 +1600,7 @@ bool InitialRole()
         }
 
         ShowStatus(0);
-        UpdateScreen(screen, 0, 0, screen->w, screen->h);
+        UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
 
         StartAmi();
     }
@@ -1815,6 +1817,7 @@ void SaveR(int num)
 
 int WaitAnyKey()
 {
+    if (Headless()) return SDLK_RETURN;
     event.key.key = 0;
     event.button.button = 0;
     while (SDL_PollEvent(&event) || true)
@@ -1873,7 +1876,7 @@ void Walk()
     int Speed = 0;
     int gotoEntrance = -1;
     DrawMMap();
-    UpdateScreen(screen, 0, 0, screen->w, screen->h);
+    UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
     MainMapStill = 0;
     MainMapStillcount = 0;
 
@@ -2162,7 +2165,7 @@ void Walk()
             }
             }
             Redraw();
-            UpdateScreen(screen, 0, 0, screen->w, screen->h);
+            UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
             if (CheckEntrance())
             {
                 walking = 0;
@@ -2173,7 +2176,7 @@ void Walk()
                 if (MMAPAMI == 0)
                 {
                     Redraw();
-                    UpdateScreen(screen, 0, 0, screen->w, screen->h);
+                    UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
                 }
             }
         }
@@ -2196,7 +2199,7 @@ void Walk()
                 GetMousePosition(axp2, ayp2, Mx, My);
                 TPosition pos = GetPositionOnScreen(axp2, ayp2, Mx, My);
                 DrawMPic(1, pos.x, pos.y, 0, 50, 0, 0);
-                UpdateScreen(screen, 0, 0, screen->w, screen->h);
+                UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
             }
             SDL_Delay(40);
         }
@@ -2265,6 +2268,14 @@ bool CheckEntrance()
         SStep = 0;
         Sx = Rscene[CurScene].EntranceX;
         Sy = Rscene[CurScene].EntranceY;
+        if (Headless())
+        {
+            Where = 1;
+            Cx = Sx; Cy = Sy;
+            HeadlessJumpGuardX = HeadlessJumpGuardY = -1;
+            CheckEvent3();
+            return true;
+        }
         SaveR(11);
         WalkInScene(0);
         event.key.key = 0;
@@ -2331,7 +2342,7 @@ int WalkInScene(int Open)
         SceneRolePic = 3445;
         CurEvent = BEGIN_EVENT;
         CallEvent(BEGIN_EVENT);
-        UpdateScreen(screen, 0, 0, screen->w, screen->h);
+        UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
         CurEvent = -1;
     }
 
@@ -2521,7 +2532,7 @@ int WalkInScene(int Open)
                         PlayMP3(Rscene[CurScene].ExitMusic, -1);
                     }
                     Redraw();
-                    UpdateScreen(screen, 0, 0, screen->w, screen->h);
+                    UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
                     return 0;
                 }
             }
@@ -2704,7 +2715,7 @@ int WalkInScene(int Open)
             }
             }
             Redraw();
-            UpdateScreen(screen, 0, 0, screen->w, screen->h);
+            UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
             CheckEvent3();
         }
 
@@ -2726,7 +2737,7 @@ int WalkInScene(int Open)
                         DrawMPic(1, pos.x, pos.y - SData[CurScene][4][axp2][ayp2], 0, 50, 0, 0);
                     }
                 }
-                UpdateScreen(screen, 0, 0, screen->w, screen->h);
+                UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
             }
             SDL_Delay(40);
         }
@@ -2988,7 +2999,7 @@ void ShowSceneName(int snum)
     {
         return;
     }
-    UpdateScreen(screen, 0, 0, screen->w, screen->h);
+    UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
     std::string name = cp950toutf8(Rscene[snum].Name);
     int nameLen = (int)strlen((const char*)Rscene[snum].Name);
     DrawTextWithRect(name, CENTER_X - nameLen * 5 + 7, 100, nameLen * 10 + 6, ColColor(5), ColColor(7));
@@ -3016,6 +3027,7 @@ int CommonMenu(int x, int y, int w, int max, int default_, const std::string men
 
 int CommonMenu(int x, int y, int w, int max, int default_, const std::string menuString[], TPInt1 fn, int count)
 {
+    if (Headless()) return Frontend->choose("menu", {menuString, menuString + max + 1});
     int menu = default_;
     if (menu < 0)
     {
@@ -3112,8 +3124,8 @@ int CommonMenu(int x, int y, int w, int max, int default_, const std::string men
             break;
         case SDL_EVENT_MOUSE_MOTION:
         {
-            float sx = (float)RESOLUTIONX / screen->w;
-            float sy = (float)RESOLUTIONY / screen->h;
+            float sx = (float)RESOLUTIONX / ScreenWidth();
+            float sy = (float)RESOLUTIONY / ScreenHeight();
             int emx = (int)(event.motion.x / sx);
             int emy = (int)(event.motion.y / sy);
             if (emx >= x && emx < x + w && emy > y && emy < y + menuH)
@@ -3148,6 +3160,7 @@ int CommonMenu(int x, int y, int w, int max, int default_, const std::string men
 // 仅有两个选项的横排选单 - 严格按Pascal版
 int CommonMenu2(int x, int y, int w, const std::string menuString[])
 {
+    if (Headless()) return Frontend->choose(menuString[2], {menuString[0], menuString[1]});
     int menu = 0;
 
     auto ShowCommonMenu2 = [&]()
@@ -3203,8 +3216,8 @@ int CommonMenu2(int x, int y, int w, const std::string menuString[])
             }
             if (event.button.button == SDL_BUTTON_LEFT)
             {
-                float sx = (float)RESOLUTIONX / screen->w;
-                float sy = (float)RESOLUTIONY / screen->h;
+                float sx = (float)RESOLUTIONX / ScreenWidth();
+                float sy = (float)RESOLUTIONY / ScreenHeight();
                 int emx = (int)(event.button.x / sx);
                 int emy = (int)(event.button.y / sy);
                 if (emx >= x && emx < x + w && emy > y && emy < y + 29)
@@ -3215,8 +3228,8 @@ int CommonMenu2(int x, int y, int w, const std::string menuString[])
             break;
         case SDL_EVENT_MOUSE_MOTION:
         {
-            float sx = (float)RESOLUTIONX / screen->w;
-            float sy = (float)RESOLUTIONY / screen->h;
+            float sx = (float)RESOLUTIONX / ScreenWidth();
+            float sy = (float)RESOLUTIONY / ScreenHeight();
             int emx = (int)(event.motion.x / sx);
             int emy = (int)(event.motion.y / sy);
             if (emx >= x && emx < x + w && emy > y && emy < y + 29)
@@ -3247,6 +3260,7 @@ int CommonMenu2(int x, int y, int w, const std::string menuString[])
 // 卷动选单 - 严格按Pascal版
 int CommonScrollMenu(int x, int y, int w, int max, int maxshow, const std::string menuString[])
 {
+    if (Headless()) return Frontend->choose("menu", {menuString, menuString + max + 1});
     int menu = 0, menutop = 0;
     if (max + 1 < maxshow)
     {
@@ -3368,8 +3382,8 @@ int CommonScrollMenu(int x, int y, int w, int max, int maxshow, const std::strin
             }
             if (event.button.button == SDL_BUTTON_LEFT)
             {
-                float sx = (float)RESOLUTIONX / screen->w;
-                float sy = (float)RESOLUTIONY / screen->h;
+                float sx = (float)RESOLUTIONX / ScreenWidth();
+                float sy = (float)RESOLUTIONY / ScreenHeight();
                 int emx = (int)(event.button.x / sx);
                 int emy = (int)(event.button.y / sy);
                 if (emx >= x && emx < x + w && emy > y && emy < y + max * 22 + 29)
@@ -3416,8 +3430,8 @@ int CommonScrollMenu(int x, int y, int w, int max, int maxshow, const std::strin
             break;
         case SDL_EVENT_MOUSE_MOTION:
         {
-            float sx = (float)RESOLUTIONX / screen->w;
-            float sy = (float)RESOLUTIONY / screen->h;
+            float sx = (float)RESOLUTIONX / ScreenWidth();
+            float sy = (float)RESOLUTIONY / ScreenHeight();
             int emx = (int)(event.motion.x / sx);
             int emy = (int)(event.motion.y / sy);
             if (emx >= x && emx < x + w && emy > y && emy < y + max * 22 + 29)
@@ -3447,6 +3461,13 @@ int CommonScrollMenu(int x, int y, int w, int max, int maxshow, const std::strin
 
 int CommonGridMenu(int x, int y, int cols, int cellW, int maxShowRows, int maxItem, const std::string menuString[], const bool* disabled)
 {
+    if (Headless())
+    {
+        std::vector<std::string> options(menuString, menuString + maxItem + 1);
+        int selected;
+        do { selected = Frontend->choose("menu", options); } while (selected >= 0 && disabled && disabled[selected]);
+        return selected;
+    }
     if (maxItem < 0)
     {
         return -1;
@@ -3720,7 +3741,7 @@ void MenuEsc()
                     i1 = TeleportByList();
                 }
                 Redraw();
-                UpdateScreen(screen, 0, 0, screen->w, screen->h);
+                UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
                 if (i1 != 0)
                 {
                     i = -1;
@@ -3751,7 +3772,7 @@ void MenuEsc()
             {
                 CallEvent(1092);
                 Redraw();
-                UpdateScreen(screen, 0, 0, screen->w, screen->h);
+                UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
             }
             else
             {
@@ -3761,14 +3782,14 @@ void MenuEsc()
         }
         }
         Redraw();
-        UpdateScreen(screen, 80, 0, screen->w - 80, screen->h);
+        UpdateScreen(screen, 80, 0, ScreenWidth() - 80, ScreenHeight());
         if (Where == 3)
         {
             break;
         }
     }
     Redraw();
-    UpdateScreen(screen, 0, 0, screen->w, screen->h);
+    UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
     NeedRefreshScene = 1;
 }
 
@@ -3796,7 +3817,7 @@ void ShowMenu(int menu)
             DrawShadowText(word[i], 30, 32 + 22 * i, ColColor(0x5), ColColor(0x7));
         }
     }
-    UpdateScreen(screen, 0, 0, screen->w, screen->h);
+    UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
 }
 
 void MenuMedcine()
@@ -3914,7 +3935,7 @@ bool MenuItem()
         if (menu >= 0 && menu < 6)
         {
             Redraw();
-            RecordFreshScreen(0, 0, screen->w, screen->h);
+            RecordFreshScreen(0, 0, ScreenWidth(), ScreenHeight());
             int iamount = ReadItemList(itemType);
             atlu = 0;
             x = 0;
@@ -3924,7 +3945,7 @@ bool MenuItem()
             auto ShowMenuItem = [&]()
             {
                 int w2 = col * 42 + 8;
-                LoadFreshScreen(0, 0, screen->w, screen->h);
+                LoadFreshScreen(0, 0, ScreenWidth(), ScreenHeight());
                 DrawRectangle(screen, 110, 30, w2, 25, 0, ColColor(255), 50);
                 DrawRectangle(screen, 110, 60, w2, 25, 0, ColColor(255), 50);
                 DrawRectangle(screen, 110, 90, w2, 218, 0, ColColor(255), 50);
@@ -4155,7 +4176,7 @@ bool MenuItem()
             };
 
             ShowMenuItem();
-            UpdateScreen(screen, 0, 0, screen->w, screen->h);
+            UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
 
             auto RunItemMenu = [&]()
             {
@@ -4181,7 +4202,7 @@ bool MenuItem()
                             y = row - 1;
                         }
                         ShowMenuItem();
-                        UpdateScreen(screen, 0, 0, screen->w, screen->h);
+                        UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
                     }
                     if (event.key.key == SDLK_UP)
                     {
@@ -4195,7 +4216,7 @@ bool MenuItem()
                             }
                         }
                         ShowMenuItem();
-                        UpdateScreen(screen, 0, 0, screen->w, screen->h);
+                        UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
                     }
                     if (event.key.key == SDLK_PAGEDOWN)
                     {
@@ -4214,7 +4235,7 @@ bool MenuItem()
                             }
                         }
                         ShowMenuItem();
-                        UpdateScreen(screen, 0, 0, screen->w, screen->h);
+                        UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
                     }
                     if (event.key.key == SDLK_PAGEUP)
                     {
@@ -4229,7 +4250,7 @@ bool MenuItem()
                             }
                         }
                         ShowMenuItem();
-                        UpdateScreen(screen, 0, 0, screen->w, screen->h);
+                        UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
                     }
                     if (event.key.key == SDLK_RIGHT)
                     {
@@ -4239,7 +4260,7 @@ bool MenuItem()
                             x = 0;
                         }
                         ShowMenuItem();
-                        UpdateScreen(screen, 0, 0, screen->w, screen->h);
+                        UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
                     }
                     if (event.key.key == SDLK_LEFT)
                     {
@@ -4249,7 +4270,7 @@ bool MenuItem()
                             x = col - 1;
                         }
                         ShowMenuItem();
-                        UpdateScreen(screen, 0, 0, screen->w, screen->h);
+                        UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
                     }
                     break;
                 case SDL_EVENT_KEY_UP:
@@ -4280,8 +4301,8 @@ bool MenuItem()
                     {
                         // 手机触屏防误触: TouchWalk关闭时(防误触模式)鼠标点击无效，仅虚拟按键可操作
                         if (CellPhone != 0 && !TouchWalk) { break; }
-                        int mx = (int)(event.button.x / ((float)RESOLUTIONX / screen->w));
-                        int my = (int)(event.button.y / ((float)RESOLUTIONY / screen->h));
+                        int mx = (int)(event.button.x / ((float)RESOLUTIONX / ScreenWidth()));
+                        int my = (int)(event.button.y / ((float)RESOLUTIONY / ScreenHeight()));
                         if (mx >= 110 && mx < 110 + w && my > 90 && my < 308)
                         {
                             int sel_idx = y * col + x + atlu;
@@ -4312,7 +4333,7 @@ bool MenuItem()
                                 y = row - 1;
                             }
                             ShowMenuItem();
-                            UpdateScreen(screen, 0, 0, screen->w, screen->h);
+                            UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
                         }
                         if (event.wheel.y > 0)
                         {
@@ -4326,15 +4347,15 @@ bool MenuItem()
                                 }
                             }
                             ShowMenuItem();
-                            UpdateScreen(screen, 0, 0, screen->w, screen->h);
+                            UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
                         }
                         break;
                     case SDL_EVENT_MOUSE_MOTION:
                         {
                             // 手机触屏防误触: TouchWalk关闭时(防误触模式)鼠标移动无效
                             if (CellPhone != 0 && !TouchWalk) { break; }
-                            int mx = (int)(event.motion.x / ((float)RESOLUTIONX / screen->w));
-                            int my = (int)(event.motion.y / ((float)RESOLUTIONY / screen->h));
+                            int mx = (int)(event.motion.x / ((float)RESOLUTIONX / ScreenWidth()));
+                            int my = (int)(event.motion.y / ((float)RESOLUTIONY / ScreenHeight()));
                             if (mx >= 110 && mx < 110 + w && my > 90 && my < 308)
                             {
                                 int xp = x, yp = y;
@@ -4359,7 +4380,7 @@ bool MenuItem()
                                 if (x != xp || y != yp)
                                 {
                                     ShowMenuItem();
-                                    UpdateScreen(screen, 0, 0, screen->w, screen->h);
+                                    UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
                                 }
                             }
                             break;
@@ -4437,6 +4458,10 @@ void UseItem(int inum)
             case 2: y--; break;
             case 3: x++; break;
             }
+            if (x < 0 || x >= 64 || y < 0 || y >= 64)
+            {
+                break;
+            }
             if (SData[CurScene][3][x][y] >= 0)
             {
                 CurEvent = SData[CurScene][3][x][y];
@@ -4468,7 +4493,7 @@ void UseItem(int inum)
             std::string str1 = cp950toutf8(Ritem[inum].Name);
             DrawTextWithRect("誰要裝備", 80, 30, (int)str1.size() * 11 + 80, ColColor(0x21), ColColor(0x23));
             DrawShadowText(str1, 160, 32, ColColor(0x64), ColColor(0x66));
-            UpdateScreen(screen, 0, 0, screen->w, screen->h);
+            UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
             int sel = SelectOneTeamMember(80, 65, "", 0, 0);
             if (sel >= 0)
             {
@@ -4517,7 +4542,7 @@ void UseItem(int inum)
             std::string str1 = cp950toutf8(Ritem[inum].Name);
             DrawTextWithRect("誰要修煉", 80, 30, (int)str1.size() * 11 + 80, ColColor(0x21), ColColor(0x23));
             DrawShadowText(str1, 160, 32, ColColor(0x64), ColColor(0x66));
-            UpdateScreen(screen, 0, 0, screen->w, screen->h);
+            UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
             int sel = SelectOneTeamMember(80, 65, "", 0, 0);
             if (sel >= 0)
             {
@@ -4553,7 +4578,7 @@ void UseItem(int inum)
             std::string str1 = cp950toutf8(Ritem[inum].Name);
             DrawTextWithRect("誰要服用", 80, 30, (int)str1.size() * 11 + 80, ColColor(0x21), ColColor(0x23));
             DrawShadowText(str1, 160, 32, ColColor(0x64), ColColor(0x66));
-            UpdateScreen(screen, 0, 0, screen->w, screen->h);
+            UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
             sel = SelectOneTeamMember(80, 65, "", 0, 0);
         }
         if (sel >= 0)
@@ -4687,20 +4712,20 @@ void MenuLeave()
             {
                 Redraw();
                 CallEvent(BEGIN_LEAVE_EVENT + i * 2);
-                UpdateScreen(screen, 0, 0, screen->w, screen->h);
+                UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
                 break;
             }
         }
     }
     Redraw();
-    UpdateScreen(screen, 0, 0, screen->w, screen->h);
+    UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
 }
 
 void MenuStatus()
 {
     Redraw();
-    RecordFreshScreen(0, 0, screen->w, screen->h);
-    UpdateScreen(screen, 0, 0, screen->w, screen->h);
+    RecordFreshScreen(0, 0, ScreenWidth(), ScreenHeight());
+    UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
 
     if (Where == 2)
     {
@@ -4720,7 +4745,7 @@ void MenuStatus()
             if (BField[2][Ax][Ay] >= 0 && BField[2][Ax][Ay] < BRoleAmount)
             {
                 ShowStatus(Brole[BField[2][Ax][Ay]].rnum);
-                UpdateScreen(screen, 0, 0, screen->w, screen->h);
+                UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
                 WaitAnyKey();
             }
         }
@@ -4742,7 +4767,7 @@ void MenuStatus()
         CommonMenu(10, 65, 85, Amount - 1, 0, menuStr, ShowStatusByTeam);
     }
     Redraw();
-    UpdateScreen(screen, 0, 0, screen->w, screen->h);
+    UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
 }
 
 void ShowStatusByTeam(int tnum)
@@ -4764,6 +4789,7 @@ void ShowStatus(int rnum)
 
 void ShowStatus(int rnum, int x, int y)
 {
+    if (Headless()) return;
     std::string strs[22];
     strs[0] = "等級";
     strs[1] = "生命";
@@ -4805,7 +4831,7 @@ void ShowStatus(int rnum, int x, int y)
 
     if (Where <= 2)
     {
-        LoadFreshScreen(0, 0, screen->w, screen->h);
+        LoadFreshScreen(0, 0, ScreenWidth(), ScreenHeight());
     }
 
     DrawRectangle(screen, x, y, 545, 315, 0, ColColor(255), 50);
@@ -5056,6 +5082,7 @@ void ShowStatus(int rnum, int x, int y)
 
 void ShowSimpleStatus(int rnum, int x, int y)
 {
+    if (Headless()) return;
     // 匹配Pascal版简易状态显示
     std::string strs[4] = { "等級", "生命", "內力", "體力" };
 
@@ -5158,7 +5185,7 @@ int MenuSystem()
         }
         Redraw();
         ShowMenu(6);
-        UpdateScreen(screen, 133, 0, screen->w - 133, screen->h);
+        UpdateScreen(screen, 133, 0, ScreenWidth() - 133, ScreenHeight());
     }
     return i;
 }
@@ -5193,7 +5220,7 @@ void MenuLoad()
         {
             ShowSceneName(CurScene);
         }
-        UpdateScreen(screen, 0, 0, screen->w, screen->h);
+        UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
     }
     ShowMenu(6);
 }
@@ -5203,7 +5230,7 @@ int MenuLoadAtBeginning()
     const char* names[] = { "載入進度一", "載入進度二", "載入進度三", "載入進度四", "載入進度五",
         "載入進度六", "載入進度七", "載入進度八", "載入進度九", "載入進度十", "載入自動檔" };
     Redraw();
-    UpdateScreen(screen, 0, 0, screen->w, screen->h);
+    UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
     std::string menuStr[11];
     for (int i = 0; i < 11; i++)
     {
@@ -5287,7 +5314,7 @@ int EffectMedcine(int role1, int role2)
         buf = std::format("{:4d}", minushurt);
         DrawEngShadowText(buf, 220, 150, ColColor(0x64), ColColor(0x66));
         ShowSimpleStatus(role2, 350, 50);
-        UpdateScreen(screen, 0, 0, screen->w, screen->h);
+        UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
         WaitAnyKey();
         Redraw();
     }
@@ -5312,7 +5339,7 @@ int EffectMedPoison(int role1, int role2)
         auto buf = std::format("{:4d}", minuspoi);
         DrawEngShadowText(buf, 220, 125, ColColor(0x64), ColColor(0x66));
         ShowSimpleStatus(role2, 350, 50);
-        UpdateScreen(screen, 0, 0, screen->w, screen->h);
+        UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
         WaitAnyKey();
         Redraw();
     }
@@ -5321,6 +5348,7 @@ int EffectMedPoison(int role1, int role2)
 
 int EatOneItem(int rnum, int inum, int times, int display)
 {
+    if (Headless()) display = 0;
     if (inum < 0 || inum >= 725)
     {
         return 0;
@@ -5590,7 +5618,7 @@ int EatOneItem(int rnum, int inum, int times, int display)
             sx = 440;
         }
         ShowSimpleStatus(rnum, sx, 50);
-        UpdateScreen(screen, 0, 0, screen->w, screen->h);
+        UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
     }
     else
     {
@@ -5616,359 +5644,6 @@ int EatOneItem(int rnum, int inum, int times, int display)
 
 // ---- 事件调用 ----
 
-void CallEvent(int num)
-{
-    SStep = 0;
-    SceneRolePic = BEGIN_WALKPIC + SFace * 7;
-    NeedRefreshScene = 0;
-
-    auto RunKDefEvent = [&]()
-    {
-        int offset, len;
-        if (num == 0)
-        {
-            offset = 0;
-            len = KIdx[0];
-        }
-        else
-        {
-            offset = KIdx[num - 1];
-            len = KIdx[num] - offset;
-        }
-        int ecount = len / 2 + 1;
-        std::vector<int16_t> e(ecount, 0);
-        if (len > 0)
-        {
-            memcpy(e.data(), KDef.data() + offset, len);
-        }
-        int i = 0;
-
-        while (i < ecount - 1)
-        {
-            SDL_PollEvent(&event);
-            CheckBasicEvent();
-            if (e[i] < 0)
-            {
-                break;
-            }
-            switch (e[i])
-            {
-            case 0:
-                instruct_0();
-                i += 1;
-                break;
-            case 1:
-                instruct_1(e[i + 1], e[i + 2], e[i + 3]);
-                i += 4;
-                break;
-            case 2:
-                instruct_2(e[i + 1], e[i + 2]);
-                i += 3;
-                break;
-            case 3:
-            {
-                std::vector<int> list(13);
-                for (int j = 0; j < 13; j++)
-                {
-                    list[j] = e[i + 1 + j];
-                }
-                instruct_3(list);
-                i += 14;
-                break;
-            }
-            case 4:
-                i += instruct_4(e[i + 1], e[i + 2], e[i + 3]);
-                i += 4;
-                break;
-            case 5:
-                i += instruct_5(e[i + 1], e[i + 2]);
-                i += 3;
-                break;
-            case 6:
-                i += instruct_6(e[i + 1], e[i + 2], e[i + 3], e[i + 4]);
-                i += 5;
-                break;
-            case 7:
-                i += 1;
-                return;
-            case 8:
-                instruct_8(e[i + 1]);
-                i += 2;
-                break;
-            case 9:
-                i += instruct_9(e[i + 1], e[i + 2]);
-                i += 3;
-                break;
-            case 10:
-                instruct_10(e[i + 1]);
-                i += 2;
-                break;
-            case 11:
-                i += instruct_11(e[i + 1], e[i + 2]);
-                i += 3;
-                break;
-            case 12:
-                instruct_12();
-                i += 1;
-                break;
-            case 13:
-                instruct_13();
-                i += 1;
-                break;
-            case 14:
-                instruct_14();
-                i += 1;
-                break;
-            case 15:
-                instruct_15();
-                i += 1;
-                return;
-            case 16:
-                i += instruct_16(e[i + 1], e[i + 2], e[i + 3]);
-                i += 4;
-                break;
-            case 17:
-            {
-                std::vector<int> list(5);
-                for (int j = 0; j < 5; j++)
-                {
-                    list[j] = e[i + 1 + j];
-                }
-                instruct_17(list);
-                i += 6;
-                break;
-            }
-            case 18:
-                i += instruct_18(e[i + 1], e[i + 2], e[i + 3]);
-                i += 4;
-                break;
-            case 19:
-                instruct_19(e[i + 1], e[i + 2]);
-                i += 3;
-                break;
-            case 20:
-                i += instruct_20(e[i + 1], e[i + 2]);
-                i += 3;
-                break;
-            case 21:
-                instruct_21(e[i + 1]);
-                i += 2;
-                break;
-            case 22:
-                instruct_22();
-                i += 1;
-                break;
-            case 23:
-                instruct_23(e[i + 1], e[i + 2]);
-                i += 3;
-                break;
-            case 24:
-                instruct_24();
-                i += 1;
-                break;
-            case 25:
-                instruct_25(e[i + 1], e[i + 2], e[i + 3], e[i + 4]);
-                i += 5;
-                break;
-            case 26:
-                instruct_26(e[i + 1], e[i + 2], e[i + 3], e[i + 4], e[i + 5]);
-                i += 6;
-                break;
-            case 27:
-                instruct_27(e[i + 1], e[i + 2], e[i + 3]);
-                i += 4;
-                break;
-            case 28:
-                i += instruct_28(e[i + 1], e[i + 2], e[i + 3], e[i + 4], e[i + 5]);
-                i += 6;
-                break;
-            case 29:
-                i += instruct_29(e[i + 1], e[i + 2], e[i + 3], e[i + 4], e[i + 5]);
-                i += 6;
-                break;
-            case 30:
-                instruct_30(e[i + 1], e[i + 2], e[i + 3], e[i + 4]);
-                i += 5;
-                break;
-            case 31:
-                i += instruct_31(e[i + 1], e[i + 2], e[i + 3]);
-                i += 4;
-                break;
-            case 32:
-                instruct_32(e[i + 1], e[i + 2]);
-                i += 3;
-                break;
-            case 33:
-                instruct_33(e[i + 1], e[i + 2], e[i + 3]);
-                i += 4;
-                break;
-            case 34:
-                instruct_34(e[i + 1], e[i + 2]);
-                i += 3;
-                break;
-            case 35:
-                instruct_35(e[i + 1], e[i + 2], e[i + 3], e[i + 4]);
-                i += 5;
-                break;
-            case 36:
-                i += instruct_36(e[i + 1], e[i + 2], e[i + 3]);
-                i += 4;
-                break;
-            case 37:
-                instruct_37(e[i + 1]);
-                i += 2;
-                break;
-            case 38:
-                instruct_38(e[i + 1], e[i + 2], e[i + 3], e[i + 4]);
-                i += 5;
-                break;
-            case 39:
-                instruct_39(e[i + 1]);
-                i += 2;
-                break;
-            case 40:
-                instruct_40(e[i + 1]);
-                i += 2;
-                break;
-            case 41:
-                instruct_41(e[i + 1], e[i + 2], e[i + 3]);
-                i += 4;
-                break;
-            case 42:
-                i += instruct_42(e[i + 1], e[i + 2]);
-                i += 3;
-                break;
-            case 43:
-                i += instruct_43(e[i + 1], e[i + 2], e[i + 3]);
-                i += 4;
-                break;
-            case 44:
-                instruct_44(e[i + 1], e[i + 2], e[i + 3], e[i + 4], e[i + 5], e[i + 6]);
-                i += 7;
-                break;
-            case 45:
-                instruct_45(e[i + 1], e[i + 2]);
-                i += 3;
-                break;
-            case 46:
-                instruct_46(e[i + 1], e[i + 2]);
-                i += 3;
-                break;
-            case 47:
-                instruct_47(e[i + 1], e[i + 2]);
-                i += 3;
-                break;
-            case 48:
-                instruct_48(e[i + 1], e[i + 2]);
-                i += 3;
-                break;
-            case 49:
-                instruct_49(e[i + 1], e[i + 2]);
-                i += 3;
-                break;
-            case 50:
-            {
-                std::vector<int> list(7);
-                for (int j = 0; j < 7; j++)
-                {
-                    list[j] = e[i + 1 + j];
-                }
-                int p = instruct_50(list);
-                i += 8;
-                if (p < 622592)
-                {
-                    i += p;
-                }
-                else
-                {
-                    e[i + ((p + 32768) / 655360) - 1] = p % 655360;
-                }
-                break;
-            }
-            case 51:
-                instruct_51();
-                i += 1;
-                break;
-            case 52:
-                instruct_52();
-                i += 1;
-                break;
-            case 53:
-                instruct_53();
-                i += 1;
-                break;
-            case 54:
-                instruct_54();
-                i += 1;
-                break;
-            case 55:
-                i += instruct_55(e[i + 1], e[i + 2], e[i + 3], e[i + 4]);
-                i += 5;
-                break;
-            case 56:
-                instruct_56(e[i + 1]);
-                i += 2;
-                break;
-            case 57:
-                instruct_57();
-                i += 1;
-                break;
-            case 58:
-                instruct_58();
-                i += 1;
-                break;
-            case 59:
-                instruct_59();
-                i += 1;
-                break;
-            case 60:
-                i += instruct_60(e[i + 1], e[i + 2], e[i + 3], e[i + 4], e[i + 5]);
-                i += 6;
-                break;
-            case 61:
-                i += instruct_61(e[i + 1], e[i + 2]);
-                i += 3;
-                break;
-            case 62:
-                instruct_62(e[i + 1], e[i + 2], e[i + 3], e[i + 4], e[i + 5], e[i + 6]);
-                i += 7;
-                return;
-            case 63:
-                instruct_63(e[i + 1], e[i + 2]);
-                i += 3;
-                break;
-            case 64:
-                instruct_64();
-                i += 1;
-                break;
-            case 65: i += 1; break;    // NOP
-            case 66:
-                instruct_66(e[i + 1]);
-                i += 2;
-                break;
-            case 67:
-                instruct_67(e[i + 1]);
-                i += 2;
-                break;
-            default: i += 1; break;
-            }
-        }
-    };
-
-    RunKDefEvent();
-
-    if (NeedRefreshScene == 1)
-    {
-        InitialScene(0);
-    }
-    NeedRefreshScene = 1;
-    if (MMAPAMI * SCENEAMI == 0)
-    {
-        Redraw();
-        UpdateScreen(screen, 0, 0, screen->w, screen->h);
-    }
-}
-
 // ---- 云 ----
 
 // 严格按Pascal版: CloudCreateOnSide先初始化所有字段, CloudCreate再覆盖Positionx
@@ -5982,15 +5657,15 @@ void CloudCreateOnSide(int num)
     {
         Cloud.resize(num + 1);
     }
-    Cloud[num].Picnum = rand() % std::max(1, CPicAmount);
+    Cloud[num].Picnum = GameRandom() % std::max(1, CPicAmount);
     Cloud[num].Shadow = 0;
-    Cloud[num].Alpha = 10 + rand() % 50;
-    Cloud[num].mixColor = (uint32_t)(rand() % 256) + ((uint32_t)(rand() % 256) << 8)
-        + ((uint32_t)(rand() % 256) << 16) + ((uint32_t)(rand() % 256) << 24);
-    Cloud[num].mixAlpha = 10 + rand() % 50;
+    Cloud[num].Alpha = 10 + GameRandom() % 50;
+    Cloud[num].mixColor = (uint32_t)(GameRandom() % 256) + ((uint32_t)(GameRandom() % 256) << 8)
+        + ((uint32_t)(GameRandom() % 256) << 16) + ((uint32_t)(GameRandom() % 256) << 24);
+    Cloud[num].mixAlpha = 10 + GameRandom() % 50;
     Cloud[num].Positionx = 0;
-    Cloud[num].Positiony = rand() % 8640;
-    Cloud[num].Speedx = 1 + rand() % 3;
+    Cloud[num].Positiony = GameRandom() % 8640;
+    Cloud[num].Speedx = 1 + GameRandom() % 3;
     Cloud[num].Speedy = 0;
 }
 
@@ -5999,7 +5674,7 @@ void CloudCreate(int num)
     CloudCreateOnSide(num);
     if (num >= 0 && num < (int)Cloud.size())
     {
-        Cloud[num].Positionx = rand() % 17280;
+        Cloud[num].Positionx = GameRandom() % 17280;
     }
 }
 
@@ -6011,7 +5686,7 @@ bool IsCave(int snum)
 int teleport()
 {
     Redraw();
-    DrawRectangleWithoutFrame(screen, 0, 0, screen->w, screen->h, 0xFF000000, 50);
+    DrawRectangleWithoutFrame(screen, 0, 0, ScreenWidth(), ScreenHeight(), 0xFF000000, 50);
     // 绘制小地图：每个地块绘制一个像素
     for (int x = 0; x < 480; x++)
     {
@@ -6022,7 +5697,7 @@ int teleport()
             DrawMPic(Earth[x][y] / 2, x1, y1 + 18, 0, 0, 0, 0, 1);
         }
     }
-    RecordFreshScreen(0, 0, screen->w, screen->h);
+    RecordFreshScreen(0, 0, ScreenWidth(), ScreenHeight());
 
     int result = 0;
     auto FinishTeleport = [&]()
@@ -6033,7 +5708,7 @@ int teleport()
     while (true)
     {
         // drawtelemap: 绘制场景标记点
-        LoadFreshScreen(0, 0, screen->w, screen->h);
+        LoadFreshScreen(0, 0, ScreenWidth(), ScreenHeight());
         int mx2, my2;
         SDL_GetMouseState2(mx2, my2);
         int hoverScene = -1;
@@ -6265,7 +5940,7 @@ void StartAmi()
             DrawShadowText(line, x, y, ColColor(0xFF), ColColor(0xFF));
             p = i + 1;
             y += 25;
-            UpdateScreen(screen, 0, 0, screen->w, screen->h);
+            UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
         }
         if (str[i] == '*')
         {
@@ -6283,6 +5958,7 @@ void StartAmi()
 // EnterString (from event system, moved here for accessibility)
 bool EnterString(std::string& str, int x, int y, int w, int h)
 {
+    if (Headless()) return true;
     int drawX = x;
     int drawY = y;
     if (CellPhone != 0)

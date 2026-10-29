@@ -1,4 +1,5 @@
-﻿// kys_draw.cpp - 高层绘图实现
+﻿#include "kys_frontend.h"
+// kys_draw.cpp - 高层绘图实现
 // 对应 kys_draw.pas
 
 #include "kys_draw.h"
@@ -16,6 +17,7 @@
 
 void DrawTitlePic(int num, int px, int py)
 {
+    if (Headless()) return;
     // 主标题图使用 smp 贴图
     if (num < 0 || num >= SPicAmount)
     {
@@ -27,16 +29,19 @@ void DrawTitlePic(int num, int px, int py)
 
 void DrawMPic(int num, int px, int py)
 {
+    if (Headless()) return;
     DrawMPic(num, px, py, 0, 0, 0, 0);
 }
 
 void DrawMPic(int num, int px, int py, int shadow, int alpha, uint32_t mixColor, int mixAlpha)
 {
+    if (Headless()) return;
     DrawMPic(num, px, py, shadow, alpha, mixColor, mixAlpha, 0);
 }
 
 void DrawMPic(int num, int px, int py, int shadow, int alpha, uint32_t mixColor, int mixAlpha, int totalpix)
 {
+    if (Headless()) return;
     if (num < 0 || num >= MPicAmount)
     {
         return;
@@ -48,27 +53,31 @@ void DrawMPic(int num, int px, int py, int shadow, int alpha, uint32_t mixColor,
 
 void DrawSPic(int num, int px, int py, int xx, int yy, int xw, int yh)
 {
+    if (Headless()) return;
     DrawSPic(num, px, py, xx, yy, xw, yh, 0, 0, 0, 0);
 }
 
 void DrawSPic(int num, int px, int py, int xx, int yy, int xw, int yh, int shadow, int alpha)
 {
+    if (Headless()) return;
     DrawSPic(num, px, py, xx, yy, xw, yh, shadow, alpha, 0, 0);
 }
 
 void DrawSPic(int num, int px, int py, int xx, int yy, int xw, int yh, int shadow, int alpha, uint32_t mixColor, int mixAlpha)
 {
+    if (Headless()) return;
     if (num < 0 || num >= SPicAmount)
     {
         return;
     }
     DrawRLE8Pic((const char*)ACol, num, px, py, SIdx.data(), SPic.data(),
-        nullptr, screen, screen->w, screen->h, screen->pitch,
+        nullptr, screen, ScreenWidth(), ScreenHeight(), screen->pitch,
         shadow, alpha, nullptr, nullptr, 0, 0, 0, 0, mixColor, mixAlpha);
 }
 
 void DrawSPic(int num, int px, int py, int shadow, int alpha, int depth, uint32_t mixColor, int mixAlpha)
 {
+    if (Headless()) return;
     if (num < 0 || num >= SPicAmount)
     {
         return;
@@ -87,6 +96,7 @@ void DrawSPic(int num, int px, int py, int shadow, int alpha, int depth, uint32_
 void InitialSPic(int num, int px, int py, SDL_Surface* img, int widthI, int heightI,
     char* blockW, int widthW, int heightW, int depth, uint32_t mixColor, int mixAlpha)
 {
+    if (Headless()) return;
     if (num < 0 || num >= SPicAmount)
     {
         return;
@@ -100,6 +110,7 @@ void InitialSPic(int num, int px, int py, SDL_Surface* img, int widthI, int heig
 void InitialSPic(int num, int px, int py, int areaX, int areaY, int areaW, int areaH,
     int needBlock, int depth, int temp)
 {
+    if (Headless()) return;
     if (num < 0 || num >= SPicAmount)
     {
         return;
@@ -140,11 +151,13 @@ void InitialSPic(int num, int px, int py, int areaX, int areaY, int areaW, int a
 
 void DrawHeadPic(int num, int px, int py)
 {
+    if (Headless()) return;
     DrawHeadPic(num, px, py, 0, 0, 0, 0, 0);
 }
 
 void DrawHeadPic(int num, int px, int py, SDL_Surface* scr)
 {
+    if (Headless()) return;
     if (num < 0 || !scr)
     {
         return;
@@ -183,6 +196,7 @@ void DrawHeadPic(int num, int px, int py, SDL_Surface* scr)
 
 void DrawHeadPic(int num, int px, int py, int shadow, int alpha, int depth, uint32_t mixColor, int mixAlpha)
 {
+    if (Headless()) return;
     if (num < 0)
     {
         return;
@@ -218,11 +232,13 @@ void DrawHeadPic(int num, int px, int py, int shadow, int alpha, int depth, uint
 
 void DrawIPic(int num, int px, int py)
 {
+    if (Headless()) return;
     DrawIPic(num, px, py, 0, 0, 0, 0);
 }
 
 void DrawIPic(int num, int px, int py, int shadow, int alpha, uint32_t mixColor, int mixAlpha)
 {
+    if (Headless()) return;
     if (num < 0)
     {
         return;
@@ -253,21 +269,25 @@ void DrawIPic(int num, int px, int py, int shadow, int alpha, uint32_t mixColor,
 
 void DrawBPic(int num, int px, int py, int shadow)
 {
+    if (Headless()) return;
     DrawBPic(num, px, py, shadow, 0, 0, 0, 0);
 }
 
 void DrawBPic(int num, int px, int py, int shadow, int alpha)
 {
+    if (Headless()) return;
     DrawBPic(num, px, py, shadow, alpha, 0, 0, 0);
 }
 
 void DrawBPic(int num, int px, int py, int shadow, int alpha, uint32_t mixColor, int mixAlpha)
 {
+    if (Headless()) return;
     DrawBPic(num, px, py, shadow, alpha, 0, mixColor, mixAlpha);
 }
 
 void DrawBPic(int num, int px, int py, int shadow, int alpha, int depth, uint32_t mixColor, int mixAlpha)
 {
+    if (Headless()) return;
     // 战斗图使用 WIdx/WPic (wdx/wmp), 严格按Pascal版
     if (num <= 0 || num >= BPicAmount)
     {
@@ -284,6 +304,7 @@ void DrawBPic(int num, int px, int py, int shadow, int alpha, int depth, uint32_
 void InitialBPic(int num, int px, int py, SDL_Surface* img, int widthI, int heightI,
     char* blockW, int widthW, int heightW, int depth, uint32_t mixColor, int mixAlpha)
 {
+    if (Headless()) return;
     if (num <= 0 || num >= BPicAmount)
     {
         return;
@@ -295,6 +316,7 @@ void InitialBPic(int num, int px, int py, SDL_Surface* img, int widthI, int heig
 
 void DrawEPic(int num, int px, int py)
 {
+    if (Headless()) return;
     if (num < 0 || num >= EPicAmount)
     {
         return;
@@ -305,12 +327,13 @@ void DrawEPic(int num, int px, int py)
 
 void DrawEPic(int num, int px, int py, int shadow, int alpha, int depth, uint32_t mixColor, int mixAlpha)
 {
+    if (Headless()) return;
     if (num < 0 || num >= EPicAmount)
     {
         return;
     }
     DrawRLE8Pic((const char*)ACol, num, px, py, EIdx.data(), EPic.data(),
-        nullptr, screen, screen->w, screen->h, screen->pitch,
+        nullptr, screen, ScreenWidth(), ScreenHeight(), screen->pitch,
         shadow, alpha,
         (char*)BlockImg2.data(), (const char*)&BlockScreen,
         ImageWidth, ImageHeight, sizeof(int16_t),
@@ -319,16 +342,19 @@ void DrawEPic(int num, int px, int py, int shadow, int alpha, int depth, uint32_
 
 void DrawFPic(int headnum, int num, int px, int py, int shadow, int alpha)
 {
+    if (Headless()) return;
     DrawFPic(headnum, num, px, py, shadow, alpha, 0, 0, 0);
 }
 
 void DrawFPic(int headnum, int num, int px, int py, int shadow, int alpha, uint32_t mixColor, int mixAlpha)
 {
+    if (Headless()) return;
     DrawFPic(headnum, num, px, py, shadow, alpha, 0, mixColor, mixAlpha);
 }
 
 void DrawFPic(int headnum, int num, int px, int py, int shadow, int alpha, int depth, uint32_t mixColor, int mixAlpha)
 {
+    if (Headless()) return;
     if (headnum < 0 || headnum >= 1000)
     {
         return;
@@ -342,7 +368,7 @@ void DrawFPic(int headnum, int num, int px, int py, int shadow, int alpha, int d
         return;
     }
     DrawRLE8Pic((const char*)ACol, num, px, py, FIdx[headnum].data(), FPic[headnum].data(),
-        nullptr, screen, screen->w, screen->h, screen->pitch,
+        nullptr, screen, ScreenWidth(), ScreenHeight(), screen->pitch,
         shadow, alpha,
         (char*)BlockImg2.data(), (const char*)&BlockScreen,
         ImageWidth, ImageHeight, sizeof(int16_t),
@@ -351,6 +377,7 @@ void DrawFPic(int headnum, int num, int px, int py, int shadow, int alpha, int d
 
 void DrawCPic(int num, int px, int py, int shadow, int alpha)
 {
+    if (Headless()) return;
     if (num < 0 || num >= CPicAmount)
     {
         return;
@@ -361,6 +388,7 @@ void DrawCPic(int num, int px, int py, int shadow, int alpha)
 
 void DrawCPic(int num, int px, int py, int shadow, int alpha, uint32_t mixColor, int mixAlpha)
 {
+    if (Headless()) return;
     if (num < 0 || num >= CPicAmount)
     {
         return;
@@ -392,6 +420,7 @@ void GetPicSize(int num, const int* pidx, const uint8_t* ppic, int& w, int& h, i
 
 void Redraw()
 {
+    if (Headless()) return;
     switch (Where)
     {
     case 0: DrawMMap(); break;
@@ -411,17 +440,18 @@ void Redraw()
 
 void RecordFreshScreen(int x, int y, int w, int h)
 {
+    if (Headless()) return;
     if (!screen || !freshscreen)
     {
         return;
     }
     if (w == 0)
     {
-        w = screen->w;
+        w = ScreenWidth();
     }
     if (h == 0)
     {
-        h = screen->h;
+        h = ScreenHeight();
     }
     SDL_Rect r = { x, y, w, h };
     SDL_BlitSurface(screen, &r, freshscreen, &r);
@@ -429,17 +459,18 @@ void RecordFreshScreen(int x, int y, int w, int h)
 
 void LoadFreshScreen(int x, int y, int w, int h)
 {
+    if (Headless()) return;
     if (!screen || !freshscreen)
     {
         return;
     }
     if (w == 0)
     {
-        w = screen->w;
+        w = ScreenWidth();
     }
     if (h == 0)
     {
-        h = screen->h;
+        h = ScreenHeight();
     }
     SDL_Rect r = { x, y, w, h };
     SDL_BlitSurface(freshscreen, &r, screen, &r);
@@ -449,6 +480,7 @@ void LoadFreshScreen(int x, int y, int w, int h)
 
 void DrawMMap()
 {
+    if (Headless()) return;
     if (!screen)
     {
         return;
@@ -592,6 +624,7 @@ TPosition CalLTPosOnImageByCenter(int cx, int cy)
 
 void DrawScene()
 {
+    if (Headless()) return;
     if (CurEvent < 0)
     {
         DrawSceneWithoutRole(Sx, Sy);
@@ -618,11 +651,13 @@ void DrawScene()
 
 void DrawSceneWithoutRole()
 {
+    if (Headless()) return;
     DrawSceneWithoutRole(Sx, Sy);
 }
 
 void DrawSceneWithoutRole(int cx, int cy)
 {
+    if (Headless()) return;
     if (!ImgScene)
     {
         return;
@@ -633,11 +668,13 @@ void DrawSceneWithoutRole(int cx, int cy)
 
 void DrawRoleOnScene()
 {
+    if (Headless()) return;
     DrawRoleOnScene(Sx, Sy);
 }
 
 void DrawRoleOnScene(int cx, int cy)
 {
+    if (Headless()) return;
     TPosition pos = GetPositionOnScreen(Sx, Sy, cx, cy);
     int pic = SceneRolePic;
     if (pic <= 0)
@@ -649,11 +686,13 @@ void DrawRoleOnScene(int cx, int cy)
 
 void InitialScene()
 {
+    if (Headless()) return;
     InitialScene(0);
 }
 
 void InitialScene(int onlyvisible)
 {
+    if (Headless()) return;
     if (!ImgScene)
     {
         return;
@@ -686,8 +725,8 @@ void InitialScene(int onlyvisible)
         }
         x1 = lt.x;
         y1 = lt.y;
-        w = screen->w;
-        h = screen->h;
+        w = ScreenWidth();
+        h = ScreenHeight();
     }
 
     int onback = (onlyvisible > 0 && Where == 1) ? 1 : 0;
@@ -752,6 +791,7 @@ void InitialScene(int onlyvisible)
 // 匹配Pascal版: InitialSceneOnePosition(i1, i2, x1, y1, w, h, depth, temp)
 void InitialSceneOnePosition(int x, int y, int x1, int y1, int w, int h, int depth, int temp)
 {
+    if (Headless()) return;
     if (CurScene < 0)
     {
         return;
@@ -801,6 +841,7 @@ int CalBlock(int x, int y)
 
 void ExpandGroundOnImg(SDL_Surface* img, int imgW, int imgH)
 {
+    if (Headless()) return;
     if (EXPAND_GROUND == 0 || !img)
     {
         return;
@@ -888,6 +929,7 @@ void ExpandGroundOnImg(SDL_Surface* img, int imgW, int imgH)
 
 void UpdateScene()
 {
+    if (Headless()) return;
     // 无参版 - 由定时器回调, 仿照Pascal调用 InitialScene(2)
     if (CurEvent < 0 && !LoadingScene && NeedRefreshScene != 0)
     {
@@ -898,6 +940,7 @@ void UpdateScene()
 // 匹配Pascal版: UpdateScene(xs, ys) - 增量更新场景映像中指定位置附近的帧
 void UpdateScene(int xs, int ys)
 {
+    if (Headless()) return;
     int xp = -xs * 18 + ys * 18 + 1151;
     int yp = xs * 9 + ys * 9 + 250;
     int w, h;
@@ -955,6 +998,7 @@ void UpdateScene(int xs, int ys)
 
 void LoadScenePart(int x1, int y1)
 {
+    if (Headless()) return;
     if (!ImgScene || !screen)
     {
         return;
@@ -971,6 +1015,7 @@ void LoadScenePart(int x1, int y1)
 // 严格按Pascal版: 遍历64x64地图, 按坐标顺序绘制角色以保证遮挡正确
 void DrawBField(int needProgress)
 {
+    if (Headless()) return;
     DrawBfieldWithoutRole();
     for (int i1 = 0; i1 <= 63; i1++)
     {
@@ -991,6 +1036,7 @@ void DrawBField(int needProgress)
 
 void DrawBfieldWithoutRole()
 {
+    if (Headless()) return;
     if (!ImgBField)
     {
         return;
@@ -1001,6 +1047,7 @@ void DrawBfieldWithoutRole()
 // 严格按Pascal版: 按地图坐标(x,y)绘制角色, 包含depth遮挡
 void DrawRoleOnBfield(int x, int y, uint32_t mixColor, int mixAlpha, int alpha_)
 {
+    if (Headless()) return;
     if (BField[2][x][y] < 0)
     {
         return;
@@ -1055,6 +1102,7 @@ void DrawRoleOnBfield(int x, int y, uint32_t mixColor, int mixAlpha, int alpha_)
 
 void InitialBFieldImage()
 {
+    if (Headless()) return;
     if (!ImgBField)
     {
         return;
@@ -1087,6 +1135,7 @@ void InitialBFieldImage()
 
 void InitialBFieldPosition(int x, int y)
 {
+    if (Headless()) return;
     TPosition pos = CalPosOnImage(x, y);
     int groundPic = BField[0][x][y] / 2;
     if (EXPAND_GROUND == 0 && groundPic > 0)
@@ -1107,6 +1156,7 @@ void InitialBFieldPosition(int x, int y)
 
 void LoadBfieldPart(int cx, int cy, int noBuild)
 {
+    if (Headless()) return;
     if (!ImgBField || !screen)
     {
         return;
@@ -1125,6 +1175,7 @@ void LoadBfieldPart(int cx, int cy, int noBuild)
 
 void LoadBFieldPart2(int x, int y, int alpha)
 {
+    if (Headless()) return;
     if (!ImgBBuild || !screen)
     {
         return;
@@ -1137,6 +1188,7 @@ void LoadBFieldPart2(int x, int y, int alpha)
 
 void DrawBFieldWithCursor(int step)
 {
+    if (Headless()) return;
     // Pascal: LoadBfieldPart(x, y, 1) — ground only, no buildings
     TPosition lt = CalLTPosOnImageByCenter(Bx, By);
     int x = lt.x, y = lt.y;
@@ -1238,6 +1290,7 @@ void DrawBFieldWithCursor(int step)
 // Pascal overload 1: 简单效果 DrawBFieldWithEft(Epicnum)
 void DrawBFieldWithEft(int Epicnum)
 {
+    if (Headless()) return;
     DrawBfieldWithoutRole();
     for (int i1 = 0; i1 <= 63; i1++)
     {
@@ -1260,6 +1313,7 @@ void DrawBFieldWithEft(int Epicnum)
 // Pascal overload 2: 带帧范围 DrawBFieldWithEft(Epicnum, beginpic, endpic, bnum, mixColor)
 void DrawBFieldWithEft(int Epicnum, int beginpic, int endpic, int bnum, uint32_t mixColor)
 {
+    if (Headless()) return;
     DrawBfieldWithoutRole();
     for (int i1 = 0; i1 <= 63; i1++)
     {
@@ -1286,6 +1340,7 @@ void DrawBFieldWithEft(int Epicnum, int beginpic, int endpic, int bnum, uint32_t
 // Pascal overload 3: 完整效果 DrawBFieldWithEft(Epicnum, beginpic, endpic, curlevel, bnum, forteam, flash, mixColor)
 void DrawBFieldWithEft(int Epicnum, int beginpic, int endpic, int curlevel, int bnum, int forteam, int flash, uint32_t mixColor)
 {
+    if (Headless()) return;
     DrawBfieldWithoutRole();
     for (int i1 = 0; i1 <= 63; i1++)
     {
@@ -1339,6 +1394,7 @@ void DrawBFieldWithEft(int Epicnum, int beginpic, int endpic, int curlevel, int 
 // 画带人物动作的战场
 void DrawBFieldWithAction(int bnum, int Apicnum)
 {
+    if (Headless()) return;
     DrawBfieldWithoutRole();
     for (int i1 = 0; i1 <= 63; i1++)
     {
@@ -1362,6 +1418,7 @@ void DrawBFieldWithAction(int bnum, int Apicnum)
 
 void DrawClouds()
 {
+    if (Headless()) return;
     for (int i = 0; i < CLOUD_AMOUNT && i < (int)Cloud.size(); i++)
     {
         if (Cloud[i].Picnum >= 0 && Cloud[i].Picnum < CPicAmount)
@@ -1376,6 +1433,7 @@ void DrawClouds()
 
 void DrawProgress()
 {
+    if (Headless()) return;
     // 绘制半即时制进度条 - 匹配Pascal版
     if (SEMIREAL != 1)
     {
@@ -1421,13 +1479,14 @@ void DrawProgress()
 
 void DrawVirtualKey()
 {
+    if (Headless()) return;
     return;
     if (ShowVirtualKey == 0)
     {
         return;
     }
 
-    if (!screen || screen->w <= 0 || screen->h <= 0)
+    if (!screen || ScreenWidth() <= 0 || ScreenHeight() <= 0)
     {
         return;
     }

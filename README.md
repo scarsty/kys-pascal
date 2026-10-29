@@ -72,6 +72,11 @@ SDL一般是在java部分调用SDL_main这个函数，可以查找以下两个�
 
 因为使用到midi功能，SDL3-mixer加上fluidSynth的支持，如需要播放mp3最好再加上mpg123，以上都建议使用vcpkg。
 
+### 原生 MCP 调试模式
+
+CMake 也可构建 `kys_mcp`，通过 stdio MCP 操作原生事件、物品、队伍、场景与战斗逻辑，不创建图形窗口。
+构建方法、工具用法及明确的流程捷径见 [MCP 文档](docs/MCP.md)。
+
 
 ## 字符串的处理
 

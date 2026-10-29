@@ -15,6 +15,12 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="kys_frontend.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="kys_script.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="kys_battle.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -50,6 +56,12 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="kys_frontend.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="kys_script.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="kys_battle.h">
       <Filter>Header Files</Filter>
     </ClInclude>

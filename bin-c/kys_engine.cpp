@@ -1,4 +1,5 @@
-﻿// kys_engine.cpp - 基础引擎实现
+﻿#include "kys_frontend.h"
+// kys_engine.cpp - 基础引擎实现
 // 对应 kys_engine.pas
 
 #define _USE_MATH_DEFINES
@@ -77,6 +78,7 @@ static uint32_t BlendRGBAByPercent(uint32_t src, uint32_t dst, int percent)
 
 void InitialMusic()
 {
+    if (Headless()) return;
     if (!MIX_Init())
     {
         return;
@@ -200,6 +202,7 @@ void InitialMusic()
 
 void ApplyAudioVolume()
 {
+    if (Headless()) return;
     if (MusicTrack)
     {
         MIX_SetTrackGain(MusicTrack, (float)VOLUME / 100.0f);
@@ -215,6 +218,7 @@ void ApplyAudioVolume()
 
 void PlayMP3(int MusicNum, int times, int frombeginning)
 {
+    if (Headless()) return;
     if (!gMixer)
     {
         return;
@@ -254,6 +258,7 @@ void PlayMP3(int MusicNum, int times, int frombeginning)
 
 void PlayMP3(const char* filename, int times)
 {
+    if (Headless()) return;
     if (!gMixer)
     {
         return;
@@ -285,6 +290,7 @@ void PlayMP3(const char* filename, int times)
 
 void StopMP3(int frombeginning)
 {
+    if (Headless()) return;
     if (MusicTrack)
     {
         MIX_StopTrack(MusicTrack, 0);
@@ -297,6 +303,7 @@ void StopMP3(int frombeginning)
 
 void PlaySound(int SoundNum, int times)
 {
+    if (Headless()) return;
     if (SoundNum < 0 || SoundNum >= (int)ESound.size())
     {
         return;
@@ -315,16 +322,19 @@ void PlaySound(int SoundNum, int times)
 
 void PlaySound(int SoundNum)
 {
+    if (Headless()) return;
     PlaySound(SoundNum, 0);
 }
 
 void PlaySound(int SoundNum, int times, int x, int y, int z)
 {
+    if (Headless()) return;
     PlaySound(SoundNum, times);
 }
 
 void PlaySoundA(int SoundNum, int times)
 {
+    if (Headless()) return;
     if (SoundNum < 0 || SoundNum >= (int)ASound.size())
     {
         return;
@@ -465,6 +475,7 @@ void FreeAllSurface()
 
 void ReadTiles()
 {
+    if (Headless()) return;
     std::string path = AppPath;
     LoadIdxGrp(path + "resource/mmap.idx", path + "resource/mmap.grp", MIdx, MPic);
     MPicAmount = (int)MIdx.size();
@@ -512,6 +523,7 @@ uint32_t GetPixel(SDL_Surface* surface, int x, int y)
 
 void PutPixel(SDL_Surface* surface, int x, int y, uint32_t pixel)
 {
+    if (Headless()) return;
     if (!surface)
     {
         return;
@@ -526,6 +538,7 @@ void PutPixel(SDL_Surface* surface, int x, int y, uint32_t pixel)
 
 void display_img(const char* file_name, int x, int y)
 {
+    if (Headless()) return;
     std::string name(file_name);
     SDL_Surface* img = nullptr;
     if (name == CachedImageName && CachedImage)
@@ -561,6 +574,7 @@ void display_img(const char* file_name, int x, int y)
 
 uint32_t ColColor(uint8_t num)
 {
+    if (Headless()) return 0;
     if (num * 3 + 2 >= 768)
     {
         return 0;
@@ -573,6 +587,7 @@ uint32_t ColColor(uint8_t num)
 void DrawRectangle(SDL_Surface* sur, int x, int y, int w, int h,
     int colorin, uint32_t colorframe, int alpha)
 {
+    if (Headless()) return;
     if (!sur)
     {
         return;
@@ -625,6 +640,7 @@ void DrawRectangle(SDL_Surface* sur, int x, int y, int w, int h,
 void DrawRectangleWithoutFrame(SDL_Surface* sur, int x, int y, int w, int h,
     uint32_t colorin, int alpha)
 {
+    if (Headless()) return;
     if (!sur)
     {
         return;
@@ -646,7 +662,7 @@ void DrawRectangleWithoutFrame(SDL_Surface* sur, int x, int y, int w, int h,
 
 bool JudgeInScreen(int px, int py, int w, int h, int xs, int ys)
 {
-    return (px + w > 0 && px - xs < screen->w && py + h > 0 && py - ys < screen->h);
+    return (px + w > 0 && px - xs < ScreenWidth() && py + h > 0 && py - ys < ScreenHeight());
 }
 
 bool JudgeInScreen(int px, int py, int w, int h, int xs, int ys,
@@ -661,6 +677,7 @@ void DrawRLE8Pic(const char* colorPanel, int num, int px, int py,
     const char* RectArea, SDL_Surface* Image,
     int widthI, int heightI, int sizeI, int shadow)
 {
+    if (Headless()) return;
     DrawRLE8Pic(colorPanel, num, px, py, Pidx, Ppic, RectArea, Image,
         widthI, heightI, sizeI, shadow, 0);
 }
@@ -672,6 +689,7 @@ void DrawRLE8Pic(const char* colorPanel, int num, int px, int py,
     int widthI, int heightI, int sizeI,
     int shadow, int alpha)
 {
+    if (Headless()) return;
     DrawRLE8Pic(colorPanel, num, px, py, Pidx, Ppic, RectArea, Image,
         widthI, heightI, sizeI, shadow, alpha,
         nullptr, nullptr, 0, 0, 0, 0, 0, 0, 0);
@@ -701,6 +719,7 @@ void DrawRLE8Pic(const char* colorPanel, int num, int px, int py,
     int widthW, int heightW, int sizeW,
     int depth, uint32_t mixColor, int mixAlpha, int totalpix)
 {
+    if (Headless()) return;
     if (!Pidx || !Ppic)
     {
         return;
@@ -985,6 +1004,7 @@ int utf8follow(char c1)
 
 void DrawText(const std::string& word, int x_pos, int y_pos, uint32_t color)
 {
+    if (Headless()) return;
     SDL_Surface* sur = screen;
     if (!sur || word.empty())
     {
@@ -1110,28 +1130,33 @@ void DrawText(const std::string& word, int x_pos, int y_pos, uint32_t color)
 
 void DrawEngText(const std::string& word, int x_pos, int y_pos, uint32_t color)
 {
+    if (Headless()) return;
     DrawText(word, x_pos, y_pos + 2, color);
 }
 
 void DrawShadowText(const std::string& word, int x_pos, int y_pos, uint32_t color1, uint32_t color2)
 {
+    if (Headless()) { Frontend->text(word); return; }
     DrawText(word, x_pos + 1, y_pos, color2);
     DrawText(word, x_pos, y_pos, color1);
 }
 
 void DrawEngShadowText(const std::string& word, int x_pos, int y_pos, uint32_t color1, uint32_t color2)
 {
+    if (Headless()) return;
     DrawShadowText(word, x_pos, y_pos, color1, color2);
 }
 
 void DrawBig5Text(const char* str, int x_pos, int y_pos, uint32_t color)
 {
+    if (Headless()) return;
     std::string utf8 = cp950toutf8(str);
     DrawText(utf8, x_pos, y_pos, color);
 }
 
 void DrawBig5ShadowText(const char* word, int x_pos, int y_pos, uint32_t color1, uint32_t color2)
 {
+    if (Headless()) { Frontend->text(cp950toutf8(word)); return; }
     std::string utf8 = cp950toutf8(word);
     DrawText(utf8, x_pos + 1, y_pos, color2);
     DrawText(utf8, x_pos, y_pos, color1);
@@ -1139,6 +1164,7 @@ void DrawBig5ShadowText(const char* word, int x_pos, int y_pos, uint32_t color1,
 
 void DrawTextWithRect(const std::string& word, int x, int y, int w, uint32_t color1, uint32_t color2)
 {
+    if (Headless()) { Frontend->context(word); Frontend->text(word); return; }
     if (w < 0)
     {
         w = DrawLength(word) * 10 + 7;
@@ -1150,6 +1176,7 @@ void DrawTextWithRect(const std::string& word, int x, int y, int w, uint32_t col
 
 void DrawTextWithRectNoUpdate(const std::string& word, int x, int y, int w, uint32_t color1, uint32_t color2)
 {
+    if (Headless()) return;
     if (w < 0)
     {
         w = DrawLength(word) * 10 + 7;
@@ -1162,6 +1189,7 @@ void DrawTextWithRectNoUpdate(const std::string& word, int x, int y, int w, uint
 
 void UpdateScreen(SDL_Surface* scr1, int x, int y, int w, int h)
 {
+    if (Headless()) return;
     if (!render || !scr1)
     {
         return;
@@ -1188,6 +1216,7 @@ void UpdateScreen(SDL_Surface* scr1, int x, int y, int w, int h)
 
 void UpdateAllScreen()
 {
+    if (Headless()) return;
     if (screen)
     {
         UpdateScreen(screen, 0, 0, CENTER_X * 2, CENTER_Y * 2);
@@ -1196,6 +1225,7 @@ void UpdateAllScreen()
 
 void TransBlackScreen()
 {
+    if (Headless()) return;
     DrawRectangleWithoutFrame(screen, 0, 0, CENTER_X * 2, CENTER_Y * 2, 0, 50);
 }
 
@@ -1224,8 +1254,8 @@ void SDL_GetMouseState2(int& x, int& y)
 {
     float fx, fy;
     SDL_GetMouseState(&fx, &fy);
-    x = (int)(fx * screen->w / RESOLUTIONX + 0.5f);
-    y = (int)(fy * screen->h / RESOLUTIONY + 0.5f);
+    x = (int)(fx * ScreenWidth() / RESOLUTIONX + 0.5f);
+    y = (int)(fy * ScreenHeight() / RESOLUTIONY + 0.5f);
 }
 
 void GetMousePosition(int& x, int& y, int x0, int y0, int yp)
@@ -1334,6 +1364,7 @@ bool EventFilter(void* p, SDL_Event* e)
 
 uint32_t CheckBasicEvent()
 {
+    if (Headless()) return 0;
     // 刷掉无用事件
     SDL_FlushEvent(SDL_EVENT_MOUSE_WHEEL);
     SDL_FlushEvent(SDL_EVENT_JOYSTICK_AXIS_MOTION);
@@ -1535,8 +1566,8 @@ void QuitConfirm()
     AskingQuit = true;
     SDL_Surface* tempscr = SDL_ConvertSurface(screen, screen->format);
     SDL_BlitSurface(tempscr, nullptr, screen, nullptr);
-    DrawRectangleWithoutFrame(screen, 0, 0, screen->w, screen->h, 0, 50);
-    UpdateScreen(screen, 0, 0, screen->w, screen->h);
+    DrawRectangleWithoutFrame(screen, 0, 0, ScreenWidth(), ScreenHeight(), 0, 50);
+    UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
     std::string menuStr[2] = { "取消", "確認" };
     if (CommonMenu(CENTER_X * 2 - 50, 2, 45, 1, menuStr) == 1)
     {
@@ -1544,7 +1575,7 @@ void QuitConfirm()
     }
     Redraw();
     SDL_BlitSurface(tempscr, nullptr, screen, nullptr);
-    UpdateScreen(screen, 0, 0, screen->w, screen->h);
+    UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
     SDL_DestroySurface(tempscr);
     AskingQuit = false;
 }
@@ -1657,6 +1688,7 @@ void QuickSortB(TBuildInfo* a, int l, int r)
 
 void ChangeCol()
 {
+    if (Headless()) return;
     uint32_t now = SDL_GetTicks();
     if (NIGHT_EFFECT == 1)
     {
@@ -1735,10 +1767,10 @@ void kyslog(const char* fmt, ...)
 {
     va_list args;
     va_start(args, fmt);
-    vprintf(fmt, args);
+    vfprintf(stderr, fmt, args);
     va_end(args);
-    printf("\n");
-    fflush(stdout);
+    fprintf(stderr, "\n");
+    fflush(stderr);
 }
 
 std::string checkFileName(const std::string& f)
