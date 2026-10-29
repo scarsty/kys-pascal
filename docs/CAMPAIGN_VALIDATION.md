@@ -43,7 +43,7 @@ It would not prove every possible event order or every graphical behavior.
 | 飞狐外传 | 苗人凤 duel4 won6; book144/map/manual | Evil duel0 manually won9 on0.2.3; book144/map/manual | Both 田归农 choices played |
 | 雪山飞狐 | Scene85 guards, saber gate and four rewards | Scene85 passed | All original variants reached; scene84 failed as reported. Fresh repaired84 passed separately |
 | 连城诀 | 狄云, ethics81, book146/神照71 | Evil route passed in combined and independent branch campaigns | Important poem wrong-item, consumption and repeat checks passed |
-| 天龙八部 | 聚贤庄/少林 fights; book147/降龙86 | Evil formations; book147/慕容/王 | 虚竹/灵鹫/丁春秋/薛 sidequests passed; all-seven picture reward is defective |
+| 天龙八部 | 聚贤庄/少林 fights; book147/降龙86 | Evil formations; book147/慕容/王 | 虚竹/灵鹫/丁春秋/薛 sidequests passed. Original all-seven picture reward is defective; separate fresh repaired progression passed |
 | 射雕英雄传 |176 won4;177 manual clean replay won6; book148 | Kill一灯68 and finals187/183/184/185 passed;148/九阴84 | Root spare一灯175 won2/一阳96; final186 still lost, no book |
 | 白马啸西风 | Spare route, ruins and weapon-gated door passed | Evil route passed on0.2.2 | Final-build replay92/91 and actual ruins approach passed |
 | 鹿鼎记 | Scene91 guards and book150 passed | Scene91 required1076/1075 and book150 passed | Primary1074 confirmed; both wives separately recruited, mutual party exclusion verified |
@@ -235,13 +235,13 @@ author intent is unverified and no speculative repair is applied.
 ## Outstanding acceptance work
 
 - Finish the separate spare一灯 final186; kill一灯 final185 has passed.
-- Complete fresh repaired 灵鹫宫 progression after its native regression.
 - Reconcile any remaining pre-fix fight-specific obligations. The requested
   older 白马92/91 replay on the corrected build has passed.
 - Validate the remaining exclusive starter-manual hidden arts with naturally
   obtained manuals; existing 松風→神山 evidence covers only one alternative.
-- Resolve the unverified scene10/slot0 item-trigger candidate through actual
-  play; do not patch a heuristic flag as if it were a proven bug.
+- Keep the scene10 wine candidate scoped to the recorded runtime plus
+  reachability/source analysis below. No pre-clear item-use failure was
+  reproduced and no repair is justified by the heuristic alone.
 - Preserve failed attempts, build/data provenance and unvisited statuses.
 
 The goal remains active. A primary ending plus selected opposite branches
@@ -271,9 +271,51 @@ The 灵鹫 all-seven picture sequence fails as a mod-data defect:624+7 routes
 to unrelated631 instead of630. Two independent actual replays, the clean
 pre-picture checkpoint and native original/repaired fixture are retained. The
 guarded separate repair appends dedicated counter states and retains all
-existing scripts. Fresh repaired progression is pending; see DRAGON_FINDINGS.md.
+existing scripts. Separate fresh repaired progression has now passed; see
+DRAGON_FINDINGS.md and the evidence below. The original-data defect remains
+a failing original route, not a silently converted pass.
 
 The new armored root186 attempt killed four enemies with a real manual玄鐵
 opening but 王 still died before her first turn; remaining native AI lost6.
 `spare186_armored_loss` records it. The earned pre-fight state was restored
 without retaining loss growth. Further normal preparation remains necessary.
+
+## Fresh repaired 灵鹫宫 campaign
+
+The independent repaired-data campaign started from `new_game(seed=7)` on
+0.2.7 SHA-256 `47A1C01338C1C8005D2079D9CF7EEF60195068E9DA2A5510D10C5831A29EB522`.
+Its complete 21-file runtime manifest matches at completion, with only the
+three guarded picture-package files differing from the original. All 497 RPCs
+used native progression; there were no debug calls, imported checkpoints,
+grants, forced wins, direct scripts, save edits or identity bypass. Every
+observed state has clean lineage. All three checkpoint loads refer to saves
+earned earlier by this same fresh process.
+
+Ordinary fighting, loot, donations and Western-village teaching/refusal earned
+ethics75. Native recruitment291 accepted 虚竹 at exactly75, a small inclusive
+boundary difference from the guide's `>75`. 苏星河296, actual `(24,23)` step297
+and rejoining299 earned the transformation, manuals and ring. The first
+palace202 attempt genuinely lost5rounds at342. Its earned pre-entry checkpoint
+was restored; owned-book practice, 21 total native224 wins, medicine and home
+rest prepared the next attempt. Palace202 won8rounds at428, and the normal
+inheritance dialogue granted palace ownership.
+
+From the earned pre-picture checkpoint, descending slots22/21/20/18/17/16/15
+at433–453 and ascending15/16/17/18/20/21/22 at465–492 both advanced1087→1094
+only once per distinct picture. Central clicks after0–6 pictures gave nothing;
+after7 they awarded79 exactly once, taught 虚竹 magic101 at proficiency0 and
+raised aptitude55→65. In the ascending replay, every picture was immediately
+repeated from the same actual position/facing; no repeat had a trigger or
+advanced the counter. The separate chest gave99 once and magic14 at
+proficiency0; both central and chest repeat interactions were empty. Failed
+slot-targeted/guessed-coordinate repeat approaches are retained separately
+and are not used as evidence of successful navigation.
+
+`tmp/campaign/fidelity-pictures/repaired/` retains `report.md`, all 497 RPCs,
+`validation.json`, exact provenance and the final earned save. All 19 scoped
+assertions passed. The original executable was used directly, no private
+binary copies were made, and the process closed with exit0. This is a fresh
+validation of the repaired prerequisite/reward chain and two reading orders,
+not a fresh final-build whole-game run or exhaustive order/tactics coverage.
+Graphical behavior and the later 星宿/薛 quests were not replayed by this
+fresh repaired run; their original-data evidence remains separately labeled.

@@ -276,10 +276,41 @@ The output directory must be new. Copy its `save/alldef.grp` and both
 `resource/kdef.*` files together into a separate complete runtime. This package
 contains only the picture repair; it is an alternative event template to the
 standalone saber repair, so blindly copying both templates would overwrite one
-repair with the other. The guarded Python repair functions can compose edits
-to an event buffer before writing a combined template. Original-data MCP
-checkpoints cannot be imported into a changed-data run without violating their
-identity checks.
+repair with the other.
+
+To install all three confirmed repairs together, generate one combined package:
+
+```powershell
+python tools/dragon_audit.py tmp/runtime/kys-Dragon `
+  --report tmp/validation/combined-repair.json `
+  --repair-combined-output tmp/repairs/dragon-confirmed
+```
+
+The destination must be a new directory, including when an existing directory
+is empty. Combined output cannot be mixed with the individual repair flags;
+those remain available for isolated investigations. The tool validates the
+exact original name/event files and the verified script-file hashes, composes
+both event edits in memory, and creates each package file exclusively. It
+rejects changed inputs, output collisions and paths inside the reference mod.
+All guards run before the package is created.
+
+Copy all four generated files into a separate complete runtime:
+`save/ranger.grp`, `save/alldef.grp`, `resource/kdef.idx` and
+`resource/kdef.grp`. The combined event template retains both the scene84
+saber repair and scene12 picture repair. Names change 12 bytes; the combined
+event template changes four bytes; script data and indices preserve their
+existing prefixes and append 102 and 32 bytes respectively. The JSON report's
+`combined_repair` records per-file original/output hashes, byte changes and
+the individual repair details. Unconfirmed candidates are unchanged.
+
+This is a **new-game package**. Existing graphical saves are not migrated, and
+original-data MCP checkpoints cannot be imported into a changed-data run
+without violating their identity checks. Exact composition and native debug
+fixtures check the cleaned names, wrong/correct saber use, both picture
+orders, early clicks, repeats and the separate chest together. Those fixtures
+are regression evidence; a full fresh campaign using all four combined files
+has not been completed. The separate fresh saber and picture campaigns retain
+their own asset identities and coverage limits.
 
 No game assets are tracked
 by this change. Temporary extraction, reports, checkpoints and diagnostic

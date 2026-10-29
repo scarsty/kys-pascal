@@ -100,6 +100,22 @@ candidates: scene 84/slot 8 (the confirmed saber defect below), and scene
 These are valid script IDs in the wrong possible trigger context, so the
 initial bounds/reference scan alone could not detect them.
 
+The scene10 candidate has since been narrowed by existing native evidence.
+Primary strict RPC1655 still observes slot0 at native `(28,14)` with talk372
+and item−1. RPC1656 crosses `(26,20)`, dispatches step223, and clears that
+record at word162 before returning control. A data-derived walkability check
+reconstructed the earned spider clearances and applied both native keyboard
+and mouse-height rules. Every route from the entry `(32,48)` or any recorded
+pre-clear position to an adjacent tile must cross the live223 trigger. When
+that clearing tile is excluded, the target room has no reachable approach;
+ignoring step dispatch produces a route through that exact trigger. Script223
+also moves the party into the room before clearing the old event atomically.
+Thus the record appears obsolete and inaccessible for an ordinary pre-clear
+item use. This is recorded-runtime plus source/map analysis, not an executed
+pre-clear interaction or a confirmed wine-use defect. No repair is applied.
+Evidence and limits are retained in the independent acceptance audit under
+`tmp/campaign/fidelity-pictures/repaired/`.
+
 Script 280 demonstrates a legitimate branch past an embedded negative
 terminator into another block of the same record. The audit continues
 decoding such records; treating the first terminator as the whole record's
@@ -230,8 +246,67 @@ manual/martial/aptitude reward at7, unchanged chest reward and repeat rejection.
 These explicitly labeled debug fixtures are not campaign progression evidence.
 The actual original failure is at primary sidequest RPC239–253, with a clean
 pre-picture checkpoint; independent replay is under
-`tmp/campaign/fidelity-pictures/`. A fresh repaired-data campaign is in progress
-without importing original-data checkpoints.
+`tmp/campaign/fidelity-pictures/`.
+
+A separate **fresh repaired-data campaign has passed** the actual
+prerequisite and reward chain. It started with `new_game(seed=7)` on0.2.7
+SHA-256 `47A1C01338C1C8005D2079D9CF7EEF60195068E9DA2A5510D10C5831A29EB522`.
+Its complete 21-file runtime manifest was verified unchanged at completion;
+only this three-file package differs from the original. No original-data
+checkpoint, debug call, grant, forced win, direct script, save edit or identity
+bypass was used. All three loads were saves earned by this fresh process,
+and every observed state retained clean lineage.
+
+Ordinary resources and ethics earned 虚竹 at exactly75, then the native
+擂鼓山 dialogue, actual `(24,23)` step and rejoining earned his transformation,
+manuals and ring. The first palace202 attempt lost5rounds at RPC342 and remains
+in the transcript. After restoring its own earned checkpoint, owned-book
+practice, 21 total native224 wins, medicine and home rest prepared the party.
+RPC428 won202 in8rounds and completed the normal palace inheritance dialogue.
+
+The earned pre-picture checkpoint was played in descending and ascending slot
+orders. Central clicks after0–6 distinct pictures were inert. Both seventh
+clicks gave79 once, taught 虚竹 magic101 at proficiency0 and raised aptitude
+55→65. Every ascending-order picture was immediately repeated from its real
+unchanged position/facing: no trigger and no extra counter increment. The
+separate chest still gave99 once and magic14 at proficiency0; central/chest
+repeats gave nothing. Some later slot-targeted/guessed-coordinate repeat
+approaches failed and are recorded as failures; successful immediate native
+repeats supply the counter evidence.
+
+`tmp/campaign/fidelity-pictures/repaired/` retains all 497 RPCs, the exact
+manifest/provenance, earned saves, concise `report.md` and machine assertions
+in `validation.json`. All 19 scoped assertions passed; the process closed with
+exit0 and no private executable/DLL copies were created. This establishes the
+repaired chain on one fresh campaign with two reading orders. It does not
+establish a fresh final-build whole-game completion, exhaustive permutations,
+manual combat tactics, or graphical behavior. The original defect remains
+separately reproducible; existing progressed saves are still not migrated.
+
+## Combined package for the confirmed repairs
+
+`--repair-combined-output` creates one new four-file package for the names,
+saber trigger and picture counter. It composes the disjoint saber/picture
+edits before writing the shared event template, so neither repair overwrites
+the other. Exact pristine reference hashes and the individual semantic guards
+must all pass; existing destinations and conflicting output paths are refused.
+Individual repair flags remain available for isolated reproductions.
+
+`tmp/repairs/dragon-confirmed/` contains the reviewed output. Its name data
+changes12 bytes; `alldef.grp` changes4 bytes and has SHA-256
+`f8d0c231a62c1157b00294fada5d100b786b7c717d97be83f9e9020aefe998b9`.
+The script data/index retain their entire existing prefixes and append102/32
+bytes. Original assets still match their original hashes. The unconfirmed
+scene10 wine candidate remains unchanged.
+
+The CLI/composition test verifies both edit orders, changed-input and overwrite
+refusal, output collisions, original preservation and standalone compatibility.
+A separate native debug fixture checks names, wrong/correct saber use, both
+picture orders, early clicks, repeats and the chest together. Both CTest targets
+and all21 stdio integration cases pass. These fixtures do not establish a fresh
+combined-data campaign: the separately completed fresh saber/picture runs each
+retain their own asset identities. See `tmp/validation/combined-repair-validation.json`
+and [MCP.md](MCP.md) for exact output identities, installation and limits.
 
 ## Actual-play finding: wrong selected item places the paired sabers
 
@@ -317,7 +392,10 @@ omitted level-up tables and silently produced a1→60 level jump; that attempt
 is excluded, preserved separately, and restarted with the complete runtime.
 It cleans up checkpoint files and the temporary repaired mod under `tmp/`.
 
-Both CTest targets pass with nineteen real stdio integration cases. The
+Both CTest targets pass with twenty-one real stdio integration cases. Two
+combined-package cases additionally check exact composition, guarded CLI
+refusal, unchanged originals, cleaned names and native saber/picture behavior
+in the same repaired runtime. The
 primary ending completed on campaign build0.2.7, SHA-256
 `372DC2F44B4EFBC9DE8206233A77B0049AD002432BE70F974F9C9EAAFA415AB2`.
 Earlier progress retains its own build identity and explicit checkpoint

@@ -1,4 +1,4 @@
-"""Audit legacy mod data and produce minimal, separate name/event repairs.
+"""Audit legacy mod data and produce minimal standalone or combined repairs.
 
 The supplied archive remains the reference. Repairs go to NEW output files;
 the input is never edited. No commercial game assets are checked into Git.
@@ -205,9 +205,50 @@ def repair_pictures(original_events: bytes, original_index: bytes, original_scri
     return files, patch
 
 
+def repair_combined(original_ranger: bytes, original_events: bytes,
+                    original_index: bytes, original_scripts: bytes, report: dict):
+    """Compose all confirmed Dragon fixes from the exact original reference.
+
+    Apply the saber edit before the picture edit so there is a single event
+    template containing both. Each existing repair still enforces its own
+    guards; the combined package additionally requires pristine names/events.
+    """
+    expected = (
+        "272f5d0300a49fe1e08afdc8da1873695998d4c88f79330f66e6874646553aaa",
+        "6ab5976dabc2053ff8039b756710e1446d14b30bb8189ecf303cd9bf10466d50",
+    )
+    if (sha256(original_ranger), sha256(original_events)) != expected:
+        raise ValueError("Combined repair requires the unmodified Dragon names/event reference")
+    names = report["item_name_defects"]
+    if [(d["item"], d["offset"]) for d in names] != [(88, 124756), (89, 124946), (178, 141856)]:
+        raise ValueError("The three confirmed Dragon name defects are not present")
+    for defect in names:
+        field = original_ranger[defect["offset"]:defect["offset"]+20]
+        replacement = text(field).replace("\r", "").replace("\n", "").replace("\t", "")
+        if defect["original_hex"] != field.hex() or defect["replacement"] != replacement:
+            raise ValueError("Name repair differs from the confirmed control-character cleanup")
+    ranger, names = repair_names(original_ranger, report["item_name_defects"])
+    events, saber = repair_saber_event(original_events, report["item_trigger_candidates"])
+    files, pictures = repair_pictures(events, original_index, original_scripts)
+    files = {"save/ranger.grp": ranger, **files}
+    originals = {"save/ranger.grp": original_ranger, "save/alldef.grp": original_events,
+                 "resource/kdef.idx": original_index, "resource/kdef.grp": original_scripts}
+    patch = {
+        "new_game_only": True,
+        "repairs": {"names": names, "saber": saber, "pictures": pictures},
+        "files": {name: {"original_sha256": sha256(originals[name]),
+                         "sha256": sha256(data), "bytes": len(data),
+                         "changed_existing_bytes": sum(a != b for a, b in zip(originals[name], data)),
+                         "appended_bytes": len(data) - len(originals[name])}
+                  for name, data in files.items()},
+    }
+    return files, patch
+
+
 def validate_outputs(mod: Path, outputs: dict[str, Path | None]):
     """Keep all generated files outside the reference and mutually distinct."""
-    seen = set()
+    seen = {}
+    directory_outputs = {"repair_pictures", "repair_combined"}
     for kind, output in outputs.items():
         if output is None:
             continue
@@ -216,9 +257,13 @@ def validate_outputs(mod: Path, outputs: dict[str, Path | None]):
             raise ValueError("All outputs must be outside the reference mod directory")
         if target in seen:
             raise ValueError("Report, script dump and repair outputs must be distinct")
+        for previous, previous_kind in seen.items():
+            if ((target.is_relative_to(previous) and previous_kind not in directory_outputs)
+                    or (previous.is_relative_to(target) and kind not in directory_outputs)):
+                raise ValueError("A file output cannot contain another output path")
         if kind.startswith("repair") and target.exists():
             raise ValueError("Repair output already exists; choose a new path")
-        seen.add(target)
+        seen[target] = kind
 
 
 def main():
@@ -230,18 +275,45 @@ def main():
     parser.add_argument("--repair-event-output", type=Path, help="NEW alldef.grp; fix only confirmed scene-84 saber trigger")
     parser.add_argument("--repair-pictures-output", type=Path,
                         help="NEW directory with save/alldef.grp and resource/kdef.*; fix seven-picture counter")
+    parser.add_argument("--repair-combined-output", type=Path,
+                        help="NEW directory combining all confirmed name, saber and picture repairs")
     args = parser.parse_args()
     try:
+        if args.repair_combined_output and any((args.repair_output, args.repair_event_output,
+                                               args.repair_pictures_output)):
+            raise ValueError("Use the combined output or individual repair outputs, not both")
         outputs = {"report": args.report, "scripts": args.scripts,
                    "repair_names": args.repair_output, "repair_event": args.repair_event_output,
-                   "repair_pictures": args.repair_pictures_output}
+                   "repair_pictures": args.repair_pictures_output,
+                   "repair_combined": args.repair_combined_output}
         if args.repair_pictures_output:
             outputs.update({"repair_picture_" + name: args.repair_pictures_output / name
                             for name in ("save/alldef.grp", "resource/kdef.idx", "resource/kdef.grp")})
+        if args.repair_combined_output:
+            outputs.update({"repair_combined_" + name: args.repair_combined_output / name
+                            for name in ("save/ranger.grp", "save/alldef.grp",
+                                         "resource/kdef.idx", "resource/kdef.grp")})
         validate_outputs(args.mod, outputs)
     except ValueError as error:
         parser.error(str(error))
     report, scripts, original = audit(args.mod)
+    if args.repair_combined_output:
+        try:
+            files, patch = repair_combined(original, (args.mod / "save/alldef.grp").read_bytes(),
+                                          (args.mod / "resource/kdef.idx").read_bytes(),
+                                          (args.mod / "resource/kdef.grp").read_bytes(), report)
+            # Validate and compose everything before creating the package.
+            # Exclusive creation also rejects a destination created after the
+            # preflight check, without overwriting any of its contents.
+            args.repair_combined_output.mkdir(parents=True, exist_ok=False)
+            for name, data in files.items():
+                output = args.repair_combined_output / name
+                output.parent.mkdir(parents=True, exist_ok=True)
+                with output.open("xb") as stream:
+                    stream.write(data)
+        except (ValueError, OSError) as error:
+            parser.error(str(error))
+        report["combined_repair"] = {"output": str(args.repair_combined_output.resolve()), **patch}
     if args.repair_pictures_output:
         files, patch = repair_pictures((args.mod / "save/alldef.grp").read_bytes(),
                                       (args.mod / "resource/kdef.idx").read_bytes(),

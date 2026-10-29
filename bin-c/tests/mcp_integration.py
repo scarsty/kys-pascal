@@ -7,9 +7,11 @@ and are removed even when a test fails. Debug fixtures are explicitly named.
 from __future__ import annotations
 
 import argparse
+import json
 from pathlib import Path
 import shutil
 import struct
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -459,6 +461,182 @@ class DragonIntegration(unittest.TestCase):
         repaired, _ = repair_names(original, report["item_name_defects"])
         self.assertEqual(sum(a!=b for a,b in zip(original, repaired)), 12)
         self.assertEqual((self.mod / "save/ranger.grp").read_bytes(), original)
+
+    def combined_package(self, label):
+        package = self.scratch / label
+        report = self.scratch / (label + ".json")
+        command = [sys.executable, "-B", str(ROOT / "tools/dragon_audit.py"), str(self.mod),
+                   "--report", str(report), "--repair-combined-output", str(package)]
+        result = subprocess.run(command, capture_output=True, text=True, encoding="utf-8", timeout=30)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        return package, report, command
+
+    def test_combined_repair_guards_and_exact_composition(self):
+        from dragon_audit import audit, repair_combined, repair_names, repair_pictures, repair_saber_event, sha256
+        report, _, _ = audit(self.mod)
+        originals = {name: (self.mod / name).read_bytes() for name in
+                     ("save/ranger.grp", "save/alldef.grp", "resource/kdef.idx", "resource/kdef.grp")}
+        files, patch = repair_combined(*originals.values(), report)
+        # Compose in the reverse order independently: either order must keep
+        # both disjoint edits in the same event template.
+        pictures, _ = repair_pictures(*list(originals.values())[1:])
+        events, _ = repair_saber_event(pictures["save/alldef.grp"], report["item_trigger_candidates"])
+        ranger, _ = repair_names(originals["save/ranger.grp"], report["item_name_defects"])
+        self.assertEqual(files, {**pictures, "save/alldef.grp": events, "save/ranger.grp": ranger})
+        self.assertEqual([patch["files"][n]["changed_existing_bytes"] for n in originals], [12, 4, 0, 0])
+        self.assertEqual([patch["files"][n]["appended_bytes"] for n in originals], [0, 0, 32, 102])
+        # The unconfirmed wine candidate must remain byte-for-byte unchanged.
+        wine = (10 * 200) * 22
+        self.assertEqual(events[wine:wine+22], originals["save/alldef.grp"][wine:wine+22])
+        for i, name in enumerate(originals):
+            altered = list(originals.values())
+            altered[i] += b"\0"
+            with self.subTest(changed_input=name), self.assertRaises(ValueError):
+                repair_combined(*altered, report)
+        with self.assertRaises(ValueError):
+            repair_combined(*files.values(), report)
+        with self.assertRaises(ValueError):
+            repair_combined(*originals.values(), {**report, "item_name_defects": []})
+        for key, value in (("offset", 124758), ("replacement", "unverified rename"),
+                           ("original_hex", "00" * 20)):
+            defects = [dict(d) for d in report["item_name_defects"]]
+            defects[0][key] = value
+            with self.subTest(altered_name_metadata=key), self.assertRaises(ValueError):
+                repair_combined(*originals.values(), {**report, "item_name_defects": defects})
+
+        package, report_path, command = self.combined_package("combined-guards")
+        self.assertEqual({p.relative_to(package).as_posix() for p in package.rglob("*") if p.is_file()}, set(files))
+        written_report = report_path.read_bytes()
+        combined = json.loads(written_report)["combined_repair"]
+        for name, data in files.items():
+            self.assertEqual((package / name).read_bytes(), data)
+            self.assertEqual(combined["files"][name]["sha256"], sha256(data))
+            self.assertEqual((self.mod / name).read_bytes(), originals[name])
+
+        occupied_file = self.scratch / "occupied-package"
+        occupied_file.write_bytes(b"preserve")
+        empty_directory = self.scratch / "occupied-empty-package"
+        empty_directory.mkdir()
+        bad_cases = [
+            command,  # Existing package: also preserve its previous report.
+            [*command[:-1], str(occupied_file)],
+            [*command[:-1], str(empty_directory)],
+            [*command[:-1], str(self.mod / "must-not-create")],
+            [*command[:-1], str(self.scratch / "combined-mixed"),
+             "--repair-output", str(self.scratch / "must-not-write.grp")],
+        ]
+        collision = self.scratch / "combined-collision"
+        bad_cases.append([*command[:4], "--report", str(collision / "save/alldef.grp"),
+                          "--repair-combined-output", str(collision)])
+        for diagnostic in (collision.parent, collision / "save"):
+            bad_cases.append([*command[:4], "--report", str(diagnostic),
+                              "--repair-combined-output", str(collision)])
+        for bad in bad_cases:
+            result = subprocess.run(bad, capture_output=True, text=True, encoding="utf-8", timeout=30)
+            self.assertEqual(result.returncode, 2, result.stderr)
+        self.assertEqual(report_path.read_bytes(), written_report)
+        self.assertEqual(occupied_file.read_bytes(), b"preserve")
+        self.assertEqual(list(empty_directory.iterdir()), [])
+        self.assertFalse((self.mod / "must-not-create").exists())
+        self.assertFalse((self.scratch / "must-not-write.grp").exists())
+        self.assertFalse(collision.exists())
+        for name, data in files.items():
+            self.assertEqual((package / name).read_bytes(), data)
+
+        # A changed reference must fail before making even a partial package.
+        changed_mod = self.scratch / "combined-changed-input"
+        for name in (*originals, "save/ranger.idx", "resource/talk.idx", "resource/war.sta"):
+            target = changed_mod / name
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(self.mod / name, target)
+        changed_ranger = bytearray(originals["save/ranger.grp"])
+        changed_ranger[-1] ^= 1
+        (changed_mod / "save/ranger.grp").write_bytes(changed_ranger)
+        failed_package = self.scratch / "combined-rejected"
+        failed_report = self.scratch / "combined-rejected.json"
+        result = subprocess.run([*command[:3], str(changed_mod), "--report", str(failed_report),
+                                 "--repair-combined-output", str(failed_package)],
+                                capture_output=True, text=True, encoding="utf-8", timeout=30)
+        self.assertEqual(result.returncode, 2, result.stderr)
+        self.assertIn("unmodified Dragon", result.stderr)
+        self.assertFalse(failed_package.exists())
+        self.assertFalse(failed_report.exists())
+
+        # All pre-existing flags remain usable together as separate outputs.
+        standalone = self.scratch / "standalone-compatible"
+        result = subprocess.run([*command[:4], "--report", str(standalone / "audit.json"),
+                                 "--repair-output", str(standalone / "ranger.grp"),
+                                 "--repair-event-output", str(standalone / "alldef.grp"),
+                                 "--repair-pictures-output", str(standalone / "pictures")],
+                                capture_output=True, text=True, encoding="utf-8", timeout=30)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual((standalone / "ranger.grp").read_bytes(), ranger)
+        saber, _ = repair_saber_event(originals["save/alldef.grp"], report["item_trigger_candidates"])
+        self.assertEqual((standalone / "alldef.grp").read_bytes(), saber)
+        for name, data in pictures.items():
+            self.assertEqual((standalone / "pictures" / name).read_bytes(), data)
+        for name, data in originals.items():
+            self.assertEqual((self.mod / name).read_bytes(), data)
+
+    def test_debug_combined_repair_native_saber_and_pictures(self):
+        package, _, _ = self.combined_package("combined-native")
+        repaired_mod = self.scratch / "combined-native-mod"
+        shutil.copytree(self.mod, repaired_mod)
+        for name in ("save/ranger.grp", "save/alldef.grp", "resource/kdef.idx", "resource/kdef.grp"):
+            shutil.copyfile(package / name, repaired_mod / name)
+        g, _ = self.game(debug=True, mod=repaired_mod)
+        observed = g.call("audit")
+        self.assertEqual(observed["item_name_control_characters"], [])
+        self.assertEqual(observed["invalid_script_references"], [])
+        # Explicit debug access fixtures, never a combined campaign claim.
+        # Earn the two required quest objects through their normal invitations.
+        g.call("debug", scene=0)
+        g.call("interact", slot=4)
+        q = g.call("choose", index=1)
+        self.assertEqual(amount(q["state"], 202), 1)
+        g.call("debug", scene=84, x=22, y=20)
+        gate = next(e for e in g.call("inspect_scene")["events"] if e["slot"] == 8)
+        self.assertEqual((gate["talk"], gate["item"]), (0, 18))
+        g.call("interact", slot=8, item=234)
+        self.rejects_unchanged(g, "navigate", x=21, y=21)
+        q = g.call("interact", slot=8, item=202)
+        self.assertEqual({row[0] for row in q["trace"]}, {18})
+        self.assertEqual(amount(q["state"], 202), 1)
+        self.assertTrue(g.call("navigate", x=21, y=21)["action_result"]["reached"])
+
+        g.call("debug", scene=60, field=56, value=80)
+        g.call("interact", slot=15)
+        q = g.call("choose", index=1)
+        aptitude = next(r for r in q["state"]["party"] if r["id"] == 49)["aptitude"]
+        g.call("checkpoint", action="save", label="combined_before_pictures")
+        order = (15, 16, 17, 18, 20, 21, 22)
+        for slots in (order, tuple(reversed(order))):
+            g.call("checkpoint", action="load", label="combined_before_pictures")
+
+            def picture(slot):
+                event = next(e for e in g.call("inspect_scene", scene=12)["events"] if e["slot"] == slot)
+                x, y = event["xy"]
+                g.call("debug", scene=12, x=x, y=y+1)
+                return g.call("interact", slot=slot)
+
+            picture(19)
+            for count, slot in enumerate(slots, 1):
+                picture(slot)
+                self.rejects_unchanged(g, "interact")
+                central = next(e for e in g.call("inspect_scene")["events"] if e["slot"] == 19)
+                self.assertEqual(central["talk"], 1087 + count)
+                q = picture(19)
+                self.assertEqual(amount(q["state"], 79), int(count == 7))
+                self.assertEqual(amount(q["state"], 99), 0)
+            monk = next(r for r in q["state"]["party"] if r["id"] == 49)
+            self.assertEqual(monk["aptitude"], aptitude + 10)
+            self.assertIn(101, [m["id"] for m in monk["magic"]])
+            self.rejects_unchanged(g, "interact")
+            q = picture(23)
+            self.assertEqual(amount(q["state"], 99), 1)
+            monk = next(r for r in q["state"]["party"] if r["id"] == 49)
+            self.assertIn(14, [m["id"] for m in monk["magic"]])
+            self.rejects_unchanged(g, "interact")
 
     def test_debug_lingjiu_picture_counter_original_and_repaired(self):
         from dragon_audit import audit, repair_pictures
