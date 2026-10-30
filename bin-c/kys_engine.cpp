@@ -106,7 +106,11 @@ static MIX_Audio* LoadMusicAudio(int number)
     SDL_SetStringProperty(properties, MIX_PROP_AUDIO_DECODER_STRING, "fluidsynth");
     auto soundfont = checkFileName("music/mid.sf2");
     SDL_SetStringProperty(properties, "SDL_mixer.decoder.fluidsynth.soundfont_path", soundfont.c_str());
+    auto synthProperties = SDL_CreateProperties();
+    SDL_SetNumberProperty(synthProperties, "synth.lock-memory", 0);
+    SDL_SetNumberProperty(properties, "SDL_mixer.decoder.fluidsynth.props", synthProperties);
     auto audio = MIX_LoadAudioWithProperties(properties);
+    SDL_DestroyProperties(synthProperties);
     SDL_DestroyProperties(properties);
     return audio;
 }
