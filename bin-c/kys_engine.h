@@ -18,6 +18,14 @@ void PlaySoundA(int SoundNum, int times);
 
 // 文件读取
 void ReadTiles();
+enum class MapTiles
+{
+    World,
+    Scene,
+    Battle
+};
+void EnsureMapTiles(MapTiles tiles);
+void InitialFonts();
 char* ReadFileToBuffer(char* p, const std::string& filename, int size, int malloc_flag);
 void FreeFileBuffer(char*& p);
 int LoadIdxGrp(const std::string& stridx, const std::string& strgrp,

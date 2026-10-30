@@ -54,6 +54,7 @@ void DrawMPic(int num, int px, int py, int shadow, int alpha, uint32_t mixColor,
     {
         return;
     }
+    EnsureMapTiles(MapTiles::World);
     if (num < 0 || num >= MPicAmount)
     {
         return;
@@ -87,6 +88,7 @@ void DrawSPic(int num, int px, int py, int xx, int yy, int xw, int yh, int shado
     {
         return;
     }
+    EnsureMapTiles(MapTiles::Scene);
     if (num < 0 || num >= SPicAmount)
     {
         return;
@@ -102,6 +104,7 @@ void DrawSPic(int num, int px, int py, int shadow, int alpha, int depth, uint32_
     {
         return;
     }
+    EnsureMapTiles(MapTiles::Scene);
     if (num < 0 || num >= SPicAmount)
     {
         return;
@@ -124,6 +127,7 @@ void InitialSPic(int num, int px, int py, SDL_Surface* img, int widthI, int heig
     {
         return;
     }
+    EnsureMapTiles(MapTiles::Scene);
     if (num < 0 || num >= SPicAmount)
     {
         return;
@@ -141,6 +145,7 @@ void InitialSPic(int num, int px, int py, int areaX, int areaY, int areaW, int a
     {
         return;
     }
+    EnsureMapTiles(MapTiles::Scene);
     if (num < 0 || num >= SPicAmount)
     {
         return;
@@ -345,6 +350,7 @@ void DrawBPic(int num, int px, int py, int shadow, int alpha, int depth, uint32_
     {
         return;
     }
+    EnsureMapTiles(MapTiles::Battle);
     // 战斗图使用 WIdx/WPic (wdx/wmp), 严格按Pascal版
     if (num <= 0 || num >= BPicAmount)
     {
@@ -365,6 +371,7 @@ void InitialBPic(int num, int px, int py, SDL_Surface* img, int widthI, int heig
     {
         return;
     }
+    EnsureMapTiles(MapTiles::Battle);
     if (num <= 0 || num >= BPicAmount)
     {
         return;
@@ -574,6 +581,7 @@ void DrawMMap()
     {
         return;
     }
+    EnsureMapTiles(MapTiles::World);
     if (!screen)
     {
         return;
@@ -1067,6 +1075,7 @@ void UpdateScene(int xs, int ys)
     {
         return;
     }
+    EnsureMapTiles(MapTiles::Scene);
     int xp = -xs * 18 + ys * 18 + 1151;
     int yp = xs * 9 + ys * 9 + 250;
     int w, h;

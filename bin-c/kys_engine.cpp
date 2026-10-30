@@ -43,6 +43,9 @@ static bool sccS2T_loaded = false;
 static bool sccT2S_loaded = false;
 
 static uint64_t tic_time = 0;
+#ifdef __EMSCRIPTEN__
+static TTF_Font* FullChineseFont = nullptr;
+#endif
 
 // ---- 内部辅助函数 ----
 
@@ -504,6 +507,13 @@ SDL_Surface* LoadSurfaceFromMem(const char* p, int len)
 
 void FreeAllSurface()
 {
+#ifdef __EMSCRIPTEN__
+    if (FullChineseFont)
+    {
+        TTF_CloseFont(FullChineseFont);
+        FullChineseFont = nullptr;
+    }
+#endif
     // 释放所有PNG tile surfaces
     for (auto& s : MPNGTile)
     {
@@ -570,12 +580,21 @@ void ReadTiles()
         return;
     }
     std::string path = AppPath;
+#ifdef __EMSCRIPTEN__
+    filefunc::readFileToVector(path + "resource/mmap.idx", MIdx);
+    filefunc::readFileToVector(path + "resource/sdx", SIdx);
+    filefunc::readFileToVector(path + "resource/wdx", WIdx);
+    MPicAmount = (int)MIdx.size();
+    SPicAmount = (int)SIdx.size();
+    BPicAmount = (int)WIdx.size();
+#else
     LoadIdxGrp(path + "resource/mmap.idx", path + "resource/mmap.grp", MIdx, MPic);
     MPicAmount = (int)MIdx.size();
     LoadIdxGrp(path + "resource/sdx", path + "resource/smp", SIdx, SPic);
     SPicAmount = (int)SIdx.size();
     LoadIdxGrp(path + "resource/wdx", path + "resource/wmp", WIdx, WPic);
     BPicAmount = (int)WIdx.size();
+#endif
     LoadIdxGrp(path + "resource/eft.idx", path + "resource/eft.grp", EIdx, EPic);
     EPicAmount = (int)EIdx.size();
     LoadIdxGrp(path + "resource/cloud.idx", path + "resource/cloud.grp", CIdx, CPic);
@@ -599,6 +618,50 @@ void ReadTiles()
         }
     }
 #endif
+}
+
+void EnsureMapTiles(MapTiles tiles)
+{
+#ifdef __EMSCRIPTEN__
+    switch (tiles)
+    {
+    case MapTiles::World:
+        if (MPic.empty())
+        {
+            filefunc::readFileToVector(AppPath + "resource/mmap.grp", MPic);
+        }
+        break;
+    case MapTiles::Scene:
+        if (SPic.empty())
+        {
+            filefunc::readFileToVector(AppPath + "resource/smp", SPic);
+        }
+        break;
+    case MapTiles::Battle:
+        if (WPic.empty())
+        {
+            filefunc::readFileToVector(AppPath + "resource/wmp", WPic);
+        }
+        break;
+    }
+#endif
+}
+
+void InitialFonts()
+{
+    if (ChineseFont)
+    {
+        return;
+    }
+    ChineseFont = TTF_OpenFont(checkFileName(CHINESE_FONT).c_str(), CHINESE_FONT_SIZE);
+    EnglishFont = TTF_OpenFont(checkFileName(ENGLISH_FONT).c_str(), ENGLISH_FONT_SIZE);
+    SDL_Color white = { 255, 255, 255, 255 };
+    SDL_Surface* text = TTF_RenderText_Solid(ChineseFont, " ", 1, white);
+    if (text)
+    {
+        CHNFONT_SPACEWIDTH = text->w;
+        SDL_DestroySurface(text);
+    }
 }
 
 // ---- 基本绘图 ----
@@ -1108,6 +1171,22 @@ std::string utf8tocp950(const std::string& str)
 
 // ---- 文字绘制 ----
 
+static TTF_Font* ChineseGlyphFont(uint32_t codepoint)
+{
+#ifdef __EMSCRIPTEN__
+    // A BOM in the opening text has no visible glyph in either font.
+    if (codepoint != 0xFEFF && !TTF_FontHasGlyph(ChineseFont, codepoint))
+    {
+        if (!FullChineseFont)
+        {
+            FullChineseFont = TTF_OpenFont(checkFileName("resource/chinese-full.ttf").c_str(), CHINESE_FONT_SIZE);
+        }
+        return FullChineseFont;
+    }
+#endif
+    return ChineseFont;
+}
+
 int utf8follow(char c1)
 {
     uint8_t c = (uint8_t)c1;
@@ -1141,6 +1220,7 @@ void DrawText(const std::string& word, int x_pos, int y_pos, uint32_t color)
     {
         return;
     }
+    InitialFonts();
     if (!ChineseFont)
     {
         return;
@@ -1199,7 +1279,8 @@ void DrawText(const std::string& word, int x_pos, int y_pos, uint32_t color)
             {
                 SDL_Color white = { 255, 255, 255, 255 };
                 char buf[3] = { text[i], text[i + 1], 0 };
-                SDL_Surface* glyph = TTF_RenderText_Blended(ChineseFont, buf, 2, white);
+                uint32_t codepoint = ((c & 31) << 6) | ((uint8_t)text[i + 1] & 63);
+                SDL_Surface* glyph = TTF_RenderText_Blended(ChineseGlyphFont(codepoint), buf, 2, white);
                 if (glyph)
                 {
                     fonts[k] = glyph;
@@ -1229,7 +1310,8 @@ void DrawText(const std::string& word, int x_pos, int y_pos, uint32_t color)
             {
                 SDL_Color white = { 255, 255, 255, 255 };
                 char buf[4] = { text[i], text[i + 1], text[i + 2], 0 };
-                SDL_Surface* glyph = TTF_RenderText_Blended(ChineseFont, buf, 3, white);
+                uint32_t codepoint = ((c & 15) << 12) | (((uint8_t)text[i + 1] & 63) << 6) | ((uint8_t)text[i + 2] & 63);
+                SDL_Surface* glyph = TTF_RenderText_Blended(ChineseGlyphFont(codepoint), buf, 3, white);
                 if (glyph)
                 {
                     fonts[k] = glyph;

@@ -2,56 +2,177 @@
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#171914">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <meta name="theme-color" content="#000000">
+  <meta name="apple-mobile-web-app-capable" content="yes">
   <title>苍龙逐日</title>
   <style>
-    *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#171914;color:#e8e3d3;font-family:system-ui,sans-serif}
-    body{display:flex;flex-direction:column;align-items:center;padding:20px;gap:14px}header{width:min(100%,960px);display:flex;align-items:center;justify-content:space-between}
-    h1{font-size:22px;font-weight:500;margin:0;letter-spacing:.18em}button{border:1px solid #77715a;background:#302f24;color:#f4ead0;padding:10px 22px;border-radius:5px;cursor:pointer;font:inherit}
-    main{position:relative;width:min(100%,960px);background:#080907;border:1px solid #454638;aspect-ratio:16/11;display:grid;place-items:center}
-    canvas{position:absolute;inset:0;display:block;width:100%;height:100%;object-fit:contain;outline:none;image-rendering:pixelated;touch-action:none}
-    #cover{position:absolute;inset:0;display:grid;place-content:center;text-align:center;gap:20px;background:#171914}#cover p{margin:0;color:#b9b6a6}
-    #status{min-height:22px;font-size:14px;color:#c9be91}footer{font-size:13px;color:#a4a58e;text-align:center;line-height:1.8}
-    @media(max-height:650px){body{padding:6px;gap:4px}header{max-width:80vh}h1{font-size:16px}main{max-height:84vh;width:auto;max-width:100%;height:84vh}footer{display:none}}
+    *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;background:#000;color:#ece8d6;font-family:system-ui,sans-serif;touch-action:none}
+    #wrap{position:fixed;inset:0;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#000}
+    canvas{display:block;outline:none;border:0;background:#000;touch-action:none;image-rendering:pixelated}
+    #overlay{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;background:#000;z-index:10;transition:opacity .3s}
+    #overlay.hidden{opacity:0;pointer-events:none}h1{margin:0;font-size:24px;font-weight:500;letter-spacing:.2em}
+    #spinner{width:36px;height:36px;border:3px solid #333;border-top-color:#b19e78;border-radius:50%;animation:spin .8s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}#status{font-size:14px;color:#aaa;text-align:center;line-height:1.7;max-width:85vw}
+    progress{width:min(260px,65vw);height:4px;accent-color:#b19e78}button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
+    .float{position:fixed;bottom:max(8px,env(safe-area-inset-bottom));width:44px;height:44px;border-radius:50%;border:1px solid #b19e7840;background:#191716a6;font-size:22px;z-index:5;display:none;align-items:center;justify-content:center;user-select:none}
+    .ready .float{display:flex}.float:active{background:#ffffff40}#fullscreen{left:max(8px,env(safe-area-inset-left))}#menu{right:max(8px,env(safe-area-inset-right))}#back{right:max(60px,calc(env(safe-area-inset-right) + 52px))}
+    #busy{position:fixed;top:max(10px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);padding:8px 16px;border-radius:6px;background:#191716df;color:#ddd;font-size:13px;pointer-events:none;z-index:6}
+    [hidden]{display:none!important}dialog{width:min(400px,calc(100% - 32px));border:1px solid #b19e7860;border-radius:12px;padding:22px;background:#191716;color:#ece8d6;line-height:1.8;touch-action:auto}
+    dialog::backdrop{background:#000a}dialog h2{font-size:20px;margin:0 0 16px;font-weight:500}dialog p{font-size:14px;color:#aaa}dialog button{display:block;width:100%;margin:10px 0;padding:10px 14px;background:#302d27;border:1px solid #b19e7840;border-radius:6px;text-align:left}#message{min-height:24px;color:#d5c29b}
+    @media(prefers-reduced-motion:reduce){#overlay{transition:none}#spinner{animation-duration:2s}}
   </style>
 </head>
 <body>
-  <header><h1>苍龙逐日</h1><button id="fullscreen" type="button">全屏</button></header>
-  <main><canvas id="canvas" tabindex="0" width="640" height="440"></canvas><div id="cover"><p>金庸群侠传 · 苍龙逐日</p><button id="start" type="button">开始游戏</button></div></main>
-  <div id="status" role="status"></div>
-  <footer>方向键移动，回车确认，Esc 返回；也可用鼠标操作。<br>存档保存在当前浏览器中。</footer>
+  <div id="wrap"><canvas id="canvas" width="640" height="440" tabindex="0" aria-label="苍龙逐日游戏画面"></canvas></div>
+  <div id="overlay"><h1>苍龙逐日</h1><div id="spinner"></div><progress id="progress" max="1" value="0"></progress><div id="status" role="status">正在准备游戏…</div><button id="retry" hidden>重新加载</button></div>
+  <button class="float" id="fullscreen" aria-label="切换画面大小" title="切换画面大小">⛶</button>
+  <button class="float" id="back" aria-label="返回" title="返回（Esc）">↶</button>
+  <button class="float" id="menu" aria-label="存档与操作说明" title="存档与操作说明">☰</button>
+  <div id="busy" role="status" hidden></div>
+  <dialog id="settings"><h2>苍龙逐日</h2><p>方向键移动，回车确认，Esc 返回。也可用鼠标操作；触屏可点右下角返回。</p><p>存档保存在当前浏览器。可以导出备份，或在其他浏览器导入。</p><button id="export">导出存档</button><button id="import">导入存档</button><input id="save-file" type="file" accept=".json,application/json" hidden><div id="message" role="status"></div><button id="close">返回游戏</button></dialog>
   <script>
     const canvas = document.getElementById('canvas');
-    const status = document.getElementById('status');
+    const overlay = document.getElementById('overlay');
+    const statusEl = document.getElementById('status');
+    const busy = document.getElementById('busy');
+    const settings = document.getElementById('settings');
+    const transfers = new Map();
+    const mobile = matchMedia('(pointer:coarse)').matches;
+    let ready = false, failed = false, expanded = true;
+
+    function fail(error) {
+      failed = true;
+      overlay.classList.remove('hidden');
+      document.getElementById('spinner').hidden = true;
+      document.getElementById('progress').hidden = true;
+      document.getElementById('retry').hidden = false;
+      statusEl.textContent = '加载失败，请重试。' + (error?.message || '');
+      console.error(error);
+    }
+
+    function resize() {
+      const viewport = window.visualViewport;
+      const scale = Math.min((viewport?.width || innerWidth) / 640, (viewport?.height || innerHeight) / 440, expanded ? Infinity : 1);
+      const width = Math.max(1, Math.floor(640 * scale)), height = Math.max(1, Math.floor(440 * scale));
+      canvas.style.width = width + 'px';
+      canvas.style.height = height + 'px';
+      if (ready) Module.ccall('web_resize', null, ['number','number'], [width,height]);
+    }
+
     var Module = {
       canvas,
-      setStatus(text) { status.textContent = text; },
+      setStatus(text) { if (!ready && !failed && text) statusEl.textContent = '正在准备游戏…'; },
       print: console.log,
       printErr: console.error,
-      onAbort(reason) { status.textContent = '游戏加载失败，请刷新重试。'; console.error(reason); },
+      onAbort: fail,
+      gameReady() {
+        ready = true;
+        overlay.classList.add('hidden');
+        document.body.classList.add('ready');
+        busy.hidden = true;
+        resize();
+        canvas.focus();
+      },
+      async fetchBinary(url, expected = 0) {
+        const transfer = {loaded:0,total:expected,done:false};
+        transfers.set(url, transfer);
+        function update() {
+          if (failed) return;
+          const all = [...transfers.values()];
+          const loaded = all.reduce((sum,t)=>sum+t.loaded,0), total = all.reduce((sum,t)=>sum+t.total,0);
+          document.getElementById('progress').value = total ? loaded / total : 0;
+          const text = (loaded / 1048576).toFixed(1) + ' / ' + (Math.max(total,loaded) / 1048576).toFixed(1) + ' MB';
+          if (!ready) statusEl.textContent = '正在加载游戏 · ' + text;
+          else { busy.hidden = all.every(t=>t.done); busy.textContent = '正在加载资源…'; }
+        }
+        update();
+        try {
+          const response = await fetch(url);
+          if (!response.ok) throw new Error('资源下载失败');
+          transfer.total = expected || Number(response.headers.get('content-length')) || 0;
+          const reader = response.body.getReader(), chunks = [];
+          while (true) {
+            const {value,done} = await reader.read();
+            if (done) break;
+            chunks.push(value); transfer.loaded += value.length; update();
+          }
+          transfer.total = transfer.loaded;
+          transfer.done = true; update();
+          return new Blob(chunks).arrayBuffer();
+        } catch (error) { fail(error); throw error; }
+      },
       instantiateWasm(imports, success) {
         (async () => {
-          const response = await fetch('kys-dragon.wasm.gz');
-          if (!response.ok) throw new Error('游戏程序下载失败');
-          const stream = response.body.pipeThrough(new DecompressionStream('gzip'));
-          const result = await WebAssembly.instantiateStreaming(new Response(stream, {headers:{'Content-Type':'application/wasm'}}), imports);
-          success(result.instance, result.module);
-        })().catch(error => { status.textContent = error.message; console.error(error); });
+          const data = await Module.fetchBinary('kys-dragon.wasm.gz');
+          const stream = new Blob([data]).stream().pipeThrough(new DecompressionStream('gzip'));
+          const result = await WebAssembly.instantiateStreaming(new Response(stream,{headers:{'Content-Type':'application/wasm'}}),imports);
+          success(result.instance,result.module);
+        })().catch(fail);
         return {};
       }
     };
-    document.getElementById('start').onclick = () => {
-      document.getElementById('cover').remove();
-      status.textContent = '正在加载游戏…';
-      canvas.focus();
-      const script = document.createElement('script');
-      script.src = 'kys-dragon.js';
-      script.onerror = () => { status.textContent = '游戏程序下载失败，请刷新重试。'; };
-      document.body.appendChild(script);
+
+    resize();
+    addEventListener('resize', resize);
+    window.visualViewport?.addEventListener('resize', resize);
+    document.addEventListener('fullscreenchange', resize);
+    document.getElementById('retry').onclick = () => location.reload();
+    document.getElementById('fullscreen').onclick = async event => {
+      event.stopPropagation();
+      if (mobile) {
+        try {
+          if (document.fullscreenElement) await document.exitFullscreen();
+          else { await document.documentElement.requestFullscreen(); await screen.orientation?.lock?.('landscape').catch(()=>{}); }
+        } catch (_) { expanded = !expanded; }
+      } else expanded = !expanded;
+      resize(); canvas.focus();
     };
-    document.getElementById('fullscreen').onclick = () => canvas.requestFullscreen();
-    canvas.addEventListener('contextmenu', event => event.preventDefault());
+    document.getElementById('back').onpointerdown = event => { event.preventDefault(); event.stopPropagation(); Module.ccall('web_back',null,[],[]); canvas.focus(); };
+    document.getElementById('menu').onclick = () => { document.getElementById('message').textContent = ''; settings.showModal(); };
+    document.getElementById('close').onclick = () => settings.close();
+    settings.addEventListener('close',()=>canvas.focus());
+    for (const type of ['keydown','keyup','keypress','pointerdown','pointerup']) settings.addEventListener(type,event=>event.stopPropagation());
+    canvas.addEventListener('contextmenu',event=>event.preventDefault());
+    canvas.addEventListener('pointerdown',()=>canvas.focus());
+
+    const sync = () => new Promise((resolve,reject)=>Module.FS.syncfs(false,error=>error?reject(error):resolve()));
+    document.getElementById('export').onclick = async () => {
+      try {
+        await sync();
+        const files = {};
+        for (const name of Module.FS.readdir('/persist')) {
+          if (/^[rsd](?:[1-9]|1\d|20)\.grp$/.test(name)) {
+            const bytes = Module.FS.readFile('/persist/' + name);
+            let text = ''; for (let offset=0;offset<bytes.length;offset+=32768) text += String.fromCharCode(...bytes.subarray(offset,offset+32768));
+            files[name] = btoa(text);
+          }
+        }
+        if (!Object.keys(files).length) throw new Error('还没有可以导出的存档。');
+        const url = URL.createObjectURL(new Blob([JSON.stringify({game:'kys-dragon',version:1,files})],{type:'application/json'}));
+        const link = document.createElement('a'); link.href=url; link.download='苍龙逐日存档.json'; link.click(); setTimeout(()=>URL.revokeObjectURL(url),1000);
+      } catch (error) { document.getElementById('message').textContent = error.message; }
+    };
+    document.getElementById('import').onclick = () => document.getElementById('save-file').click();
+    document.getElementById('save-file').onchange = async event => {
+      try {
+        const file = event.target.files[0]; if (!file) return;
+        if (file.size > 60000000) throw new Error('存档文件过大。');
+        const save = JSON.parse(await file.text());
+        if (save.game !== 'kys-dragon' || save.version !== 1 || !save.files || typeof save.files !== 'object') throw new Error('不是有效的苍龙逐日存档。');
+        const files = Object.entries(save.files).map(([name,text])=>{
+          if (!/^[rsd](?:[1-9]|1\d|20)\.grp$/.test(name) || typeof text !== 'string') throw new Error('存档内容不正确。');
+          return [name,Uint8Array.from(atob(text),c=>c.charCodeAt(0))];
+        });
+        if (!files.length) throw new Error('存档为空。');
+        for (const [name,bytes] of files) Module.FS.writeFile('/persist/'+name,bytes);
+        await sync(); document.getElementById('message').textContent = '导入完成，请从游戏菜单读取存档。';
+      } catch (error) { document.getElementById('message').textContent = error.message; }
+      event.target.value = '';
+    };
+
+    if (!window.DecompressionStream || !window.WebAssembly) fail(new Error('请使用较新的浏览器。'));
+    else { const script=document.createElement('script'); script.src='kys-dragon.js'; script.onerror=()=>fail(new Error('游戏程序下载失败。')); document.body.appendChild(script); }
   </script>
 </body>
 </html>

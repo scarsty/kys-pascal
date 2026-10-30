@@ -35,4 +35,4 @@ if ($LASTEXITCODE -ne 0) { throw 'WebAssembly configure failed' }
 cmake --build $build --parallel 6
 if ($LASTEXITCODE -ne 0) { throw 'WebAssembly build failed' }
 python -B (Join-Path $PSScriptRoot 'package_assets.py') $GameData (Join-Path $PSScriptRoot 'dist')
-if ($LASTEXITCODE -ne 0) { throw 'Asset packaging failed (Python, Pillow and fontTools are required)' }
+if ($LASTEXITCODE -ne 0) { throw 'Asset packaging failed (install Python dependencies from web/requirements.txt)' }

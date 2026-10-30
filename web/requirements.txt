@@ -1,0 +1,4 @@
+Pillow
+fonttools
+numpy
+soundfile>=0.13

@@ -15,6 +15,9 @@
 #include <SDL3/SDL.h>
 #include <SDL3_mixer/SDL_mixer.h>
 #include <SDL3_ttf/SDL_ttf.h>
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
 
 #include <algorithm>
 #include <cmath>
@@ -487,20 +490,9 @@ void Run()
 
     // 初始化 TTF
     TTF_Init();
-    std::string fontPath = checkFileName(CHINESE_FONT);
-    ChineseFont = TTF_OpenFont(fontPath.c_str(), CHINESE_FONT_SIZE);
-    fontPath = checkFileName(ENGLISH_FONT);
-    EnglishFont = TTF_OpenFont(fontPath.c_str(), ENGLISH_FONT_SIZE);
-
-    // 测试空格宽度
-    SDL_Color white = { 255, 255, 255, 255 };
-    uint16_t space[2] = { 32, 0 };
-    SDL_Surface* text = TTF_RenderText_Solid(ChineseFont, (const char*)space, 1, white);
-    if (text)
-    {
-        CHNFONT_SPACEWIDTH = text->w;
-        SDL_DestroySurface(text);
-    }
+#ifndef __EMSCRIPTEN__
+    InitialFonts();
+#endif
 
     MIX_Init();
 
@@ -848,6 +840,9 @@ void Start()
     DrawTitlePic(menu + 1, x, y + menu * 20);
     UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
 
+#ifdef __EMSCRIPTEN__
+    EM_ASM({ Module.gameReady(); });
+#endif
     bool selected = false;
     while (SDL_WaitEvent(&event))
     {

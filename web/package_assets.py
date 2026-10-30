@@ -9,27 +9,58 @@ import io
 import json
 from pathlib import Path
 import shutil
+import struct
 
 from PIL import Image
 from fontTools import subset
 from fontTools.ttLib import TTFont
+from soundfont import convert_sf2
 
 
 def web_font(data: bytes, source: Path) -> bytes:
-    # Saves and dialogue use Big5; SimpleCC supplies the simplified forms.
-    # Retain both Chinese repertoires and every non-CJK glyph in the font.
+    # Subset from actual dialogue, record names and compiled UI text, then
+    # close the alphabet over SimpleCC's conversions as in KYS-CPP.
     font = TTFont(io.BytesIO(data), recalcTimestamp=False)
     points = {point for point in font.getBestCmap()
               if not (0x3400 <= point <= 0x9FFF or 0x20000 <= point <= 0x323AF)}
-    for encoding in ("cp950", "gb2312"):
-        for first in range(0x81, 0xFF):
-            for second in range(0x40, 0xFF):
-                try:
-                    points.update(map(ord, bytes((first, second)).decode(encoding)))
-                except UnicodeError:
-                    pass
-    for dictionary in (source / "cc").glob("*.txt"):
-        points.update(map(ord, dictionary.read_text(encoding="utf-8")))
+    # FreeType's CJK auto-hinter measures these reference glyphs even when
+    # rendering other characters. Preserve the same small-size font metrics.
+    points.update(map(ord, "个为主事些人他以们你來例個們军別别到制前动動即同吗吧听呢和品响嗎囗因地增大她學它对将將對就已师師席年得情想意愿我或指收政断斯新斷既时明星是時景最會有朝期来构样樣民沒没為然照物特现現球理生用田當看眼着确种第經置者能自舰著裡要說調说谁调費费起軍过还这进這通進過道還那都配里開間间际陈限除陳随際隨雷露面顾齊"))
+    dialogue = (source / "resource/talk.grp").read_bytes()
+    points.update(map(ord, bytes(byte ^ 0xFF if byte else 0 for byte in dialogue).decode("cp950", errors="ignore")))
+    records = (source / "save/ranger.grp").read_bytes()
+    offsets = struct.unpack("<6I", (source / "save/ranger.idx").read_bytes()[:24])
+    for start, end, size, field, length in (
+        (offsets[0], offsets[1], 182, 8, 20),
+        (offsets[1], offsets[2], 190, 2, 70),
+        (offsets[2], offsets[3], 52, 2, 10),
+        (offsets[3], offsets[4], 136, 2, 10),
+    ):
+        for position in range(start, end, size):
+            points.update(map(ord, records[position + field:position + field + length].decode("cp950", errors="ignore")))
+    code = Path(__file__).resolve().parents[1] / "bin-c"
+    for path in [*code.glob("*.cpp"), *code.glob("*.h")]:
+        points.update(map(ord, path.read_text(encoding="utf-8")))
+    for path in [*(source / "resource").glob("*.txt"), *(source / "list").glob("*.txt")]:
+        data = path.read_bytes()
+        try:
+            text = data.decode("utf-8-sig")
+        except UnicodeDecodeError:
+            text = data.decode("cp950", errors="ignore")
+        points.update(map(ord, text))
+    mappings = {}
+    for direction in ("ST", "TS"):
+        for suffix in ("Phrases", "Characters"):
+            for line in (source / "cc" / f"{direction}{suffix}.txt").read_text(encoding="utf-8").splitlines():
+                if "\t" in line:
+                    key, value = line.split("\t", 1)
+                    mappings[direction, key] = value.split(" ", 1)[0]
+    previous = -1
+    while previous != len(points):
+        previous = len(points)
+        for (_, key), value in mappings.items():
+            if set(map(ord, key)) <= points:
+                points.update(map(ord, value))
     selected = subset.Subsetter()
     selected.populate(unicodes=points)
     selected.subset(font)
@@ -49,11 +80,11 @@ def group(path: str) -> str:
     if folder == "resource":
         if name.endswith(".ttf"):
             return "fonts"
-        if name in ("mmap.grp", "mmap.idx"):
+        if name == "mmap.grp":
             return "world"
-        if name in ("smp", "sdx"):
+        if name == "smp":
             return "scenes"
-        if name in ("wmp", "wdx", "warfld.grp", "warfld.idx"):
+        if name in ("wmp", "warfld.grp", "warfld.idx"):
             return "battle"
         if name.endswith(".png"):
             return Path(name).stem
@@ -76,9 +107,12 @@ def package(source: Path, output: Path) -> None:
         data = path.read_bytes()
         original_bytes += len(data)
         if relative == "resource/chinese.ttf":
+            groups["font-fallback"].append(("/game/resource/chinese-full.ttf", data))
             selected = web_font(data, source)
             font_bytes_saved += len(data) - len(selected)
             data = selected
+        if relative == "music/mid.sf2":
+            data = convert_sf2(data)
         if path.suffix.lower() == ".png":
             stream = io.BytesIO()
             with Image.open(path) as image:
@@ -87,7 +121,7 @@ def package(source: Path, output: Path) -> None:
                 webp_bytes_saved += len(data) - stream.tell()
                 data = stream.getvalue()
         groups[group(relative)].append(("/game/" + relative, data))
-    manifest = {"files": {}, "bundles": {}}
+    manifest = {"files": {}, "bundles": {}, "sizes": {}}
     total = 0
     for name, entries in sorted(groups.items()):
         raw = bytearray()
@@ -100,9 +134,12 @@ def package(source: Path, output: Path) -> None:
         filename = f"{name}-{digest}.pack.gz"
         (assets / filename).write_bytes(compressed)
         manifest["bundles"][filename] = members
+        manifest["sizes"][filename] = len(compressed)
         for path, offset, size in members:
             manifest["files"][path] = [filename, size]
         total += len(compressed)
+    manifest["startup"] = sorted({manifest["files"]["/game/" + name][0] for name in (
+        "kysmod.ini", "resource/title.grp", "resource/open.png", "music/16.mid", "music/mid.sf2")})
     (assets / "manifest.json").write_text(json.dumps(manifest, ensure_ascii=False,
                                                      separators=(",", ":")), encoding="utf-8")
     for old in assets.glob("*.pack.gz"):
@@ -112,8 +149,10 @@ def package(source: Path, output: Path) -> None:
         shutil.copyfile(Path(__file__).with_name(name), output / name)
     wasm = output / "kys-dragon.wasm"
     wasm.with_suffix(".wasm.gz").write_bytes(gzip.compress(wasm.read_bytes(), compresslevel=9, mtime=0))
+    fallback = sum(size for name, size in manifest["sizes"].items() if name.startswith("font-fallback-"))
     print(f"{len(manifest['files'])} files -> {len(groups)} compressed bundles")
-    print(f"Game data: {original_bytes:,} -> {total:,} bytes; lossless WebP saves {webp_bytes_saved:,} bytes")
+    print(f"Game data: {original_bytes:,} source bytes -> {total - fallback:,} compressed bytes + {fallback:,} optional font bytes")
+    print(f"Title data: {sum(manifest['sizes'][name] for name in manifest['startup']):,} compressed bytes; lossless WebP saves {webp_bytes_saved:,} bytes")
     print(f"Chinese font subsetting saves {font_bytes_saved:,} uncompressed bytes")
 
 

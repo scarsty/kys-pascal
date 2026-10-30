@@ -19,10 +19,8 @@ Module.preRun.push(function () {
         function loadPack(name) {
             if (!packs.has(name)) {
                 packs.set(name, (async function () {
-                    Module.setStatus('正在加载游戏资源…');
-                    const res = await fetch('assets/' + name);
-                    if (!res.ok) throw new Error('游戏资源下载失败，请刷新重试');
-                    const stream = res.body.pipeThrough(new DecompressionStream('gzip'));
+                    const bytes = await Module.fetchBinary('assets/' + name, manifest.sizes[name]);
+                    const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
                     const data = new Uint8Array(await new Response(stream).arrayBuffer());
                     for (const [path, offset, size] of manifest.bundles[name]) {
                         const node = FS.lookupPath(path).node;
@@ -30,8 +28,10 @@ Module.preRun.push(function () {
                         node.usedBytes = size;
                         node.dragonLoaded = true;
                     }
-                    Module.setStatus('');
-                })());
+                })().catch(error => {
+                    Module.onAbort(error);
+                    throw error;
+                }));
             }
             return packs.get(name);
         }
@@ -63,10 +63,10 @@ Module.preRun.push(function () {
                 FS.symlink('/persist/' + name, '/game/save/' + name);
             }
         }
+        await Promise.all(manifest.startup.map(loadPack));
         FS.chdir('/game');
         removeRunDependency('dragon-data');
     })().catch(error => {
-        Module.setStatus(error.message);
-        console.error(error);
+        Module.onAbort(error);
     });
 });

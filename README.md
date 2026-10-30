@@ -85,12 +85,14 @@ MCP 通过 `--mod` 选择模组，`--save-dir` 指定独立存档目录；工具
 ### 网页版本
 
 使用 Emscripten 和 vcpkg 的 `wasm32-emscripten` 静态库构建，依赖 SDL3、SDL3_image（WebP）、SDL3_ttf 和 SDL3_mixer（FluidSynth）。
-`web/build.ps1` 默认复用相邻 `kys-cpp/kys-cpp` 工程的依赖，也可通过 `-EmsdkRoot`、`-WasmDeps`、`-MlccDir` 指定位置；Python 需要 Pillow 和 fontTools。
+`web/build.ps1` 默认复用相邻 `kys-cpp/kys-cpp` 工程的依赖，也可通过 `-EmsdkRoot`、`-WasmDeps`、`-MlccDir` 指定位置；Python 依赖通过 `python -m pip install -r web/requirements.txt` 安装。
 
 将固定的苍龙逐日数据放入 `game-data/kys-dragon`，运行 `./web/build.ps1`，结果在 `web/dist`。
 构建使用已完成修复、启用苍龙 1.2 规则的数据基准，后续直接读取，不再重复修复。
-打包器会将图片转为较小的无损 WebP，并把资源合并为按需下载的压缩包；浏览器存档使用 IndexedDB。
-部署时发布压缩后的程序、资源目录及页面，保留 `web/_headers` 中的缓存设置。
+打包器将独立 PNG 转为较小的无损 WebP，按游戏文本裁剪中文字体，将 MIDI 音色库压缩为 SF3，并把资源合并为按需下载的压缩包。原有调色板贴图仍使用原格式，字体和地图贴图在首次使用时加载；姓名中额外用到的汉字会按需加载完整字体。
+网页自动启动，支持画面缩放、触屏返回和存档导入导出；浏览器存档使用 IndexedDB。
+网页发布在 [Cloudflare Pages](https://kys-dragon.pages.dev)，不需要服务端程序或 Pages Functions。
+部署时上传 `index.html`、`kys-dragon.js`、`kys-dragon.wasm.gz`、`assets/` 和 `_headers`，省略未压缩的 `.wasm`，并保留 `web/_headers` 中的缓存设置。
 
 ## 字符串的处理
 
