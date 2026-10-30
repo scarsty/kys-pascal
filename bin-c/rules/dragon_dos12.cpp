@@ -28,9 +28,9 @@ int EffectiveLevel(const TRole& role, const TMagic& magic, int trainedLevel)
     return level;
 }
 
-void PayMagicCost(TRole& role, const TMagic& magic, int cachedLevel)
+void PayMagicCost(TRole& role, const TMagic& magic, int effectiveLevel)
 {
-    role.CurrentMP = std::max<int>(word(role.CurrentMP - magic.NeedMP * (cachedLevel / 2)), 0);
+    role.CurrentMP = std::max<int>(word(role.CurrentMP - magic.NeedMP * (effectiveLevel / 2)), 0);
 }
 
 int LevelUp(TRole& role, const RulesRandom& random)
@@ -53,29 +53,32 @@ int LevelUp(TRole& role, const RulesRandom& random)
         role.Aptitude < 70                                 ? 4 :
         role.Aptitude < 90                                 ? 5 :
                                                              6;
-    int gain = 1 + bounded(random, tier);
-    role.Level = static_cast<int16_t>(next);
-    role.MaxHP = std::min<int>(word(role.MaxHP + delta * config.growth.hp * (role.IncLife + bounded(random, 3))), MAX_HP);
-    role.CurrentHP = role.MaxHP;
-    role.Hurt = 0;
-    role.Poison = 0;
-    role.PhyPower = MAX_PHYSICAL_POWER;
-    role.MaxMP = std::min<int>(word(role.MaxMP + delta * config.growth.mp * (9 - gain)), MAX_MP);
-    role.CurrentMP = role.MaxMP;
-    role.Attack = word(role.Attack + delta * gain * config.growth.attack);
-    role.Speed = word(role.Speed + delta * gain * config.growth.speed);
-    role.Defence = word(role.Defence + delta * gain * config.growth.defence);
-    for (int index : { 46, 47, 48, 50, 51, 52 })
+    while (role.Level < next)
     {
-        if (role.Data[index] > 20)
+        ++role.Level;
+        int gain = 1 + bounded(random, tier);
+        role.MaxHP = std::min<int>(word(role.MaxHP + config.growth.hp * (role.IncLife + bounded(random, 3))), MAX_HP);
+        role.CurrentHP = role.MaxHP;
+        role.Hurt = 0;
+        role.Poison = 0;
+        role.PhyPower = MAX_PHYSICAL_POWER;
+        role.MaxMP = std::min<int>(word(role.MaxMP + config.growth.mp * (9 - gain)), MAX_MP);
+        role.CurrentMP = role.MaxMP;
+        role.Attack = word(role.Attack + gain * config.growth.attack);
+        role.Speed = word(role.Speed + gain * config.growth.speed);
+        role.Defence = word(role.Defence + gain * config.growth.defence);
+        for (int index : { 46, 47, 48, 50, 51, 52 })
         {
-            role.Data[index] = word(role.Data[index] + bounded(random, 3));
+            if (role.Data[index] > 20)
+            {
+                role.Data[index] = word(role.Data[index] + bounded(random, 3));
+            }
         }
-    }
-    role.HidWeapon = word(role.HidWeapon + bounded(random, 3));
-    for (int index : { 46, 47, 48 })
-    {
-        role.Data[index] = std::min<int>(role.Data[index], 100);
+        role.HidWeapon = word(role.HidWeapon + bounded(random, 3));
+        for (int index : { 46, 47, 48 })
+        {
+            role.Data[index] = std::min<int>(role.Data[index], 100);
+        }
     }
     return delta;
 }
@@ -104,7 +107,7 @@ int ApplyHpHit(TRole& a, TRole& d, const TMagic& m, int trained, const HitContex
     int damage = HpDamage(a, d, m, EffectiveLevel(a, m, trained), c, random);
     exp = word(exp + damage / 5);
     d.CurrentHP = word(d.CurrentHP - damage);
-    if (d.CurrentHP < 0)
+    if (d.CurrentHP <= 0)
     {
         d.CurrentHP = 0;
         exp = word(exp + d.Level * 10);
@@ -192,19 +195,15 @@ int HiddenWeapon(const TRole& a, TRole& d, const TItem& item, const RulesRandom&
     d.CurrentHP = std::clamp<int>(word(d.CurrentHP + change), 0, d.MaxHP);
     if (item.AddPoi > 0)
     {
-        int poison = (item.AddPoi - a.HidWeapon) / 2 - d.DefPoi;
+        int poison = item.AddPoi / 2 - d.DefPoi;
         if (d.DefPoi >= 100)
         {
             poison = 0;
         }
         poison = std::max(poison, 0);
         d.Poison = word(d.Poison + poison / 2);
+        d.Poison = std::clamp<int>(d.Poison, 0, 99);
     }
-    else
-    {
-        d.Poison = word(d.Poison + item.AddPoi / 2 + noise(random, 5));
-    }
-    d.Poison = std::clamp<int>(d.Poison, 0, 99);
     return before - d.CurrentHP;
 }
 
@@ -221,21 +220,15 @@ void Rest(TRole& r, int steps, const RulesRandom& random)
 
 void RoundStatus(TRole& r, bool dead)
 {
-    // Original short-circuit ordering matters: injury bypasses the alive/
-    // stamina checks. The executable clamps negative HP to 1 but leaves 0.
-    if (r.Hurt <= 0 && (r.Poison <= 0 || r.CurrentHP <= 0 || r.PhyPower <= 0 || dead))
+    if (dead || r.CurrentHP <= 0 || (r.Hurt <= 0 && (r.Poison <= 0 || r.PhyPower <= 0)))
     {
         return;
     }
     int poison = POISON_HURT ? r.Poison / POISON_HURT : 0;
-    r.CurrentHP = word(r.CurrentHP - r.Hurt / 20 - poison);
+    r.CurrentHP = std::max<int>(r.CurrentHP - r.Hurt / 20 - poison, 1);
     if (r.PhyPower < 0)
     {
         r.PhyPower = 1;
-    }
-    if (r.CurrentHP < 0)
-    {
-        r.CurrentHP = 1;
     }
 }
 }    //namespace rules::dragon_dos12
@@ -310,7 +303,7 @@ public:
     void describe(GameRuleDescription& out) const override
     {
         out.cumulativeExperience = true;
-        out.batchGrowth = true;
+        out.batchGrowth = false;
         out.xpThresholds = config.xpThresholds;
         out.growth = config.growth;
         out.levelStatCaps = "Medicine/use-poison/detox 100; attack/speed/defence/fist/sword/knife/hidden weapon retain original 16-bit growth without a 100 cap. Resistance/unusual do not grow.";
@@ -340,6 +333,9 @@ public:
         int rnum = Brole[bnum].rnum;
         auto& attacker = Rrole[rnum];
         auto& magic = Rmagic[mnum];
+        // Snapshot this cast's cost before MP recovery and independently of
+        // whether it hits a target. The old DOS cache survives only in saves.
+        int costTier = dragon_dos12::EffectiveLevel(attacker, magic, level);
         for (int i = 0; i < BRoleAmount; ++i)
         {
             Brole[i].ShowNumber = -1;
@@ -350,7 +346,6 @@ public:
             auto& defender = Rrole[Brole[i].rnum];
             if (magic.HurtType == 0)
             {
-                runtime.magicCostTier = dragon_dos12::EffectiveLevel(attacker, magic, level);
                 Brole[i].ShowNumber = dragon_dos12::ApplyHpHit(attacker, defender, magic, level,
                     hitContext(bnum, i, mnum), Brole[bnum].ExpGot);
             }
@@ -359,8 +354,7 @@ public:
                 Brole[i].ShowNumber = dragon_dos12::ApplyMpHit(attacker, defender, magic, level);
             }
         }
-        // Original obj2+18520 consumes this HP cache even on an MP attack.
-        dragon_dos12::PayMagicCost(attacker, magic, runtime.magicCostTier);
+        dragon_dos12::PayMagicCost(attacker, magic, costTier);
         Brole[bnum].ExpGot += 2;
     }
 
@@ -400,8 +394,8 @@ public:
     MagicRuleInfo inspectMagic(const TRole* role, const TMagic& magic, int trained) const override
     {
         int effective = magic.HurtType == 0 && role ? dragon_dos12::EffectiveLevel(*role, magic, trained) : trained;
-        int costTier = magic.HurtType == 0 ? effective : runtime.magicCostTier;
-        return { effective, magic.NeedMP * (costTier / 2), 3, 0, true, magic.HurtType == 1 };
+        int costTier = role ? dragon_dos12::EffectiveLevel(*role, magic, trained) : trained;
+        return { effective, magic.NeedMP * (costTier / 2), 3, 0, true, false };
     }
 
     int minimumCheckpointVersion() const override { return 4; }

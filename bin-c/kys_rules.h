@@ -68,8 +68,8 @@ struct GameRuleDescription
     std::optional<std::string> levelStatCaps;
 };
 
-// Opaque to gameplay and presentation callers. Binary layout stays compatible
-// with existing V4 checkpoints.
+// Reserved historical state. The MP-cost cache no longer affects gameplay;
+// keep the binary layout and value range compatible with V4 checkpoints.
 struct RuleRuntimeState
 {
     int32_t magicCostTier = 0;

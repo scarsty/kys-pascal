@@ -674,12 +674,11 @@ public:
     {
         auto info = DescribeGameRules();
         J out = obj({ { "profile", info.profile }, { "progression", info.progression },
-            { "combat", info.combat }, { "revision", 1 }, { "max_level", MAX_LEVEL },
+            { "combat", info.combat }, { "revision", 2 }, { "max_level", MAX_LEVEL },
             { "max_hp", MAX_HP }, { "max_mp", MAX_MP }, { "max_stamina", MAX_PHYSICAL_POWER },
             { "xp_mode", info.cumulativeExperience ? "cumulative" : "deduct_per_level" },
             { "growth_roll", info.batchGrowth ? "once_per_level_batch" : "once_per_level" },
-            { "min_knowledge", MIN_KNOWLEDGE }, { "life_hurt", LIFE_HURT }, { "poison_hurt", POISON_HURT },
-            { "dos_mp_cost_cache", CaptureRuleState().magicCostTier } });
+            { "min_knowledge", MIN_KNOWLEDGE }, { "life_hurt", LIFE_HURT }, { "poison_hurt", POISON_HURT } });
         if (info.growth)
         {
             out["xp_thresholds"] = numbers(info.xpThresholds);
@@ -797,7 +796,7 @@ public:
         }
         J out = obj({ { "loaded", loaded }, { "where", Where }, { "scene", CurScene }, { "scene_name", CurScene >= 0 ? name(Rscene[CurScene].Name) : "" }, { "xy", Where == 0 ? arr({ Mx, My }) : arr({ Sx, Sy }) }, { "data_xy", Where == 0 ? arr({ My, Mx }) : arr({ Sy, Sx }) }, { "face", Where == 0 ? MFace : SFace }, { "world_xy", arr({ Mx, My }) }, { "world_face", MFace }, { "in_ship", InShip }, { "ship_xy", arr({ ShipY, ShipX }) }, { "party", party }, { "inventory", inventory() }, { "pending", prompt }, { "rng_state", HeadlessRandomState }, { "debug_enabled", debug }, { "legacy_checkpoint_lineage", legacyCheckpointLineage } });
         auto info = DescribeGameRules();
-        out["active_rules"] = obj({ { "profile", info.profile }, { "progression", info.progression }, { "combat", info.combat }, { "dos_mp_cost_cache", CaptureRuleState().magicCostTier } });
+        out["active_rules"] = obj({ { "profile", info.profile }, { "progression", info.progression }, { "combat", info.combat } });
         for (auto& member : out["party"].get_array())
         {
             member["next_level_exp"] = NextLevelExperience(Rrole[integer(member, "id")]);
@@ -1909,7 +1908,7 @@ J tools()
     };
     add("new_game", "Start native character generation and opening event. Deterministic seed; mod directory is supplied on command line.", schema({ { "seed", num } }));
     add("state", "Compact native state, party stats, inventory, pending decision and battle roster.", schema({ }));
-    add("rules", "Read active progression/combat profiles, caps, XP thresholds and DOS MP-cost cache. Configuration is in mod kysmod.ini [rules].", schema({ }));
+    add("rules", "Read active progression/combat profiles, caps, XP thresholds and growth rules. Configuration is in mod kysmod.ini [rules].", schema({ }));
     add("search", "Find IDs by exact CP950 decoded name substring. kind=item/scene/role/magic. Specify id for raw fields, item effects and requirements, equipment eligibility. Paginated.", schema({ { "kind", str }, { "query", str }, { "id", num }, { "offset", num }, { "limit", num } }));
     add("inspect_scene", "Sparse event slots, actual map tiles, script IDs, gates, entries/exits/jumps. Optional x,y adds one tile's six layers and keyboard passability; include_inactive=1 adds raw records. Native xy axes; data_xy swaps for guide/editor.", schema({ { "scene", num }, { "include_inactive", num }, { "x", num }, { "y", num } }));
     add("inspect_world", "Read world tiles around internal x,y (default current), radius0..3 (default1). Shows terrain, building anchor, actual entrance scene and native keyboard passability without moving or changing ship state.", schema({ { "x", num }, { "y", num }, { "radius", num } }));
@@ -1924,7 +1923,7 @@ J tools()
     add("use_item", "Use an owned item through native equipment/practice/medicine/plot flow; further character/menu choices suspend as needed.", schema({ { "item", num } }));
     add("party_action", "Use out-of-battle medicine or detox. Menus ask actor then recipient via choose. Remake rules make these skills free outside battle; DOS medicine costs 2 stamina and requires 50. Poison or injury>33 prevents sleep recovery until treated.", schema({ { "action", str } }));
     add("dismiss", "Dismiss a party member through the native mod leave event.", schema({ { "role", num } }));
-    add("checkpoint", "Save/load all mutations, RNG and DOS MP-cost cache. Idle only: save BEFORE one-shot interactions. Cache holds12 labels; --save-dir retains unlimited labels. V4 verifies world/list/mod fingerprints and checksum. V3 loads in remake mode; V1/V2 require --allow-legacy-checkpoints. Label uses ASCII letters/digits/underscore/hyphen.", schema({ { "action", str }, { "label", str } }));
+    add("checkpoint", "Save/load all mutations and RNG. Idle only: save BEFORE one-shot interactions. Cache holds12 labels; --save-dir retains unlimited labels. V4 verifies world/list/mod fingerprints and checksum. V3 loads in remake mode; V1/V2 require --allow-legacy-checkpoints. Label uses ASCII letters/digits/underscore/hyphen.", schema({ { "action", str }, { "label", str } }));
     add("audit", "Read-only current-data audit for control characters in item names, blocked/invalid entry candidates and invalid event script references. Candidates need investigation.", schema({ }));
     add("inspect_script", "Read native event bytecode without executing it. Paginated instructions with word offset/opcode/args. include_text=1 expands dialogue for guide comparisons. Negative terminators may have other branch blocks after them.", schema({ { "id", num }, { "offset", num }, { "limit", num }, { "include_text", num } }));
     add("debug", "Explicit opt-in debug shortcut; requires --debug. Teleport, mutate a role Data[field], or invoke a script. Result marks evidence as debug.", schema({ { "scene", num }, { "x", num }, { "y", num }, { "role", num }, { "field", num }, { "value", num }, { "script", num } }));

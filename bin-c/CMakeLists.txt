@@ -106,3 +106,11 @@ if(KYS_BUILD_MCP)
         target_compile_options(kys_mcp PRIVATE /utf-8)
     endif()
 endif()
+
+include(CTest)
+if(BUILD_TESTING AND NOT EMSCRIPTEN)
+    add_executable(kys_dragon_rules_tests tests/dragon_rules_tests.cpp)
+    target_link_libraries(kys_dragon_rules_tests PRIVATE kys_core)
+    add_test(NAME dragon_rules_regressions COMMAND kys_dragon_rules_tests
+        "${CMAKE_CURRENT_SOURCE_DIR}/presets/dragon_dos12.ini")
+endif()

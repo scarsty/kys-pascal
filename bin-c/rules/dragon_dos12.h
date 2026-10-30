@@ -2,7 +2,7 @@
 
 #include "kys_rules.h"
 
-// Oracle tests exercise pure effects directly. Production uses the common
+// Regression tests exercise pure effects directly. Production uses the common
 // interfaces; all profile-specific integration lives in this module.
 namespace rules::dragon_dos12
 {
@@ -13,7 +13,7 @@ struct HitContext
 };
 
 int EffectiveLevel(const TRole&, const TMagic&, int trainedLevel);
-void PayMagicCost(TRole&, const TMagic&, int cachedLevel);
+void PayMagicCost(TRole&, const TMagic&, int effectiveLevel);
 int LevelUp(TRole&, const RulesRandom& = RulesRandomDraw);
 int HpDamage(const TRole&, const TRole&, const TMagic&, int effectiveLevel,
     const HitContext&, const RulesRandom& = RulesRandomDraw);
