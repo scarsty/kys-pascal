@@ -65,6 +65,10 @@ kys-pascal-androidstudio/build
 cc
 bin-c/build
 /tmp/
+/game-data/
+/web/dist/
+/.cloudflare/
+/.wrangler/
 **/__pycache__/
 bin-c/.vs
 bin-c/x64

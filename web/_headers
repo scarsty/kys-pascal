@@ -1,0 +1,12 @@
+/
+  Cache-Control: no-cache
+/index.html
+  Cache-Control: no-cache
+/kys-dragon.js
+  Cache-Control: no-cache
+/kys-dragon.wasm.gz
+  Cache-Control: no-cache
+/assets/manifest.json
+  Cache-Control: no-cache
+/assets/*.pack.gz
+  Cache-Control: public, max-age=31536000, immutable

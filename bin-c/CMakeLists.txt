@@ -4,6 +4,12 @@ project(kys LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+if(EMSCRIPTEN AND WASM_DEPS_DIR)
+    list(PREPEND CMAKE_PREFIX_PATH "${WASM_DEPS_DIR}")
+    list(PREPEND CMAKE_FIND_ROOT_PATH "${WASM_DEPS_DIR}")
+    set(SDL3_DIR "${WASM_DEPS_DIR}/share/sdl3")
+endif()
+
 # --- mlcc 辅助库 (filefunc / PotConv / strfunc / INIReader 等) ---
 if(NOT DEFINED MLCC_DIR)
     if(DEFINED ENV{MLCC_DIR})
@@ -66,6 +72,22 @@ endif()
 option(KYS_BUILD_MCP "Build the native stdio MCP frontend" ON)
 add_executable(kys main.cpp)
 target_link_libraries(kys PRIVATE kys_core)
+if(EMSCRIPTEN)
+    find_package(SDL3_image CONFIG REQUIRED)
+    target_link_libraries(kys_core PUBLIC SDL3_image::SDL3_image bz2 brotlidec brotlicommon)
+    target_link_directories(kys PRIVATE "${WASM_DEPS_DIR}/lib")
+    target_compile_options(kys_core PRIVATE -O3 -fexceptions)
+    target_link_options(kys PRIVATE
+        -O3 -sASYNCIFY -sASYNCIFY_STACK_SIZE=262144 -sSTACK_SIZE=1048576
+        -sALLOW_MEMORY_GROWTH=1 -sINITIAL_MEMORY=134217728
+        -sFORCE_FILESYSTEM=1 -lidbfs.js -sASYNCIFY_IMPORTS=__syscall_openat
+        -sNO_DISABLE_EXCEPTION_CATCHING -sASSERTIONS=1
+        "-sEXPORTED_RUNTIME_METHODS=['FS','IDBFS','ccall']"
+        --pre-js "${CMAKE_CURRENT_SOURCE_DIR}/../web/runtime.js")
+    set_target_properties(kys PROPERTIES OUTPUT_NAME kys-dragon SUFFIX .js
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../web/dist"
+        LINK_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/../web/runtime.js")
+endif()
 if(KYS_BUILD_MCP)
     find_package(glaze CONFIG REQUIRED)
     add_executable(kys_mcp kys_mcp.cpp)

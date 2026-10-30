@@ -14,6 +14,9 @@
 #include <SDL3/SDL.h>
 #include <SDL3_mixer/SDL_mixer.h>
 #include <SDL3_ttf/SDL_ttf.h>
+#ifdef __EMSCRIPTEN__
+#include <SDL3_image/SDL_image.h>
+#endif
 
 #include <algorithm>
 #include <cmath>
@@ -76,6 +79,36 @@ static uint32_t BlendRGBAByPercent(uint32_t src, uint32_t dst, int percent)
 
 // ---- 音频 ----
 
+#ifdef __EMSCRIPTEN__
+static MIX_Audio* LoadMusicAudio(int number)
+{
+    auto path = AppPath + "music/" + std::to_string(number) + ".mp3";
+    if (filefunc::fileExist(path))
+    {
+        return MIX_LoadAudio(nullptr, path.c_str(), false);
+    }
+    path = AppPath + "music/" + std::to_string(number) + ".mid";
+    if (!filefunc::fileExist(path))
+    {
+        return nullptr;
+    }
+    auto io = SDL_IOFromFile(path.c_str(), "rb");
+    if (!io)
+    {
+        return nullptr;
+    }
+    auto properties = SDL_CreateProperties();
+    SDL_SetPointerProperty(properties, MIX_PROP_AUDIO_LOAD_IOSTREAM_POINTER, io);
+    SDL_SetBooleanProperty(properties, MIX_PROP_AUDIO_LOAD_CLOSEIO_BOOLEAN, true);
+    SDL_SetStringProperty(properties, MIX_PROP_AUDIO_DECODER_STRING, "fluidsynth");
+    auto soundfont = checkFileName("music/mid.sf2");
+    SDL_SetStringProperty(properties, "SDL_mixer.decoder.fluidsynth.soundfont_path", soundfont.c_str());
+    auto audio = MIX_LoadAudioWithProperties(properties);
+    SDL_DestroyProperties(properties);
+    return audio;
+}
+#endif
+
 void InitialMusic()
 {
     if (Headless())
@@ -98,6 +131,7 @@ void InitialMusic()
     }
     SfxNextTrack = 0;
 
+#ifndef __EMSCRIPTEN__
     for (int i = 0; i < (int)Music.size(); i++)
     {
         if (Music[i])
@@ -201,6 +235,7 @@ void InitialMusic()
         fprintf(stderr, "[InitialMusic] loaded: Music=%d/%d  ESound=%d/%d  ASound=%d/%d  gMixer=%p\n",
             mc, (int)Music.size(), ec, (int)ESound.size(), ac, (int)ASound.size(), (void*)gMixer);
     }
+#endif
 }
 
 void ApplyAudioVolume()
@@ -244,6 +279,12 @@ void PlayMP3(int MusicNum, int times, int frombeginning)
     {
         return;
     }
+#ifdef __EMSCRIPTEN__
+    if (!Music[MusicNum])
+    {
+        Music[MusicNum] = LoadMusicAudio(MusicNum);
+    }
+#endif
     if (!Music[MusicNum])
     {
         return;
@@ -326,6 +367,13 @@ void PlaySound(int SoundNum, int times)
     {
         return;
     }
+#ifdef __EMSCRIPTEN__
+    if (!ESound[SoundNum])
+    {
+        auto path = AppPath + std::format("sound/e{:02d}.wav", SoundNum);
+        ESound[SoundNum] = MIX_LoadAudio(nullptr, path.c_str(), false);
+    }
+#endif
     if (!ESound[SoundNum])
     {
         return;
@@ -366,6 +414,13 @@ void PlaySoundA(int SoundNum, int times)
     {
         return;
     }
+#ifdef __EMSCRIPTEN__
+    if (!ASound[SoundNum])
+    {
+        auto path = AppPath + std::format("sound/atk{:02d}.wav", SoundNum);
+        ASound[SoundNum] = MIX_LoadAudio(nullptr, path.c_str(), false);
+    }
+#endif
     if (!ASound[SoundNum])
     {
         return;
@@ -425,7 +480,11 @@ int LoadIdxGrp(const std::string& stridx, const std::string& strgrp,
 
 SDL_Surface* LoadSurfaceFromFile(const std::string& filename)
 {
+#ifdef __EMSCRIPTEN__
+    return IMG_Load(filename.c_str());
+#else
     return SDL_LoadSurface(filename.c_str());
+#endif
 }
 
 SDL_Surface* LoadSurfaceFromMem(const char* p, int len)
@@ -435,7 +494,11 @@ SDL_Surface* LoadSurfaceFromMem(const char* p, int len)
     {
         return nullptr;
     }
+#ifdef __EMSCRIPTEN__
+    SDL_Surface* s = IMG_Load_IO(io, true);
+#else
     SDL_Surface* s = SDL_LoadSurface_IO(io, true);
+#endif
     return s;
 }
 
@@ -523,6 +586,8 @@ void ReadTiles()
     LoadIdxGrp(path + "resource/talk.idx", path + "resource/talk.grp", TIdx, TDef);
     LoadIdxGrp(path + "resource/kdef.idx", path + "resource/kdef.grp", KIdx, KDef);
 
+    // Browser builds load each fighter when the battle needs it.
+#ifndef __EMSCRIPTEN__
     // 战斗图
     for (int i = 0; i < 1000; i++)
     {
@@ -533,6 +598,7 @@ void ReadTiles()
             LoadIdxGrp(fidx, fgrp, FIdx[i], FPic[i]);
         }
     }
+#endif
 }
 
 // ---- 基本绘图 ----
@@ -588,7 +654,7 @@ void display_img(const char* file_name, int x, int y)
             SDL_DestroySurface(CachedImage);
         }
         std::string fullpath = checkFileName(name);
-        img = SDL_LoadSurface(fullpath.c_str());
+        img = LoadSurfaceFromFile(fullpath);
         CachedImage = img;
         CachedImageName = name;
     }

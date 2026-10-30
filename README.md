@@ -82,6 +82,16 @@ MCP 通过 `--mod` 选择模组，`--save-dir` 指定独立存档目录；工具
 规则由 `[rules]` 配置选择，`profile=dragon_dos12` 启用苍龙 1.2 原版成长与战斗数值，省略或选择 `profile=remake` 则保持复刻规则。
 
 
+### 网页版本
+
+使用 Emscripten 和 vcpkg 的 `wasm32-emscripten` 静态库构建，依赖 SDL3、SDL3_image（WebP）、SDL3_ttf 和 SDL3_mixer（FluidSynth）。
+`web/build.ps1` 默认复用相邻 `kys-cpp/kys-cpp` 工程的依赖，也可通过 `-EmsdkRoot`、`-WasmDeps`、`-MlccDir` 指定位置；Python 需要 Pillow 和 fontTools。
+
+将固定的苍龙逐日数据放入 `game-data/kys-dragon`，运行 `./web/build.ps1`，结果在 `web/dist`。
+构建使用已完成修复、启用苍龙 1.2 规则的数据基准，后续直接读取，不再重复修复。
+打包器会将图片转为较小的无损 WebP，并把资源合并为按需下载的压缩包；浏览器存档使用 IndexedDB。
+部署时发布压缩后的程序、资源目录及页面，保留 `web/_headers` 中的缓存设置。
+
 ## 字符串的处理
 
 在Delphi和Lazarus中默认的字符串编码不同，但是可以强制设置。故目前在pascal版本中和cpp版本中都强制设置为utf-8编码，

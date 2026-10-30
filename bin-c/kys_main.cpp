@@ -447,7 +447,7 @@ void Run()
 #ifdef _WIN32
     SetConsoleOutputCP(65001);
     AppPath = "";
-#else
+#elif defined(__ANDROID__)
     AppPath = "/sdcard/kys-pascal/";
     if (!filefunc::fileExist(AppPath + "kysmod.ini") && !filefunc::fileExist(AppPath + "games.ini"))
     {
@@ -461,6 +461,8 @@ void Run()
     SDL_Log("[kys] AppPath=%s", AppPath.c_str());
     SDL_SetHint(SDL_HINT_ORIENTATIONS, "LandscapeLeft LandscapeRight");
     CellPhone = 1;
+#else
+    AppPath = "";
 #endif
 
     //CellPhone = 1;    //仅调试使用
@@ -545,6 +547,9 @@ void Run()
         render_str = "software";
     }
     SDL_SetHint(SDL_HINT_RENDER_DRIVER, "direct3d,direct3d12,direct3d11,opengl,software");
+#elif defined(__EMSCRIPTEN__)
+    render_str = "opengles2";
+    SDL_SetHint(SDL_HINT_RENDER_DRIVER, "opengles2,software");
 #else
     render_str = "opengles2";
     if (RENDERER == 1)
