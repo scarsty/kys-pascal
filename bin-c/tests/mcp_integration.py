@@ -18,8 +18,8 @@ import unittest
 
 sys.dont_write_bytecode = True
 ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ROOT / "tools"))
 from mcp_client import Game
+sys.path.insert(0, str(ROOT / "tools"))
 
 
 def amount(state, item):
