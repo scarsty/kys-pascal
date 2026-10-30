@@ -1,4 +1,5 @@
 ﻿#include "kys_frontend.h"
+#include "kys_presenter.h"
 // kys_main.cpp - 游戏主流程实现
 // 对应 kys_main.pas
 
@@ -159,7 +160,7 @@ static void MenuSettings()
         {
             SDL_Rect src = { settingsMenuX, settingsMenuY, settingsMenuW + 1, settingsMenuH };
             SDL_Rect dst = { 0, 0, settingsMenuW + 1, settingsMenuH };
-            SDL_BlitSurface(screen, &src, settingsBackground, &dst);
+            Presentation::blit(screen, &src, settingsBackground, &dst);
         }
     }
 
@@ -171,7 +172,7 @@ static void MenuSettings()
         }
         SDL_Rect src = { 0, 0, settingsMenuW + 1, settingsMenuH };
         SDL_Rect dst = { settingsMenuX, settingsMenuY, settingsMenuW + 1, settingsMenuH };
-        SDL_BlitSurface(settingsBackground, &src, screen, &dst);
+        Presentation::blit(settingsBackground, &src, screen, &dst);
     };
 
     auto ShowSettingsMenu = [&](int menu)
@@ -439,7 +440,7 @@ static void MenuSettings()
     RestoreSettingsBackground();
     if (settingsBackground)
     {
-        SDL_DestroySurface(settingsBackground);
+        Presentation::destroy(settingsBackground);
     }
     UpdateScreen(screen, settingsMenuX, settingsMenuY, settingsMenuW + 1, settingsMenuH);
 }
@@ -515,6 +516,9 @@ void Run()
     }
 
     uint32_t screenFlag = SDL_WINDOW_RESIZABLE;
+#ifdef __EMSCRIPTEN__
+    screenFlag |= SDL_WINDOW_HIGH_PIXEL_DENSITY;
+#endif
     window = SDL_CreateWindow(TitleString.c_str(), RESOLUTIONX, RESOLUTIONY, screenFlag);
     if (CellPhone == 1)
     {
@@ -594,7 +598,7 @@ void Quit()
 {
     for (auto& p : fonts)
     {
-        SDL_DestroySurface(p.second);
+        Presentation::destroy(p.second);
     }
     fonts.clear();
     FreeAllSurface();

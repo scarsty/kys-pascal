@@ -10,12 +10,15 @@
 #include "kys_draw.h"
 #include "kys_engine.h"
 #include "kys_main.h"
+#include "kys_presenter.h"
 
 #include <SDL3/SDL.h>
 #include <SDL3_mixer/SDL_mixer.h>
 #include <SDL3_ttf/SDL_ttf.h>
 #ifdef __EMSCRIPTEN__
+#include "kys_web.h"
 #include <SDL3_image/SDL_image.h>
+#include <emscripten.h>
 #endif
 
 #include <algorithm>
@@ -287,6 +290,12 @@ void PlayMP3(int MusicNum, int times, int frombeginning)
         return;
     }
 #ifdef __EMSCRIPTEN__
+    if (!WebMusicReady(MusicNum))
+    {
+        WebDeferMusic(MusicNum, times, frombeginning);
+        return;
+    }
+    WebCancelMusic();
     if (!Music[MusicNum])
     {
         Music[MusicNum] = LoadMusicAudio(MusicNum);
@@ -350,6 +359,9 @@ void PlayMP3(const char* filename, int times)
 
 void StopMP3(int frombeginning)
 {
+#ifdef __EMSCRIPTEN__
+    WebCancelMusic();
+#endif
     if (Headless())
     {
         return;
@@ -473,15 +485,32 @@ void FreeFileBuffer(char*& p)
     p = nullptr;
 }
 
+template <class T>
+static void ReadBinaryVector(const std::string& path, std::vector<T>& data)
+{
+    FILE* file = fopen(path.c_str(), "rb");
+    if (!file)
+    {
+        data.clear();
+        return;
+    }
+    fseek(file, 0, SEEK_END);
+    long bytes = ftell(file);
+    rewind(file);
+    data.resize(bytes > 0 ? static_cast<size_t>(bytes) / sizeof(T) : 0);
+    data.resize(fread(data.data(), sizeof(T), data.size(), file));
+    fclose(file);
+}
+
 int LoadIdxGrp(const std::string& stridx, const std::string& strgrp,
     std::vector<int>& idxarray, std::vector<uint8_t>& grparray)
 {
-    filefunc::readFileToVector(stridx, idxarray);
+    ReadBinaryVector(stridx, idxarray);
     if (idxarray.empty())
     {
         return 0;
     }
-    filefunc::readFileToVector(strgrp, grparray);
+    ReadBinaryVector(strgrp, grparray);
     return (int)idxarray.size();
 }
 
@@ -511,6 +540,7 @@ SDL_Surface* LoadSurfaceFromMem(const char* p, int len)
 
 void FreeAllSurface()
 {
+    Presentation::shutdown();
 #ifdef __EMSCRIPTEN__
     if (FullChineseFont)
     {
@@ -523,7 +553,7 @@ void FreeAllSurface()
     {
         if (s)
         {
-            SDL_DestroySurface(s);
+            Presentation::destroy(s);
         }
     }
     MPNGTile.clear();
@@ -531,7 +561,7 @@ void FreeAllSurface()
     {
         if (s)
         {
-            SDL_DestroySurface(s);
+            Presentation::destroy(s);
         }
     }
     SPNGTile.clear();
@@ -539,7 +569,7 @@ void FreeAllSurface()
     {
         if (s)
         {
-            SDL_DestroySurface(s);
+            Presentation::destroy(s);
         }
     }
     BPNGTile.clear();
@@ -547,7 +577,7 @@ void FreeAllSurface()
     {
         if (s)
         {
-            SDL_DestroySurface(s);
+            Presentation::destroy(s);
         }
     }
     EPNGTile.clear();
@@ -555,7 +585,7 @@ void FreeAllSurface()
     {
         if (s)
         {
-            SDL_DestroySurface(s);
+            Presentation::destroy(s);
         }
     }
     CPNGTile.clear();
@@ -563,7 +593,7 @@ void FreeAllSurface()
     {
         if (s)
         {
-            SDL_DestroySurface(s);
+            Presentation::destroy(s);
         }
     }
     HeadSurface.clear();
@@ -571,7 +601,7 @@ void FreeAllSurface()
     {
         if (s)
         {
-            SDL_DestroySurface(s);
+            Presentation::destroy(s);
         }
     }
     ItemSurface.clear();
@@ -585,9 +615,9 @@ void ReadTiles()
     }
     std::string path = AppPath;
 #ifdef __EMSCRIPTEN__
-    filefunc::readFileToVector(path + "resource/mmap.idx", MIdx);
-    filefunc::readFileToVector(path + "resource/sdx", SIdx);
-    filefunc::readFileToVector(path + "resource/wdx", WIdx);
+    ReadBinaryVector(path + "resource/mmap.idx", MIdx);
+    ReadBinaryVector(path + "resource/sdx", SIdx);
+    ReadBinaryVector(path + "resource/wdx", WIdx);
     MPicAmount = (int)MIdx.size();
     SPicAmount = (int)SIdx.size();
     BPicAmount = (int)WIdx.size();
@@ -599,15 +629,20 @@ void ReadTiles()
     LoadIdxGrp(path + "resource/wdx", path + "resource/wmp", WIdx, WPic);
     BPicAmount = (int)WIdx.size();
 #endif
+#ifndef __EMSCRIPTEN__
     LoadIdxGrp(path + "resource/eft.idx", path + "resource/eft.grp", EIdx, EPic);
     EPicAmount = (int)EIdx.size();
     LoadIdxGrp(path + "resource/cloud.idx", path + "resource/cloud.grp", CIdx, CPic);
     CPicAmount = (int)CIdx.size();
     LoadIdxGrp(path + "resource/hdgrp.idx", path + "resource/hdgrp.grp", HIdx, HPic);
     HPicAmount = (int)HIdx.size();
-    LoadIdxGrp(path + "resource/title.idx", path + "resource/title.grp", TitleIdx, TitlePic);
     LoadIdxGrp(path + "resource/talk.idx", path + "resource/talk.grp", TIdx, TDef);
     LoadIdxGrp(path + "resource/kdef.idx", path + "resource/kdef.grp", KIdx, KDef);
+#else
+    ReadBinaryVector(path + "resource/cloud.idx", CIdx);
+    CPicAmount = static_cast<int>(CIdx.size());
+#endif
+    LoadIdxGrp(path + "resource/title.idx", path + "resource/title.grp", TitleIdx, TitlePic);
 
     // Browser builds load each fighter when the battle needs it.
 #ifndef __EMSCRIPTEN__
@@ -632,21 +667,45 @@ void EnsureMapTiles(MapTiles tiles)
     case MapTiles::World:
         if (MPic.empty())
         {
-            filefunc::readFileToVector(AppPath + "resource/mmap.grp", MPic);
+            WebLoading("正在准备大地图…");
+            ReadBinaryVector(AppPath + "resource/mmap.grp", MPic);
+            LoadIdxGrp(AppPath + "resource/cloud.idx", AppPath + "resource/cloud.grp", CIdx, CPic);
         }
         break;
     case MapTiles::Scene:
         if (SPic.empty())
         {
-            filefunc::readFileToVector(AppPath + "resource/smp", SPic);
+            WebLoading("正在准备场景…");
+            ReadBinaryVector(AppPath + "resource/smp", SPic);
         }
         break;
     case MapTiles::Battle:
         if (WPic.empty())
         {
-            filefunc::readFileToVector(AppPath + "resource/wmp", WPic);
+            WebLoading("正在准备战斗…");
+            ReadBinaryVector(AppPath + "resource/wmp", WPic);
         }
         break;
+    }
+#endif
+}
+
+void EnsurePortraits()
+{
+#ifdef __EMSCRIPTEN__
+    if (HPic.empty())
+    {
+        HPicAmount = LoadIdxGrp(AppPath + "resource/hdgrp.idx", AppPath + "resource/hdgrp.grp", HIdx, HPic);
+    }
+#endif
+}
+
+void EnsureEffects()
+{
+#ifdef __EMSCRIPTEN__
+    if (EPic.empty())
+    {
+        EPicAmount = LoadIdxGrp(AppPath + "resource/eft.idx", AppPath + "resource/eft.grp", EIdx, EPic);
     }
 #endif
 }
@@ -664,7 +723,7 @@ void InitialFonts()
     if (text)
     {
         CHNFONT_SPACEWIDTH = text->w;
-        SDL_DestroySurface(text);
+        Presentation::destroy(text);
     }
 }
 
@@ -699,6 +758,7 @@ void PutPixel(SDL_Surface* surface, int x, int y, uint32_t pixel)
         return;
     }
     uint32_t* pixels = (uint32_t*)surface->pixels;
+    Presentation::pixel(surface, x, y, pixel);
     pixels[y * (surface->pitch / 4) + x] = pixel;
 }
 
@@ -718,7 +778,7 @@ void display_img(const char* file_name, int x, int y)
     {
         if (CachedImage)
         {
-            SDL_DestroySurface(CachedImage);
+            Presentation::destroy(CachedImage);
         }
         std::string fullpath = checkFileName(name);
         img = LoadSurfaceFromFile(fullpath);
@@ -738,7 +798,7 @@ void display_img(const char* file_name, int x, int y)
         y = CENTER_Y - img->h / 2;
     }
     SDL_Rect dst = { x, y, img->w, img->h };
-    SDL_BlitSurface(img, nullptr, screen, &dst);
+    Presentation::blit(img, nullptr, screen, &dst);
 }
 
 uint32_t ColColor(uint8_t num)
@@ -780,7 +840,7 @@ void DrawRectangle(SDL_Surface* sur, int x, int y, int w, int h,
     SDL_GetRGB(colorframe, SDL_GetPixelFormatDetails(tempscr->format),
         SDL_GetSurfacePalette(tempscr), &r1, &g1, &b1);
 
-    SDL_FillSurfaceRect(tempscr, nullptr,
+    Presentation::fill(tempscr, nullptr,
         SDL_MapSurfaceRGBA(tempscr, r, g, b, (uint8_t)(alpha * 255 / 100)));
 
     for (int i1 = 0; i1 <= w; i1++)
@@ -808,8 +868,8 @@ void DrawRectangle(SDL_Surface* sur, int x, int y, int w, int h,
     }
 
     SDL_Rect dst = { x, y, 0, 0 };
-    SDL_BlitSurface(tempscr, nullptr, sur, &dst);
-    SDL_DestroySurface(tempscr);
+    Presentation::blit(tempscr, nullptr, sur, &dst);
+    Presentation::destroy(tempscr);
 }
 
 void DrawRectangleWithoutFrame(SDL_Surface* sur, int x, int y, int w, int h,
@@ -829,11 +889,11 @@ void DrawRectangleWithoutFrame(SDL_Surface* sur, int x, int y, int w, int h,
     {
         return;
     }
-    SDL_FillSurfaceRect(temp, nullptr, colorin | 0xFF000000);
+    Presentation::fill(temp, nullptr, colorin | 0xFF000000);
     SDL_SetSurfaceAlphaMod(temp, (uint8_t)(alpha * 255 / 100));
     SDL_Rect dst = { x, y, 0, 0 };
-    SDL_BlitSurface(temp, nullptr, sur, &dst);
-    SDL_DestroySurface(temp);
+    Presentation::blit(temp, nullptr, sur, &dst);
+    Presentation::destroy(temp);
 }
 
 // ---- RLE8绘图 ----
@@ -1269,6 +1329,8 @@ void DrawText(const std::string& word, int x_pos, int y_pos, uint32_t color)
                 SDL_Rect dst;
                 dst.x = x_pos;
                 dst.y = y_pos + 2;
+                char bytes[2] = { text[i], 0 };
+                Presentation::glyph(EnglishFont, bytes, dst.x, dst.y, { r, g, b, 255 });
                 SDL_BlitSurface(glyph, nullptr, sur, &dst);
             }
             x_pos += 10;
@@ -1300,6 +1362,9 @@ void DrawText(const std::string& word, int x_pos, int y_pos, uint32_t color)
                 SDL_Rect dst;
                 dst.x = x_pos;
                 dst.y = y_pos;
+                char bytes[3] = { text[i], text[i + 1], 0 };
+                uint32_t codepoint = ((c & 31) << 6) | ((uint8_t)text[i + 1] & 63);
+                Presentation::glyph(ChineseGlyphFont(codepoint), bytes, dst.x, dst.y, { r, g, b, 255 });
                 SDL_BlitSurface(glyph, nullptr, sur, &dst);
             }
             x_pos += 10;
@@ -1331,6 +1396,9 @@ void DrawText(const std::string& word, int x_pos, int y_pos, uint32_t color)
                 SDL_Rect dst;
                 dst.x = x_pos;
                 dst.y = y_pos;
+                char bytes[4] = { text[i], text[i + 1], text[i + 2], 0 };
+                uint32_t codepoint = ((c & 15) << 12) | (((uint8_t)text[i + 1] & 63) << 6) | ((uint8_t)text[i + 2] & 63);
+                Presentation::glyph(ChineseGlyphFont(codepoint), bytes, dst.x, dst.y, { r, g, b, 255 });
                 SDL_BlitSurface(glyph, nullptr, sur, &dst);
             }
             x_pos += 20;
@@ -1452,10 +1520,19 @@ void UpdateScreen(SDL_Surface* scr1, int x, int y, int w, int h)
 
     if (scr1 == screen)
     {
+#ifdef __EMSCRIPTEN__
+        WebPollMusic();
+#endif
         void* p = (void*)((uintptr_t)screen->pixels + y * screen->pitch + x * 4);
         SDL_UpdateTexture(screenTex, &dest, p, screen->pitch);
-        SDL_RenderTexture(render, screenTex, nullptr, nullptr);
+        if (!Presentation::present(render))
+        {
+            SDL_RenderTexture(render, screenTex, nullptr, nullptr);
+        }
         SDL_RenderPresent(render);
+#ifdef __EMSCRIPTEN__
+        EM_ASM({ Module.gamePresented(); });
+#endif
     }
 }
 
@@ -1829,8 +1906,9 @@ void QuitConfirm()
         return;
     }
     AskingQuit = true;
-    SDL_Surface* tempscr = SDL_ConvertSurface(screen, screen->format);
-    SDL_BlitSurface(tempscr, nullptr, screen, nullptr);
+    SDL_Surface* tempscr = SDL_CreateSurface(screen->w, screen->h, screen->format);
+    Presentation::blit(screen, nullptr, tempscr, nullptr);
+    Presentation::blit(tempscr, nullptr, screen, nullptr);
     DrawRectangleWithoutFrame(screen, 0, 0, ScreenWidth(), ScreenHeight(), 0, 50);
     UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
     std::string menuStr[2] = { "取消", "確認" };
@@ -1839,9 +1917,9 @@ void QuitConfirm()
         Quit();
     }
     Redraw();
-    SDL_BlitSurface(tempscr, nullptr, screen, nullptr);
+    Presentation::blit(tempscr, nullptr, screen, nullptr);
     UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
-    SDL_DestroySurface(tempscr);
+    Presentation::destroy(tempscr);
     AskingQuit = false;
 }
 

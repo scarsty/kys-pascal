@@ -4,6 +4,47 @@
 #include <SDL3/SDL.h>
 #include <emscripten.h>
 
+namespace
+{
+int pendingTrack = -1;
+int pendingTimes = -1;
+int pendingFromBeginning = 1;
+}    //namespace
+
+void WebLoading(const char* label)
+{
+    EM_ASM({ Module.beginLoading(UTF8ToString($0)); }, label);
+    // Give the browser a paint opportunity before CPU scene preparation.
+    emscripten_sleep(20);
+}
+
+bool WebMusicReady(int track)
+{
+    return EM_ASM_INT({ return Module.prepareMusic($0) ? 1 : 0; }, track) != 0;
+}
+
+void WebDeferMusic(int track, int times, int fromBeginning)
+{
+    pendingTrack = track;
+    pendingTimes = times;
+    pendingFromBeginning = fromBeginning;
+}
+
+void WebCancelMusic()
+{
+    pendingTrack = -1;
+}
+
+void WebPollMusic()
+{
+    if (pendingTrack >= 0 && WebMusicReady(pendingTrack))
+    {
+        int track = pendingTrack;
+        pendingTrack = -1;
+        PlayMP3(track, pendingTimes, pendingFromBeginning);
+    }
+}
+
 // clang-format off
 EM_ASYNC_JS(int, BrowserEnterText, (char* buffer, int capacity), {
     const text = await Module.inputText(UTF8ToString(buffer));

@@ -8,17 +8,17 @@
   <title>苍龙逐日</title>
   <style>
     *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;background:#000;color:#ece8d6;font-family:system-ui,sans-serif;touch-action:none}
-    #wrap{position:fixed;inset:calc(52px + env(safe-area-inset-top)) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);overflow:hidden;display:flex;align-items:center;justify-content:center;background:#000}
-    canvas{display:block;outline:none;border:0;background:#000;touch-action:none;image-rendering:pixelated}
+    #wrap{position:fixed;inset:0;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#000}
+    canvas{display:block;outline:none;border:0;background:#000;touch-action:none}
     #overlay{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;background:#000;z-index:10;transition:opacity .3s}
     #overlay.hidden{opacity:0;pointer-events:none}h1{margin:0;font-size:24px;font-weight:500;letter-spacing:.2em}
     #spinner{width:36px;height:36px;border:3px solid #333;border-top-color:#b19e78;border-radius:50%;animation:spin .8s linear infinite}
     @keyframes spin{to{transform:rotate(360deg)}}#status{font-size:14px;color:#aaa;text-align:center;line-height:1.7;max-width:85vw}
     progress{width:min(260px,65vw);height:4px;accent-color:#b19e78}button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
-    #toolbar{position:fixed;top:env(safe-area-inset-top);left:max(8px,env(safe-area-inset-left));right:max(8px,env(safe-area-inset-right));height:48px;display:none;align-items:center;gap:8px;z-index:5}
-    .ready #toolbar{display:flex}.float{width:40px;height:40px;border-radius:50%;border:1px solid #b19e7840;background:#191716a6;font-size:22px;display:flex;align-items:center;justify-content:center;user-select:none}
-    .float:active{background:#ffffff40}#menu{margin-left:auto}
-    #busy{position:fixed;top:calc(58px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);padding:8px 16px;border-radius:6px;background:#191716df;color:#ddd;font-size:13px;pointer-events:none;z-index:6}
+    #toolbar{display:none}.ready #toolbar{display:contents}.float{position:fixed;width:36px;height:36px;border-radius:50%;border:1px solid #ffffff33;background:#0006;color:#aaa;font-size:20px;display:flex;align-items:center;justify-content:center;user-select:none;z-index:5}
+    .float:active{background:#ffffff4d}#fullscreen{bottom:max(6px,env(safe-area-inset-bottom));left:max(6px,env(safe-area-inset-left))}#back{bottom:max(6px,env(safe-area-inset-bottom));right:max(6px,env(safe-area-inset-right))}#menu{top:max(6px,env(safe-area-inset-top));right:max(6px,env(safe-area-inset-right))}
+    #busy{position:fixed;bottom:max(12px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);max-width:calc(100vw - 100px);padding:8px 14px;border-radius:6px;background:#191716ee;color:#ece8d6;font-size:13px;pointer-events:none;z-index:6;display:flex;align-items:center;gap:9px;white-space:nowrap}
+    #busy::before{content:'';flex:none;width:14px;height:14px;border:2px solid #ffffff33;border-top-color:#b19e78;border-radius:50%;animation:spin .8s linear infinite}
     [hidden]{display:none!important}dialog{width:min(400px,calc(100% - 32px));border:1px solid #b19e7860;border-radius:12px;padding:22px;background:#191716;color:#ece8d6;line-height:1.8;touch-action:auto}
     dialog::backdrop{background:#000a}dialog h2{font-size:20px;margin:0 0 16px;font-weight:500}dialog p{font-size:14px;color:#aaa}dialog button{display:block;width:100%;margin:10px 0;padding:10px 14px;background:#302d27;border:1px solid #b19e7840;border-radius:6px;text-align:left}#message{min-height:24px;color:#d5c29b}
     #name-input{width:100%;margin:12px 0;padding:10px;border:1px solid #b19e7860;border-radius:6px;background:#080808;color:#ece8d6;font:20px system-ui;touch-action:auto}#name-dialog label{display:block}
@@ -29,12 +29,12 @@
   <div id="wrap"><canvas id="canvas" width="800" height="450" tabindex="0" aria-label="苍龙逐日游戏画面"></canvas></div>
   <div id="overlay"><h1>苍龙逐日</h1><div id="spinner"></div><progress id="progress" max="1" value="0"></progress><div id="status" role="status">正在准备游戏…</div><button id="retry" hidden>重新加载</button></div>
   <nav id="toolbar" aria-label="网页操作">
-  <button class="float" id="back" aria-label="返回" title="返回（Esc）">↶</button>
+  <button class="float" id="back" aria-label="取消或返回" title="取消／返回（Esc）">✕</button>
   <button class="float" id="fullscreen" aria-label="切换画面大小" title="切换画面大小">⛶</button>
-  <button class="float" id="menu" aria-label="存档与操作说明" title="存档与操作说明">☰</button>
+  <button class="float" id="menu" aria-label="存档管理" title="存档管理"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 3h13l4 4v14H3V3zM7 3v6h10V3M7 21v-8h10v8"/></svg></button>
   </nav>
   <div id="busy" role="status" hidden></div>
-  <dialog id="settings"><h2>苍龙逐日</h2><p>方向键移动，回车确认，Esc 返回。也可用鼠标操作；触屏可点左上角返回。</p><p>存档保存在当前浏览器。可以导出备份，或在其他浏览器导入。</p><button id="export">导出存档</button><button id="import">导入存档</button><input id="save-file" type="file" accept=".json,application/json" hidden><div id="message" role="status"></div><button id="close">返回游戏</button></dialog>
+  <dialog id="settings"><h2>存档管理</h2><p>方向键移动，回车确认，Esc 返回。触屏可点右下角取消／返回，左下角切换画面大小。</p><p>请在游戏的系统菜单中存档。这里可以导出备份，或导入其他浏览器的存档。</p><button id="export">导出存档</button><button id="import">导入存档</button><input id="save-file" type="file" accept=".json,application/json" hidden><div id="message" role="status"></div><button id="close">返回游戏</button></dialog>
   <dialog id="name-dialog"><form id="name-form"><h2>请输入主角姓名</h2><label for="name-input">姓名</label><input id="name-input" type="text" maxlength="20" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="done"><button type="submit">确定</button><button type="button" id="name-cancel">取消</button></form></dialog>
   <script>
     const canvas = document.getElementById('canvas');
@@ -50,6 +50,8 @@
     let ready = false, failed = false, expanded = true;
     let gameWidth = 800, gameHeight = 450;
     let lastWidth = 0, lastHeight = 0;
+    let loadingLabel = '', awaitingPresentation = false;
+    const pendingAssets = new Set();
 
     function fail(error) {
       failed = true;
@@ -80,12 +82,27 @@
       print: console.log,
       printErr: console.error,
       onAbort: fail,
+      hasInteracted: false,
+      beginLoading(label) {
+        loadingLabel = label;
+        awaitingPresentation = true;
+        updateLoading();
+      },
+      assetStarted(name, label) { pendingAssets.add(name); Module.beginLoading('正在下载' + label + '…'); },
+      assetDecoding(label) { loadingLabel = '正在解压' + label + '…'; updateLoading(); },
+      assetFinished(name, label) { pendingAssets.delete(name); loadingLabel = '正在准备' + label + '…'; updateLoading(); },
+      gamePresented() {
+        if (awaitingPresentation && !pendingAssets.size) {
+          awaitingPresentation = false; loadingLabel = '';
+          updateLoading();
+        }
+      },
       gameReady(width, height) {
         gameWidth = width; gameHeight = height;
         ready = true;
         overlay.classList.add('hidden');
         document.body.classList.add('ready');
-        busy.hidden = true;
+        Module.gamePresented();
         resize();
         canvas.focus();
       },
@@ -118,44 +135,66 @@
           nameDialog.showModal(); nameInput.focus(); nameInput.select();
         });
       },
-      async fetchBinary(url, expected = 0) {
-        const transfer = {loaded:0,total:expected,done:false};
+      async fetchResponse(url, expected = 0, foreground = true) {
+        const transfer = {loaded:0,total:expected,done:false,foreground};
         transfers.set(url, transfer);
-        function update() {
-          if (failed) return;
-          const all = [...transfers.values()];
-          const loaded = all.reduce((sum,t)=>sum+t.loaded,0), total = all.reduce((sum,t)=>sum+t.total,0);
-          document.getElementById('progress').value = total ? loaded / total : 0;
-          const text = (loaded / 1048576).toFixed(1) + ' / ' + (Math.max(total,loaded) / 1048576).toFixed(1) + ' MB';
-          if (!ready) statusEl.textContent = '正在加载游戏 · ' + text;
-          else { busy.hidden = all.every(t=>t.done); busy.textContent = '正在加载资源…'; }
-        }
-        update();
+        updateLoading();
         try {
           const response = await fetch(url);
           if (!response.ok) throw new Error('资源下载失败');
           transfer.total = expected || Number(response.headers.get('content-length')) || 0;
-          const reader = response.body.getReader(), chunks = [];
-          while (true) {
-            const {value,done} = await reader.read();
-            if (done) break;
-            chunks.push(value); transfer.loaded += value.length; update();
-          }
-          transfer.total = transfer.loaded;
-          transfer.done = true; update();
-          return new Blob(chunks).arrayBuffer();
+          const stream = response.body.pipeThrough(new TransformStream({
+            transform(chunk, controller) { transfer.loaded += chunk.length; updateLoading(); controller.enqueue(chunk); },
+            flush() { transfer.total = transfer.loaded; transfer.done = true; updateLoading(); }
+          }));
+          return new Response(stream,{headers:response.headers});
         } catch (error) { fail(error); throw error; }
+      },
+      async fetchBinary(url, expected = 0, foreground = true) {
+        return (await Module.fetchResponse(url, expected, foreground)).arrayBuffer();
       },
       instantiateWasm(imports, success) {
         (async () => {
-          const data = await Module.fetchBinary('kys-dragon.wasm.gz');
-          const stream = new Blob([data]).stream().pipeThrough(new DecompressionStream('gzip'));
+          const response = await Module.fetchResponse('kys-dragon.wasm.gz');
+          const stream = response.body.pipeThrough(new DecompressionStream('gzip'));
           const result = await WebAssembly.instantiateStreaming(new Response(stream,{headers:{'Content-Type':'application/wasm'}}),imports);
           success(result.instance,result.module);
         })().catch(fail);
         return {};
       }
     };
+
+    function updateLoading() {
+      if (failed) return;
+      const active = [...transfers.values()].filter(t=>t.foreground && !t.done);
+      const all = [...transfers.values()].filter(t=>t.foreground);
+      const loaded = all.reduce((sum,t)=>sum+t.loaded,0), total = all.reduce((sum,t)=>sum+t.total,0);
+      document.getElementById('progress').value = total ? loaded / total : 0;
+      const progress = (loaded / 1048576).toFixed(1) + ' / ' + (Math.max(total,loaded) / 1048576).toFixed(1) + ' MB';
+      if (!ready) statusEl.textContent = '正在加载游戏 · ' + progress;
+      else {
+        const hidden = !awaitingPresentation && !pendingAssets.size && !active.length;
+        if (busy.hidden !== hidden) busy.hidden = hidden;
+        const current = active.reduce((sum,t)=>sum+t.loaded,0), size = active.reduce((sum,t)=>sum+t.total,0);
+        const text = (loadingLabel || '正在加载资源…') + (active.length && size ? ' ' + (current / 1048576).toFixed(1) + ' / ' + (size / 1048576).toFixed(1) + ' MB' : '');
+        if (busy.textContent !== text) busy.textContent = text;
+      }
+    }
+
+    Module.assetManifest = fetch('assets/manifest.json',{cache:'no-cache'}).then(response=>{
+      if (!response.ok) throw new Error('无法读取游戏资源目录');
+      return response.json();
+    });
+    Module.startupPacks = new Map();
+    Module.assetManifest.then(manifest=>{
+      for (const name of manifest.startup) {
+        const promise = Module.fetchBinary('assets/'+name,manifest.sizes[name]);
+        promise.catch(fail);
+        Module.startupPacks.set(name,promise);
+      }
+    }).catch(fail);
+
+    for (const type of ['keydown','pointerdown','touchstart']) addEventListener(type,()=>{ Module.hasInteracted = true; },{once:true,capture:true});
 
     resize();
     addEventListener('resize', resize);

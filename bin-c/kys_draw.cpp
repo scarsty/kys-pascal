@@ -1,4 +1,5 @@
 ﻿#include "kys_frontend.h"
+#include "kys_presenter.h"
 // kys_draw.cpp - 高层绘图实现
 // 对应 kys_draw.pas
 
@@ -7,6 +8,9 @@
 #include "kys_engine.h"
 #include "kys_main.h"
 #include "kys_type.h"
+#ifdef __EMSCRIPTEN__
+#include "kys_web.h"
+#endif
 
 #include <algorithm>
 #include <cstdio>
@@ -218,11 +222,12 @@ void DrawHeadPic(int num, int px, int py, SDL_Surface* scr)
         if (image)
         {
             SDL_Rect dest = { px, py, image->w, image->h };
-            SDL_BlitSurface(image, nullptr, scr, &dest);
+            Presentation::blit(image, nullptr, scr, &dest);
         }
     }
     else
     {
+        EnsurePortraits();
         if (num >= 0 && num < HPicAmount && !HPic.empty())
         {
             int offset = (num > 0) ? HIdx[num - 1] : 0;
@@ -260,11 +265,12 @@ void DrawHeadPic(int num, int px, int py, int shadow, int alpha, int depth, uint
         if (image)
         {
             SDL_Rect dest = { px, py - 60, image->w, image->h };
-            SDL_BlitSurface(image, nullptr, screen, &dest);
+            Presentation::blit(image, nullptr, screen, &dest);
         }
     }
     else
     {
+        EnsurePortraits();
         if (num >= 0 && num < HPicAmount && !HPic.empty())
         {
             DrawRLE8Pic((const char*)ACol1, num, px, py, HIdx.data(), HPic.data(),
@@ -308,7 +314,7 @@ void DrawIPic(int num, int px, int py, int shadow, int alpha, uint32_t mixColor,
         if (image)
         {
             SDL_Rect dest = { px, py, image->w, image->h };
-            SDL_BlitSurface(image, nullptr, screen, &dest);
+            Presentation::blit(image, nullptr, screen, &dest);
         }
     }
     else
@@ -387,6 +393,7 @@ void DrawEPic(int num, int px, int py)
     {
         return;
     }
+    EnsureEffects();
     if (num < 0 || num >= EPicAmount)
     {
         return;
@@ -401,6 +408,7 @@ void DrawEPic(int num, int px, int py, int shadow, int alpha, int depth, uint32_
     {
         return;
     }
+    EnsureEffects();
     if (num < 0 || num >= EPicAmount)
     {
         return;
@@ -518,12 +526,12 @@ void Redraw()
     case 1: DrawScene(); break;
     case 2: DrawBField(); break;
     case 3:
-        SDL_FillSurfaceRect(screen, nullptr, 0xff000000);
+        Presentation::fill(screen, nullptr, 0xff000000);
         display_img("resource/open.png", OpenPicPosition.x, OpenPicPosition.y);
         DrawVirtualKey();
         break;
     case 4:
-        SDL_FillSurfaceRect(screen, nullptr, 0xff000000);
+        Presentation::fill(screen, nullptr, 0xff000000);
         display_img("resource/dead.png", OpenPicPosition.x, OpenPicPosition.y);
         break;
     }
@@ -548,7 +556,7 @@ void RecordFreshScreen(int x, int y, int w, int h)
         h = ScreenHeight();
     }
     SDL_Rect r = { x, y, w, h };
-    SDL_BlitSurface(screen, &r, freshscreen, &r);
+    Presentation::blit(screen, &r, freshscreen, &r);
 }
 
 void LoadFreshScreen(int x, int y, int w, int h)
@@ -570,7 +578,7 @@ void LoadFreshScreen(int x, int y, int w, int h)
         h = ScreenHeight();
     }
     SDL_Rect r = { x, y, w, h };
-    SDL_BlitSurface(freshscreen, &r, screen, &r);
+    Presentation::blit(freshscreen, &r, screen, &r);
 }
 
 // ---- 大地图绘制 ----
@@ -586,7 +594,7 @@ void DrawMMap()
     {
         return;
     }
-    SDL_FillSurfaceRect(screen, nullptr, 0);
+    Presentation::fill(screen, nullptr, 0);
 
     const int MAX_BUILD = 2001;
     TBuildInfo BuildArray[2001];
@@ -820,6 +828,12 @@ void InitialScene(int onlyvisible)
         return;
     }
 
+#ifdef __EMSCRIPTEN__
+    if (onlyvisible == 0)
+    {
+        WebLoading("正在准备场景…");
+    }
+#endif
     SDL_LockMutex(mutex);
     LoadingScene = true;
 
@@ -827,10 +841,10 @@ void InitialScene(int onlyvisible)
 
     if (onlyvisible == 0)
     {
-        SDL_FillSurfaceRect(ImgScene, nullptr, 0xFF000000);
+        Presentation::fill(ImgScene, nullptr, 0xFF000000);
         if (ImgSceneBack)
         {
-            SDL_FillSurfaceRect(ImgSceneBack, nullptr, 1);
+            Presentation::fill(ImgSceneBack, nullptr, 1);
         }
         ExpandGroundOnImg(ImgScene, ImageWidth, ImageHeight);
     }
@@ -902,7 +916,7 @@ void InitialScene(int onlyvisible)
         if (ImgSceneBack)
         {
             SDL_Rect rect = { x1, y1, w, h };
-            SDL_BlitSurface(ImgSceneBack, &rect, ImgScene, &rect);
+            Presentation::blit(ImgSceneBack, &rect, ImgScene, &rect);
         }
     }
 
@@ -1145,7 +1159,8 @@ void LoadScenePart(int x1, int y1)
     BlockScreen.y = y1;
     SDL_Rect src = { x1, y1, CENTER_X * 2, CENTER_Y * 2 };
     SDL_Rect dst = { 0, 0, CENTER_X * 2, CENTER_Y * 2 };
-    SDL_BlitSurface(ImgScene, &src, screen, &dst);
+    Presentation::clear(screen);
+    Presentation::blit(ImgScene, &src, screen, &dst);
 }
 
 // ---- 战场绘制 ----
@@ -1263,10 +1278,10 @@ void InitialBFieldImage()
     {
         return;
     }
-    SDL_FillSurfaceRect(ImgBField, nullptr, 0);
+    Presentation::fill(ImgBField, nullptr, 0);
     if (ImgBBuild)
     {
-        SDL_FillSurfaceRect(ImgBBuild, nullptr, SDL_MapSurfaceRGBA(ImgBBuild, 0, 0, 0, 1));
+        Presentation::fill(ImgBBuild, nullptr, SDL_MapSurfaceRGBA(ImgBBuild, 0, 0, 0, 1));
     }
     if (!BlockImg2.empty())
     {
@@ -1328,7 +1343,8 @@ void LoadBfieldPart(int cx, int cy, int noBuild)
     BlockScreen.y = lt.y;
     SDL_Rect src = { lt.x, lt.y, CENTER_X * 2, CENTER_Y * 2 };
     SDL_Rect dst = { 0, 0, CENTER_X * 2, CENTER_Y * 2 };
-    SDL_BlitSurface(ImgBField, &src, screen, &dst);
+    Presentation::clear(screen);
+    Presentation::blit(ImgBField, &src, screen, &dst);
     if (noBuild == 0)
     {
         LoadBFieldPart2(lt.x, lt.y, 0);
@@ -1348,7 +1364,7 @@ void LoadBFieldPart2(int x, int y, int alpha)
     SDL_Rect src = { x, y, CENTER_X * 2, CENTER_Y * 2 };
     SDL_Rect dst = { 0, 0, CENTER_X * 2, CENTER_Y * 2 };
     SDL_SetSurfaceAlphaMod(ImgBBuild, 255 - alpha * 255 / 100);
-    SDL_BlitSurface(ImgBBuild, &src, screen, &dst);
+    Presentation::blit(ImgBBuild, &src, screen, &dst);
 }
 
 void DrawBFieldWithCursor(int step)
@@ -1367,7 +1383,8 @@ void DrawBFieldWithCursor(int step)
         BlockScreen.y = y;
         SDL_Rect src = { x, y, CENTER_X * 2, CENTER_Y * 2 };
         SDL_Rect dst = { 0, 0, CENTER_X * 2, CENTER_Y * 2 };
-        SDL_BlitSurface(ImgBField, &src, screen, &dst);
+        Presentation::clear(screen);
+        Presentation::blit(ImgBField, &src, screen, &dst);
     }
     // Dim the entire screen
     TransBlackScreen();
@@ -1662,7 +1679,7 @@ void DrawProgress()
                 int bhead = Brole[range[i]].BHead;
                 if (bhead >= 0 && bhead < (int)BHead.size() && BHead[bhead])
                 {
-                    SDL_BlitSurface(BHead[bhead], nullptr, screen, &dest);
+                    Presentation::blit(BHead[bhead], nullptr, screen, &dest);
                 }
             }
         }
@@ -1731,7 +1748,7 @@ void DrawVirtualKey()
         }
         SDL_SetSurfaceAlphaMod(surf, (uint8_t)std::clamp(alpha, 0, 255));
         SDL_Rect rect = { x, y, 0, 0 };
-        SDL_BlitSurface(surf, nullptr, screen, &rect);
+        Presentation::blit(surf, nullptr, screen, &rect);
     };
 
     blitKey(VirtualKeyU, VirtualCrossX, VirtualCrossY, alphaU);

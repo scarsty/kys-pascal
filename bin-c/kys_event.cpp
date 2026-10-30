@@ -41,6 +41,12 @@ void instruct_0()
 
 std::string ReadTalk(int talknum)
 {
+#ifdef __EMSCRIPTEN__
+    if (TIdx.empty())
+    {
+        LoadIdxGrp(AppPath + "resource/talk.idx", AppPath + "resource/talk.grp", TIdx, TDef);
+    }
+#endif
     int offset = 0, len = 0;
     if (talknum == 0)
     {
@@ -1982,6 +1988,7 @@ int instruct_50e(int code, int e1, int e2, int e3, int e4, int e5, int e6)
             break;
         case 1:
             DrawHeadPic(e5, e3, e4);
+            EnsurePortraits();
             GetPicSize(e5 / 2, HIdx.data(), HPic.data(), w, h, x, y);
             break;
         case 2:

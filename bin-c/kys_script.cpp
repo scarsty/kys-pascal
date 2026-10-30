@@ -11,6 +11,13 @@
 
 void CallEvent(int num)
 {
+#ifdef __EMSCRIPTEN__
+    if (KIdx.empty())
+    {
+        LoadIdxGrp(AppPath + "resource/kdef.idx", AppPath + "resource/kdef.grp", KIdx, KDef);
+        LoadIdxGrp(AppPath + "resource/talk.idx", AppPath + "resource/talk.grp", TIdx, TDef);
+    }
+#endif
     if (num < 0 || num >= static_cast<int>(KIdx.size()))
     {
         throw std::runtime_error("Invalid event script: " + std::to_string(num));

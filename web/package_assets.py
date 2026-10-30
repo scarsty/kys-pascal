@@ -71,6 +71,8 @@ def web_font(data: bytes, source: Path) -> bytes:
 
 def group(path: str) -> str:
     folder, _, name = path.partition("/")
+    if folder == "cc":
+        return "text-conversion"
     if folder == "fight":
         return "fight-" + str(int(Path(name).stem[5:]) // 32)
     if folder == "head":
@@ -78,9 +80,16 @@ def group(path: str) -> str:
     if folder == "music":
         return "soundfont" if name.endswith(".sf2") else "music-" + str(int(Path(name).stem) // 8)
     if folder == "resource":
+        if name == "talkutf8.txt":
+            return "extras"
+        for prefix, bundle in (("eft.", "effects"), ("hdgrp.", "portraits"),
+                               ("talk.", "dialogue"), ("kdef.", "events"),
+                               ("name.", "extras"), ("war", "battle")):
+            if name.startswith(prefix):
+                return bundle
         if name.endswith(".ttf"):
             return "fonts"
-        if name == "mmap.grp":
+        if name in ("mmap.grp", "cloud.grp"):
             return "world"
         if name == "smp":
             return "scenes"
@@ -139,7 +148,7 @@ def package(source: Path, output: Path) -> None:
             manifest["files"][path] = [filename, size]
         total += len(compressed)
     manifest["startup"] = sorted({manifest["files"]["/game/" + name][0] for name in (
-        "kysmod.ini", "resource/title.grp", "resource/open.png", "music/16.mid", "music/mid.sf2")})
+        "kysmod.ini", "resource/title.grp", "resource/open.png")})
     (assets / "manifest.json").write_text(json.dumps(manifest, ensure_ascii=False,
                                                      separators=(",", ":")), encoding="utf-8")
     for old in assets.glob("*.pack.gz"):

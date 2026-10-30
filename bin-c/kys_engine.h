@@ -25,6 +25,8 @@ enum class MapTiles
     Battle
 };
 void EnsureMapTiles(MapTiles tiles);
+void EnsurePortraits();
+void EnsureEffects();
 void InitialFonts();
 char* ReadFileToBuffer(char* p, const std::string& filename, int size, int malloc_flag);
 void FreeFileBuffer(char*& p);
