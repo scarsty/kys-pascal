@@ -84,7 +84,7 @@ if(BUILD_TESTING)
             target_compile_options(kys_rules_tests PRIVATE /utf-8)
         endif()
         add_test(NAME dos_rules_native_vectors COMMAND kys_rules_tests
-            "${CMAKE_CURRENT_SOURCE_DIR}/tests/dragon_dos12_vectors.json")
+            "${CMAKE_CURRENT_SOURCE_DIR}/../tools/dragon_dos12_vectors.json")
     endif()
     add_executable(kys_core_tests tests/core_tests.cpp)
     target_link_libraries(kys_core_tests PRIVATE kys_core)
@@ -98,6 +98,9 @@ if(BUILD_TESTING)
         add_test(NAME dragon_mcp_integration COMMAND "${Python3_EXECUTABLE}"
             "${CMAKE_CURRENT_SOURCE_DIR}/tests/mcp_integration.py"
             --executable $<TARGET_FILE:kys_mcp> --mod "${KYS_TEST_MOD}")
-        set_tests_properties(dragon_mcp_integration PROPERTIES TIMEOUT 120)
+        add_test(NAME dragon_data_repairs COMMAND "${Python3_EXECUTABLE}"
+            "${CMAKE_CURRENT_SOURCE_DIR}/tests/dragon_repairs_test.py"
+            --executable $<TARGET_FILE:kys_mcp> --mod "${KYS_TEST_MOD}")
+        set_tests_properties(dragon_mcp_integration dragon_data_repairs PROPERTIES TIMEOUT 120)
     endif()
 endif()
