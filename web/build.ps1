@@ -2,7 +2,8 @@ param(
     [string]$GameData,
     [string]$EmsdkRoot = $env:EMSDK,
     [string]$WasmDeps,
-    [string]$MlccDir = $env:MLCC_DIR
+    [string]$MlccDir = $env:MLCC_DIR,
+    [string]$VcpkgRoot = $env:VCPKG_ROOT
 )
 
 Set-StrictMode -Version Latest
@@ -14,12 +15,14 @@ if (-not $GameData) { $GameData = Join-Path $repo 'game-data/kys-dragon' }
 if (-not $EmsdkRoot) { $EmsdkRoot = Join-Path $projects 'emsdk' }
 if (-not $WasmDeps) { $WasmDeps = Join-Path $reference 'wasm/vcpkg_installed/wasm32-emscripten' }
 if (-not $MlccDir) { $MlccDir = Join-Path $reference 'mlcc' }
+if (-not $VcpkgRoot) { $VcpkgRoot = Join-Path $projects 'vcpkg' }
 
 foreach ($required in @(
     (Join-Path $GameData 'kysmod.ini'),
     (Join-Path $EmsdkRoot 'emsdk_env.ps1'),
     (Join-Path $WasmDeps 'lib/libSDL3.a'),
     (Join-Path $MlccDir 'filefunc.cpp')
+    (Join-Path $VcpkgRoot 'vcpkg.exe')
 )) {
     if (-not (Test-Path -LiteralPath $required)) { throw "Missing build input: $required" }
 }
@@ -27,10 +30,18 @@ foreach ($required in @(
 $env:EMSDK_QUIET = '1'
 & (Join-Path $EmsdkRoot 'emsdk_env.ps1') | Out-Null
 $build = Join-Path $repo 'tmp/wasm/build'
+$iconvInstall = Join-Path $repo 'tmp/wasm/vcpkg_installed'
+& (Join-Path $VcpkgRoot 'vcpkg.exe') install --x-wait-for-lock `
+    "--x-manifest-root=$PSScriptRoot" "--x-install-root=$iconvInstall" `
+    "--overlay-triplets=$(Join-Path $PSScriptRoot 'triplets')" --triplet=wasm32-emscripten `
+    "--x-buildtrees-root=$(Join-Path $repo 'tmp/wasm/vcpkg-buildtrees')" `
+    "--x-packages-root=$(Join-Path $repo 'tmp/wasm/vcpkg-packages')"
+if ($LASTEXITCODE -ne 0) { throw 'WebAssembly encoding dependency build failed' }
 $toolchain = Join-Path $EmsdkRoot 'upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake'
 cmake -S (Join-Path $repo 'bin-c') -B $build -G Ninja `
     "-DCMAKE_TOOLCHAIN_FILE=$toolchain" "-DWASM_DEPS_DIR=$WasmDeps" `
-    "-DMLCC_DIR=$MlccDir" -DKYS_BUILD_MCP=OFF -DCMAKE_BUILD_TYPE=Release
+    "-DMLCC_DIR=$MlccDir" "-DWASM_ICONV_DIR=$iconvInstall/wasm32-emscripten" `
+    -DKYS_BUILD_MCP=OFF -DCMAKE_BUILD_TYPE=Release
 if ($LASTEXITCODE -ne 0) { throw 'WebAssembly configure failed' }
 cmake --build $build --parallel 6
 if ($LASTEXITCODE -ne 0) { throw 'WebAssembly build failed' }

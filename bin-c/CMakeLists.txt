@@ -49,6 +49,14 @@ add_library(kys_core STATIC
 find_package(SDL3 REQUIRED)
 find_package(SDL3_ttf REQUIRED)
 find_package(SDL3_mixer REQUIRED)
+if(EMSCRIPTEN)
+    if(NOT EXISTS "${WASM_ICONV_DIR}/lib/libiconv.a")
+        message(FATAL_ERROR "GNU libiconv is required for Big5 encoding; build with web/build.ps1")
+    endif()
+    set(Iconv_IS_BUILT_IN FALSE CACHE BOOL "Use GNU libiconv for Big5 output" FORCE)
+    set(Iconv_INCLUDE_DIR "${WASM_ICONV_DIR}/include" CACHE PATH "GNU libiconv headers" FORCE)
+    set(Iconv_LIBRARY "${WASM_ICONV_DIR}/lib/libiconv.a" CACHE FILEPATH "GNU libiconv" FORCE)
+endif()
 find_package(Iconv REQUIRED)
 
 target_include_directories(kys_core PUBLIC
@@ -83,7 +91,7 @@ if(EMSCRIPTEN)
         -sALLOW_MEMORY_GROWTH=1 -sINITIAL_MEMORY=134217728
         -sFORCE_FILESYSTEM=1 -lidbfs.js -sASYNCIFY_IMPORTS=__syscall_openat
         -sNO_DISABLE_EXCEPTION_CATCHING -sASSERTIONS=1
-        "-sEXPORTED_RUNTIME_METHODS=['FS','IDBFS','ccall']"
+        "-sEXPORTED_RUNTIME_METHODS=['FS','IDBFS','ccall','UTF8ToString','stringToUTF8']"
         --pre-js "${CMAKE_CURRENT_SOURCE_DIR}/../web/runtime.js")
     set_target_properties(kys PROPERTIES OUTPUT_NAME kys-dragon SUFFIX .js
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../web/dist"

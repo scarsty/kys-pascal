@@ -16,6 +16,7 @@
 #include <SDL3_mixer/SDL_mixer.h>
 #include <SDL3_ttf/SDL_ttf.h>
 #ifdef __EMSCRIPTEN__
+#include "kys_web.h"
 #include <emscripten.h>
 #endif
 
@@ -581,7 +582,9 @@ void Run()
 
     SDL_AddEventWatch((SDL_EventFilter)EventFilter, nullptr);
     mutex = SDL_CreateMutex();
+#ifndef __EMSCRIPTEN__
     SDL_AddTimer(200, UpdateSceneAmi, nullptr);
+#endif
 
     Start();
     Quit();
@@ -841,7 +844,7 @@ void Start()
     UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
 
 #ifdef __EMSCRIPTEN__
-    EM_ASM({ Module.gameReady(); });
+    EM_ASM({ Module.gameReady($0, $1); }, ScreenWidth(), ScreenHeight());
 #endif
     bool selected = false;
     while (SDL_WaitEvent(&event))
@@ -1888,7 +1891,6 @@ void Walk()
 
     while (true)
     {
-        SDL_PollEvent(&event);
         if (Where >= 3)
         {
             break;
@@ -1939,154 +1941,172 @@ void Walk()
             next_time = now + 320;
         }
 
-        CheckBasicEvent();
-        switch (event.type)
+        // Drain input before rendering; a quick press/release still takes one step.
+        bool releaseAfterStep = false;
+        while (SDL_PollEvent(&event))
         {
-        case SDL_EVENT_KEY_DOWN:
-            if (event.key.key == SDLK_LEFT)
+            CheckBasicEvent();
+            switch (event.type)
             {
-                MFace = 2;
-                walking = 1;
-            }
-            if (event.key.key == SDLK_RIGHT)
-            {
-                MFace = 1;
-                walking = 1;
-            }
-            if (event.key.key == SDLK_UP)
-            {
-                MFace = 0;
-                walking = 1;
-            }
-            if (event.key.key == SDLK_DOWN)
-            {
-                MFace = 3;
-                walking = 1;
-            }
-            break;
-        case SDL_EVENT_KEY_UP:
-        {
-            const bool* ks = SDL_GetKeyboardState(nullptr);
-            if (!ks[SDL_SCANCODE_LEFT] && !ks[SDL_SCANCODE_RIGHT] && !ks[SDL_SCANCODE_UP] && !ks[SDL_SCANCODE_DOWN])
-            {
-                walking = 0;
-                Speed = 0;
-            }
-            if (event.key.key == SDLK_ESCAPE)
-            {
-                MenuEsc();
-            }
-            break;
-        }
-        case SDL_EVENT_MOUSE_MOTION:
-            if (ShowVirtualKey == 0)
-            {
-                int mx2, my2;
-                SDL_GetMouseState2(mx2, my2);
-                if (mx2 < CENTER_X && my2 < CENTER_Y)
+            case SDL_EVENT_KEY_DOWN:
+                if (event.key.key == SDLK_LEFT)
                 {
                     MFace = 2;
+                    walking = 1;
+                    releaseAfterStep = false;
                 }
-                if (mx2 > CENTER_X && my2 < CENTER_Y)
-                {
-                    MFace = 0;
-                }
-                if (mx2 < CENTER_X && my2 > CENTER_Y)
-                {
-                    MFace = 3;
-                }
-                if (mx2 > CENTER_X && my2 > CENTER_Y)
+                if (event.key.key == SDLK_RIGHT)
                 {
                     MFace = 1;
+                    walking = 1;
+                    releaseAfterStep = false;
                 }
-            }
-            break;
-        case SDL_EVENT_MOUSE_BUTTON_UP:
-            if (event.button.button == SDL_BUTTON_RIGHT)
-            {
-                event.button.button = 0;
-                MenuEsc();
-                nowstep = -1;
-                walking = 0;
-            }
-            if (event.button.button == SDL_BUTTON_LEFT && TouchWalk)
-            {
-                walking = 2;
-                int axp, ayp;
-                GetMousePosition(axp, ayp, Mx, My);
-                if (ayp >= 0 && ayp <= 479 && axp >= 0 && axp <= 479)
+                if (event.key.key == SDLK_UP)
                 {
-                    memset(PathCost, 0xFF, sizeof(PathCost));
-                    FindWay(Mx, My);
-                    gotoEntrance = -1;
-                    if (BuildY[axp][ayp] > 0 && Entrance[axp][ayp] < 0)
+                    MFace = 0;
+                    walking = 1;
+                    releaseAfterStep = false;
+                }
+                if (event.key.key == SDLK_DOWN)
+                {
+                    MFace = 3;
+                    walking = 1;
+                    releaseAfterStep = false;
+                }
+                break;
+            case SDL_EVENT_KEY_UP:
+            {
+                const bool* ks = SDL_GetKeyboardState(nullptr);
+                if (walking == 1 && !ks[SDL_SCANCODE_LEFT] && !ks[SDL_SCANCODE_RIGHT] && !ks[SDL_SCANCODE_UP] && !ks[SDL_SCANCODE_DOWN])
+                {
+                    if (Speed == 0)
                     {
-                        int bx = BuildX[axp][ayp];
-                        int by = BuildY[axp][ayp];
-                        axp = bx;
-                        ayp = by;
-                        auto SetBuildingEntrance = [&]()
+                        releaseAfterStep = true;
+                    }
+                    else
+                    {
+                        walking = 0;
+                        Speed = 0;
+                    }
+                }
+                if (event.key.key == SDLK_ESCAPE)
+                {
+                    MenuEsc();
+                    nowstep = -1;
+                    walking = 0;
+                    Speed = 0;
+                }
+                break;
+            }
+            case SDL_EVENT_MOUSE_MOTION:
+                if (ShowVirtualKey == 0)
+                {
+                    int mx2, my2;
+                    SDL_GetMouseState2(mx2, my2);
+                    if (mx2 < CENTER_X && my2 < CENTER_Y)
+                    {
+                        MFace = 2;
+                    }
+                    if (mx2 > CENTER_X && my2 < CENTER_Y)
+                    {
+                        MFace = 0;
+                    }
+                    if (mx2 < CENTER_X && my2 > CENTER_Y)
+                    {
+                        MFace = 3;
+                    }
+                    if (mx2 > CENTER_X && my2 > CENTER_Y)
+                    {
+                        MFace = 1;
+                    }
+                }
+                break;
+            case SDL_EVENT_MOUSE_BUTTON_UP:
+                if (event.button.button == SDL_BUTTON_RIGHT)
+                {
+                    event.button.button = 0;
+                    MenuEsc();
+                    nowstep = -1;
+                    walking = 0;
+                }
+                if (event.button.button == SDL_BUTTON_LEFT && TouchWalk)
+                {
+                    walking = 2;
+                    int axp, ayp;
+                    GetMapPositionFromScreen(axp, ayp, event.button.x, event.button.y, Mx, My);
+                    if (ayp >= 0 && ayp <= 479 && axp >= 0 && axp <= 479)
+                    {
+                        memset(PathCost, 0xFF, sizeof(PathCost));
+                        FindWay(Mx, My);
+                        gotoEntrance = -1;
+                        if (BuildY[axp][ayp] > 0 && Entrance[axp][ayp] < 0)
                         {
-                            for (int i1 = bx - 3; i1 <= bx; i1++)
+                            int bx = BuildX[axp][ayp];
+                            int by = BuildY[axp][ayp];
+                            axp = bx;
+                            ayp = by;
+                            auto SetBuildingEntrance = [&]()
                             {
-                                for (int i2 = by - 3; i2 <= by; i2++)
+                                for (int i1 = bx - 3; i1 <= bx; i1++)
                                 {
-                                    if (i1 >= 0 && i2 >= 0 && Entrance[i1][i2] >= 0 && BuildX[i1][i2] == bx && BuildY[i1][i2] == by)
+                                    for (int i2 = by - 3; i2 <= by; i2++)
                                     {
-                                        axp = i1;
-                                        ayp = i2;
-                                        return;
+                                        if (i1 >= 0 && i2 >= 0 && Entrance[i1][i2] >= 0 && BuildX[i1][i2] == bx && BuildY[i1][i2] == by)
+                                        {
+                                            axp = i1;
+                                            ayp = i2;
+                                            return;
+                                        }
+                                    }
+                                }
+                            };
+                            SetBuildingEntrance();
+                        }
+                        if (Entrance[axp][ayp] >= 0)
+                        {
+                            int minstep = 4096;
+                            for (int i = 0; i < 4; i++)
+                            {
+                                int axp1 = axp, ayp1 = ayp;
+                                switch (i)
+                                {
+                                case 0: axp1 = axp - 1; break;
+                                case 1: ayp1 = ayp + 1; break;
+                                case 2: ayp1 = ayp - 1; break;
+                                case 3: axp1 = axp + 1; break;
+                                }
+                                if (axp1 >= 0 && axp1 < 480 && ayp1 >= 0 && ayp1 < 480)
+                                {
+                                    int step = PathCost[axp1][ayp1];
+                                    if (step >= 0 && minstep > step)
+                                    {
+                                        gotoEntrance = i;
+                                        minstep = step;
                                     }
                                 }
                             }
-                        };
-                        SetBuildingEntrance();
-                    }
-                    if (Entrance[axp][ayp] >= 0)
-                    {
-                        int minstep = 4096;
-                        for (int i = 0; i < 4; i++)
-                        {
-                            int axp1 = axp, ayp1 = ayp;
-                            switch (i)
+                            if (gotoEntrance >= 0)
                             {
-                            case 0: axp1 = axp - 1; break;
-                            case 1: ayp1 = ayp + 1; break;
-                            case 2: ayp1 = ayp - 1; break;
-                            case 3: axp1 = axp + 1; break;
-                            }
-                            if (axp1 >= 0 && axp1 < 480 && ayp1 >= 0 && ayp1 < 480)
-                            {
-                                int step = PathCost[axp1][ayp1];
-                                if (step >= 0 && minstep > step)
+                                switch (gotoEntrance)
                                 {
-                                    gotoEntrance = i;
-                                    minstep = step;
+                                case 0: axp = axp - 1; break;
+                                case 1: ayp = ayp + 1; break;
+                                case 2: ayp = ayp - 1; break;
+                                case 3: axp = axp + 1; break;
                                 }
+                                gotoEntrance = 3 - gotoEntrance;
                             }
                         }
-                        if (gotoEntrance >= 0)
-                        {
-                            switch (gotoEntrance)
-                            {
-                            case 0: axp = axp - 1; break;
-                            case 1: ayp = ayp + 1; break;
-                            case 2: ayp = ayp - 1; break;
-                            case 3: axp = axp + 1; break;
-                            }
-                            gotoEntrance = 3 - gotoEntrance;
-                        }
+                        Moveman(Mx, My, axp, ayp);
+                        nowstep = PathCost[axp][ayp] - 1;
                     }
-                    FindWay(Mx, My);
-                    Moveman(Mx, My, axp, ayp);
-                    nowstep = PathCost[axp][ayp] - 1;
+                    else
+                    {
+                        walking = 0;
+                    }
                 }
-                else
-                {
-                    walking = 0;
-                }
+                break;
             }
-            break;
         }
 
         // 行走处理
@@ -2191,6 +2211,12 @@ void Walk()
         if (Where == 1)
         {
             WalkInScene(0);
+        }
+
+        if (releaseAfterStep && walking == 1)
+        {
+            walking = 0;
+            Speed = 0;
         }
 
         event.key.key = 0;
@@ -2368,7 +2394,7 @@ int WalkInScene(int Open)
     ShowSceneName(CurScene);
     CheckEvent3();
 
-    while (SDL_PollEvent(&event) || true)
+    while (true)
     {
         if (Where != 1)
         {
@@ -2406,7 +2432,12 @@ int WalkInScene(int Open)
                     }
                 }
             }
+#ifdef __EMSCRIPTEN__
+            // Browser timer callbacks must not render or suspend a second Asyncify stack.
+            if (SCENEAMI != 0)
+#else
             if (SCENEAMI == 1)
+#endif
             {
                 InitialScene(1);
             }
@@ -2466,188 +2497,204 @@ int WalkInScene(int Open)
             CheckEvent3();
         }
 
-        CheckBasicEvent();
-        switch (event.type)
+        // Drain input before rendering; a quick press/release still takes one step.
+        bool releaseAfterStep = false;
+        while (SDL_PollEvent(&event))
         {
-        case SDL_EVENT_KEY_UP:
-        {
-            const bool* ks = SDL_GetKeyboardState(nullptr);
-            if (!ks[SDL_SCANCODE_LEFT] && !ks[SDL_SCANCODE_RIGHT] && !ks[SDL_SCANCODE_UP] && !ks[SDL_SCANCODE_DOWN])
+            CheckBasicEvent();
+            switch (event.type)
             {
-                walking = 0;
-                Speed = 0;
-            }
-            if (event.key.key == SDLK_ESCAPE)
+            case SDL_EVENT_KEY_UP:
             {
-                MenuEsc();
-                walking = 0;
-                Speed = 0;
-            }
-            if (event.key.key == SDLK_RETURN || event.key.key == SDLK_SPACE)
-            {
-                CheckEvent1();
-            }
-            break;
-        }
-        case SDL_EVENT_KEY_DOWN:
-            if (event.key.key == SDLK_LEFT)
-            {
-                SFace = 2;
-                walking = 1;
-            }
-            if (event.key.key == SDLK_RIGHT)
-            {
-                SFace = 1;
-                walking = 1;
-            }
-            if (event.key.key == SDLK_UP)
-            {
-                SFace = 0;
-                walking = 1;
-            }
-            if (event.key.key == SDLK_DOWN)
-            {
-                SFace = 3;
-                walking = 1;
-            }
-            break;
-        case SDL_EVENT_MOUSE_MOTION:
-            if (ShowVirtualKey == 0)
-            {
-                int mx2, my2;
-                SDL_GetMouseState2(mx2, my2);
-                if (mx2 < CENTER_X && my2 < CENTER_Y)
+                const bool* ks = SDL_GetKeyboardState(nullptr);
+                if (walking == 1 && !ks[SDL_SCANCODE_LEFT] && !ks[SDL_SCANCODE_RIGHT] && !ks[SDL_SCANCODE_UP] && !ks[SDL_SCANCODE_DOWN])
                 {
-                    MFace = 2;
-                }
-                if (mx2 > CENTER_X && my2 < CENTER_Y)
-                {
-                    MFace = 0;
-                }
-                if (mx2 < CENTER_X && my2 > CENTER_Y)
-                {
-                    MFace = 3;
-                }
-                if (mx2 > CENTER_X && my2 > CENTER_Y)
-                {
-                    MFace = 1;
-                }
-            }
-            break;
-        case SDL_EVENT_MOUSE_BUTTON_UP:
-            if (event.button.button == SDL_BUTTON_RIGHT)
-            {
-                MenuEsc();
-                nowstep = 0;
-                walking = 0;
-                Speed = 0;
-                if (Where == 0)
-                {
-                    if (CurScene >= 0 && Rscene[CurScene].ExitMusic >= 0)
+                    if (Speed == 0)
                     {
-                        StopMP3();
-                        PlayMP3(Rscene[CurScene].ExitMusic, -1);
+                        releaseAfterStep = true;
                     }
-                    Redraw();
-                    UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
-                    return 0;
-                }
-            }
-            if (event.button.button == SDL_BUTTON_MIDDLE)
-            {
-                CheckEvent1();
-            }
-            if (event.button.button == SDL_BUTTON_LEFT && TouchWalk)
-            {
-                if (walking == 0)
-                {
-                    walking = 2;
-                    int axp, ayp;
-                    GetMousePosition(axp, ayp, Sx, Sy, SData[CurScene][4][Sx][Sy]);
-                    if (ayp >= 0 && ayp <= 63 && axp >= 0 && axp <= 63)
+                    else
                     {
-                        memset(PathCost, 0xFF, sizeof(PathCost));
-                        FindWay(Sx, Sy);
-                        gotoevent_local = -1;
-                        if (SData[CurScene][3][axp][ayp] >= 0)
+                        walking = 0;
+                        Speed = 0;
+                    }
+                }
+                if (event.key.key == SDLK_ESCAPE)
+                {
+                    MenuEsc();
+                    walking = 0;
+                    Speed = 0;
+                }
+                if (event.key.key == SDLK_RETURN || event.key.key == SDLK_SPACE)
+                {
+                    CheckEvent1();
+                }
+                break;
+            }
+            case SDL_EVENT_KEY_DOWN:
+                if (event.key.key == SDLK_LEFT)
+                {
+                    SFace = 2;
+                    walking = 1;
+                    releaseAfterStep = false;
+                }
+                if (event.key.key == SDLK_RIGHT)
+                {
+                    SFace = 1;
+                    walking = 1;
+                    releaseAfterStep = false;
+                }
+                if (event.key.key == SDLK_UP)
+                {
+                    SFace = 0;
+                    walking = 1;
+                    releaseAfterStep = false;
+                }
+                if (event.key.key == SDLK_DOWN)
+                {
+                    SFace = 3;
+                    walking = 1;
+                    releaseAfterStep = false;
+                }
+                break;
+            case SDL_EVENT_MOUSE_MOTION:
+                if (ShowVirtualKey == 0)
+                {
+                    int mx2, my2;
+                    SDL_GetMouseState2(mx2, my2);
+                    if (mx2 < CENTER_X && my2 < CENTER_Y)
+                    {
+                        MFace = 2;
+                    }
+                    if (mx2 > CENTER_X && my2 < CENTER_Y)
+                    {
+                        MFace = 0;
+                    }
+                    if (mx2 < CENTER_X && my2 > CENTER_Y)
+                    {
+                        MFace = 3;
+                    }
+                    if (mx2 > CENTER_X && my2 > CENTER_Y)
+                    {
+                        MFace = 1;
+                    }
+                }
+                break;
+            case SDL_EVENT_MOUSE_BUTTON_UP:
+                if (event.button.button == SDL_BUTTON_RIGHT)
+                {
+                    MenuEsc();
+                    nowstep = 0;
+                    walking = 0;
+                    Speed = 0;
+                    if (Where == 0)
+                    {
+                        if (CurScene >= 0 && Rscene[CurScene].ExitMusic >= 0)
                         {
-                            if (abs(axp - Sx) + abs(ayp - Sy) == 1)
+                            StopMP3();
+                            PlayMP3(Rscene[CurScene].ExitMusic, -1);
+                        }
+                        Redraw();
+                        UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
+                        return 0;
+                    }
+                }
+                if (event.button.button == SDL_BUTTON_MIDDLE)
+                {
+                    CheckEvent1();
+                }
+                if (event.button.button == SDL_BUTTON_LEFT && TouchWalk)
+                {
+                    if (walking == 0)
+                    {
+                        walking = 2;
+                        int axp, ayp;
+                        GetMapPositionFromScreen(axp, ayp, event.button.x, event.button.y, Sx, Sy, SData[CurScene][4][Sx][Sy]);
+                        if (ayp >= 0 && ayp <= 63 && axp >= 0 && axp <= 63)
+                        {
+                            memset(PathCost, 0xFF, sizeof(PathCost));
+                            FindWay(Sx, Sy);
+                            gotoevent_local = -1;
+                            if (SData[CurScene][3][axp][ayp] >= 0)
                             {
-                                if (axp < Sx)
+                                if (abs(axp - Sx) + abs(ayp - Sy) == 1)
                                 {
-                                    SFace = 0;
-                                }
-                                if (axp > Sx)
-                                {
-                                    SFace = 3;
-                                }
-                                if (ayp < Sy)
-                                {
-                                    SFace = 2;
-                                }
-                                if (ayp > Sy)
-                                {
-                                    SFace = 1;
-                                }
-                                if (CheckEvent1())
-                                {
-                                    walking = 0;
-                                }
-                            }
-                            else
-                            {
-                                if (!CanWalkInScene(axp, ayp))
-                                {
-                                    int minstep = 4096;
-                                    for (int i = 0; i < 4; i++)
+                                    if (axp < Sx)
                                     {
-                                        int axp1 = axp, ayp1 = ayp;
-                                        switch (i)
+                                        SFace = 0;
+                                    }
+                                    if (axp > Sx)
+                                    {
+                                        SFace = 3;
+                                    }
+                                    if (ayp < Sy)
+                                    {
+                                        SFace = 2;
+                                    }
+                                    if (ayp > Sy)
+                                    {
+                                        SFace = 1;
+                                    }
+                                    if (CheckEvent1())
+                                    {
+                                        walking = 0;
+                                    }
+                                }
+                                else
+                                {
+                                    if (!CanWalkInScene(axp, ayp))
+                                    {
+                                        int minstep = 4096;
+                                        for (int i = 0; i < 4; i++)
                                         {
-                                        case 0: axp1 = axp - 1; break;
-                                        case 1: ayp1 = ayp + 1; break;
-                                        case 2: ayp1 = ayp - 1; break;
-                                        case 3: axp1 = axp + 1; break;
-                                        }
-                                        if (axp1 >= 0 && axp1 < 64 && ayp1 >= 0 && ayp1 < 64)
-                                        {
-                                            int step = PathCost[axp1][ayp1];
-                                            if (step >= 0 && minstep > step)
+                                            int axp1 = axp, ayp1 = ayp;
+                                            switch (i)
                                             {
-                                                gotoevent_local = i;
-                                                minstep = step;
+                                            case 0: axp1 = axp - 1; break;
+                                            case 1: ayp1 = ayp + 1; break;
+                                            case 2: ayp1 = ayp - 1; break;
+                                            case 3: axp1 = axp + 1; break;
+                                            }
+                                            if (axp1 >= 0 && axp1 < 64 && ayp1 >= 0 && ayp1 < 64)
+                                            {
+                                                int step = PathCost[axp1][ayp1];
+                                                if (step >= 0 && minstep > step)
+                                                {
+                                                    gotoevent_local = i;
+                                                    minstep = step;
+                                                }
                                             }
                                         }
-                                    }
-                                    if (gotoevent_local >= 0)
-                                    {
-                                        switch (gotoevent_local)
+                                        if (gotoevent_local >= 0)
                                         {
-                                        case 0: axp = axp - 1; break;
-                                        case 1: ayp = ayp + 1; break;
-                                        case 2: ayp = ayp - 1; break;
-                                        case 3: axp = axp + 1; break;
+                                            switch (gotoevent_local)
+                                            {
+                                            case 0: axp = axp - 1; break;
+                                            case 1: ayp = ayp + 1; break;
+                                            case 2: ayp = ayp - 1; break;
+                                            case 3: axp = axp + 1; break;
+                                            }
+                                            gotoevent_local = 3 - gotoevent_local;
                                         }
-                                        gotoevent_local = 3 - gotoevent_local;
                                     }
                                 }
                             }
+                            Moveman(Sx, Sy, axp, ayp);
+                            nowstep = PathCost[axp][ayp] - 1;
                         }
-                        Moveman(Sx, Sy, axp, ayp);
-                        nowstep = PathCost[axp][ayp] - 1;
+                        else
+                        {
+                            walking = 0;
+                        }
                     }
                     else
                     {
                         walking = 0;
                     }
+                    event.button.button = 0;
                 }
-                else
-                {
-                    walking = 0;
-                }
-                event.button.button = 0;
+                break;
             }
-            break;
         }
 
         // 行走处理
@@ -2734,6 +2781,12 @@ int WalkInScene(int Open)
             Redraw();
             UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
             CheckEvent3();
+        }
+
+        if (releaseAfterStep && walking == 1)
+        {
+            walking = 0;
+            Speed = 0;
         }
 
         event.key.key = 0;
@@ -5978,6 +6031,9 @@ bool EnterString(std::string& str, int x, int y, int w, int h)
     {
         return true;
     }
+#ifdef __EMSCRIPTEN__
+    return WebEnterString(str);
+#endif
     int drawX = x;
     int drawY = y;
     if (CellPhone != 0)

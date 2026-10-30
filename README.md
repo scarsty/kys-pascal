@@ -86,6 +86,7 @@ MCP 通过 `--mod` 选择模组，`--save-dir` 指定独立存档目录；工具
 
 使用 Emscripten 和 vcpkg 的 `wasm32-emscripten` 静态库构建，依赖 SDL3、SDL3_image（WebP）、SDL3_ttf 和 SDL3_mixer（FluidSynth）。
 `web/build.ps1` 默认复用相邻 `kys-cpp/kys-cpp` 工程的依赖，也可通过 `-EmsdkRoot`、`-WasmDeps`、`-MlccDir` 指定位置；Python 依赖通过 `python -m pip install -r web/requirements.txt` 安装。
+构建脚本还会用 vcpkg 编译 GNU libiconv，以支持中文姓名写回游戏数据；vcpkg 位置通过 `VCPKG_ROOT` 或 `-VcpkgRoot` 指定。这部分依赖和构建缓存统一放在 `tmp/wasm`。
 
 将固定的苍龙逐日数据放入 `game-data/kys-dragon`，运行 `./web/build.ps1`，结果在 `web/dist`。
 构建使用已完成修复、启用苍龙 1.2 规则的数据基准，后续直接读取，不再重复修复。

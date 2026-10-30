@@ -8,38 +8,48 @@
   <title>苍龙逐日</title>
   <style>
     *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;background:#000;color:#ece8d6;font-family:system-ui,sans-serif;touch-action:none}
-    #wrap{position:fixed;inset:0;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#000}
+    #wrap{position:fixed;inset:calc(52px + env(safe-area-inset-top)) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);overflow:hidden;display:flex;align-items:center;justify-content:center;background:#000}
     canvas{display:block;outline:none;border:0;background:#000;touch-action:none;image-rendering:pixelated}
     #overlay{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;background:#000;z-index:10;transition:opacity .3s}
     #overlay.hidden{opacity:0;pointer-events:none}h1{margin:0;font-size:24px;font-weight:500;letter-spacing:.2em}
     #spinner{width:36px;height:36px;border:3px solid #333;border-top-color:#b19e78;border-radius:50%;animation:spin .8s linear infinite}
     @keyframes spin{to{transform:rotate(360deg)}}#status{font-size:14px;color:#aaa;text-align:center;line-height:1.7;max-width:85vw}
     progress{width:min(260px,65vw);height:4px;accent-color:#b19e78}button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
-    .float{position:fixed;bottom:max(8px,env(safe-area-inset-bottom));width:44px;height:44px;border-radius:50%;border:1px solid #b19e7840;background:#191716a6;font-size:22px;z-index:5;display:none;align-items:center;justify-content:center;user-select:none}
-    .ready .float{display:flex}.float:active{background:#ffffff40}#fullscreen{left:max(8px,env(safe-area-inset-left))}#menu{right:max(8px,env(safe-area-inset-right))}#back{right:max(60px,calc(env(safe-area-inset-right) + 52px))}
-    #busy{position:fixed;top:max(10px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);padding:8px 16px;border-radius:6px;background:#191716df;color:#ddd;font-size:13px;pointer-events:none;z-index:6}
+    #toolbar{position:fixed;top:env(safe-area-inset-top);left:max(8px,env(safe-area-inset-left));right:max(8px,env(safe-area-inset-right));height:48px;display:none;align-items:center;gap:8px;z-index:5}
+    .ready #toolbar{display:flex}.float{width:40px;height:40px;border-radius:50%;border:1px solid #b19e7840;background:#191716a6;font-size:22px;display:flex;align-items:center;justify-content:center;user-select:none}
+    .float:active{background:#ffffff40}#menu{margin-left:auto}
+    #busy{position:fixed;top:calc(58px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);padding:8px 16px;border-radius:6px;background:#191716df;color:#ddd;font-size:13px;pointer-events:none;z-index:6}
     [hidden]{display:none!important}dialog{width:min(400px,calc(100% - 32px));border:1px solid #b19e7860;border-radius:12px;padding:22px;background:#191716;color:#ece8d6;line-height:1.8;touch-action:auto}
     dialog::backdrop{background:#000a}dialog h2{font-size:20px;margin:0 0 16px;font-weight:500}dialog p{font-size:14px;color:#aaa}dialog button{display:block;width:100%;margin:10px 0;padding:10px 14px;background:#302d27;border:1px solid #b19e7840;border-radius:6px;text-align:left}#message{min-height:24px;color:#d5c29b}
+    #name-input{width:100%;margin:12px 0;padding:10px;border:1px solid #b19e7860;border-radius:6px;background:#080808;color:#ece8d6;font:20px system-ui;touch-action:auto}#name-dialog label{display:block}
     @media(prefers-reduced-motion:reduce){#overlay{transition:none}#spinner{animation-duration:2s}}
   </style>
 </head>
 <body>
-  <div id="wrap"><canvas id="canvas" width="640" height="440" tabindex="0" aria-label="苍龙逐日游戏画面"></canvas></div>
+  <div id="wrap"><canvas id="canvas" width="800" height="450" tabindex="0" aria-label="苍龙逐日游戏画面"></canvas></div>
   <div id="overlay"><h1>苍龙逐日</h1><div id="spinner"></div><progress id="progress" max="1" value="0"></progress><div id="status" role="status">正在准备游戏…</div><button id="retry" hidden>重新加载</button></div>
-  <button class="float" id="fullscreen" aria-label="切换画面大小" title="切换画面大小">⛶</button>
+  <nav id="toolbar" aria-label="网页操作">
   <button class="float" id="back" aria-label="返回" title="返回（Esc）">↶</button>
+  <button class="float" id="fullscreen" aria-label="切换画面大小" title="切换画面大小">⛶</button>
   <button class="float" id="menu" aria-label="存档与操作说明" title="存档与操作说明">☰</button>
+  </nav>
   <div id="busy" role="status" hidden></div>
-  <dialog id="settings"><h2>苍龙逐日</h2><p>方向键移动，回车确认，Esc 返回。也可用鼠标操作；触屏可点右下角返回。</p><p>存档保存在当前浏览器。可以导出备份，或在其他浏览器导入。</p><button id="export">导出存档</button><button id="import">导入存档</button><input id="save-file" type="file" accept=".json,application/json" hidden><div id="message" role="status"></div><button id="close">返回游戏</button></dialog>
+  <dialog id="settings"><h2>苍龙逐日</h2><p>方向键移动，回车确认，Esc 返回。也可用鼠标操作；触屏可点左上角返回。</p><p>存档保存在当前浏览器。可以导出备份，或在其他浏览器导入。</p><button id="export">导出存档</button><button id="import">导入存档</button><input id="save-file" type="file" accept=".json,application/json" hidden><div id="message" role="status"></div><button id="close">返回游戏</button></dialog>
+  <dialog id="name-dialog"><form id="name-form"><h2>请输入主角姓名</h2><label for="name-input">姓名</label><input id="name-input" type="text" maxlength="20" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="done"><button type="submit">确定</button><button type="button" id="name-cancel">取消</button></form></dialog>
   <script>
     const canvas = document.getElementById('canvas');
     const overlay = document.getElementById('overlay');
     const statusEl = document.getElementById('status');
     const busy = document.getElementById('busy');
     const settings = document.getElementById('settings');
+    const nameDialog = document.getElementById('name-dialog');
+    const nameInput = document.getElementById('name-input');
+    const suppressedKeyUps = new Set();
     const transfers = new Map();
     const mobile = matchMedia('(pointer:coarse)').matches;
     let ready = false, failed = false, expanded = true;
+    let gameWidth = 800, gameHeight = 450;
+    let lastWidth = 0, lastHeight = 0;
 
     function fail(error) {
       failed = true;
@@ -52,12 +62,16 @@
     }
 
     function resize() {
-      const viewport = window.visualViewport;
-      const scale = Math.min((viewport?.width || innerWidth) / 640, (viewport?.height || innerHeight) / 440, expanded ? Infinity : 1);
-      const width = Math.max(1, Math.floor(640 * scale)), height = Math.max(1, Math.floor(440 * scale));
+      if (nameDialog.open) return;
+      const area = document.getElementById('wrap').getBoundingClientRect();
+      const scale = Math.min(area.width / gameWidth, area.height / gameHeight, expanded ? Infinity : 1);
+      const width = Math.max(1, Math.floor(gameWidth * scale)), height = Math.max(1, Math.floor(gameHeight * scale));
       canvas.style.width = width + 'px';
       canvas.style.height = height + 'px';
-      if (ready) Module.ccall('web_resize', null, ['number','number'], [width,height]);
+      if (ready && (width !== lastWidth || height !== lastHeight)) {
+        lastWidth = width; lastHeight = height;
+        Module.ccall('web_resize', null, ['number','number'], [width,height]);
+      }
     }
 
     var Module = {
@@ -66,13 +80,43 @@
       print: console.log,
       printErr: console.error,
       onAbort: fail,
-      gameReady() {
+      gameReady(width, height) {
+        gameWidth = width; gameHeight = height;
         ready = true;
         overlay.classList.add('hidden');
         document.body.classList.add('ready');
         busy.hidden = true;
         resize();
         canvas.focus();
+      },
+      inputText(initial) {
+        Module.ccall('web_clear_keys',null,[],[]);
+        return new Promise(resolve => {
+          let composing = false, compositionEnded = -Infinity, finished = false;
+          const listeners = new AbortController();
+          nameInput.value = initial;
+          function finish(value) {
+            if (finished) return;
+            finished = true;
+            listeners.abort();
+            nameDialog.close(); resize(); canvas.focus(); resolve(value);
+          }
+          nameInput.addEventListener('compositionstart',() => { composing = true; },{signal:listeners.signal});
+          nameInput.addEventListener('compositionend',() => { composing = false; compositionEnded = performance.now(); },{signal:listeners.signal});
+          nameInput.onkeydown = event => {
+            if (event.key === 'Enter') {
+              suppressedKeyUps.add(event.code);
+              if (event.isComposing || composing || event.keyCode === 229 || performance.now() - compositionEnded < 50) event.preventDefault();
+            }
+          };
+          document.getElementById('name-form').onsubmit = event => {
+            event.preventDefault();
+            if (!composing) finish(nameInput.value);
+          };
+          document.getElementById('name-cancel').onclick = () => finish(null);
+          nameDialog.oncancel = event => { event.preventDefault(); suppressedKeyUps.add('Escape'); finish(null); };
+          nameDialog.showModal(); nameInput.focus(); nameInput.select();
+        });
       },
       async fetchBinary(url, expected = 0) {
         const transfer = {loaded:0,total:expected,done:false};
@@ -120,6 +164,7 @@
     document.getElementById('retry').onclick = () => location.reload();
     document.getElementById('fullscreen').onclick = async event => {
       event.stopPropagation();
+      Module.ccall('web_clear_keys',null,[],[]);
       if (mobile) {
         try {
           if (document.fullscreenElement) await document.exitFullscreen();
@@ -128,11 +173,19 @@
       } else expanded = !expanded;
       resize(); canvas.focus();
     };
-    document.getElementById('back').onpointerdown = event => { event.preventDefault(); event.stopPropagation(); Module.ccall('web_back',null,[],[]); canvas.focus(); };
-    document.getElementById('menu').onclick = () => { document.getElementById('message').textContent = ''; settings.showModal(); };
-    document.getElementById('close').onclick = () => settings.close();
+    document.getElementById('back').onclick = event => { event.preventDefault(); Module.ccall('web_back',null,[],[]); canvas.focus(); };
+    document.getElementById('menu').onclick = () => { Module.ccall('web_clear_keys',null,[],[]); document.getElementById('message').textContent = ''; settings.showModal(); };
+    function closeSettings() { settings.close(); canvas.focus(); }
+    document.getElementById('close').onclick = closeSettings;
     settings.addEventListener('close',()=>canvas.focus());
-    for (const type of ['keydown','keyup','keypress','pointerdown','pointerup']) settings.addEventListener(type,event=>event.stopPropagation());
+    settings.addEventListener('cancel',event=>{ event.preventDefault(); suppressedKeyUps.add('Escape'); closeSettings(); });
+    for (const element of [settings,nameDialog,document.getElementById('toolbar')]) {
+      for (const type of ['keydown','keyup','keypress','pointerdown','pointerup','mousedown','mouseup','mousemove','click','dblclick','touchstart','touchend','touchmove','wheel']) element.addEventListener(type,event=>event.stopPropagation());
+    }
+    addEventListener('keyup',event=>{
+      if (suppressedKeyUps.delete(event.code)) { event.preventDefault(); event.stopImmediatePropagation(); }
+    },true);
+    addEventListener('blur',()=>{ if (ready) Module.ccall('web_clear_keys',null,[],[]); });
     canvas.addEventListener('contextmenu',event=>event.preventDefault());
     canvas.addEventListener('pointerdown',()=>canvas.focus());
 

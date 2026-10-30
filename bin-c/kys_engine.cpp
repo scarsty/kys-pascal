@@ -1507,8 +1507,15 @@ void SDL_GetMouseState2(int& x, int& y)
 
 void GetMousePosition(int& x, int& y, int x0, int y0, int yp)
 {
-    int x1, y1;
-    SDL_GetMouseState2(x1, y1);
+    float px, py;
+    SDL_GetMouseState(&px, &py);
+    GetMapPositionFromScreen(x, y, px, py, x0, y0, yp);
+}
+
+void GetMapPositionFromScreen(int& x, int& y, float px, float py, int x0, int y0, int yp)
+{
+    int x1 = (int)(px * ScreenWidth() / RESOLUTIONX + 0.5f);
+    int y1 = (int)(py * ScreenHeight() / RESOLUTIONY + 0.5f);
     x = (-x1 + CENTER_X + 2 * (y1 + yp) - 2 * CENTER_Y + 18) / 36 + x0;
     y = (x1 - CENTER_X + 2 * (y1 + yp) - 2 * CENTER_Y + 18) / 36 + y0;
 }
