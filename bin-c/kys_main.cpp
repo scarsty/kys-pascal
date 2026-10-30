@@ -85,7 +85,7 @@ static void MenuSettings()
     constexpr int settingsMenuX = 133;
     constexpr int settingsMenuY = 30;
     constexpr int settingsMenuW = 260;
-    constexpr int settingsMenuMax = 15;
+    constexpr int settingsMenuMax = 16;
     constexpr int settingsMenuH = settingsMenuMax * 22 + 29;
 
     auto ClampSetting = [](int value, int minValue, int maxValue)
@@ -180,11 +180,11 @@ static void MenuSettings()
         RestoreSettingsBackground();
         DrawRectangle(screen, settingsMenuX, settingsMenuY, settingsMenuW, settingsMenuMax * 22 + 28, 0, ColColor(0xFF), 50);
 
-        const std::string labels[16] = {
+        const std::string labels[17] = {
             "地圖延時", "場景延時", "戰鬥延時", "音樂音量", "音效音量", "經驗倍率",
-            "簡繁體", "全屏", "半即時", "觸摸行走", "戰鬥顯示血條", "升級屬性固定", "顯示場景名", "WMP四向圖", "擴展地面", "返回"
+            "簡繁體", "全屏", "半即時", "觸摸行走", "戰鬥顯示血條", "升級屬性固定", "顯示場景名", "WMP四向圖", "擴展地面", "畫面風格", "返回"
         };
-        const std::string states[15] = {
+        const std::string states[16] = {
             FormatNumericState(WALK_SPEED),
             FormatNumericState(WALK_SPEED2),
             FormatNumericState(BATTLE_SPEED),
@@ -199,7 +199,8 @@ static void MenuSettings()
             MAX_ADD_PRO ? "打開" : "關閉",
             SHOW_SUBSCENE_NAME ? "打開" : "關閉",
             WMP_4_PIC ? "打開" : "關閉",
-            EXPAND_GROUND ? "打開" : "關閉"
+            EXPAND_GROUND ? "打開" : "關閉",
+            SMOOTH == 0 ? "銳利" : "平滑"
         };
         const int stateRight = settingsMenuX + settingsMenuW - 10;
 
@@ -423,6 +424,14 @@ static void MenuSettings()
             Redraw();
             break;
         case 15:
+            SMOOTH = SMOOTH == 0 ? 2 : 0;
+            SaveIntegerSetting("system", "SMOOTH", SMOOTH);
+            ApplyRenderScale();
+#ifdef __EMSCRIPTEN__
+            EM_ASM({ Module.saveSmoothing($0); }, SMOOTH);
+#endif
+            break;
+        case 16:
             i = -1;
             break;
         }
@@ -506,15 +515,6 @@ void Run()
         return;
     }
 
-    if (SMOOTH >= 2)
-    {
-        SDL_SetHint("SDL_RENDER_SCALE_QUALITY", "1");
-    }
-    else
-    {
-        SDL_SetHint("SDL_RENDER_SCALE_QUALITY", "0");
-    }
-
     uint32_t screenFlag = SDL_WINDOW_RESIZABLE;
 #ifdef __EMSCRIPTEN__
     screenFlag |= SDL_WINDOW_HIGH_PIXEL_DENSITY;
@@ -564,6 +564,7 @@ void Run()
         SDL_GetPixelFormatForMasks(32, RMask, GMask, BMask, AMask));
     screenTex = SDL_CreateTexture(render, SDL_PIXELFORMAT_ARGB8888,
         SDL_TEXTUREACCESS_STREAMING, CENTER_X * 2, CENTER_Y * 2);
+    ApplyRenderScale();
     freshscreen = SDL_CreateSurface(CENTER_X * 2, CENTER_Y * 2,
         SDL_GetPixelFormatForMasks(32, RMask, GMask, BMask, AMask));
 
@@ -735,6 +736,9 @@ void ReadFiles()
     WALK_SPEED = ini.getInt("system", "WALK_SPEED", 10);
     WALK_SPEED2 = ini.getInt("system", "WALK_SPEED2", WALK_SPEED);
     SMOOTH = ini.getInt("system", "SMOOTH", 1);
+#ifdef __EMSCRIPTEN__
+    SMOOTH = EM_ASM_INT({ return Module.readSmoothing($0); }, SMOOTH);
+#endif
     SIMPLE = ini.getInt("system", "SIMPLE", 1);
     VOLUME = ini.getInt("music", "VOLUME", 30);
     VOLUMEWAV = ini.getInt("music", "VOLUMEWAV", 30);

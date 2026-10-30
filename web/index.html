@@ -83,6 +83,15 @@
       printErr: console.error,
       onAbort: fail,
       hasInteracted: false,
+      readSmoothing(fallback) {
+        try {
+          const saved = localStorage.getItem('kys-dragon.smoothing');
+          return saved === 'sharp' ? 0 : saved === 'smooth' ? 2 : fallback;
+        } catch (_) { return fallback; }
+      },
+      saveSmoothing(value) {
+        try { localStorage.setItem('kys-dragon.smoothing',value === 0 ? 'sharp' : 'smooth'); } catch (_) {}
+      },
       beginLoading(label) {
         loadingLabel = label;
         awaitingPresentation = true;

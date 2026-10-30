@@ -92,6 +92,7 @@ void QuitConfirm();
 uint32_t CheckBasicEvent();
 int AngleToDirection(double y, double x);
 void UpdateAllScreen();
+void ApplyRenderScale();
 void TransBlackScreen();
 void CleanKeyValue();
 bool inReturn(int x, int y);

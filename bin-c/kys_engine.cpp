@@ -1497,6 +1497,14 @@ void DrawTextWithRectNoUpdate(const std::string& word, int x, int y, int w, uint
 
 // ---- 屏幕管理 ----
 
+void ApplyRenderScale()
+{
+    if (screenTex)
+    {
+        SDL_SetTextureScaleMode(screenTex, SMOOTH == 0 ? SDL_SCALEMODE_NEAREST : SDL_SCALEMODE_LINEAR);
+    }
+}
+
 void UpdateScreen(SDL_Surface* scr1, int x, int y, int w, int h)
 {
     if (Headless())

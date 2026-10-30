@@ -31,8 +31,13 @@ struct Image
         if (!texture)
         {
             texture = SDL_CreateTextureFromSurface(renderer, surface);
-            SDL_SetTextureScaleMode(texture, SDL_SCALEMODE_NEAREST);
         }
+        SDL_ScaleMode scaleMode = SDL_SCALEMODE_LINEAR;
+        if (screenTex)
+        {
+            SDL_GetTextureScaleMode(screenTex, &scaleMode);
+        }
+        SDL_SetTextureScaleMode(texture, scaleMode);
         return texture;
     }
 };
