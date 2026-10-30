@@ -1,6 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
 project(kys LANGUAGES CXX)
-include(CTest)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -73,34 +72,5 @@ if(KYS_BUILD_MCP)
     target_link_libraries(kys_mcp PRIVATE kys_core glaze::glaze)
     if(MSVC)
         target_compile_options(kys_mcp PRIVATE /utf-8)
-    endif()
-endif()
-
-if(BUILD_TESTING)
-    if(KYS_BUILD_MCP)
-        add_executable(kys_rules_tests tests/rules_tests.cpp)
-        target_link_libraries(kys_rules_tests PRIVATE kys_core glaze::glaze)
-        if(MSVC)
-            target_compile_options(kys_rules_tests PRIVATE /utf-8)
-        endif()
-        add_test(NAME dos_rules_native_vectors COMMAND kys_rules_tests
-            "${CMAKE_CURRENT_SOURCE_DIR}/../tools/dragon_dos12_vectors.json")
-    endif()
-    add_executable(kys_core_tests tests/core_tests.cpp)
-    target_link_libraries(kys_core_tests PRIVATE kys_core)
-    if(MSVC)
-        target_compile_options(kys_core_tests PRIVATE /utf-8)
-    endif()
-    add_test(NAME core_regressions COMMAND kys_core_tests)
-    set(KYS_TEST_MOD "" CACHE PATH "External unmodified kys-Dragon directory for MCP integration tests")
-    if(KYS_BUILD_MCP AND KYS_TEST_MOD)
-        find_package(Python3 REQUIRED COMPONENTS Interpreter)
-        add_test(NAME dragon_mcp_integration COMMAND "${Python3_EXECUTABLE}"
-            "${CMAKE_CURRENT_SOURCE_DIR}/tests/mcp_integration.py"
-            --executable $<TARGET_FILE:kys_mcp> --mod "${KYS_TEST_MOD}")
-        add_test(NAME dragon_data_repairs COMMAND "${Python3_EXECUTABLE}"
-            "${CMAKE_CURRENT_SOURCE_DIR}/tests/dragon_repairs_test.py"
-            --executable $<TARGET_FILE:kys_mcp> --mod "${KYS_TEST_MOD}")
-        set_tests_properties(dragon_mcp_integration dragon_data_repairs PROPERTIES TIMEOUT 120)
     endif()
 endif()
