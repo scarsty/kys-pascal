@@ -82,6 +82,7 @@ struct TRole
             int16_t Magic[10], MagLevel[10];
             int16_t TakingItem[4], TakingItemAmount[4];
         };
+
         int16_t Data[91];
     };
 };
@@ -105,6 +106,7 @@ struct TItem
             int16_t NeedExp, NeedExpForItem, NeedMaterial;
             int16_t GetItem[5], NeedMatAmount[5];
         };
+
         int16_t Data[95];
     };
 };
@@ -124,6 +126,7 @@ struct TScene
             int16_t ExitY[3], ExitX[3];
             int16_t JumpY1, JumpX1, JumpY2, JumpX2;
         };
+
         int16_t Data[26];
     };
 };
@@ -140,6 +143,7 @@ struct TMagic
             int16_t SoundNum, MagicType, AmiNum, HurtType, AttAreaType, NeedMP, Poison;
             int16_t Attack[10], MoveDistance[10], AttDistance[10], AddMP[10], HurtMP[10];
         };
+
         int16_t Data[68];
     };
 };
@@ -152,6 +156,7 @@ struct TShop
         {
             int16_t Item[5], Amount[5], Price[5];
         };
+
         int16_t Data[15];
     };
 };
@@ -166,6 +171,7 @@ struct TBattleRole
             int16_t Pic, ShowNumber, UnUse1, UnUse2, UnUse3, ExpGot, Auto;
             int16_t RealSpeed, RealProgress, BHead, AutoMode;
         };
+
         int16_t Data[19];
     };
 };
@@ -182,6 +188,7 @@ struct TWarData
             int16_t TeamMate[6], AutoTeamMate[6], TeamY[6], TeamX[6];
             int16_t Enemy[20], EnemyY[20], EnemyX[20];
         };
+
         int16_t Data[0x5D];
     };
 };

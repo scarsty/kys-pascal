@@ -13,4 +13,5 @@ int GameRandom()
 }
 
 int ScreenWidth() { return screen ? screen->w : CENTER_X * 2; }
+
 int ScreenHeight() { return screen ? screen->h : CENTER_Y * 2; }

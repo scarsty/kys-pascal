@@ -1,4 +1,4 @@
-"""Audit legacy mod data and produce minimal standalone or combined repairs.
+"""Audit Dragon mod data and produce minimal standalone or combined repairs.
 
 The supplied archive remains the reference. Repairs go to NEW output files;
 the input is never edited. No commercial game assets are checked into Git.

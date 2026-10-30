@@ -15,10 +15,12 @@ namespace dos = rules::dragon_dos12;
 #include <stdexcept>
 
 using Fields = std::map<std::string, int>;
+
 struct Draw
 {
     int bound = 0, value = 0;
 };
+
 struct Expected
 {
     std::optional<uint32_t> eax;
@@ -26,6 +28,7 @@ struct Expected
     std::vector<Draw> rng;
     int battle_exp = 0, effective_level = 0;
 };
+
 struct Case
 {
     std::string name, kind;
@@ -35,21 +38,29 @@ struct Case
     int distance = 1, match = 0, step = 0, cache = 0, seed = -1;
     Expected expected;
 };
+
 struct Vectors
 {
     std::string binary_sha256;
     std::vector<int> xp_table;
     std::vector<Case> cases;
 };
+
 struct TestFrontend final : GameFrontend
 {
     void text(const std::string&, int) override { }
+
     int choose(const std::string&, const std::vector<std::string>&, bool) override { return 0; }
+
     int number(int, int, int n) override { return n; }
+
     bool battle(int, int) override { return false; }
+
     bool aim(int, int, int, int) override { return false; }
+
     void instruction(int, int, int) override { }
 };
+
 void expect(bool ok, const std::string& message)
 {
     if (!ok)
@@ -57,6 +68,7 @@ void expect(bool ok, const std::string& message)
         throw std::runtime_error(message);
     }
 }
+
 template <class T>
 void fill(T& record, const Fields& fields)
 {
@@ -66,6 +78,7 @@ void fill(T& record, const Fields& fields)
         record.Data[std::stoi(key)] = std::bit_cast<int16_t>(static_cast<uint16_t>(value));
     }
 }
+
 int main(int argc, char** argv)
 {
     try
@@ -279,7 +292,7 @@ int main(int argc, char** argv)
         expect(custom.Level == 3 && custom.Exp == 150 && custom.MaxHP == 140 && custom.MaxMP == 284 && custom.Attack == 8 && custom.Speed == 0 && custom.Defence == 12, "Custom growth coefficients must affect the actual batch");
         // Cross a proficiency boundary during a real double strike. This
         // distinguishes per-strike tier/cost timing from per-action stamina.
-        for (auto profile : { rules::Profile::Legacy, rules::Profile::DragonDos12 })
+        for (auto profile : { rules::Profile::Remake, rules::Profile::DragonDos12 })
         {
             rules::config.combat = profile;
             rules::SelectProfiles();

@@ -24,7 +24,7 @@
     <ClCompile Include="kys_battle.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="rules\legacy.cpp">
+    <ClCompile Include="rules\remake.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="rules\dragon_dos12.cpp">

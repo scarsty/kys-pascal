@@ -516,7 +516,9 @@ void instruct_22()
         }
     }
 }
+
 void instruct_23(int rnum, int Poison) { Rrole[rnum].UsePoi = Poison; }
+
 void instruct_24() { }
 
 void instruct_25(int x1, int y1, int x2, int y2)
@@ -1357,6 +1359,7 @@ void instruct_66(int musicnum)
     StopMP3();
     PlayMP3(musicnum, -1);
 }
+
 void instruct_67(int Soundnum) { PlaySoundA(Soundnum, 0); }
 
 int e_GetValue(int bit, int t, int x)

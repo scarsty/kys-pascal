@@ -8,13 +8,16 @@ namespace rules::dragon_dos12
 namespace
 {
 int16_t word(int value) { return std::bit_cast<int16_t>(static_cast<uint16_t>(value)); }
+
 int bounded(const RulesRandom& random, int bound) { return bound <= 1 || bound > 30000 ? 0 : random(bound); }
+
 int noise(const RulesRandom& random, int bound)
 {
     int plus = bounded(random, bound);
     return plus - bounded(random, bound);
 }
 }    //namespace
+
 int EffectiveLevel(const TRole& role, const TMagic& magic, int trainedLevel)
 {
     int level = std::clamp(trainedLevel, 1, 10);
@@ -24,10 +27,12 @@ int EffectiveLevel(const TRole& role, const TMagic& magic, int trainedLevel)
     }
     return level;
 }
+
 void PayMagicCost(TRole& role, const TMagic& magic, int cachedLevel)
 {
     role.CurrentMP = std::max<int>(word(role.CurrentMP - magic.NeedMP * (cachedLevel / 2)), 0);
 }
+
 int LevelUp(TRole& role, const RulesRandom& random)
 {
     if (role.Level < 1 || role.Level >= MAX_LEVEL)
@@ -74,6 +79,7 @@ int LevelUp(TRole& role, const RulesRandom& random)
     }
     return delta;
 }
+
 int HpDamage(const TRole& a, const TRole& d, const TMagic& m, int level, const HitContext& c, const RulesRandom& random)
 {
     int attack = word((3 * a.Attack + m.Attack[std::clamp(level, 1, 10) - 1]) / 2 + c.attackEquipment + c.weaponMatch + c.attackKnowledge);
@@ -92,6 +98,7 @@ int HpDamage(const TRole& a, const TRole& d, const TMagic& m, int level, const H
     damage = c.distance <= 10 ? word(damage * (100 - (c.distance - 1) * 3) / 100) : word(damage * 2 / 3);
     return std::max(damage, 1);
 }
+
 int ApplyHpHit(TRole& a, TRole& d, const TMagic& m, int trained, const HitContext& c, int16_t& exp, const RulesRandom& random)
 {
     int damage = HpDamage(a, d, m, EffectiveLevel(a, m, trained), c, random);
@@ -115,6 +122,7 @@ int ApplyHpHit(TRole& a, TRole& d, const TMagic& m, int trained, const HitContex
     }
     return damage;
 }
+
 int ApplyMpHit(TRole& a, TRole& d, const TMagic& m, int trained, const RulesRandom& random)
 {
     int level = std::clamp(trained, 1, 10) - 1;
@@ -126,6 +134,7 @@ int ApplyMpHit(TRole& a, TRole& d, const TMagic& m, int trained, const RulesRand
     d.CurrentMP = std::max<int>(word(d.CurrentMP - m.HurtMP[level] - lostNoise), 0);
     return before - d.CurrentMP;
 }
+
 int UsePoison(const TRole& a, TRole& d)
 {
     int amount = std::clamp((a.UsePoi - d.DefPoi) / 4, 0, 99);
@@ -133,6 +142,7 @@ int UsePoison(const TRole& a, TRole& d)
     d.Poison = std::clamp<int>(word(d.Poison + amount), 0, 99);
     return amount;
 }
+
 int Detox(const TRole& a, TRole& d, const RulesRandom& random)
 {
     int amount = std::clamp<int>(word(a.MedPoi / 3 + noise(random, 10)), 0, 99);
@@ -148,6 +158,7 @@ int Detox(const TRole& a, TRole& d, const RulesRandom& random)
     }
     return amount;
 }
+
 int Heal(TRole& a, TRole& d, const RulesRandom& random)
 {
     if (a.PhyPower < 50)
@@ -170,6 +181,7 @@ int Heal(TRole& a, TRole& d, const RulesRandom& random)
     a.PhyPower = word(a.PhyPower - 2);
     return amount;
 }
+
 int HiddenWeapon(const TRole& a, TRole& d, const TItem& item, const RulesRandom& random)
 {
     int before = d.CurrentHP, divisor = d.Hurt == 0 ? 4 : d.Hurt <= 33 ? 3 :
@@ -195,6 +207,7 @@ int HiddenWeapon(const TRole& a, TRole& d, const TItem& item, const RulesRandom&
     d.Poison = std::clamp<int>(d.Poison, 0, 99);
     return before - d.CurrentHP;
 }
+
 void Rest(TRole& r, int steps, const RulesRandom& random)
 {
     r.PhyPower = std::min<int>(word(r.PhyPower + (steps == r.Speed / 10 ? 3 : 2) + bounded(random, 3)), MAX_PHYSICAL_POWER);
@@ -205,6 +218,7 @@ void Rest(TRole& r, int steps, const RulesRandom& random)
         r.CurrentMP = std::min<int>(word(r.CurrentMP + 3 + bounded(random, bound)), r.MaxMP);
     }
 }
+
 void RoundStatus(TRole& r, bool dead)
 {
     // Original short-circuit ordering matters: injury bypasses the alive/
@@ -280,6 +294,7 @@ class DragonProgression final : public ProgressionRules
 {
 public:
     const char* name() const override { return "dragon_dos12"; }
+
     ProgressionDefaults defaults() const override
     {
         return { 30, 999, 9999, 100,
@@ -287,8 +302,11 @@ public:
                 9250, 10850, 12550, 14350, 16750, 18250, 21400, 24700, 28150, 31750, 35500,
                 39400, 43450, 47650, 52000 } };
     }
+
     int nextExperience(const TRole& role) const override { return config.xpThresholds.at(role.Level - 1); }
+
     int advance(TRole& role) const override { return dragon_dos12::LevelUp(role); }
+
     void describe(GameRuleDescription& out) const override
     {
         out.cumulativeExperience = true;
@@ -298,18 +316,25 @@ public:
         out.levelStatCaps = "Medicine/use-poison/detox 100; attack/speed/defence/fist/sword/knife/hidden weapon retain original 16-bit growth without a 100 cap. Resistance/unusual do not grow.";
     }
 };
+
 class DragonCombat final : public CombatRules
 {
 public:
     const char* name() const override { return "dragon_dos12"; }
+
     CombatDefaults defaults() const override { return { 100, 80, 10, 1 }; }
+
     int strikeCount(const TRole& role) const override { return role.AttTwice == 1 ? 2 : 1; }
+
     int beginStrike(TRole& role, int slot, int) const override { return role.MagLevel[slot] / 100 + 1; }
+
     void finishStrike(TRole& role, int slot) const override
     {
         role.MagLevel[slot] = std::min<int>(role.MagLevel[slot] + RulesRandomDraw(2) + 1, 999);
     }
+
     void finishAttack(TRole& role) const override { role.PhyPower = std::max<int>(role.PhyPower - 3, 0); }
+
     void resolveMagic(int bnum, int mnum, int level) const override
     {
         int rnum = Brole[bnum].rnum;
@@ -338,13 +363,16 @@ public:
         dragon_dos12::PayMagicCost(attacker, magic, runtime.magicCostTier);
         Brole[bnum].ExpGot += 2;
     }
+
     int hpDamage(int attacker, int defender, int magic, int trained) const override
     {
         auto& role = Rrole[Brole[attacker].rnum];
         return dragon_dos12::HpDamage(role, Rrole[Brole[defender].rnum], Rmagic[magic],
             dragon_dos12::EffectiveLevel(role, Rmagic[magic], trained), hitContext(attacker, defender, magic));
     }
+
     void roundEnd(int actor) const override { dragon_dos12::RoundStatus(Rrole[Brole[actor].rnum], Brole[actor].Dead != 0); }
+
     void paySkillCost(TRole& role, BattleSkill skill) const override
     {
         // Healing owns its eligibility check and cost, including out of battle.
@@ -353,29 +381,39 @@ public:
             role.PhyPower -= 2;
         }
     }
+
     void awardSkillExperience(int actor, int, int) const override { Brole[actor].ExpGot++; }
+
     int poison(TRole& a, TRole& d) const override { return dragon_dos12::UsePoison(a, d); }
+
     int heal(TRole& a, TRole& d) const override { return dragon_dos12::Heal(a, d); }
+
     int detox(TRole& a, TRole& d) const override { return dragon_dos12::Detox(a, d); }
+
     int hiddenWeapon(int actor, int target, const TItem& item) const override
     {
         return dragon_dos12::HiddenWeapon(Rrole[Brole[actor].rnum], Rrole[Brole[target].rnum], item);
     }
+
     void rest(int actor) const override { dragon_dos12::Rest(Rrole[Brole[actor].rnum], Brole[actor].Step); }
+
     MagicRuleInfo inspectMagic(const TRole* role, const TMagic& magic, int trained) const override
     {
         int effective = magic.HurtType == 0 && role ? dragon_dos12::EffectiveLevel(*role, magic, trained) : trained;
         int costTier = magic.HurtType == 0 ? effective : runtime.magicCostTier;
         return { effective, magic.NeedMP * (costTier / 2), 3, 0, true, magic.HurtType == 1 };
     }
+
     int minimumCheckpointVersion() const override { return 4; }
 };
 }    //namespace
+
 const ProgressionRules& DragonDos12Progression()
 {
     static DragonProgression rules;
     return rules;
 }
+
 const CombatRules& DragonDos12Combat()
 {
     static DragonCombat rules;

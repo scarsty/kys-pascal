@@ -25,13 +25,18 @@
 namespace fs = std::filesystem;
 using J = glz::generic;
 using A = J::array_t;
+
 J obj(std::initializer_list<std::pair<const std::string, J>> values) { return J::object_t(values); }
+
 J arr(std::initializer_list<J> values) { return A(values); }
+
 struct JsonOptions : glz::opts
 {
     bool escape_control_characters = true;
 };
+
 std::string dump(const J& value) { return glz::write<JsonOptions{ }>(value).value(); }
+
 int integer(const J& args, const std::string& key, int fallback = -1)
 {
     if (!args.contains(key))
@@ -49,6 +54,7 @@ int integer(const J& args, const std::string& key, int fallback = -1)
     }
     return static_cast<int>(n);
 }
+
 std::string string(const J& args, const std::string& key, std::string fallback = { })
 {
     if (!args.contains(key))
@@ -61,6 +67,7 @@ std::string string(const J& args, const std::string& key, std::string fallback =
     }
     return args[key].as<std::string>();
 }
+
 void require(bool condition, const std::string& reason)
 {
     if (!condition)
@@ -68,12 +75,14 @@ void require(bool condition, const std::string& reason)
         throw std::runtime_error(reason);
     }
 }
+
 template <size_t N>
 std::string name(const char (&field)[N])
 {
     auto end = std::find(field, field + N, '\0');
     return cp950toutf8(field, static_cast<int>(end - field));
 }
+
 template <class T>
 J numbers(const T& values)
 {
@@ -84,6 +93,7 @@ J numbers(const T& values)
     }
     return out;
 }
+
 int quantity(int id)
 {
     for (const auto& v : RItemList)
@@ -95,6 +105,7 @@ int quantity(int id)
     }
     return 0;
 }
+
 const char* attackShape(int area)
 {
     switch (area)
@@ -106,6 +117,7 @@ const char* attackShape(int area)
     default: return "unknown";
     }
 }
+
 const char* attackTargeting(int area)
 {
     switch (area)
@@ -134,6 +146,7 @@ struct Snapshot
     std::array<int, 2> jumpGuard{ HeadlessJumpGuardX, HeadlessJumpGuardY };
     unsigned rng = HeadlessRandomState;
     int32_t ruleCostTier = CaptureRuleState().magicCostTier;
+
     Snapshot()
     {
         auto copy = [](auto& to, auto& from)
@@ -147,6 +160,7 @@ struct Snapshot
         std::copy(std::begin(TeamList), std::end(TeamList), team.begin());
         location = { Where, CurScene, Sx, Sy, SFace, Mx, My, MFace, InShip, ShipX, ShipY, ShipX1, ShipY1, ShipFace, CurEvent, CurItem, Cx, Cy, SavedSceneIndex, SceneRolePic };
     }
+
     void restore() const
     {
         std::copy(roles.begin(), roles.end(), Rrole);
@@ -184,6 +198,7 @@ struct Snapshot
         HeadlessJumpGuardY = jumpGuard[1];
         RestoreRuleState({ ruleCostTier });
     }
+
     void file(const fs::path& path, uint64_t identity, bool load, uint64_t legacyIdentity = 0, bool allowLegacy = false)
     {
         std::fstream stream(path, std::ios::binary | (load ? std::ios::in : std::ios::out | std::ios::trunc));
@@ -302,6 +317,7 @@ class Session final : public GameFrontend
 
 public:
     explicit Session(bool allowDebug, fs::path saves, bool allowLegacy = false) : debug(allowDebug), allowLegacyCheckpoints(allowLegacy), saveDirectory(std::move(saves)) { Frontend = this; }
+
     ~Session()
     {
         {
@@ -316,12 +332,15 @@ public:
         }
         Frontend = nullptr;
     }
+
     void text(const std::string& value, int head = -1) override
     {
         // Keep full dialogue; the protocol returns it once per mutating call.
         messages.get_array().push_back(obj({ { "head", head }, { "text", value } }));
     }
+
     void context(const std::string& value) override { menuContext = value; }
+
     void instruction(int script, int pc, int opcode) override
     {
         if (++instructions > 250000)
@@ -334,6 +353,7 @@ public:
         }
         trace.get_array().push_back(arr({ script, pc, opcode }));
     }
+
     int waitPrompt(J value)
     {
         std::unique_lock lock(mutex);
@@ -353,14 +373,17 @@ public:
         prompt = J{ };
         return answer;
     }
+
     int choose(const std::string& title, const std::vector<std::string>& options, bool cancel = true) override
     {
         return waitPrompt(obj({ { "kind", "choice" }, { "title", title == "menu" ? menuContext : title }, { "options", numbers(options) }, { "cancel_allowed", cancel } }));
     }
+
     int number(int minimum, int maximum, int initial) override
     {
         return waitPrompt(obj({ { "kind", "number" }, { "minimum", minimum }, { "maximum", maximum }, { "initial", initial } }));
     }
+
     bool aim(int actor, int step, int area, int range) override
     {
         if (!manualReady)
@@ -373,6 +396,7 @@ public:
         SetAnimationPosition(area, step, range);
         return true;
     }
+
     J prepareManual(const J& a)
     {
         require(paused && string(prompt, "kind") == "battle_turn", "Wait for a player battle turn");
@@ -452,6 +476,7 @@ public:
         manualReady = true;
         return resume(3, true);
     }
+
     void performManual(int actor)
     {
         auto action = string(manualCommand, "action");
@@ -520,6 +545,7 @@ public:
         manualReady = false;
         text("Manual native battle action: " + action);
     }
+
     bool battle(int number, int getexp) override
     {
         auto staSize = fs::file_size(fs::path(AppPath) / "resource/war.sta");
@@ -628,6 +654,7 @@ public:
         Where = 1;
         return BattleResult == 1;
     }
+
     J role(int id)
     {
         require(id >= 0 && id < roleCount, "Invalid role ID");
@@ -642,6 +669,7 @@ public:
         }
         return obj({ { "id", id }, { "name", name(r.Name) }, { "level", r.Level }, { "hp", arr({ r.CurrentHP, r.MaxHP }) }, { "mp", arr({ r.CurrentMP, r.MaxMP }) }, { "mp_type", r.MPType }, { "stamina", r.PhyPower }, { "injury", r.Hurt }, { "poison", r.Poison }, { "attack", r.Attack }, { "defence", r.Defence }, { "speed", r.Speed }, { "ethics", r.Ethics }, { "repute", r.Repute }, { "aptitude", r.Aptitude }, { "exp", r.Exp }, { "equipment", numbers(r.Equip) }, { "practice_book", r.PracticeBook }, { "book_exp", r.ExpForBook }, { "skills", obj({ { "medicine", r.Medicine }, { "detox", r.MedPoi }, { "use_poison", r.UsePoi }, { "poison_resistance", r.DefPoi }, { "fist", r.Fist }, { "sword", r.Sword }, { "knife", r.Knife }, { "unusual", r.Unusual }, { "hidden_weapon", r.HidWeapon }, { "knowledge", r.Knowledge } }) }, { "magic", magic } });
     }
+
     J rules()
     {
         auto info = DescribeGameRules();
@@ -672,6 +700,7 @@ public:
         out["scope"] = "Progression, HP/MP damage, poison, hidden weapons, medicine, detox and rest. AI, movement, item/book/event rules and starting data retain remake behavior.";
         return out;
     }
+
     J inventory()
     {
         A out;
@@ -684,6 +713,7 @@ public:
         }
         return out;
     }
+
     J battleState()
     {
         A out;
@@ -694,6 +724,7 @@ public:
         }
         return obj({ { "id", CurrentBattle }, { "name", name(WarSta.Name) }, { "round", BattleRound }, { "result", BattleResult }, { "exp_pool", WarSta.ExpGot }, { "actors", out } });
     }
+
     J inspectBattle(const J& a)
     {
         require(Where == 2, "Battle inspection requires an active battle");
@@ -753,6 +784,7 @@ public:
         }
         return obj({ { "battle", battleState() }, { "actor", actor }, { "role", role(Brole[actor].rnum) }, { "magic", magic }, { "reachable_columns", arr({ "x", "y", "movement_cost" }) }, { "reachable", reachable }, { "tile_columns", arr({ "x", "y", "ground", "building", "occupant_actor" }) }, { "tiles", tiles }, { "center", arr({ x, y }) }, { "radius", radius }, { "rules", "Movement/terrain from native CalCanSelect. Building>0 blocks movement; occupant -1 is empty. Low MP permits native weak attacks. Targeting uses native x/y." } });
     }
+
     J state()
     {
         A party;
@@ -776,6 +808,7 @@ public:
         }
         return out;
     }
+
     J changes()
     {
         A items, events, roles;
@@ -824,6 +857,7 @@ public:
         }
         return obj({ { "items", items }, { "roles", roles }, { "events", events } });
     }
+
     J response()
     {
         J visibleState = loaded ? state() : obj({ { "loaded", false }, { "debug_enabled", debug }, { "legacy_checkpoint_lineage", legacyCheckpointLineage } });
@@ -838,6 +872,7 @@ public:
         before = std::make_unique<Snapshot>();
         return out;
     }
+
     J run(std::function<J()> action)
     {
         require(done, "A native event is waiting. Call choose before another action.");
@@ -883,6 +918,7 @@ public:
             });
         return response();
     }
+
     J resume(int selection, bool manual = false)
     {
         std::unique_lock lock(mutex);
@@ -916,6 +952,7 @@ public:
             });
         return response();
     }
+
     void validateGameplayFiles()
     {
         // ReadFiles historically accepts absent/short files, leaving zeroed
@@ -943,6 +980,7 @@ public:
             check(file, 480 * 480 * 2, true);
         }
     }
+
     void loadCounts()
     {
         std::ifstream f(fs::path(AppPath) / "save/ranger.idx", std::ios::binary);
@@ -1002,6 +1040,7 @@ public:
             }
         }
     }
+
     J scene(int id, bool all = true, bool inactive = false)
     {
         require(id >= 0 && id < SceneAmount, "Invalid scene ID");
@@ -1041,6 +1080,7 @@ public:
         }
         return obj({ { "id", id }, { "name", name(s.Name) }, { "entry_condition", s.EnCondition }, { "can_enter", CheckCanEnter(id) }, { "entry_xy", arr({ s.EntranceX, s.EntranceY }) }, { "world_data_xy", arr({ s.MainEntranceY1, s.MainEntranceX1 }) }, { "exits", exits }, { "jump_scene", s.JumpScene }, { "jump_xy", arr({ s.JumpX1, s.JumpY1 }) }, { "jump_landing_xy", arr({ s.JumpX2, s.JumpY2 }) }, { "events", points } });
     }
+
     bool transition()
     {
         if (Where != 1)
@@ -1077,6 +1117,7 @@ public:
         }
         return false;
     }
+
     bool walk(int tx, int ty)
     {
         require(Where == 1, "Scene navigation requires a scene");
@@ -1138,6 +1179,7 @@ public:
         }
         return true;
     }
+
     bool worldPassable(int x, int y)
     {
         int ship = InShip;
@@ -1145,6 +1187,7 @@ public:
         InShip = ship;
         return result;
     }
+
     bool worldStep(int direction)
     {
         constexpr int dx[] = { -1, 0, 0, 1 }, dy[] = { 0, 1, -1, 0 };
@@ -1159,6 +1202,7 @@ public:
         // The headless branch skips only rendering and native autosave I/O.
         return CheckEntrance();
     }
+
     J worldWalk(int tx, int ty, int destinationScene = -1)
     {
         require(Where == 0, "World navigation requires the world map");
@@ -1247,6 +1291,7 @@ public:
         }
         return obj({ { "reached", destinationScene >= 0 ? Where == 1 && CurScene == destinationScene : Where == 0 && Mx == tx && My == ty }, { "world_steps", steps }, { "mode", "native world approach" } });
     }
+
     J step(int direction, int count)
     {
         require((Where == 0 || Where == 1) && direction >= 0 && direction < 4 && count >= 1 && count <= 100, "step requires world/scene, direction 0..3 and count 1..100");
@@ -1291,6 +1336,7 @@ public:
         }
         return obj({ { "moved", moved }, { "requested_steps", count }, { "mode", "native keyboard steps" } });
     }
+
     J interact(int slot, int item)
     {
         require(Where == 1, "Interaction requires a scene");
@@ -1382,6 +1428,7 @@ public:
         }
         return obj({ { "interacted_slot", slot }, { "item", item } });
     }
+
     J search(const J& a)
     {
         std::string kind = string(a, "kind", "item"), query = string(a, "query");
@@ -1491,6 +1538,7 @@ public:
         }
         return obj({ { "results", out }, { "total", matched }, { "offset", offset }, { "limit", limit } });
     }
+
     J audit()
     {
         A names, entries, refs;
@@ -1529,6 +1577,7 @@ public:
         CurScene = old;
         return obj({ { "item_name_control_characters", names }, { "entry_candidates", entries }, { "invalid_script_references", refs } });
     }
+
     J script(const J& a)
     {
         int id = integer(a, "id"), offset = integer(a, "offset", 0), limit = integer(a, "limit", 20);
@@ -1562,6 +1611,7 @@ public:
         }
         return obj({ { "script", id }, { "offset", offset }, { "total", count }, { "instructions", instructions } });
     }
+
     J call(const std::string& method, const J& a)
     {
         if (method == "new_game")
@@ -1848,6 +1898,7 @@ J schema(std::initializer_list<std::pair<const std::string, J>> fields)
 {
     return obj({ { "type", "object" }, { "properties", obj(fields) }, { "additionalProperties", false } });
 }
+
 J tools()
 {
     J num = obj({ { "type", "integer" } }), str = obj({ { "type", "string" } });
@@ -1871,9 +1922,9 @@ J tools()
     add("choose", "Resume suspended native input using displayed zero-based option index. Battle offers native AI turn/rest/whole battle; combat, losses, experience and books use native calculations.", schema({ { "index", num } }));
     add("battle_action", "Act at a pending battle_turn using native move/attack/medicine/detox/poison/consume/hidden_weapon. Internal x,y target; magic_slot from party.magic[].slot for attack, item ID for consume/hidden_weapon. For area_type=1 aim at an adjacent cardinal direction, not a distant enemy; search magic ID exposes ranges/costs. Movement preserves remaining turn. Party selection uses choose(index=bitmask), e.g. slots 0,2 -> 5.", schema({ { "action", str }, { "x", num }, { "y", num }, { "magic_slot", num }, { "item", num } }));
     add("use_item", "Use an owned item through native equipment/practice/medicine/plot flow; further character/menu choices suspend as needed.", schema({ { "item", num } }));
-    add("party_action", "Use out-of-battle medicine or detox. Menus ask actor then recipient via choose. Legacy skills are free outside battle; DOS medicine costs 2 stamina and requires 50. Poison or injury>33 prevents sleep recovery until treated.", schema({ { "action", str } }));
+    add("party_action", "Use out-of-battle medicine or detox. Menus ask actor then recipient via choose. Remake rules make these skills free outside battle; DOS medicine costs 2 stamina and requires 50. Poison or injury>33 prevents sleep recovery until treated.", schema({ { "action", str } }));
     add("dismiss", "Dismiss a party member through the native mod leave event.", schema({ { "role", num } }));
-    add("checkpoint", "Save/load all mutations, RNG and DOS MP-cost cache. Idle only: save BEFORE one-shot interactions. Cache holds12 labels; --save-dir retains unlimited labels. V4 verifies world/list/mod fingerprints and checksum. V3 loads in legacy mode; V1/V2 require --allow-legacy-checkpoints. Label uses ASCII letters/digits/underscore/hyphen.", schema({ { "action", str }, { "label", str } }));
+    add("checkpoint", "Save/load all mutations, RNG and DOS MP-cost cache. Idle only: save BEFORE one-shot interactions. Cache holds12 labels; --save-dir retains unlimited labels. V4 verifies world/list/mod fingerprints and checksum. V3 loads in remake mode; V1/V2 require --allow-legacy-checkpoints. Label uses ASCII letters/digits/underscore/hyphen.", schema({ { "action", str }, { "label", str } }));
     add("audit", "Read-only current-data audit for control characters in item names, blocked/invalid entry candidates and invalid event script references. Candidates need investigation.", schema({ }));
     add("inspect_script", "Read native event bytecode without executing it. Paginated instructions with word offset/opcode/args. include_text=1 expands dialogue for guide comparisons. Negative terminators may have other branch blocks after them.", schema({ { "id", num }, { "offset", num }, { "limit", num }, { "include_text", num } }));
     add("debug", "Explicit opt-in debug shortcut; requires --debug. Teleport, mutate a role Data[field], or invoke a script. Result marks evidence as debug.", schema({ { "scene", num }, { "x", num }, { "y", num }, { "role", num }, { "field", num }, { "value", num }, { "script", num } }));

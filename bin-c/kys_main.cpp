@@ -5065,6 +5065,7 @@ void ShowStatus(int rnum, int x, int y)
         int hy = y;
         DrawRectangle(screen, hx, hy, 140, 292, 0, ColColor(255), 50);
         DrawShadowText("隱藏屬性", hx + 5, hy + 5, ColColor(0x21), ColColor(0x23));
+
         struct
         {
             const char* label;
@@ -5084,6 +5085,7 @@ void ShowStatus(int rnum, int x, int y)
             { "道德", Rrole[rnum].Ethics, ColColor(0x21), ColColor(0x23) },
             { "聲望", Rrole[rnum].Repute, ColColor(0x21), ColColor(0x23) },
         };
+
         constexpr int hiddenAttrCount = sizeof(hiddenAttrs) / sizeof(hiddenAttrs[0]);
         for (int i = 0; i < hiddenAttrCount; i++)
         {

@@ -32,7 +32,7 @@ add_library(kys_core STATIC
     kys_event.cpp
     kys_battle.cpp
     kys_rules.cpp
-    rules/legacy.cpp
+    rules/remake.cpp
     rules/dragon_dos12.cpp
     "${MLCC_DIR}/filefunc.cpp"
     "${MLCC_DIR}/PotConv.cpp"

@@ -136,7 +136,7 @@
     <ClCompile Include="C:\project\mlcc\strfunc.cpp" />
     <ClCompile Include="kys_battle.cpp" />
     <ClCompile Include="kys_rules.cpp" />
-    <ClCompile Include="rules\legacy.cpp" />
+    <ClCompile Include="rules\remake.cpp" />
     <ClCompile Include="rules\dragon_dos12.cpp" />
     <ClCompile Include="kys_draw.cpp" />
     <ClCompile Include="kys_engine.cpp" />

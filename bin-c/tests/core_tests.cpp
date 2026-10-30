@@ -11,13 +11,20 @@
 struct TestFrontend final : GameFrontend
 {
     bool aimAccepted = false;
+
     void text(const std::string&, int) override { }
+
     int choose(const std::string&, const std::vector<std::string>&, bool) override { return 0; }
+
     int number(int, int, int n) override { return n; }
+
     bool battle(int, int) override { return false; }
+
     bool aim(int, int, int, int) override { return aimAccepted; }
+
     void instruction(int, int, int) override { }
 };
+
 void check(bool condition, const char* message)
 {
     if (!condition)
@@ -25,6 +32,7 @@ void check(bool condition, const char* message)
         throw std::runtime_error(message);
     }
 }
+
 void checkBattleMovement()
 {
     int failures = 0;
@@ -145,6 +153,7 @@ void checkBattleMovement()
         "failed path reconstruction must leave actor position, steps and occupancy unchanged");
     check(failures == 0, "Battle movement parity regressions failed");
 }
+
 void checkEquipmentRemoval()
 {
     int failures = 0;
@@ -205,15 +214,17 @@ void checkEquipmentRemoval()
     RItemList = { { 71, 1 }, { -1, 0 }, { -1, 0 } };
     instruct_32(71, -1);
     expect(Rrole[0].PracticeBook == 71 && Ritem[71].User == 0 && Rrole[0].Equip[0] == 40,
-        "equipment correction must not change legacy practice-book behavior");
+        "equipment correction must not change existing practice-book behavior");
     check(failures == 0, "Equipment removal regressions failed");
 }
+
 void checkHiddenWeaponPoison(TestFrontend& frontend)
 {
     struct Case
     {
         int itemPoison, resistance, before, after;
     };
+
     int failures = 0;
     frontend.aimAccepted = true;
     for (auto c : { Case{ 80, 0, 0, 80 }, Case{ 80, 60, 0, 32 }, Case{ 100, 99, 0, 1 },
@@ -261,6 +272,7 @@ void checkHiddenWeaponPoison(TestFrontend& frontend)
     frontend.aimAccepted = false;
     check(failures == 0, "Hidden-weapon poison boundary regressions failed");
 }
+
 int main()
 {
     try

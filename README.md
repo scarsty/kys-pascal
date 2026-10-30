@@ -79,7 +79,7 @@ CMake 也可构建 `kys_mcp`，通过 stdio MCP 操作原生事件、物品、�
 
 MCP 通过 `--mod` 选择模组，`--save-dir` 指定独立存档目录；工具列表自带操作说明。
 构建时可用 `KYS_BUILD_MCP` 开关控制 MCP，`KYS_TEST_MOD` 指定用于集成测试的外部原始苍龙数据。
-规则由 `[rules]` 配置选择，`profile=dragon_dos12` 启用苍龙 1.2 原版成长与战斗数值，省略则保持复刻规则。
+规则由 `[rules]` 配置选择，`profile=dragon_dos12` 启用苍龙 1.2 原版成长与战斗数值，省略或选择 `profile=remake` 则保持复刻规则。
 
 
 ## 字符串的处理

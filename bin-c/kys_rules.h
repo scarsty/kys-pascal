@@ -14,17 +14,20 @@ enum class BattleSkill
     Medicine,
     Detox
 };
+
 struct MagicRuleInfo
 {
     int effectiveLevel, mpCost;
     int staminaPerAction = 0, staminaPerStrike = 3;
     bool reportsEffectiveLevel = false, usesCachedTier = false;
 };
+
 struct CombatDefaults
 {
     std::optional<int> stamina;
     int minKnowledge, lifeHurt, poisonHurt;
 };
+
 class CombatRules
 {
 public:
@@ -48,12 +51,14 @@ public:
     virtual MagicRuleInfo inspectMagic(const TRole*, const TMagic&, int trainedLevel) const = 0;
     virtual int minimumCheckpointVersion() const = 0;
 };
+
 const CombatRules& BattleRules();
 
 struct LevelGrowth
 {
     int hp = 3, mp = 4, attack = 1, speed = 1, defence = 1;
 };
+
 struct GameRuleDescription
 {
     std::string profile, progression, combat;
@@ -62,12 +67,14 @@ struct GameRuleDescription
     std::optional<LevelGrowth> growth;
     std::optional<std::string> levelStatCaps;
 };
+
 // Opaque to gameplay and presentation callers. Binary layout stays compatible
 // with existing V4 checkpoints.
 struct RuleRuntimeState
 {
     int32_t magicCostTier = 0;
 };
+
 RuleRuntimeState CaptureRuleState();
 void RestoreRuleState(RuleRuntimeState state);
 GameRuleDescription DescribeGameRules();

@@ -380,18 +380,26 @@ class DragonIntegration(unittest.TestCase):
                 with Game(self.executable, mod) as g:
                     with self.assertRaisesRegex(RuntimeError, diagnostic):
                         g.call("new_game", seed=7)
-        ini.write_bytes(original + b"\n[rules]\nprogression=dragon_dos12\ncombat=legacy\nmax_level=3\nxp_thresholds=10,20\nhp_growth_factor=5\nmp_growth_factor=6\nattack_growth_factor=2\nspeed_growth_factor=0\ndefence_growth_factor=3\n")
+        for profile in ("remake", "legacy"):
+            # The old input spelling remains readable; reports use one name.
+            ini.write_bytes(original + ("\n[rules]\nprofile=" + profile + "\nprogression=" + profile + "\ncombat=" + profile + "\n").encode())
+            g, state = self.game(mod=mod)
+            rules = g.call("rules")
+            self.assertEqual((rules["profile"], rules["progression"], rules["combat"]), ("remake", "remake", "remake"))
+            self.assertEqual(state["state"]["active_rules"]["profile"], "remake")
+            g.close()
+        ini.write_bytes(original + b"\n[rules]\nprogression=dragon_dos12\ncombat=remake\nmax_level=3\nxp_thresholds=10,20\nhp_growth_factor=5\nmp_growth_factor=6\nattack_growth_factor=2\nspeed_growth_factor=0\ndefence_growth_factor=3\n")
         g, _ = self.game(mod=mod)
         rules = g.call("rules")
-        self.assertEqual((rules["progression"], rules["combat"]), ("dragon_dos12", "legacy"))
+        self.assertEqual((rules["progression"], rules["combat"]), ("dragon_dos12", "remake"))
         self.assertEqual(rules["xp_thresholds"], [10, 20])
         self.assertEqual((rules["max_level"], rules["hp_growth_factor"], rules["mp_growth_factor"]), (3, 5, 6))
         self.assertEqual((rules["attack_growth_factor"], rules["speed_growth_factor"], rules["defence_growth_factor"]), (2, 0, 3))
         g.close()
-        ini.write_bytes(original + b"\n[rules]\nprofile=dragon_dos12\nprogression=legacy\n")
+        ini.write_bytes(original + b"\n[rules]\nprofile=dragon_dos12\nprogression=remake\n")
         g, _ = self.game(mod=mod)
         rules = g.call("rules")
-        self.assertEqual((rules["progression"], rules["combat"]), ("legacy", "dragon_dos12"))
+        self.assertEqual((rules["progression"], rules["combat"]), ("remake", "dragon_dos12"))
         self.assertEqual((rules["max_level"], rules["xp_mode"]), (60, "deduct_per_level"))
         self.assertEqual((rules["min_knowledge"], rules["life_hurt"], rules["poison_hurt"]), (80, 10, 1))
 
@@ -429,7 +437,7 @@ class DragonIntegration(unittest.TestCase):
         v3 = bytearray(data[:-12] + data[-8:])
         struct.pack_into("<Q", v3, 8, 3)
         (saves / "v3.kys-save").write_bytes(v3)
-        # Legacy mode has a zero DOS cache and a false lineage word; removing
+        # Remake mode has a zero DOS cache and a false lineage word; removing
         # both reconstructs V2 without changing its checksum.
         legacy = bytearray(data[:-20] + data[-8:])
         identity = 14695981039346656037

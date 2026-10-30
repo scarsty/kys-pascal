@@ -11,6 +11,7 @@ struct HitContext
     int attackEquipment = 0, defenceEquipment = 0, weaponMatch = 0;
     int attackKnowledge = 0, defenceKnowledge = 0, distance = 1;
 };
+
 int EffectiveLevel(const TRole&, const TMagic&, int trainedLevel);
 void PayMagicCost(TRole&, const TMagic&, int cachedLevel);
 int LevelUp(TRole&, const RulesRandom& = RulesRandomDraw);

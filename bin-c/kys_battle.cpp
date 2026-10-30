@@ -1074,6 +1074,7 @@ void SeekPath2(int x, int y, int step, int myteam, int mode)
     {
         int x, y, s;
     };
+
     std::vector<QNode> queue;
     queue.push_back({ x, y, 0 });
     BField[3][x][y] = 0;

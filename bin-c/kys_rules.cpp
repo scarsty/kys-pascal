@@ -10,31 +10,35 @@ namespace rules
 {
 Configuration config;
 RuleRuntimeState runtime;
+
 namespace
 {
-const ProgressionRules* progression = &LegacyProgression();
-const CombatRules* combat = &LegacyCombat();
+const ProgressionRules* progression = &RemakeProgression();
+const CombatRules* combat = &RemakeCombat();
 }    //namespace
+
 void SelectProfiles()
 {
-    progression = config.progression == Profile::Legacy ? &LegacyProgression() : &DragonDos12Progression();
-    combat = config.combat == Profile::Legacy ? &LegacyCombat() : &DragonDos12Combat();
+    progression = config.progression == Profile::Remake ? &RemakeProgression() : &DragonDos12Progression();
+    combat = config.combat == Profile::Remake ? &RemakeCombat() : &DragonDos12Combat();
 }
 }    //namespace rules
+
 namespace
 {
 rules::Profile mode(const std::string& name)
 {
-    if (name == "legacy")
+    if (name == "remake" || name == "legacy")
     {
-        return rules::Profile::Legacy;
+        return rules::Profile::Remake;
     }
     if (name == "dragon_dos12")
     {
         return rules::Profile::DragonDos12;
     }
-    throw std::runtime_error("Unknown rules mode: " + name + " (use legacy or dragon_dos12)");
+    throw std::runtime_error("Unknown rules mode: " + name + " (use remake or dragon_dos12)");
 }
+
 int integer(INIReaderNormal& ini, const std::string& key, int fallback, int low, int high)
 {
     auto text = ini.getString("rules", key, std::to_string(fallback));
@@ -54,8 +58,12 @@ void LoadGameRules(const std::string& iniPath)
     ini.loadFile(iniPath);
     rules::config = { };
     rules::runtime = { };
-    rules::config.profile = ini.getString("rules", "profile", "legacy");
+    rules::config.profile = ini.getString("rules", "profile", "remake");
     mode(rules::config.profile);    // fail on typos, including an unused profile
+    if (rules::config.profile == "legacy")
+    {
+        rules::config.profile = "remake";
+    }
     rules::config.progression = mode(ini.getString("rules", "progression", rules::config.profile));
     rules::config.combat = mode(ini.getString("rules", "combat", rules::config.profile));
     rules::SelectProfiles();
@@ -116,11 +124,14 @@ void LoadGameRules(const std::string& iniPath)
 }
 
 const CombatRules& BattleRules() { return *rules::combat; }
+
 int NextLevelExperience(const TRole& role)
 {
     return role.Level < 1 || role.Level >= MAX_LEVEL ? -1 : rules::progression->nextExperience(role);
 }
+
 int AdvanceRoleLevels(TRole& role) { return rules::progression->advance(role); }
+
 GameRuleDescription DescribeGameRules()
 {
     GameRuleDescription out;
@@ -130,7 +141,9 @@ GameRuleDescription DescribeGameRules()
     rules::progression->describe(out);
     return out;
 }
+
 RuleRuntimeState CaptureRuleState() { return rules::runtime; }
+
 void RestoreRuleState(RuleRuntimeState state)
 {
     if (state.magicCostTier < 0 || state.magicCostTier > 10)
@@ -139,4 +152,5 @@ void RestoreRuleState(RuleRuntimeState state)
     }
     rules::runtime = state;
 }
+
 int RulesRandomDraw(int bound) { return bound <= 1 || bound > 30000 ? 0 : GameRandom() % bound; }
