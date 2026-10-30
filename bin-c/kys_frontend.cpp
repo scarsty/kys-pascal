@@ -4,7 +4,10 @@
 
 int GameRandom()
 {
-    if (!Headless()) return std::rand();
+    if (!Headless())
+    {
+        return std::rand();
+    }
     HeadlessRandomState = HeadlessRandomState * 1664525u + 1013904223u;
     return static_cast<int>(HeadlessRandomState >> 1);
 }

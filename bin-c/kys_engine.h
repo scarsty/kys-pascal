@@ -112,4 +112,3 @@ std::string checkFileName(const std::string& f);
 bool InRegion(int x1, int y1, int x, int y, int w, int h);
 
 bool EventFilter(void* p, SDL_Event* e);
-

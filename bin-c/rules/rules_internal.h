@@ -4,7 +4,11 @@
 
 namespace rules
 {
-enum class Profile { Legacy, DragonDos12 };
+enum class Profile
+{
+    Legacy,
+    DragonDos12
+};
 struct Configuration
 {
     std::string profile = "legacy";
@@ -35,4 +39,4 @@ const CombatRules& LegacyCombat();
 const ProgressionRules& DragonDos12Progression();
 const CombatRules& DragonDos12Combat();
 void SelectProfiles();
-}
+}    //namespace rules

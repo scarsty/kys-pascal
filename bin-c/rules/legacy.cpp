@@ -1,5 +1,5 @@
-#include "rules_internal.h"
 #include "kys_frontend.h"
+#include "rules_internal.h"
 #include <algorithm>
 
 namespace rules
@@ -10,11 +10,14 @@ class RemakeProgression final : public ProgressionRules
 {
 public:
     const char* name() const override { return "legacy"; }
-    ProgressionDefaults defaults() const override { return {MAX_LEVEL,MAX_HP,MAX_MP,std::nullopt,{}}; }
-    int nextExperience(const TRole& role) const override { return static_cast<uint16_t>(LevelUpList[role.Level-1]); }
+    ProgressionDefaults defaults() const override { return { MAX_LEVEL, MAX_HP, MAX_MP, std::nullopt, { } }; }
+    int nextExperience(const TRole& role) const override { return static_cast<uint16_t>(LevelUpList[role.Level - 1]); }
     int advance(TRole& role) const override
     {
-        if (role.Level < 1 || role.Level >= MAX_LEVEL || role.Exp < nextExperience(role)) return 0;
+        if (role.Level < 1 || role.Level >= MAX_LEVEL || role.Exp < nextExperience(role))
+        {
+            return 0;
+        }
         role.Exp -= LevelUpList[role.Level - 1];
         role.Level++;
         // MaxHP: IncLife * 3 + random(6)
@@ -56,23 +59,26 @@ public:
         role.Poison = 0;
         return 1;
     }
-    void describe(GameRuleDescription&) const override {}
+    void describe(GameRuleDescription&) const override { }
 };
 class RemakeCombat final : public CombatRules
 {
 public:
     const char* name() const override { return "legacy"; }
-    CombatDefaults defaults() const override { return {std::nullopt,MIN_KNOWLEDGE,LIFE_HURT,POISON_HURT}; }
-    int strikeCount(const TRole& role) const override { return role.AttTwice>0?2:1; }
-    int beginStrike(TRole& role,int slot,int selected) const override
+    CombatDefaults defaults() const override { return { std::nullopt, MIN_KNOWLEDGE, LIFE_HURT, POISON_HURT }; }
+    int strikeCount(const TRole& role) const override { return role.AttTwice > 0 ? 2 : 1; }
+    int beginStrike(TRole& role, int slot, int selected) const override
     {
-        role.MagLevel[slot]+=GameRandom()%2+1;
-        if(role.MagLevel[slot]>999)role.MagLevel[slot]=999;
+        role.MagLevel[slot] += GameRandom() % 2 + 1;
+        if (role.MagLevel[slot] > 999)
+        {
+            role.MagLevel[slot] = 999;
+        }
         return selected;
     }
-    void finishStrike(TRole&,int) const override {}
-    void finishAttack(TRole&) const override {}
-    void resolveMagic(int bnum,int mnum,int level) const override
+    void finishStrike(TRole&, int) const override { }
+    void finishAttack(TRole&) const override { }
+    void resolveMagic(int bnum, int mnum, int level) const override
     {
         int rnum = Brole[bnum].rnum;
         Rrole[rnum].PhyPower -= 3;
@@ -154,7 +160,7 @@ public:
             }
         }
     }
-    int hpDamage(int bnum1,int bnum2,int mnum,int level) const override
+    int hpDamage(int bnum1, int bnum2, int mnum, int level) const override
     {
         int rnum1 = Brole[bnum1].rnum, rnum2 = Brole[bnum2].rnum;
         // 计算双方武学常识
@@ -254,24 +260,35 @@ public:
     }
     void roundEnd(int actor) const override
     {
-        auto& state=Brole[actor];auto& role=Rrole[state.rnum];
-        if(role.Poison>0 && state.Dead==0 && state.Acted==1)
+        auto& state = Brole[actor];
+        auto& role = Rrole[state.rnum];
+        if (role.Poison > 0 && state.Dead == 0 && state.Acted == 1)
         {
-            if(POISON_HURT!=0)role.CurrentHP-=role.Poison/POISON_HURT+1;
-            if(role.CurrentHP<=0)role.CurrentHP=1;
+            if (POISON_HURT != 0)
+            {
+                role.CurrentHP -= role.Poison / POISON_HURT + 1;
+            }
+            if (role.CurrentHP <= 0)
+            {
+                role.CurrentHP = 1;
+            }
         }
     }
-    void paySkillCost(TRole& role,BattleSkill skill) const override { role.PhyPower-=skill==BattleSkill::Poison?3:5; }
-    void awardSkillExperience(int,int target,int amount) const override { Brole[target].ExpGot+=amount; }
-    int poison(TRole& a,TRole& d) const override
+    void paySkillCost(TRole& role, BattleSkill skill) const override { role.PhyPower -= skill == BattleSkill::Poison ? 3 : 5; }
+    void awardSkillExperience(int, int target, int amount) const override { Brole[target].ExpGot += amount; }
+    int poison(TRole& a, TRole& d) const override
     {
-        int amount=std::max(a.UsePoi/3-d.DefPoi/4,0);
-        if(amount+d.Poison>99)amount=99-d.Poison;
-        d.Poison+=amount;return amount;
+        int amount = std::max(a.UsePoi / 3 - d.DefPoi / 4, 0);
+        if (amount + d.Poison > 99)
+        {
+            amount = 99 - d.Poison;
+        }
+        d.Poison += amount;
+        return amount;
     }
-    int heal(TRole& a,TRole& d) const override
+    int heal(TRole& a, TRole& d) const override
     {
-        int addlife=0,minushurt=0;
+        int addlife = 0, minushurt = 0;
 
         addlife = a.Medicine * MED_LIFE * (10 - d.Hurt / 15) / 10;
         if (d.Hurt - a.Medicine > 20)
@@ -295,7 +312,7 @@ public:
         d.CurrentHP += addlife;
         return addlife;
     }
-    int detox(TRole& a,TRole& d) const override
+    int detox(TRole& a, TRole& d) const override
     {
         int minuspoi;
 
@@ -307,7 +324,7 @@ public:
         d.Poison -= minuspoi;
         return minuspoi;
     }
-    int hiddenWeapon(int bnum,int bnum1,const TItem& item) const override
+    int hiddenWeapon(int bnum, int bnum1, const TItem& item) const override
     {
         int rnum = Brole[bnum].rnum, rnum1 = Brole[bnum1].rnum;
         int hidden = Rrole[rnum].HidWeapon, hurt;
@@ -330,13 +347,21 @@ public:
         Rrole[rnum].CurrentMP = std::min<int>(Rrole[rnum].CurrentMP + (5 + Brole[bnum].Step) * Rrole[rnum].MaxMP / 200, Rrole[rnum].MaxMP);
         Rrole[rnum].PhyPower = std::min<int>(Rrole[rnum].PhyPower + (5 + Brole[bnum].Step) * MAX_PHYSICAL_POWER / 200, MAX_PHYSICAL_POWER);
     }
-    MagicRuleInfo inspectMagic(const TRole*,const TMagic& magic,int trained) const override
+    MagicRuleInfo inspectMagic(const TRole*, const TMagic& magic, int trained) const override
     {
-        return {trained,magic.NeedMP*((trained+1)/2)};
+        return { trained, magic.NeedMP * ((trained + 1) / 2) };
     }
     int minimumCheckpointVersion() const override { return 1; }
 };
+}    //namespace
+const ProgressionRules& LegacyProgression()
+{
+    static RemakeProgression rules;
+    return rules;
 }
-const ProgressionRules& LegacyProgression() { static RemakeProgression rules;return rules; }
-const CombatRules& LegacyCombat() { static RemakeCombat rules;return rules; }
+const CombatRules& LegacyCombat()
+{
+    static RemakeCombat rules;
+    return rules;
 }
+}    //namespace rules

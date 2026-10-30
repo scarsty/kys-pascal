@@ -2,14 +2,14 @@
 // kys_main.cpp - 游戏主流程实现
 // 对应 kys_main.pas
 
-#include "kys_main.h"
 #include "INIReader.h"
 #include "filefunc.h"
 #include "kys_battle.h"
-#include "kys_rules.h"
 #include "kys_draw.h"
 #include "kys_engine.h"
 #include "kys_event.h"
+#include "kys_main.h"
+#include "kys_rules.h"
 #include "kys_type.h"
 
 #include <SDL3/SDL.h>
@@ -997,7 +997,8 @@ bool InitialRole()
 
         Redraw();
         int key = 0;
-        do {
+        do
+        {
             if (MODVersion != 21)
             {
                 Rrole[0].MaxHP = 25 + GameRandom() % 26;
@@ -1819,7 +1820,10 @@ void SaveR(int num)
 
 int WaitAnyKey()
 {
-    if (Headless()) return SDLK_RETURN;
+    if (Headless())
+    {
+        return SDLK_RETURN;
+    }
     event.key.key = 0;
     event.button.button = 0;
     while (SDL_PollEvent(&event) || true)
@@ -2273,7 +2277,8 @@ bool CheckEntrance()
         if (Headless())
         {
             Where = 1;
-            Cx = Sx; Cy = Sy;
+            Cx = Sx;
+            Cy = Sy;
             HeadlessJumpGuardX = HeadlessJumpGuardY = -1;
             CheckEvent3();
             return true;
@@ -2300,7 +2305,12 @@ bool CheckCanEnter(int snum)
     if (Rscene[snum].EnCondition == 2)
     {
         for (int role : TeamList)
-            if (role >= 0 && Rrole[role].Speed > 70) return true;
+        {
+            if (role >= 0 && Rrole[role].Speed > 70)
+            {
+                return true;
+            }
+        }
     }
     return false;
 }
@@ -2857,7 +2867,7 @@ void FindWay(int x1, int y1)
         int curX = Xlist[curgrid];
         int curY = Ylist[curgrid];
         int curstep = steplist[curgrid];
-        int Bgrid[4] = {};
+        int Bgrid[4] = { };
 
         if (Where == 1)
         {
@@ -3009,7 +3019,8 @@ void ShowSceneName(int snum)
     UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
     std::string name = cp950toutf8(Rscene[snum].Name, sizeof(Rscene[snum].Name));
     int nameLen = static_cast<int>(std::find(std::begin(Rscene[snum].Name),
-        std::end(Rscene[snum].Name), '\0') - std::begin(Rscene[snum].Name));
+                                       std::end(Rscene[snum].Name), '\0')
+        - std::begin(Rscene[snum].Name));
     DrawTextWithRect(name, CENTER_X - nameLen * 5 + 7, 100, nameLen * 10 + 6, ColColor(5), ColColor(7));
     if (Rscene[snum].EntranceMusic >= 0)
     {
@@ -3035,7 +3046,10 @@ int CommonMenu(int x, int y, int w, int max, int default_, const std::string men
 
 int CommonMenu(int x, int y, int w, int max, int default_, const std::string menuString[], TPInt1 fn, int count)
 {
-    if (Headless()) return Frontend->choose("menu", {menuString, menuString + max + 1});
+    if (Headless())
+    {
+        return Frontend->choose("menu", { menuString, menuString + max + 1 });
+    }
     int menu = default_;
     if (menu < 0)
     {
@@ -3168,7 +3182,10 @@ int CommonMenu(int x, int y, int w, int max, int default_, const std::string men
 // 仅有两个选项的横排选单 - 严格按Pascal版
 int CommonMenu2(int x, int y, int w, const std::string menuString[])
 {
-    if (Headless()) return Frontend->choose(menuString[2], {menuString[0], menuString[1]});
+    if (Headless())
+    {
+        return Frontend->choose(menuString[2], { menuString[0], menuString[1] });
+    }
     int menu = 0;
 
     auto ShowCommonMenu2 = [&]()
@@ -3268,7 +3285,10 @@ int CommonMenu2(int x, int y, int w, const std::string menuString[])
 // 卷动选单 - 严格按Pascal版
 int CommonScrollMenu(int x, int y, int w, int max, int maxshow, const std::string menuString[])
 {
-    if (Headless()) return Frontend->choose("menu", {menuString, menuString + max + 1});
+    if (Headless())
+    {
+        return Frontend->choose("menu", { menuString, menuString + max + 1 });
+    }
     int menu = 0, menutop = 0;
     if (max + 1 < maxshow)
     {
@@ -4188,130 +4208,105 @@ bool MenuItem()
 
             auto RunItemMenu = [&]()
             {
-            while (SDL_WaitEvent(&event))
-            {
-                CheckBasicEvent();
-                switch (event.type)
+                while (SDL_WaitEvent(&event))
                 {
-                case SDL_EVENT_KEY_DOWN:
-                    if (event.key.key == SDLK_DOWN)
+                    CheckBasicEvent();
+                    switch (event.type)
                     {
-                        y++;
-                        if (y < 0)
+                    case SDL_EVENT_KEY_DOWN:
+                        if (event.key.key == SDLK_DOWN)
                         {
-                            y = 0;
-                        }
-                        if (y >= row)
-                        {
-                            if (ItemList[atlu + col * row] >= 0)
-                            {
-                                atlu += col;
-                            }
-                            y = row - 1;
-                        }
-                        ShowMenuItem();
-                        UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
-                    }
-                    if (event.key.key == SDLK_UP)
-                    {
-                        y--;
-                        if (y < 0)
-                        {
-                            y = 0;
-                            if (atlu > 0)
-                            {
-                                atlu -= col;
-                            }
-                        }
-                        ShowMenuItem();
-                        UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
-                    }
-                    if (event.key.key == SDLK_PAGEDOWN)
-                    {
-                        atlu += col * row;
-                        if (y < 0)
-                        {
-                            y = 0;
-                        }
-                        if (ItemList[atlu + col * row] < 0 && iamount > col * row)
-                        {
-                            y = y - (iamount - atlu) / col - 1 + row;
-                            atlu = (iamount / col - row + 1) * col;
-                            if (y >= row)
-                            {
-                                y = row - 1;
-                            }
-                        }
-                        ShowMenuItem();
-                        UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
-                    }
-                    if (event.key.key == SDLK_PAGEUP)
-                    {
-                        atlu -= col * row;
-                        if (atlu < 0)
-                        {
-                            y += atlu / col;
-                            atlu = 0;
+                            y++;
                             if (y < 0)
                             {
                                 y = 0;
                             }
-                        }
-                        ShowMenuItem();
-                        UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
-                    }
-                    if (event.key.key == SDLK_RIGHT)
-                    {
-                        x++;
-                        if (x >= col)
-                        {
-                            x = 0;
-                        }
-                        ShowMenuItem();
-                        UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
-                    }
-                    if (event.key.key == SDLK_LEFT)
-                    {
-                        x--;
-                        if (x < 0)
-                        {
-                            x = col - 1;
-                        }
-                        ShowMenuItem();
-                        UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
-                    }
-                    break;
-                case SDL_EVENT_KEY_UP:
-                    if (event.key.key == SDLK_ESCAPE)
-                    {
-                        return;
-                    }
-                    if (event.key.key == SDLK_RETURN || event.key.key == SDLK_SPACE)
-                    {
-                        int sel_idx = y * col + x + atlu;
-                        if (ItemList[sel_idx] >= 0)
-                        {
-                            CurItem = RItemList[ItemList[sel_idx]].Number;
-                            if (Where != 2 && CurItem >= 0)
+                            if (y >= row)
                             {
-                                UseItem(CurItem);
+                                if (ItemList[atlu + col * row] >= 0)
+                                {
+                                    atlu += col;
+                                }
+                                y = row - 1;
                             }
+                            ShowMenuItem();
+                            UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
                         }
-                        return;
-                    }
-                    break;
-                case SDL_EVENT_MOUSE_BUTTON_UP:
-                    if (event.button.button == SDL_BUTTON_RIGHT)
-                    {
-                        return;
-                    }
-                    if (event.button.button == SDL_BUTTON_LEFT)
-                    {
-                        // 手机触屏防误触: TouchWalk关闭时(防误触模式)鼠标点击无效，仅虚拟按键可操作
-                        if (CellPhone != 0 && !TouchWalk) { break; }
-                        int mx = (int)(event.button.x / ((float)RESOLUTIONX / ScreenWidth()));
-                        int my = (int)(event.button.y / ((float)RESOLUTIONY / ScreenHeight()));
-                        if (mx >= 110 && mx < 110 + w && my > 90 && my < 308)
+                        if (event.key.key == SDLK_UP)
+                        {
+                            y--;
+                            if (y < 0)
+                            {
+                                y = 0;
+                                if (atlu > 0)
+                                {
+                                    atlu -= col;
+                                }
+                            }
+                            ShowMenuItem();
+                            UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
+                        }
+                        if (event.key.key == SDLK_PAGEDOWN)
+                        {
+                            atlu += col * row;
+                            if (y < 0)
+                            {
+                                y = 0;
+                            }
+                            if (ItemList[atlu + col * row] < 0 && iamount > col * row)
+                            {
+                                y = y - (iamount - atlu) / col - 1 + row;
+                                atlu = (iamount / col - row + 1) * col;
+                                if (y >= row)
+                                {
+                                    y = row - 1;
+                                }
+                            }
+                            ShowMenuItem();
+                            UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
+                        }
+                        if (event.key.key == SDLK_PAGEUP)
+                        {
+                            atlu -= col * row;
+                            if (atlu < 0)
+                            {
+                                y += atlu / col;
+                                atlu = 0;
+                                if (y < 0)
+                                {
+                                    y = 0;
+                                }
+                            }
+                            ShowMenuItem();
+                            UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
+                        }
+                        if (event.key.key == SDLK_RIGHT)
+                        {
+                            x++;
+                            if (x >= col)
+                            {
+                                x = 0;
+                            }
+                            ShowMenuItem();
+                            UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
+                        }
+                        if (event.key.key == SDLK_LEFT)
+                        {
+                            x--;
+                            if (x < 0)
+                            {
+                                x = col - 1;
+                            }
+                            ShowMenuItem();
+                            UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
+                        }
+                        break;
+                    case SDL_EVENT_KEY_UP:
+                        if (event.key.key == SDLK_ESCAPE)
+                        {
+                            return;
+                        }
+                        if (event.key.key == SDLK_RETURN || event.key.key == SDLK_SPACE)
                         {
                             int sel_idx = y * col + x + atlu;
                             if (ItemList[sel_idx] >= 0)
@@ -4324,8 +4319,33 @@ bool MenuItem()
                             }
                             return;
                         }
-                    }
-                    break;
+                        break;
+                    case SDL_EVENT_MOUSE_BUTTON_UP:
+                        if (event.button.button == SDL_BUTTON_RIGHT)
+                        {
+                            return;
+                        }
+                        if (event.button.button == SDL_BUTTON_LEFT)
+                        {
+                            // 手机触屏防误触: TouchWalk关闭时(防误触模式)鼠标点击无效，仅虚拟按键可操作
+                            if (CellPhone != 0 && !TouchWalk) { break; }
+                            int mx = (int)(event.button.x / ((float)RESOLUTIONX / ScreenWidth()));
+                            int my = (int)(event.button.y / ((float)RESOLUTIONY / ScreenHeight()));
+                            if (mx >= 110 && mx < 110 + w && my > 90 && my < 308)
+                            {
+                                int sel_idx = y * col + x + atlu;
+                                if (ItemList[sel_idx] >= 0)
+                                {
+                                    CurItem = RItemList[ItemList[sel_idx]].Number;
+                                    if (Where != 2 && CurItem >= 0)
+                                    {
+                                        UseItem(CurItem);
+                                    }
+                                }
+                                return;
+                            }
+                        }
+                        break;
                     case SDL_EVENT_MOUSE_WHEEL:
                         // 手机触屏防误触: TouchWalk关闭时(防误触模式)滚轮（手指滑动）无效
                         if (CellPhone != 0 && !TouchWalk) { break; }
@@ -4359,40 +4379,40 @@ bool MenuItem()
                         }
                         break;
                     case SDL_EVENT_MOUSE_MOTION:
+                    {
+                        // 手机触屏防误触: TouchWalk关闭时(防误触模式)鼠标移动无效
+                        if (CellPhone != 0 && !TouchWalk) { break; }
+                        int mx = (int)(event.motion.x / ((float)RESOLUTIONX / ScreenWidth()));
+                        int my = (int)(event.motion.y / ((float)RESOLUTIONY / ScreenHeight()));
+                        if (mx >= 110 && mx < 110 + w && my > 90 && my < 308)
                         {
-                            // 手机触屏防误触: TouchWalk关闭时(防误触模式)鼠标移动无效
-                            if (CellPhone != 0 && !TouchWalk) { break; }
-                            int mx = (int)(event.motion.x / ((float)RESOLUTIONX / ScreenWidth()));
-                            int my = (int)(event.motion.y / ((float)RESOLUTIONY / ScreenHeight()));
-                            if (mx >= 110 && mx < 110 + w && my > 90 && my < 308)
+                            int xp = x, yp = y;
+                            x = (mx - 115) / 42;
+                            y = (my - 95) / 42;
+                            if (x >= col)
                             {
-                                int xp = x, yp = y;
-                                x = (mx - 115) / 42;
-                                y = (my - 95) / 42;
-                                if (x >= col)
-                                {
-                                    x = col - 1;
-                                }
-                                if (y >= row)
-                                {
-                                    y = row - 1;
-                                }
-                                if (x < 0)
-                                {
-                                    x = 0;
-                                }
-                                if (y < 0)
-                                {
-                                    y = 0;
-                                }
-                                if (x != xp || y != yp)
-                                {
-                                    ShowMenuItem();
-                                    UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
-                                }
+                                x = col - 1;
                             }
-                            break;
+                            if (y >= row)
+                            {
+                                y = row - 1;
+                            }
+                            if (x < 0)
+                            {
+                                x = 0;
+                            }
+                            if (y < 0)
+                            {
+                                y = 0;
+                            }
+                            if (x != xp || y != yp)
+                            {
+                                ShowMenuItem();
+                                UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
+                            }
                         }
+                        break;
+                    }
                     }
                 }
             };
@@ -4737,7 +4757,7 @@ void MenuStatus()
 
     if (Where == 2)
     {
-        CalCanSelect(0,0, 32);
+        CalCanSelect(0, 0, 32);
         for (int i = 0; i < 64; i++)
         {
             for (int j = 0; j < 64; j++)
@@ -4797,7 +4817,10 @@ void ShowStatus(int rnum)
 
 void ShowStatus(int rnum, int x, int y)
 {
-    if (Headless()) return;
+    if (Headless())
+    {
+        return;
+    }
     std::string strs[22];
     strs[0] = "等級";
     strs[1] = "生命";
@@ -5089,7 +5112,10 @@ void ShowStatus(int rnum, int x, int y)
 
 void ShowSimpleStatus(int rnum, int x, int y)
 {
-    if (Headless()) return;
+    if (Headless())
+    {
+        return;
+    }
     // 匹配Pascal版简易状态显示
     std::string strs[4] = { "等級", "生命", "內力", "體力" };
 
@@ -5288,9 +5314,9 @@ void MenuQuit()
 
 int EffectMedcine(int role1, int role2)
 {
-    int injury=Rrole[role2].Hurt;
-    int addlife=BattleRules().heal(Rrole[role1],Rrole[role2]);
-    int minushurt=injury-Rrole[role2].Hurt;
+    int injury = Rrole[role2].Hurt;
+    int addlife = BattleRules().heal(Rrole[role1], Rrole[role2]);
+    int minushurt = injury - Rrole[role2].Hurt;
 
     if (Where != 2)
     {
@@ -5313,7 +5339,7 @@ int EffectMedcine(int role1, int role2)
 
 int EffectMedPoison(int role1, int role2)
 {
-    int minuspoi=BattleRules().detox(Rrole[role1],Rrole[role2]);
+    int minuspoi = BattleRules().detox(Rrole[role1], Rrole[role2]);
 
     if (Where != 2)
     {
@@ -5333,7 +5359,10 @@ int EffectMedPoison(int role1, int role2)
 
 int EatOneItem(int rnum, int inum, int times, int display)
 {
-    if (Headless()) display = 0;
+    if (Headless())
+    {
+        display = 0;
+    }
     if (inum < 0 || inum >= 725)
     {
         return 0;
@@ -5346,7 +5375,7 @@ int EatOneItem(int rnum, int inum, int times, int display)
         50, 51, 52, 53, 54, 55, 56,    // 14-20: 拳掌/御剑/耍刀/特殊/暗器/知识/品德
         58, 57, 19                     // 21: 左右互搏, 22: 攻击带毒, 23: 受伤
     };
-    int addvalue[24] = {};
+    int addvalue[24] = { };
     for (int i = 0; i <= 22; i++)
     {
         if (i != 4 && i != 21)
@@ -5943,7 +5972,10 @@ void StartAmi()
 // EnterString (from event system, moved here for accessibility)
 bool EnterString(std::string& str, int x, int y, int w, int h)
 {
-    if (Headless()) return true;
+    if (Headless())
+    {
+        return true;
+    }
     int drawX = x;
     int drawY = y;
     if (CellPhone != 0)

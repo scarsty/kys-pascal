@@ -34,7 +34,10 @@ static int maxdelaypicnum;
 
 bool Battle(int battlenum, int getexp)
 {
-    if (Headless()) return Frontend->battle(battlenum, getexp);
+    if (Headless())
+    {
+        return Frontend->battle(battlenum, getexp);
+    }
     BattleResult = 0;
     CurrentBattle = battlenum;
     BattleRound = 1;
@@ -404,7 +407,7 @@ void BattleMainControl()
             i = 0;
         }
 
-        TBattleRole tempBrole = {};
+        TBattleRole tempBrole = { };
         while (i < BRoleAmount && BattleResult == 0)
         {
             while (SDL_PollEvent(&event) || true)
@@ -470,8 +473,7 @@ void BattleMainControl()
                             {
                                 BField[2][tempBrole.X][tempBrole.Y] = i;
                             }
-                            if ((Brole[i].X != tempBrole.X || Brole[i].Y != tempBrole.Y) &&
-                                Brole[i].X >= 0 && Brole[i].X <= 63 && Brole[i].Y >= 0 && Brole[i].Y <= 63)
+                            if ((Brole[i].X != tempBrole.X || Brole[i].Y != tempBrole.Y) && Brole[i].X >= 0 && Brole[i].X <= 63 && Brole[i].Y >= 0 && Brole[i].Y <= 63)
                             {
                                 BField[2][Brole[i].X][Brole[i].Y] = -1;
                             }
@@ -793,8 +795,7 @@ bool MoveAnimation(int bnum)
                     // Equal-distance paths may enter an enemy's adjacency.
                     // Prefer a predecessor that can be traversed without
                     // stopping, as in Pascal MoveAmination.
-                    if (BField[7][tx][ty] == 0 ||
-                        (BField[7][tx][ty] == 1 && tx == Ax && ty == Ay))
+                    if (BField[7][tx][ty] == 0 || (BField[7][tx][ty] == 1 && tx == Ax && ty == Ay))
                     {
                         break;
                     }
@@ -844,7 +845,10 @@ bool MoveAnimation(int bnum)
             Brole[bnum].Step--;
             Redraw();
             UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
-            if (!Headless()) SDL_Delay(BATTLE_SPEED);
+            if (!Headless())
+            {
+                SDL_Delay(BATTLE_SPEED);
+            }
         }
         Brole[bnum].X = Bx;
         Brole[bnum].Y = By;
@@ -856,7 +860,10 @@ bool MoveAnimation(int bnum)
 
 bool SelectAim(int bnum, int step, int AreaType, int AreaRange)
 {
-    if (Headless()) return Frontend->aim(bnum, step, AreaType, AreaRange);
+    if (Headless())
+    {
+        return Frontend->aim(bnum, step, AreaType, AreaRange);
+    }
     Ax = Bx;
     Ay = By;
     BattleSelecting = true;
@@ -1079,7 +1086,7 @@ void SeekPath2(int x, int y, int step, int myteam, int mode)
         {
             continue;
         }
-        int kind[4]{};
+        int kind[4]{ };
         for (int d = 0; d < 4; d++)
         {
             int nx = cur.x + dx[d], ny = cur.y + dy[d];
@@ -1103,8 +1110,7 @@ void SeekPath2(int x, int y, int step, int myteam, int mode)
             else
             {
                 int ground = BField[0][nx][ny] / 2;
-                if ((ground >= 179 && ground <= 190) || ground == 261 || ground == 511 ||
-                    (ground >= 224 && ground <= 232) || (ground >= 662 && ground <= 674))
+                if ((ground >= 179 && ground <= 190) || ground == 261 || ground == 511 || (ground >= 224 && ground <= 232) || (ground >= 662 && ground <= 674))
                 {
                     kind[d] = 6;
                 }
@@ -1118,15 +1124,16 @@ void SeekPath2(int x, int y, int step, int myteam, int mode)
                 int ex = nx + dx[j], ey = ny + dy[j];
                 // Retain Pascal's adjacency-marker bounds while avoiding its
                 // possible write outside the field for an invalid neighbor.
-                if (ex >= 0 && ex < 63 && ey >= 0 && ey < 63 && BField[2][ex][ey] >= 0 &&
-                    Brole[BField[2][ex][ey]].Dead == 0 && Brole[BField[2][ex][ey]].Team != myteam)
+                if (ex >= 0 && ex < 63 && ey >= 0 && ey < 63 && BField[2][ex][ey] >= 0 && Brole[BField[2][ex][ey]].Dead == 0 && Brole[BField[2][ex][ey]].Team != myteam)
                 {
                     BField[7][nx][ny] = 1;
                 }
             }
         }
-        bool canContinue = mode != 0 || cur.s == 0 ||
-            std::none_of(std::begin(kind), std::end(kind), [](int value) { return value == 3; });
+        bool canContinue = mode != 0 || cur.s == 0 || std::none_of(std::begin(kind), std::end(kind), [](int value)
+                               {
+                                   return value == 3;
+                               });
         if (!canContinue)
         {
             continue;
@@ -1271,14 +1278,23 @@ void Attack(int bnum)
 void AttackAction(int bnum, int i, int mnum, int level)
 {
     int rnum = Brole[bnum].rnum;
-    if (i < 0 || i >= 10 || Brole[bnum].Acted != 1)return;
-    const auto& rules=BattleRules();
-    for(int strike=0;strike<rules.strikeCount(Rrole[rnum]);++strike)
+    if (i < 0 || i >= 10 || Brole[bnum].Acted != 1)
     {
-        int tier=rules.beginStrike(Rrole[rnum],i,level);
-        if(Rmagic[mnum].Unknown[4]>0)CallEvent(Rmagic[mnum].Unknown[4]);
-        else AttackAction(bnum,mnum,tier);
-        rules.finishStrike(Rrole[rnum],i);
+        return;
+    }
+    const auto& rules = BattleRules();
+    for (int strike = 0; strike < rules.strikeCount(Rrole[rnum]); ++strike)
+    {
+        int tier = rules.beginStrike(Rrole[rnum], i, level);
+        if (Rmagic[mnum].Unknown[4] > 0)
+        {
+            CallEvent(Rmagic[mnum].Unknown[4]);
+        }
+        else
+        {
+            AttackAction(bnum, mnum, tier);
+        }
+        rules.finishStrike(Rrole[rnum], i);
     }
     rules.finishAttack(Rrole[rnum]);
 }
@@ -1306,7 +1322,10 @@ void AttackActionAll(int bnum, int mnum, int level)
 
 void ShowMagicName(int mnum, int mode)
 {
-    if (Headless()) return;
+    if (Headless())
+    {
+        return;
+    }
     Redraw();
     std::string str;
     if (mode == 1)
@@ -1547,7 +1566,10 @@ void SetAnimationPosition2(int bx1, int by1, int ax1, int ay1, int mode, int ste
 
 void PlayMagicAnimation(int bnum, int enumv, int ForTeam, int mode)
 {
-    if (Headless()) return;
+    if (Headless())
+    {
+        return;
+    }
     if (enumv < 0 || enumv > 199)
     {
         return;
@@ -1609,12 +1631,12 @@ void PlayMagicAnimation(int bnum, int enumv, int ForTeam, int mode)
 
 void CalHurtRole(int bnum, int mnum, int level)
 {
-    BattleRules().resolveMagic(bnum,mnum,level);
+    BattleRules().resolveMagic(bnum, mnum, level);
 }
 
 int CalHurtValue(int bnum1, int bnum2, int mnum, int level)
 {
-    return BattleRules().hpDamage(bnum1,bnum2,mnum,level);
+    return BattleRules().hpDamage(bnum1, bnum2, mnum, level);
 }
 
 int CalHurtValue2(int bnum1, int bnum2, int mnum, int level)
@@ -1670,7 +1692,10 @@ void SelectModeColor(int mode, uint32_t& color1, uint32_t& color2, std::string& 
 
 void ShowHurtValue(int mode)
 {
-    if (Headless()) return;
+    if (Headless())
+    {
+        return;
+    }
     uint32_t color1, color2;
     std::string str;
     SelectModeColor(mode, color1, color2, str);
@@ -1713,9 +1738,9 @@ void ShowHurtValue(int mode)
 
 void CalPoiHurtLife()
 {
-    for(int i=0;i<BRoleAmount;++i)
+    for (int i = 0; i < BRoleAmount; ++i)
     {
-        Brole[i].ShowNumber=-1;
+        Brole[i].ShowNumber = -1;
         BattleRules().roundEnd(i);
     }
 }
@@ -1896,10 +1921,10 @@ void AddExp()
 
 static void ShowLevelUp(int bnum)
 {
-    if(Brole[bnum].Team==0)
+    if (Brole[bnum].Team == 0)
     {
         ShowStatus(Brole[bnum].rnum);
-        DrawTextWithRect("昇級",58,CENTER_Y-150,46,ColColor(0x23),ColColor(0x21));
+        DrawTextWithRect("昇級", 58, CENTER_Y - 150, 46, ColColor(0x23), ColColor(0x21));
         WaitAnyKey();
     }
 }
@@ -1908,8 +1933,13 @@ void CheckLevelUp()
 {
     Redraw();
     RecordFreshScreen(0, 0, ScreenWidth(), ScreenHeight());
-    for(int i=0;i<BRoleAmount;++i)
-        while(AdvanceRoleLevels(Rrole[Brole[i].rnum])>0)ShowLevelUp(i);
+    for (int i = 0; i < BRoleAmount; ++i)
+    {
+        while (AdvanceRoleLevels(Rrole[Brole[i].rnum]) > 0)
+        {
+            ShowLevelUp(i);
+        }
+    }
 }
 
 void CheckBook()
@@ -2068,7 +2098,10 @@ void BattleMenuItem(int bnum)
 
 void PlayActionAnimation(int bnum, int mode, int mnum)
 {
-    if (Headless()) return;
+    if (Headless())
+    {
+        return;
+    }
     int rnum = Brole[bnum].rnum;
 
     // 方向至少朝向一个将被打中的敌人
@@ -2142,7 +2175,10 @@ void PlayActionAnimation(int bnum, int mode, int mnum)
                 PlaySoundA(Rmagic[mnum].SoundNum, 0);
             }
             UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
-            if (!Headless()) SDL_Delay(BATTLE_SPEED);
+            if (!Headless())
+            {
+                SDL_Delay(BATTLE_SPEED);
+            }
             p++;
             if (p > endPic)
             {
@@ -2189,13 +2225,13 @@ void UsePoison(int bnum)
     if (BField[2][Ax][Ay] >= 0 && select)
     {
         Brole[bnum].Acted = 1;
-        BattleRules().paySkillCost(Rrole[rnum],BattleSkill::Poison);
+        BattleRules().paySkillCost(Rrole[rnum], BattleSkill::Poison);
         int bnum1 = BField[2][Ax][Ay];
         if (Brole[bnum1].Team != Brole[bnum].Team)
         {
             int rnum1 = Brole[bnum1].rnum;
-            int addpoi=BattleRules().poison(Rrole[rnum],Rrole[rnum1]);
-            BattleRules().awardSkillExperience(bnum,bnum1,addpoi);
+            int addpoi = BattleRules().poison(Rrole[rnum], Rrole[rnum1]);
+            BattleRules().awardSkillExperience(bnum, bnum1, addpoi);
             Brole[bnum1].ShowNumber = addpoi;
             SetAnimationPosition(0, 0);
             PlayActionAnimation(bnum, 0);
@@ -2230,14 +2266,14 @@ void Medicine(int bnum)
     if (BField[2][Ax][Ay] >= 0 && select)
     {
         Brole[bnum].Acted = 1;
-        BattleRules().paySkillCost(Rrole[rnum],BattleSkill::Medicine);
+        BattleRules().paySkillCost(Rrole[rnum], BattleSkill::Medicine);
         int bnum1 = BField[2][Ax][Ay];
         if (Brole[bnum1].Team == Brole[bnum].Team)
         {
             int rnum1 = Brole[bnum1].rnum;
             int addlife = EffectMedcine(rnum, rnum1);
             Brole[bnum1].ShowNumber = addlife;
-            BattleRules().awardSkillExperience(bnum,bnum1,addlife);
+            BattleRules().awardSkillExperience(bnum, bnum1, addlife);
             SetAnimationPosition(0, 0);
             PlayActionAnimation(bnum, 0);
             PlayMagicAnimation(bnum, 0, 1, 3);
@@ -2271,14 +2307,14 @@ void MedPoison(int bnum)
     if (BField[2][Ax][Ay] >= 0 && select)
     {
         Brole[bnum].Acted = 1;
-        BattleRules().paySkillCost(Rrole[rnum],BattleSkill::Detox);
+        BattleRules().paySkillCost(Rrole[rnum], BattleSkill::Detox);
         int bnum1 = BField[2][Ax][Ay];
         if (Brole[bnum1].Team == Brole[bnum].Team)
         {
             int rnum1 = Brole[bnum1].rnum;
             int minuspoi = EffectMedPoison(rnum, rnum1);
             Brole[bnum1].ShowNumber = minuspoi;
-            BattleRules().awardSkillExperience(bnum,bnum1,minuspoi);
+            BattleRules().awardSkillExperience(bnum, bnum1, minuspoi);
             SetAnimationPosition(0, 0);
             PlayActionAnimation(bnum, 0);
             PlayMagicAnimation(bnum, 36, 1, 4);
@@ -2361,8 +2397,8 @@ void UseHiddenWeapon(int bnum, int inum)
             int bnum1 = BField[2][Ax][Ay];
             if (Brole[bnum1].Team != Brole[bnum].Team)
             {
-                int hurt=BattleRules().hiddenWeapon(bnum,bnum1,Ritem[inum]);
-                Brole[bnum1].ShowNumber=hurt;
+                int hurt = BattleRules().hiddenWeapon(bnum, bnum1, Ritem[inum]);
+                Brole[bnum1].ShowNumber = hurt;
                 SetAnimationPosition(0, 0);
                 ShowMagicName(inum, 1);
                 PlayActionAnimation(bnum, 0);
@@ -2375,7 +2411,7 @@ void UseHiddenWeapon(int bnum, int inum)
 
 void Rest(int bnum)
 {
-    Brole[bnum].Acted=1;
+    Brole[bnum].Acted = 1;
     BattleRules().rest(bnum);
 }
 
@@ -2569,7 +2605,10 @@ void AutoBattle(int bnum)
 {
     int rnum = Brole[bnum].rnum;
     ShowSimpleStatus(rnum, CENTER_X + 100, 50);
-    if (!Headless()) SDL_Delay(450);
+    if (!Headless())
+    {
+        SDL_Delay(450);
+    }
 
     if (((Brole[bnum].Team == 0) && (Brole[bnum].AutoMode == 2)) || (Brole[bnum].Team != 0))
     {
@@ -2662,7 +2701,6 @@ void AutoBattle(int bnum)
                 }
             }
         }
-
     }
 
     // 暗器：HidWeapon > Attack 或没有攻击武功时使用暗器
@@ -2673,7 +2711,11 @@ void AutoBattle(int bnum)
         bool hasNoMagic = true;
         for (int i = 0; i < 10; i++)
         {
-            if (Rrole[rnum].Magic[i] > 0) { hasNoMagic = false; break; }
+            if (Rrole[rnum].Magic[i] > 0)
+            {
+                hasNoMagic = false;
+                break;
+            }
         }
         if (Rrole[rnum].HidWeapon > Rrole[rnum].Attack || hasNoMagic)
         {

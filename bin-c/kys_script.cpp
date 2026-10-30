@@ -1,10 +1,10 @@
 // Shared native event interpreter: SDL and headless frontends run the same opcodes.
 #include "kys_script.h"
+#include "kys_draw.h"
+#include "kys_engine.h"
+#include "kys_event.h"
 #include "kys_frontend.h"
 #include "kys_main.h"
-#include "kys_event.h"
-#include "kys_engine.h"
-#include "kys_draw.h"
 #include <cstring>
 #include <stdexcept>
 #include <vector>
@@ -12,7 +12,9 @@
 void CallEvent(int num)
 {
     if (num < 0 || num >= static_cast<int>(KIdx.size()))
+    {
         throw std::runtime_error("Invalid event script: " + std::to_string(num));
+    }
     SStep = 0;
     SceneRolePic = BEGIN_WALKPIC + SFace * 7;
     NeedRefreshScene = 0;
@@ -31,7 +33,9 @@ void CallEvent(int num)
             len = KIdx[num] - offset;
         }
         if (offset < 0 || len < 0 || len % 2 != 0 || static_cast<size_t>(offset) + len > KDef.size())
+        {
             throw std::runtime_error("Invalid event byte range: script " + std::to_string(num));
+        }
         int ecount = len / 2 + 1;
         std::vector<int16_t> e(ecount, 0);
         if (len > 0)
@@ -42,14 +46,23 @@ void CallEvent(int num)
 
         while (i >= 0 && i < ecount - 1)
         {
-            if (Frontend) Frontend->instruction(num, i, e[i]);
-            else { SDL_PollEvent(&event); CheckBasicEvent(); }
+            if (Frontend)
+            {
+                Frontend->instruction(num, i, e[i]);
+            }
+            else
+            {
+                SDL_PollEvent(&event);
+                CheckBasicEvent();
+            }
             if (e[i] < 0)
             {
                 break;
             }
             if (e[i] >= EventWidths.size() || i + EventWidths[e[i]] > len / 2)
+            {
                 throw std::runtime_error("Invalid/truncated event opcode at script " + std::to_string(num) + " pc " + std::to_string(i));
+            }
             switch (e[i])
             {
             case 0:
@@ -356,7 +369,11 @@ void CallEvent(int num)
 
     RunKDefEvent();
 
-    if (Headless()) { NeedRefreshScene = 1; return; }
+    if (Headless())
+    {
+        NeedRefreshScene = 1;
+        return;
+    }
     if (NeedRefreshScene == 1)
     {
         InitialScene(0);

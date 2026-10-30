@@ -9,7 +9,7 @@ struct GameFrontend
 {
     virtual ~GameFrontend() = default;
     virtual void text(const std::string& value, int head = -1) = 0;
-    virtual void context(const std::string&) {}
+    virtual void context(const std::string&) { }
     virtual int choose(const std::string& title, const std::vector<std::string>& options, bool cancel = true) = 0;
     virtual int number(int minimum, int maximum, int initial) = 0;
     virtual bool battle(int number, int getexp) = 0;

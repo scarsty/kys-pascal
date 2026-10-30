@@ -67,7 +67,11 @@ std::string ReadTalk(int talknum)
 
 void talk_1(const std::string& talkstr, int headnum, int dismode)
 {
-    if (Headless()) { Frontend->text(talkstr, headnum); return; }
+    if (Headless())
+    {
+        Frontend->text(talkstr, headnum);
+        return;
+    }
     int headx, heady, diagx, diagy;
     switch (dismode)
     {
@@ -163,7 +167,8 @@ void talk_1(const std::string& talkstr, int headnum, int dismode)
         {
             UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
             int key;
-            do {
+            do
+            {
                 key = WaitAnyKey();
             } while (key == SDLK_LEFT || key == SDLK_RIGHT || key == SDLK_UP || key == SDLK_DOWN);
             Redraw();
@@ -177,7 +182,8 @@ void talk_1(const std::string& talkstr, int headnum, int dismode)
     }
     UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
     int key;
-    do {
+    do
+    {
         key = WaitAnyKey();
     } while (key == SDLK_LEFT || key == SDLK_RIGHT || key == SDLK_UP || key == SDLK_DOWN);
     Redraw();
@@ -192,7 +198,11 @@ void instruct_1(int talknum, int headnum, int dismode)
 void instruct_2(int inum, int amount)
 {
     instruct_32(inum, amount);
-    if (Headless()) { Frontend->text(std::format("item {} {} {:+d}", inum, cp950toutf8(Ritem[inum].Name, sizeof(Ritem[inum].Name)), amount)); return; }
+    if (Headless())
+    {
+        Frontend->text(std::format("item {} {} {:+d}", inum, cp950toutf8(Ritem[inum].Name, sizeof(Ritem[inum].Name)), amount));
+        return;
+    }
     int x = CENTER_X;
     if (Where == 2)
     {
@@ -385,7 +395,10 @@ void instruct_12()
 
 void instruct_13()
 {
-    if (Headless()) return;
+    if (Headless())
+    {
+        return;
+    }
     InitialScene(0);
     NeedRefreshScene = 0;
     for (int i = 0; i <= 5; i++)
@@ -398,7 +411,10 @@ void instruct_13()
 
 void instruct_14()
 {
-    if (Headless()) return;
+    if (Headless())
+    {
+        return;
+    }
     for (int i = 0; i <= 5; i++)
     {
         DrawRectangleWithoutFrame(screen, 0, 0, ScreenWidth(), ScreenHeight(), 0, i * 20);
@@ -501,11 +517,16 @@ void instruct_22()
     }
 }
 void instruct_23(int rnum, int Poison) { Rrole[rnum].UsePoi = Poison; }
-void instruct_24() {}
+void instruct_24() { }
 
 void instruct_25(int x1, int y1, int x2, int y2)
 {
-    if (Headless()) { Cx = y2; Cy = x2; return; }
+    if (Headless())
+    {
+        Cx = y2;
+        Cy = x2;
+        return;
+    }
     if (NeedRefreshScene == 1)
     {
         InitialScene(0);
@@ -571,7 +592,21 @@ void instruct_26(int snum, int en, int add1, int add2, int add3)
 
 void instruct_27(int en, int beginpic, int endpic)
 {
-    if (Headless()) { if (en == -1) SceneRolePic = (endpic + 1) / 2; else for (int i = 5; i <= 7; ++i) DData[CurScene][en][i] = endpic + 1; return; }
+    if (Headless())
+    {
+        if (en == -1)
+        {
+            SceneRolePic = (endpic + 1) / 2;
+        }
+        else
+        {
+            for (int i = 5; i <= 7; ++i)
+            {
+                DData[CurScene][en][i] = endpic + 1;
+            }
+        }
+        return;
+    }
     if (en == -1)
     {
         for (int i = beginpic;; i++)
@@ -623,7 +658,22 @@ int instruct_29(int rnum, int r1, int r2, int jump1, int jump2)
 
 void instruct_30(int x1, int y1, int x2, int y2)
 {
-    if (Headless()) { Sx = y2; Sy = x2; Cx = Sx; Cy = Sy; if (y2 != y1) SFace = y2 > y1 ? 3 : 0; else if (x2 != x1) SFace = x2 > x1 ? 1 : 2; return; }
+    if (Headless())
+    {
+        Sx = y2;
+        Sy = x2;
+        Cx = Sx;
+        Cy = Sy;
+        if (y2 != y1)
+        {
+            SFace = y2 > y1 ? 3 : 0;
+        }
+        else if (x2 != x1)
+        {
+            SFace = x2 > x1 ? 1 : 2;
+        }
+        return;
+    }
     if (NeedRefreshScene == 1)
     {
         InitialScene(0);
@@ -732,7 +782,7 @@ void instruct_32(int inum, int amount)
     {
         if (RItemList[i].Number == inum)
         {
-            int previousAmount=RItemList[i].Amount;
+            int previousAmount = RItemList[i].Amount;
             RItemList[i].Amount += amount;
             if (RItemList[i].Amount < 0 && amount >= 0)
             {
@@ -745,13 +795,19 @@ void instruct_32(int inum, int amount)
             // Quest handovers must not leave an unowned weapon/armor granting
             // bonuses. Only an actual last-unit removal changes these links;
             // existing save inconsistencies and practice books stay untouched.
-            if (amount<0 && previousAmount>0 && RItemList[i].Amount==0 &&
-                inum>=0 && inum<static_cast<int>(std::size(Ritem)) && Ritem[inum].ItemType==1)
+            if (amount < 0 && previousAmount > 0 && RItemList[i].Amount == 0 && inum >= 0 && inum < static_cast<int>(std::size(Ritem)) && Ritem[inum].ItemType == 1)
             {
-                for (auto& role:Rrole)
-                    for (auto& equipped:role.Equip)
-                        if (equipped==inum) equipped=-1;
-                Ritem[inum].User=-1;
+                for (auto& role : Rrole)
+                {
+                    for (auto& equipped : role.Equip)
+                    {
+                        if (equipped == inum)
+                        {
+                            equipped = -1;
+                        }
+                    }
+                }
+                Ritem[inum].User = -1;
             }
             break;
         }
@@ -950,7 +1006,12 @@ void instruct_44(int enum1, int beginpic1, int endpic1, int enum2, int beginpic2
     }
     SData[CurScene][3][DData[CurScene][enum1][10]][DData[CurScene][enum1][9]] = enum1;
     SData[CurScene][3][DData[CurScene][enum2][10]][DData[CurScene][enum2][9]] = enum2;
-    if (Headless()) { DData[CurScene][enum1][5] = beginpic1 + (endpic1 - beginpic1 + 1); DData[CurScene][enum2][5] = beginpic2 + (endpic1 - beginpic1 + 1); return; }
+    if (Headless())
+    {
+        DData[CurScene][enum1][5] = beginpic1 + (endpic1 - beginpic1 + 1);
+        DData[CurScene][enum2][5] = beginpic2 + (endpic1 - beginpic1 + 1);
+        return;
+    }
     for (int i = 0;; i++)
     {
         CheckBasicEvent();
@@ -972,7 +1033,14 @@ void instruct_44e(int enum1, int beginpic1, int endpic1, int enum2, int beginpic
     SData[CurScene][3][DData[CurScene][enum1][10]][DData[CurScene][enum1][9]] = enum1;
     SData[CurScene][3][DData[CurScene][enum2][10]][DData[CurScene][enum2][9]] = enum2;
     SData[CurScene][3][DData[CurScene][enum3][10]][DData[CurScene][enum3][9]] = enum3;
-    if (Headless()) { int count = endpic1 - beginpic1 + 1; DData[CurScene][enum1][5] = beginpic1 + count; DData[CurScene][enum2][5] = beginpic2 + count; DData[CurScene][enum3][5] = beginpic3 + count; return; }
+    if (Headless())
+    {
+        int count = endpic1 - beginpic1 + 1;
+        DData[CurScene][enum1][5] = beginpic1 + count;
+        DData[CurScene][enum2][5] = beginpic2 + count;
+        DData[CurScene][enum3][5] = beginpic3 + count;
+        return;
+    }
     for (int i = 0;; i++)
     {
         CheckBasicEvent();
@@ -1195,7 +1263,10 @@ void instruct_62(int enum1, int beginpic1, int endpic1, int enum2, int beginpic2
 
 void EndAmi()
 {
-    if (Headless()) return;
+    if (Headless())
+    {
+        return;
+    }
     instruct_14();
     Redraw();
     // 读取 end.txt 并逐行显示
@@ -1727,11 +1798,14 @@ int instruct_50e(int code, int e1, int e2, int e3, int e4, int e5, int e6)
     {
         if (Headless())
         {
-            static constexpr int keys[] = {SDLK_RETURN, SDLK_ESCAPE, SDLK_LEFT, SDLK_RIGHT, SDLK_UP, SDLK_DOWN, SDLK_Y, SDLK_N};
-            int selected = Frontend->choose("Script key input", {"Enter", "Escape", "Left", "Right", "Up", "Down", "Y", "N"});
+            static constexpr int keys[] = { SDLK_RETURN, SDLK_ESCAPE, SDLK_LEFT, SDLK_RIGHT, SDLK_UP, SDLK_DOWN, SDLK_Y, SDLK_N };
+            int selected = Frontend->choose("Script key input", { "Enter", "Escape", "Left", "Right", "Up", "Down", "Y", "N" });
             i = selected < 0 ? SDLK_ESCAPE : keys[selected];
         }
-        else i = WaitAnyKey();
+        else
+        {
+            i = WaitAnyKey();
+        }
         x50[e1] = i;
         if (i == SDLK_LEFT)
         {
@@ -1809,7 +1883,7 @@ int instruct_50e(int code, int e1, int e2, int e3, int e4, int e5, int e6)
         }
         DrawBig5ShadowText(p1, e3 + 3, e4 + 22 * i + 2, ColColor(e5 & 0xFF), ColColor((e5 & 0xFF00) << 8));
         UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
-        i = Headless() ? (Frontend->choose("Script yes/no", {"No", "Yes"}) == 1 ? SDLK_RETURN : SDLK_ESCAPE) : WaitAnyKey();
+        i = Headless() ? (Frontend->choose("Script yes/no", { "No", "Yes" }) == 1 ? SDLK_RETURN : SDLK_ESCAPE) : WaitAnyKey();
         if (i == SDLK_Y || i == SDLK_RETURN || i == SDLK_SPACE)
         {
             x50[0x7000] = 0;
@@ -1823,7 +1897,10 @@ int instruct_50e(int code, int e1, int e2, int e3, int e4, int e5, int e6)
     case 37:
     {
         e2 = e_GetValue(0, e1, e2);
-        if (!Headless()) SDL_Delay(e2);
+        if (!Headless())
+        {
+            SDL_Delay(e2);
+        }
     }
     break;
     case 38:
@@ -1999,7 +2076,11 @@ int instruct_50e(int code, int e1, int e2, int e3, int e4, int e5, int e6)
         {
             str += "x" + std::to_string(i) + "=" + std::to_string(x50[i]) + "\n";
         }
-        if (Headless()) { Frontend->text(str); break; }
+        if (Headless())
+        {
+            Frontend->text(str);
+            break;
+        }
         if (FULLSCREEN == 0)
         {
 #ifdef _WIN32
@@ -2111,7 +2192,11 @@ std::string ReplaceStr(const std::string& S, const std::string& Srch, const std:
 
 void NewTalk(int headnum, int talknum, int namenum, int place, int showhead, int color, int frame, const std::string& content, const std::string& disname)
 {
-    if (Headless()) { Frontend->text(content.empty() ? ReadTalk(talknum) : content, headnum); return; }
+    if (Headless())
+    {
+        Frontend->text(content.empty() ? ReadTalk(talknum) : content, headnum);
+        return;
+    }
     const int RowSpacing = 25;
     const int ColSpacing = 20;
     const int MaxRow = 5;
@@ -2438,7 +2523,10 @@ void NewTalk(int headnum, int talknum, int namenum, int place, int showhead, int
 
 int EnterNumber(int MinValue, int MaxValue, int x, int y, int Default)
 {
-    if (Headless()) return Frontend->number(MinValue, MaxValue, Default);
+    if (Headless())
+    {
+        return Frontend->number(MinValue, MaxValue, Default);
+    }
     CleanKeyValue();
     int Value = Default;
     if (MinValue < -32768)

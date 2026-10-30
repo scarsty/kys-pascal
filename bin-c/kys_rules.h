@@ -8,7 +8,12 @@
 
 // Configuration binds these interfaces once. Each implementation owns its
 // mechanics, costs and experience; frontends never select a profile themselves.
-enum class BattleSkill { Poison, Medicine, Detox };
+enum class BattleSkill
+{
+    Poison,
+    Medicine,
+    Detox
+};
 struct MagicRuleInfo
 {
     int effectiveLevel, mpCost;
@@ -59,13 +64,16 @@ struct GameRuleDescription
 };
 // Opaque to gameplay and presentation callers. Binary layout stays compatible
 // with existing V4 checkpoints.
-struct RuleRuntimeState { int32_t magicCostTier = 0; };
+struct RuleRuntimeState
+{
+    int32_t magicCostTier = 0;
+};
 RuleRuntimeState CaptureRuleState();
 void RestoreRuleState(RuleRuntimeState state);
 GameRuleDescription DescribeGameRules();
 void LoadGameRules(const std::string& iniPath);
-int NextLevelExperience(const TRole& role); // -1 at cap
-int AdvanceRoleLevels(TRole& role); // one settlement; zero when no level is due
+int NextLevelExperience(const TRole& role);    // -1 at cap
+int AdvanceRoleLevels(TRole& role);            // one settlement; zero when no level is due
 
 using RulesRandom = std::function<int(int)>;
 int RulesRandomDraw(int bound);
