@@ -75,10 +75,10 @@ SDL一般是在java部分调用SDL_main这个函数，可以查找以下两个�
 ### 原生 MCP 模式
 
 CMake 也可构建 `kys_mcp`，通过 stdio MCP 操作原生事件、物品、队伍、场景与战斗逻辑，不创建图形窗口。
-玩家可阅读两份差异说明：[数据差异](docs/数据差异.md)和 [Z.dat 规则差异](docs/Z.dat差异.md)。
+苍龙逐日的修复与规则说明见[苍龙逐日](docs/苍龙逐日.md)。
 
 MCP 通过 `--mod` 选择模组，`--save-dir` 指定独立存档目录；工具列表自带操作说明。
-构建时可用 `KYS_BUILD_MCP` 开关控制 MCP，`KYS_TEST_MOD` 指定用于集成测试的外部原始苍龙数据。
+构建时可用 `KYS_BUILD_MCP` 开关控制 MCP。
 规则由 `[rules]` 配置选择，`profile=dragon_dos12` 启用苍龙 1.2 原版成长与战斗数值，省略或选择 `profile=remake` 则保持复刻规则。
 
 
