@@ -5764,116 +5764,130 @@ int teleport()
 {
     Redraw();
     DrawRectangleWithoutFrame(screen, 0, 0, ScreenWidth(), ScreenHeight(), 0xFF000000, 50);
-    // 绘制小地图：每个地块绘制一个像素
-    for (int x = 0; x < 480; x++)
-    {
-        for (int y = 0; y < 480; y++)
-        {
-            int x1 = CENTER_X - (x - y);
-            int y1 = (x + y) / 2;
-            DrawMPic(Earth[x][y] / 2, x1, y1 + 18, 0, 0, 0, 0, 1);
-        }
-    }
+    WorldMapOverview overview(ScreenWidth(), ScreenHeight());
+    overview.draw();
     RecordFreshScreen(0, 0, ScreenWidth(), ScreenHeight());
 
-    int result = 0;
-    auto FinishTeleport = [&]()
+    auto SceneAt = [&](int x, int y)
     {
-        return result;
-    };
-
-    while (true)
-    {
-        // drawtelemap: 绘制场景标记点
-        LoadFreshScreen(0, 0, ScreenWidth(), ScreenHeight());
-        int mx2, my2;
-        SDL_GetMouseState2(mx2, my2);
-        int hoverScene = -1;
-        int hx = 0, hy = 0;
+        int scene = -1;
+        int nearest = 19;
         for (int i = 0; i < SceneAmount; i++)
         {
             int sx = Rscene[i].MainEntranceX1;
             int sy = Rscene[i].MainEntranceY1;
-            if (sx > 0 && sy > 0)
+            if (sx <= 0 || sx >= 480 || sy <= 0 || sy >= 480)
             {
-                int dx = CENTER_X - (sx - sy);
-                int dy = (sx + sy) / 2;
-                DrawRectangleWithoutFrame(screen, dx, dy, 5, 5, 0xFFFFFFFF, 50);
-                if (InRegion(mx2, my2, dx, dy, 5, 5))
-                {
-                    hoverScene = i;
-                    hx = dx;
-                    hy = dy;
-                }
+                continue;
+            }
+            auto point = overview.screenPosition(sx, sy);
+            int dx = x - point.x, dy = y - point.y;
+            int distance = dx * dx + dy * dy;
+            if (std::abs(dx) <= 3 && std::abs(dy) <= 3 && distance < nearest)
+            {
+                scene = i;
+                nearest = distance;
             }
         }
-        // 绘制当前位置红点
-        int px = CENTER_X - (Mx - My);
-        int py = (Mx + My) / 2;
-        DrawRectangleWithoutFrame(screen, px, py, 5, 5, 0xFFFF0000, 50);
-        // 高亮悬停场景
+        return scene;
+    };
+
+    auto DrawOverview = [&](int hoverScene)
+    {
+        LoadFreshScreen(0, 0, ScreenWidth(), ScreenHeight());
+        for (int i = 0; i < SceneAmount; i++)
+        {
+            int sx = Rscene[i].MainEntranceX1;
+            int sy = Rscene[i].MainEntranceY1;
+            if (sx > 0 && sx < 480 && sy > 0 && sy < 480)
+            {
+                auto point = overview.screenPosition(sx, sy);
+                DrawRectangleWithoutFrame(screen, point.x - 2, point.y - 2, 5, 5, 0xFFFFFFFF, 50);
+            }
+        }
+        auto player = overview.screenPosition(Mx, My);
+        DrawRectangleWithoutFrame(screen, player.x - 2, player.y - 2, 5, 5, 0xFFFF0000, 50);
         if (hoverScene >= 0)
         {
-            DrawRectangleWithoutFrame(screen, hx, hy, 5, 5, 0xFFFFFFFF, 50);
+            auto point = overview.screenPosition(Rscene[hoverScene].MainEntranceX1, Rscene[hoverScene].MainEntranceY1);
+            DrawRectangleWithoutFrame(screen, point.x - 2, point.y - 2, 5, 5, 0xFFFFFFFF, 50);
             std::string name = cp950toutf8(Rscene[hoverScene].Name, sizeof(Rscene[hoverScene].Name));
-            DrawTextWithRect(name, hx + 7, hy - 5, -1, ColColor(5), ColColor(7));
+            int width = DrawLength(name) * 10 + 7;
+            int x = std::clamp(point.x + 7, 0, std::max(0, ScreenWidth() - width - 1));
+            int y = std::clamp(point.y - 5, 0, std::max(0, ScreenHeight() - 29));
+            DrawTextWithRectNoUpdate(name, x, y, width, ColColor(5), ColColor(7));
         }
-        SDL_Delay(16);
         UpdateAllScreen();
+    };
 
-        if (!SDL_PollEvent(&event))
+    int mx, my;
+    SDL_GetMouseState2(mx, my);
+    int hoverScene = SceneAt(mx, my);
+    DrawOverview(hoverScene);
+    while (SDL_WaitEvent(&event))
+    {
+        // Drain queued motion before redrawing. Clicks use their own coordinates,
+        // so neither a previous hover nor a later pointer move changes the target.
+        do
         {
-            SDL_zero(event);
-        }
-        CheckBasicEvent();
-        switch (event.type)
-        {
-        case SDL_EVENT_KEY_UP:
-            if (event.key.key == SDLK_ESCAPE)
+            CheckBasicEvent();
+            switch (event.type)
             {
-                return FinishTeleport();
-            }
-            if (event.key.key == SDLK_RETURN || event.key.key == SDLK_SPACE)
-            {
-                return FinishTeleport();
-            }
-            break;
-        case SDL_EVENT_MOUSE_BUTTON_UP:
-            if (event.button.button == SDL_BUTTON_RIGHT)
-            {
-                return FinishTeleport();
-            }
-            if (event.button.button == SDL_BUTTON_LEFT)
-            {
-                SDL_GetMouseState2(mx2, my2);
-                int tx = (my2 * 2 - mx2 + CENTER_X) / 2;
-                int ty = my2 * 2 - tx;
-                if (InRegion(tx, ty, 0, 0, 480, 480))
+            case SDL_EVENT_KEY_UP:
+                if (event.key.key == SDLK_ESCAPE || event.key.key == SDLK_RETURN || event.key.key == SDLK_SPACE)
                 {
-                    Mx = tx;
-                    My = ty;
-                    result = 1;
-                    if (hoverScene >= 0)
+                    return 0;
+                }
+                break;
+            case SDL_EVENT_MOUSE_MOTION:
+                mx = (int)std::lround(event.motion.x * ScreenWidth() / RESOLUTIONX);
+                my = (int)std::lround(event.motion.y * ScreenHeight() / RESOLUTIONY);
+                break;
+            case SDL_EVENT_MOUSE_BUTTON_UP:
+                if (event.button.button == SDL_BUTTON_RIGHT)
+                {
+                    return 0;
+                }
+                if (event.button.button == SDL_BUTTON_LEFT)
+                {
+                    mx = (int)std::lround(event.button.x * ScreenWidth() / RESOLUTIONX);
+                    my = (int)std::lround(event.button.y * ScreenHeight() / RESOLUTIONY);
+                    int scene = SceneAt(mx, my);
+                    auto tile = overview.mapPosition((float)mx, (float)my);
+                    if (scene >= 0)
                     {
-                        if (CheckCanEnter(hoverScene))
+                        tile = { Rscene[scene].MainEntranceX1, Rscene[scene].MainEntranceY1 };
+                    }
+                    if (InRegion(tile.x, tile.y, 0, 0, 480, 480))
+                    {
+                        Mx = tile.x;
+                        My = tile.y;
+                        if (scene >= 0 && CheckCanEnter(scene))
                         {
                             instruct_14();
-                            CurScene = hoverScene;
+                            CurScene = scene;
                             SStep = 0;
                             Sx = Rscene[CurScene].EntranceX;
                             Sy = Rscene[CurScene].EntranceY;
                             SaveR(11);
                             WalkInScene(0);
                         }
+                        event.key.key = 0;
+                        event.button.button = 0;
+                        return 1;
                     }
-                    event.key.key = 0;
-                    event.button.button = 0;
-                    return FinishTeleport();
                 }
+                break;
             }
-            break;
+        } while (SDL_PollEvent(&event));
+        int nextHover = SceneAt(mx, my);
+        if (nextHover != hoverScene)
+        {
+            hoverScene = nextHover;
+            DrawOverview(hoverScene);
         }
     }
+    return 0;
 }
 
 int TeleportByList()

@@ -44,6 +44,18 @@ void LoadFreshScreen(int x = 0, int y = 0, int w = 0, int h = 0);
 // 大地图
 void DrawMMap();
 
+class WorldMapOverview
+{
+public:
+    WorldMapOverview(int width, int height);
+    TPosition screenPosition(int x, int y) const;
+    TPosition mapPosition(float x, float y) const;
+    void draw() const;
+
+private:
+    float scale, originX, originY;
+};
+
 // 场景
 void DrawScene();
 void DrawSceneWithoutRole();

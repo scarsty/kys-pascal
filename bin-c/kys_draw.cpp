@@ -13,6 +13,7 @@
 #endif
 
 #include <algorithm>
+#include <cmath>
 #include <cstdio>
 #include <cstring>
 #include <vector>
@@ -582,6 +583,86 @@ void LoadFreshScreen(int x, int y, int w, int h)
 }
 
 // ---- 大地图绘制 ----
+
+WorldMapOverview::WorldMapOverview(int width, int height)
+{
+    scale = std::max(0.01f, std::min((width - 32.0f) / 958.0f, (height - 32.0f) / 479.0f));
+    originX = width / 2.0f;
+    originY = (height - 479 * scale) / 2.0f;
+}
+
+TPosition WorldMapOverview::screenPosition(int x, int y) const
+{
+    return { (int)std::lround(originX + (y - x) * scale),
+        (int)std::lround(originY + (x + y) * scale / 2) };
+}
+
+TPosition WorldMapOverview::mapPosition(float x, float y) const
+{
+    float difference = (x - originX) / scale;
+    float sum = (y - originY) * 2 / scale;
+    return { (int)std::lround((sum - difference) / 2),
+        (int)std::lround((sum + difference) / 2) };
+}
+
+void WorldMapOverview::draw() const
+{
+    EnsureMapTiles(MapTiles::World);
+    // The overview is a single raster layer. Decode each terrain color once,
+    // independently of the full-size sprite's offsets and clipping.
+    std::vector<uint32_t> colors(MIdx.size(), 0);
+    auto TerrainColor = [&](int num)
+    {
+        if (num < 0 || num >= (int)colors.size())
+        {
+            return uint32_t{ 0xFF000000 };
+        }
+        auto& color = colors[num];
+        if (color != 0)
+        {
+            return color;
+        }
+        color = 0xFF000000;
+        size_t offset = num == 0 ? 0 : MIdx[num - 1];
+        size_t end = std::min<size_t>(MIdx[num], MPic.size());
+        if (offset + 8 > end)
+        {
+            return color;
+        }
+        for (size_t row = offset + 8; row < end;)
+        {
+            size_t length = MPic[row++];
+            size_t next = std::min(row + length, end);
+            while (row + 2 <= next)
+            {
+                row++;    // transparent run
+                int count = MPic[row++];
+                if (count > 0 && row + count <= next)
+                {
+                    int index = MPic[row] * 3;
+                    color = SDL_MapSurfaceRGB(screen, ACol[index] * 4, ACol[index + 1] * 4, ACol[index + 2] * 4);
+                    return color;
+                }
+            }
+            row = next;
+        }
+        return color;
+    };
+
+    Presentation::clear(screen);
+    for (int y = 0; y < screen->h; y++)
+    {
+        auto* row = reinterpret_cast<uint32_t*>(static_cast<uint8_t*>(screen->pixels) + y * screen->pitch);
+        for (int x = 0; x < screen->w; x++)
+        {
+            auto tile = mapPosition((float)x, (float)y);
+            if (tile.x >= 0 && tile.x < 480 && tile.y >= 0 && tile.y < 480)
+            {
+                row[x] = TerrainColor(Earth[tile.x][tile.y] / 2);
+            }
+        }
+    }
+}
 
 void DrawMMap()
 {
