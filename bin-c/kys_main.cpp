@@ -95,9 +95,13 @@ static std::string GrowthSettingLabel()
     return "";
 }
 
-static void MenuGrowthSettings()
+static void MenuGrowthSettings(const SDL_Rect& parent, const std::function<void()>& onChange)
 {
-    constexpr int x = 133, y = 24, width = 500, height = 398;
+    const int x = parent.x + parent.w + 7, y = parent.y;
+    const int width = std::min(390, ScreenWidth() - x - 10);
+    constexpr int rowHeight = 48;
+    const int priorityY = 52 + 4 * rowHeight + 8;
+    const int height = std::max(parent.h, priorityY + 122);
     const SDL_Rect panel = { x, y, width, height };
     std::unique_ptr<SDL_Surface, decltype(&Presentation::destroy)> background(
         SDL_CreateSurface(width, height, SDL_GetPixelFormatForMasks(32, RMask, GMask, BMask, AMask)), Presentation::destroy);
@@ -112,18 +116,18 @@ static void MenuGrowthSettings()
     const std::string names[] = { "原版隨機", "固定隨機", "平均成長", "最大成長" };
     const std::string descriptions[] = {
         "連升共用抽籤，可讀檔重抽。",
-        "逐級隨機，讀檔不會改變結果。",
+        "逐級隨機，讀檔不會重抽。",
         "各項取平均，符合條件的能力 +1。",
-        "生命與能力取最高成長，保留三維內力取捨。"
+        "生命與能力最高，三維、內力擇一。"
     };
     const uint32_t disabledColor = SDL_MapSurfaceRGB(screen, 110, 110, 110);
     const uint32_t descriptionColor = SDL_MapSurfaceRGB(screen, 195, 195, 185);
     const uint32_t shadowColor = SDL_MapSurfaceRGB(screen, 0, 0, 0);
     SDL_Rect targets[7];
-    for (int i = 0; i < 4; ++i) targets[i] = { x + 12, y + 72 + i * 48, width - 24, 46 };
-    targets[4] = { x + 12, y + 310, 232, 38 };
-    targets[5] = { x + 256, y + 310, 232, 38 };
-    targets[6] = { x + width - 92, y + height - 37, 80, 27 };
+    for (int i = 0; i < 4; ++i) targets[i] = { x + 8, y + 52 + i * rowHeight, width - 16, rowHeight - 2 };
+    targets[4] = { x + 8, y + priorityY + 24, width - 16, 28 };
+    targets[5] = { x + 8, y + priorityY + 56, width - 16, 28 };
+    targets[6] = { x + 8, y + height - 31, 88, 25 };
     int selected = static_cast<int>(GetGrowthMode());
     auto enabled = [&](int index)
     {
@@ -132,9 +136,9 @@ static void MenuGrowthSettings()
     auto draw = [&]()
     {
         restore();
-        DrawRectangle(screen, x, y, width - 1, height - 1, 0, ColColor(0xFF), 100);
-        DrawShadowText("升級成長", x + 14, y + 10, ColColor(0x64), ColColor(0x66));
-        DrawShadowText("只影響升級成長，戰鬥隨機不變", x + 14, y + 38, descriptionColor, shadowColor);
+        DrawRectangle(screen, x, y, width - 1, height - 1, 0, ColColor(0xFF), 75);
+        DrawShadowText("升級成長", x + 12, y + 4, ColColor(0x64), ColColor(0x66));
+        DrawShadowText("戰鬥隨機不變", x + 12, y + 27, descriptionColor, shadowColor);
         for (int i = 0; i < 7; ++i)
         {
             const auto& rect = targets[i];
@@ -146,21 +150,21 @@ static void MenuGrowthSettings()
             uint32_t text = !enabled(i) ? disabledColor : ColColor(active || i == selected ? 0x64 : 0x05);
             if (i < 4)
             {
-                DrawShadowText(active ? "[x]" : "[ ]", rect.x + 8, rect.y + 2, text, ColColor(0x07));
-                DrawShadowText(names[i], rect.x + 46, rect.y + 2, text, ColColor(0x07));
-                if (active) DrawShadowText("使用中", rect.x + rect.w - 72, rect.y + 2, text, ColColor(0x07));
-                DrawShadowText(descriptions[i], rect.x + 46, rect.y + 23, descriptionColor, shadowColor);
+                DrawShadowText(active ? "[x]" : "[ ]", rect.x + 4, rect.y, text, ColColor(0x07));
+                DrawShadowText(names[i], rect.x + 42, rect.y, text, ColColor(0x07));
+                if (active) DrawShadowText("使用中", rect.x + rect.w - 64, rect.y, text, ColColor(0x07));
+                DrawShadowText(descriptions[i], rect.x + 4, rect.y + 21, descriptionColor, shadowColor);
             }
             else if (i < 6)
             {
-                DrawShadowText(active ? "[x]" : "[ ]", rect.x + 12, rect.y + 8, text, shadowColor);
-                DrawShadowText(i == 4 ? "三維高、內力低" : "內力高、三維低", rect.x + 52, rect.y + 8, text, shadowColor);
+                DrawShadowText(active ? "[x]" : "[ ]", rect.x + 4, rect.y + 3, text, shadowColor);
+                DrawShadowText(i == 4 ? "三維高、內力低" : "內力高、三維低", rect.x + 42, rect.y + 3, text, shadowColor);
             }
-            else DrawShadowText("返回", rect.x + 20, rect.y + 3, text, ColColor(0x07));
+            else DrawShadowText("< 返回", rect.x + 8, rect.y + 2, text, ColColor(0x07));
         }
-        DrawShadowText("最大成長取捨", x + 14, y + 280, ColColor(0x05), ColColor(0x07));
-        DrawShadowText("僅最大檔生效", x + width - 154, y + 280, descriptionColor, shadowColor);
-        DrawShadowText("選擇即保存；Esc 返回", x + 14, y + height - 32, descriptionColor, shadowColor);
+        DrawShadowText("最大檔取捨", x + 12, y + priorityY, ColColor(0x05), ColColor(0x07));
+        DrawShadowText("僅最大檔生效", x + width - 132, y + priorityY, descriptionColor, shadowColor);
+        DrawShadowText("選擇即保存", x + width - 112, y + height - 29, descriptionColor, shadowColor);
         UpdateScreen(screen, x, y, width, height);
     };
     auto hit = [&](float px, float py)
@@ -186,15 +190,10 @@ static void MenuGrowthSettings()
                 int step = event.key.key == SDLK_UP ? -1 : 1;
                 do { selected = (selected + step + 7) % 7; } while (!enabled(selected));
             }
-            else if ((event.key.key == SDLK_LEFT || event.key.key == SDLK_RIGHT) && selected >= 4 && selected <= 5)
-            {
-                selected = selected == 4 ? 5 : 4;
-                activate = true;
-            }
             else continue;
             break;
         case SDL_EVENT_KEY_UP:
-            close = event.key.key == SDLK_ESCAPE;
+            close = event.key.key == SDLK_ESCAPE || event.key.key == SDLK_LEFT;
             activate = event.key.key == SDLK_RETURN || event.key.key == SDLK_SPACE;
             if (!close && !activate) continue;
             break;
@@ -209,6 +208,15 @@ static void MenuGrowthSettings()
             close = event.button.button == SDL_BUTTON_RIGHT;
             if (event.button.button == SDL_BUTTON_LEFT)
             {
+                const int mx = int(event.button.x * ScreenWidth() / RESOLUTIONX);
+                const int my = int(event.button.y * ScreenHeight() / RESOLUTIONY);
+                if (mx >= parent.x && mx < parent.x + parent.w && my >= parent.y && my < parent.y + parent.h)
+                {
+                    // Let the settings menu handle the same click after closing its child.
+                    SDL_PushEvent(&event);
+                    close = true;
+                    break;
+                }
                 int index = hit(event.button.x, event.button.y);
                 if (index < 0) continue;
                 selected = index;
@@ -227,6 +235,7 @@ static void MenuGrowthSettings()
 #ifdef __EMSCRIPTEN__
             EM_ASM({ Module.saveGrowthSettings($0, $1); }, static_cast<int>(GetGrowthMode()), static_cast<int>(GetGrowthMaxPriority()));
 #endif
+            onChange();
         }
         draw();
     }
@@ -368,8 +377,10 @@ static void MenuSettings()
             DrawShadowText(labels[row], settingsMenuX + 3, y, col1, col2);
             if (row < settingsMenuMax)
             {
-                int stateX = stateRight - DrawLength(states[row]) * 10;
+                const bool submenu = row == 11 && HasConfigurableGrowth();
+                int stateX = stateRight - DrawLength(states[row]) * 10 - (submenu ? 16 : 0);
                 DrawShadowText(states[row], stateX, y, col1, col2);
+                if (submenu) DrawShadowText(">", stateRight - 10, y, col1, col2);
             }
         }
 
@@ -415,6 +426,10 @@ static void MenuSettings()
                 if (AdjustNumericSetting(i, 1))
                 {
                     ShowSettingsMenu(i);
+                }
+                else if (i == 11 && HasConfigurableGrowth() && !event.key.repeat)
+                {
+                    activate = true;
                 }
             }
             break;
@@ -551,7 +566,11 @@ static void MenuSettings()
             SaveSystemToggleSettings();
             break;
         case 11:
-            if (HasConfigurableGrowth()) MenuGrowthSettings();
+            if (HasConfigurableGrowth())
+            {
+                const SDL_Rect parent = { settingsMenuX, settingsMenuY, settingsMenuW, settingsMenuH };
+                MenuGrowthSettings(parent, [&]() { ShowSettingsMenu(i); });
+            }
             else
             {
                 MAX_ADD_PRO = 1 - MAX_ADD_PRO;
@@ -1072,6 +1091,7 @@ void Start()
                 menu = (my - y) / 20;
                 if (menu != menup)
                 {
+                    Redraw();
                     DrawTitlePic(0, x, y);
                     DrawTitlePic(menu + 1, x, y + menu * 20);
                     UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());

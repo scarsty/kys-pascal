@@ -16,6 +16,7 @@
 #include <cmath>
 #include <cstdio>
 #include <cstring>
+#include <memory>
 #include <vector>
 
 // ---- 贴图绘制包装 ----
@@ -26,6 +27,25 @@ void DrawTitlePic(int num, int px, int py)
     {
         return;
     }
+#ifdef __EMSCRIPTEN__
+    if (MODVersion == 12 && num >= 0 && num <= 3)
+    {
+        static std::unique_ptr<SDL_Surface, decltype(&SDL_DestroySurface)> labels(
+            LoadSurfaceFromFile(checkFileName("resource/title-menu.webp")), SDL_DestroySurface);
+        if (labels && labels->h % 3 == 0)
+        {
+            SDL_SetSurfaceBlendMode(labels.get(), SDL_BLENDMODE_BLEND);
+            SDL_SetSurfaceColorMod(labels.get(), num == 0 ? 195 : 255, num == 0 ? 73 : 115, num == 0 ? 53 : 77);
+            for (int row = num == 0 ? 0 : num - 1; row < (num == 0 ? 3 : num); ++row)
+            {
+                SDL_Rect source = { 0, row * labels->h / 3, labels->w, labels->h / 3 };
+                SDL_Rect target = { px, py + (num == 0 ? row * 20 : 0), 84, 20 };
+                Presentation::blitScaled(labels.get(), &source, screen, &target);
+            }
+            return;
+        }
+    }
+#endif
     // 主标题图使用 smp 贴图
     if (num < 0 || num >= SPicAmount)
     {

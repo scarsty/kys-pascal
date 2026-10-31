@@ -1,4 +1,4 @@
-"""Package the fixed Dragon data into compressed bundles for demand loading."""
+"""Package a local Dragon data tree into compressed bundles for demand loading."""
 from __future__ import annotations
 
 import argparse
@@ -95,14 +95,14 @@ def group(path: str) -> str:
             return "scenes"
         if name in ("wmp", "warfld.grp", "warfld.idx"):
             return "battle"
-        if name.endswith(".png"):
+        if name.endswith((".png", ".webp")):
             return Path(name).stem
     return folder if folder in ("save", "sound") else "core"
 
 
 def package(source: Path, output: Path) -> None:
     if not (source / "kysmod.ini").is_file():
-        raise ValueError("Golden game data is missing")
+        raise ValueError(f"Game data is missing: {source / 'kysmod.ini'}")
     assets = output / "assets"
     assets.mkdir(parents=True, exist_ok=True)
     groups = defaultdict(list)
@@ -125,7 +125,7 @@ def package(source: Path, output: Path) -> None:
         if path.suffix.lower() == ".png":
             stream = io.BytesIO()
             with Image.open(path) as image:
-                image.save(stream, "WEBP", lossless=True, method=6)
+                image.save(stream, "WEBP", quality=80, method=6)
             if stream.tell() < len(data):
                 webp_bytes_saved += len(data) - stream.tell()
                 data = stream.getvalue()
@@ -147,8 +147,10 @@ def package(source: Path, output: Path) -> None:
         for path, offset, size in members:
             manifest["files"][path] = [filename, size]
         total += len(compressed)
-    manifest["startup"] = sorted({manifest["files"]["/game/" + name][0] for name in (
-        "kysmod.ini", "resource/title.grp", "resource/open.png")})
+    startup = ["kysmod.ini", "resource/title.grp", "resource/open.png"]
+    if "/game/resource/title-menu.webp" in manifest["files"]:
+        startup.append("resource/title-menu.webp")
+    manifest["startup"] = sorted({manifest["files"]["/game/" + name][0] for name in startup})
     (assets / "manifest.json").write_text(json.dumps(manifest, ensure_ascii=False,
                                                      separators=(",", ":")), encoding="utf-8")
     for old in assets.glob("*.pack.gz"):
@@ -167,7 +169,7 @@ def package(source: Path, output: Path) -> None:
     fallback = sum(size for name, size in manifest["sizes"].items() if name.startswith("font-fallback-"))
     print(f"{len(manifest['files'])} files -> {len(groups)} compressed bundles")
     print(f"Game data: {original_bytes:,} source bytes -> {total - fallback:,} compressed bytes + {fallback:,} optional font bytes")
-    print(f"Title data: {sum(manifest['sizes'][name] for name in manifest['startup']):,} compressed bytes; lossless WebP saves {webp_bytes_saved:,} bytes")
+    print(f"Title data: {sum(manifest['sizes'][name] for name in manifest['startup']):,} compressed bytes; WebP q80 saves {webp_bytes_saved:,} bytes")
     print(f"Chinese font subsetting saves {font_bytes_saved:,} uncompressed bytes")
 
 

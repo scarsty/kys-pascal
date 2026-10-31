@@ -279,6 +279,29 @@ bool blit(SDL_Surface* source, const SDL_Rect* sourceRect, SDL_Surface* target, 
     return SDL_BlitSurface(source, sourceRect, target, targetRect);
 }
 
+bool blitScaled(SDL_Surface* source, const SDL_Rect* sourceRect, SDL_Surface* target, const SDL_Rect* targetRect)
+{
+    if (source && target && targetRect)
+    {
+        SDL_Rect src = sourceRect ? *sourceRect : SDL_Rect{ 0, 0, source->w, source->h };
+        SDL_Rect bounds;
+        SDL_GetSurfaceClipRect(target, &bounds);
+        if (SDL_GetRectIntersection(targetRect, &bounds, &bounds))
+        {
+            auto& frame = frameFor(target);
+            SDL_BlendMode blend;
+            SDL_Color modulation;
+            SDL_GetSurfaceBlendMode(source, &blend);
+            SDL_GetSurfaceColorMod(source, &modulation.r, &modulation.g, &modulation.b);
+            SDL_GetSurfaceAlphaMod(source, &modulation.a);
+            if (blend == SDL_BLENDMODE_NONE) cover(frame, bounds);
+            frame.commands.push_back({ *targetRect, bounds, Blit{ copyImage(source), src, blend, modulation } });
+            frame.pixelPatch.reset();
+        }
+    }
+    return SDL_BlitSurfaceScaled(source, sourceRect, target, targetRect, SDL_SCALEMODE_LINEAR);
+}
+
 bool fill(SDL_Surface* target, const SDL_Rect* rect, Uint32 color)
 {
     if (target)

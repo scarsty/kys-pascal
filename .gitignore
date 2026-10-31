@@ -66,6 +66,7 @@ cc
 bin-c/build
 /tmp/
 /game-data/
+/work/
 /web/dist/
 /.cloudflare/
 /.wrangler/

@@ -9,6 +9,7 @@ namespace Presentation
 {
 #ifdef __EMSCRIPTEN__
 bool blit(SDL_Surface* source, const SDL_Rect* sourceRect, SDL_Surface* target, SDL_Rect* targetRect);
+bool blitScaled(SDL_Surface* source, const SDL_Rect* sourceRect, SDL_Surface* target, const SDL_Rect* targetRect);
 bool fill(SDL_Surface* target, const SDL_Rect* rect, Uint32 color);
 void pixel(SDL_Surface* target, int x, int y, Uint32 color);
 void glyph(TTF_Font* font, const char* text, int x, int y, SDL_Color color);
