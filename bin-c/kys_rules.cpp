@@ -5,6 +5,9 @@
 #include <charconv>
 #include <sstream>
 #include <stdexcept>
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
 
 namespace rules
 {
@@ -66,6 +69,25 @@ void LoadGameRules(const std::string& iniPath)
     }
     rules::config.progression = mode(ini.getString("rules", "progression", rules::config.profile));
     rules::config.combat = mode(ini.getString("rules", "combat", rules::config.profile));
+    // These options and browser preferences belong only to Dragon progression.
+    // A combat-only Dragon profile must keep the remake growth behavior.
+    if (HasConfigurableGrowth())
+    {
+        auto growth = ini.getString("rules", "growth_mode", "original");
+        if (growth == "original") rules::config.growthMode = GrowthMode::Original;
+        else if (growth == "fixed_random") rules::config.growthMode = GrowthMode::FixedRandom;
+        else if (growth == "average") rules::config.growthMode = GrowthMode::Average;
+        else if (growth == "maximum") rules::config.growthMode = GrowthMode::Maximum;
+        else throw std::runtime_error("Invalid [rules] growth_mode (use original, fixed_random, average or maximum)");
+        auto priority = ini.getString("rules", "growth_max_priority", "stats");
+        if (priority == "stats") rules::config.growthMaxPriority = GrowthMaxPriority::Stats;
+        else if (priority == "mp") rules::config.growthMaxPriority = GrowthMaxPriority::Mp;
+        else throw std::runtime_error("Invalid [rules] growth_max_priority (use stats or mp)");
+#ifdef __EMSCRIPTEN__
+        rules::config.growthMode = static_cast<GrowthMode>(EM_ASM_INT({ return Module.readGrowthMode($0); }, static_cast<int>(rules::config.growthMode)));
+        rules::config.growthMaxPriority = static_cast<GrowthMaxPriority>(EM_ASM_INT({ return Module.readGrowthPriority($0); }, static_cast<int>(rules::config.growthMaxPriority)));
+#endif
+    }
     rules::SelectProfiles();
     auto progression = rules::progression->defaults();
     auto combat = BattleRules().defaults();
@@ -131,6 +153,34 @@ int NextLevelExperience(const TRole& role)
 }
 
 int AdvanceRoleLevels(TRole& role) { return rules::progression->advance(role); }
+
+bool HasConfigurableGrowth() { return rules::config.progression == rules::Profile::DragonDos12; }
+GrowthMode GetGrowthMode() { return rules::config.growthMode; }
+GrowthMaxPriority GetGrowthMaxPriority() { return rules::config.growthMaxPriority; }
+void SetGrowthMode(GrowthMode mode) { GrowthModeName(mode); rules::config.growthMode = mode; }
+void SetGrowthMaxPriority(GrowthMaxPriority priority) { GrowthMaxPriorityName(priority); rules::config.growthMaxPriority = priority; }
+
+const char* GrowthModeName(GrowthMode mode)
+{
+    switch (mode)
+    {
+    case GrowthMode::Original: return "original";
+    case GrowthMode::FixedRandom: return "fixed_random";
+    case GrowthMode::Average: return "average";
+    case GrowthMode::Maximum: return "maximum";
+    }
+    throw std::runtime_error("Invalid growth mode");
+}
+
+const char* GrowthMaxPriorityName(GrowthMaxPriority priority)
+{
+    switch (priority)
+    {
+    case GrowthMaxPriority::Stats: return "stats";
+    case GrowthMaxPriority::Mp: return "mp";
+    }
+    throw std::runtime_error("Invalid growth maximum priority");
+}
 
 GameRuleDescription DescribeGameRules()
 {

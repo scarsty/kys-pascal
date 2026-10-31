@@ -6,6 +6,7 @@
 #include "kys_frontend.h"
 #include "kys_main.h"
 #include "kys_rules.h"
+#include "rules/growth_state.h"
 #include "kys_script.h"
 #include <algorithm>
 #include <array>
@@ -161,9 +162,15 @@ struct Snapshot
         location = { Where, CurScene, Sx, Sy, SFace, Mx, My, MFace, InShip, ShipX, ShipY, ShipX1, ShipY1, ShipFace, CurEvent, CurItem, Cx, Cy, SavedSceneIndex, SceneRolePic };
     }
 
-    void restore() const
+    void restore(bool importGrowth = false) const
     {
-        std::copy(roles.begin(), roles.end(), Rrole);
+        if (importGrowth && HasConfigurableGrowth())
+        {
+            auto importedRoles = roles;
+            rules::growth::PrepareLoadedRoles(importedRoles);
+            std::copy(importedRoles.begin(), importedRoles.end(), Rrole);
+        }
+        else std::copy(roles.begin(), roles.end(), Rrole);
         std::copy(items.begin(), items.end(), Ritem);
         std::copy(scenes.begin(), scenes.end(), Rscene);
         std::copy(magics.begin(), magics.end(), Rmagic);
@@ -674,13 +681,15 @@ public:
     {
         auto info = DescribeGameRules();
         J out = obj({ { "profile", info.profile }, { "progression", info.progression },
-            { "combat", info.combat }, { "revision", 2 }, { "max_level", MAX_LEVEL },
+            { "combat", info.combat }, { "revision", HasConfigurableGrowth() ? 3 : 2 }, { "max_level", MAX_LEVEL },
             { "max_hp", MAX_HP }, { "max_mp", MAX_MP }, { "max_stamina", MAX_PHYSICAL_POWER },
             { "xp_mode", info.cumulativeExperience ? "cumulative" : "deduct_per_level" },
             { "growth_roll", info.batchGrowth ? "once_per_level_batch" : "once_per_level" },
             { "min_knowledge", MIN_KNOWLEDGE }, { "life_hurt", LIFE_HURT }, { "poison_hurt", POISON_HURT } });
         if (info.growth)
         {
+            out["growth_mode"] = *info.growthMode;
+            out["growth_max_priority"] = *info.growthMaxPriority;
             out["xp_thresholds"] = numbers(info.xpThresholds);
             out["hp_growth_factor"] = info.growth->hp;
             out["mp_growth_factor"] = info.growth->mp;
@@ -797,6 +806,11 @@ public:
         J out = obj({ { "loaded", loaded }, { "where", Where }, { "scene", CurScene }, { "scene_name", CurScene >= 0 ? name(Rscene[CurScene].Name) : "" }, { "xy", Where == 0 ? arr({ Mx, My }) : arr({ Sx, Sy }) }, { "data_xy", Where == 0 ? arr({ My, Mx }) : arr({ Sy, Sx }) }, { "face", Where == 0 ? MFace : SFace }, { "world_xy", arr({ Mx, My }) }, { "world_face", MFace }, { "in_ship", InShip }, { "ship_xy", arr({ ShipY, ShipX }) }, { "party", party }, { "inventory", inventory() }, { "pending", prompt }, { "rng_state", HeadlessRandomState }, { "debug_enabled", debug }, { "legacy_checkpoint_lineage", legacyCheckpointLineage } });
         auto info = DescribeGameRules();
         out["active_rules"] = obj({ { "profile", info.profile }, { "progression", info.progression }, { "combat", info.combat } });
+        if (info.growthMode)
+        {
+            out["active_rules"]["growth_mode"] = *info.growthMode;
+            out["active_rules"]["growth_max_priority"] = *info.growthMaxPriority;
+        }
         for (auto& member : out["party"].get_array())
         {
             member["next_level_exp"] = NextLevelExperience(Rrole[integer(member, "id")]);
@@ -1747,7 +1761,7 @@ public:
                     checkpoints[label] = std::move(snapshot);
                 }
                 require(checkpoints.contains(label), "Unknown checkpoint");
-                checkpoints.at(label)->restore();
+                checkpoints.at(label)->restore(true);
                 legacyCheckpointLineage = checkpoints.at(label)->legacyLineage;
             }
             else

@@ -11,6 +11,7 @@
 #include "kys_engine.h"
 #include "kys_main.h"
 #include "kys_type.h"
+#include "rules/growth_state.h"
 
 #include <SDL3/SDL.h>
 #include <algorithm>
@@ -956,6 +957,7 @@ void instruct_40(int director)
 
 void instruct_41(int rnum, int inum, int amount)
 {
+    rules::growth::CheckPersonalItemWrite(rnum);
     int found = 0;
     for (int i = 0; i < 4; i++)
     {

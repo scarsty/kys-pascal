@@ -1,7 +1,9 @@
 #include "dragon_dos12.h"
 #include "rules_internal.h"
+#include "growth_state.h"
 #include <algorithm>
 #include <bit>
+#include <stdexcept>
 
 namespace rules::dragon_dos12
 {
@@ -33,7 +35,7 @@ void PayMagicCost(TRole& role, const TMagic& magic, int effectiveLevel)
     role.CurrentMP = std::max<int>(word(role.CurrentMP - magic.NeedMP * (effectiveLevel / 2)), 0);
 }
 
-int LevelUp(TRole& role, const RulesRandom& random)
+int LevelUp(TRole& role, const RulesRandom& random, int roleIndex)
 {
     if (role.Level < 1 || role.Level >= MAX_LEVEL)
     {
@@ -53,28 +55,55 @@ int LevelUp(TRole& role, const RulesRandom& random)
         role.Aptitude < 70                                 ? 4 :
         role.Aptitude < 90                                 ? 5 :
                                                              6;
+    uint32_t seed = 0;
+    auto mode = GetGrowthMode();
+    if (mode == GrowthMode::FixedRandom)
+    {
+        seed = growth::ReadSeed(Rrole[0]);
+        if (roleIndex < 0)
+            for (int i = 0; i < 2032; ++i)
+                if (&role == &Rrole[i]) { roleIndex = i; break; }
+        if (roleIndex < 0) throw std::runtime_error("Fixed growth requires the role's array index");
+    }
     while (role.Level < next)
     {
-        ++role.Level;
-        int gain = 1 + bounded(random, tier);
-        role.MaxHP = std::min<int>(word(role.MaxHP + config.growth.hp * (role.IncLife + bounded(random, 3))), MAX_HP);
+        int levels = mode == GrowthMode::Original ? delta : 1;
+        role.Level += levels;
+        auto draw = [&](int group, int bound)
+        {
+            if (mode == GrowthMode::FixedRandom) return growth::FixedDraw(seed, roleIndex, role.Level, group, bound);
+            if (mode == GrowthMode::Average) return (bound - 1) / 2;
+            if (mode == GrowthMode::Maximum) return bound - 1;
+            return bounded(random, bound);
+        };
+        // Group 0 is the linked three-stat/MP roll, group 1 is HP;
+        // ability group IDs are their stable Data indices.
+        int gain = mode == GrowthMode::Maximum && GetGrowthMaxPriority() == GrowthMaxPriority::Mp ? 1 : 1 + draw(0, tier);
+        bool half = growth::HasHalf(role);
+        auto statGain = [&](int factor)
+        {
+            return mode == GrowthMode::Average ? ((tier + 1) * factor + int(half)) / 2 : gain * factor * levels;
+        };
+        int mpGain = mode == GrowthMode::Average ? ((17 - tier) * config.growth.mp + int(!half)) / 2 : config.growth.mp * (9 - gain) * levels;
+        role.MaxHP = std::min<int>(word(role.MaxHP + levels * config.growth.hp * (role.IncLife + draw(1, 3))), MAX_HP);
         role.CurrentHP = role.MaxHP;
         role.Hurt = 0;
         role.Poison = 0;
         role.PhyPower = MAX_PHYSICAL_POWER;
-        role.MaxMP = std::min<int>(word(role.MaxMP + config.growth.mp * (9 - gain)), MAX_MP);
+        role.MaxMP = std::min<int>(word(role.MaxMP + mpGain), MAX_MP);
         role.CurrentMP = role.MaxMP;
-        role.Attack = word(role.Attack + gain * config.growth.attack);
-        role.Speed = word(role.Speed + gain * config.growth.speed);
-        role.Defence = word(role.Defence + gain * config.growth.defence);
+        role.Attack = word(role.Attack + statGain(config.growth.attack));
+        role.Speed = word(role.Speed + statGain(config.growth.speed));
+        role.Defence = word(role.Defence + statGain(config.growth.defence));
+        if (mode == GrowthMode::Average) growth::StoreHalf(role, half != (tier % 2 == 0));
         for (int index : { 46, 47, 48, 50, 51, 52 })
         {
             if (role.Data[index] > 20)
             {
-                role.Data[index] = word(role.Data[index] + bounded(random, 3));
+                role.Data[index] = word(role.Data[index] + draw(index, 3));
             }
         }
-        role.HidWeapon = word(role.HidWeapon + bounded(random, 3));
+        role.HidWeapon = word(role.HidWeapon + draw(54, 3));
         for (int index : { 46, 47, 48 })
         {
             role.Data[index] = std::min<int>(role.Data[index], 100);
@@ -303,9 +332,11 @@ public:
     void describe(GameRuleDescription& out) const override
     {
         out.cumulativeExperience = true;
-        out.batchGrowth = false;
+        out.batchGrowth = GetGrowthMode() == GrowthMode::Original;
         out.xpThresholds = config.xpThresholds;
         out.growth = config.growth;
+        out.growthMode = GrowthModeName(GetGrowthMode());
+        out.growthMaxPriority = GrowthMaxPriorityName(GetGrowthMaxPriority());
         out.levelStatCaps = "Medicine/use-poison/detox 100; attack/speed/defence/fist/sword/knife/hidden weapon retain original 16-bit growth without a 100 cap. Resistance/unusual do not grow.";
     }
 };

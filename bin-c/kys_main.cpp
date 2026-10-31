@@ -11,6 +11,7 @@
 #include "kys_event.h"
 #include "kys_main.h"
 #include "kys_rules.h"
+#include "rules/growth_state.h"
 #include "kys_type.h"
 
 #include <SDL3/SDL.h>
@@ -28,6 +29,8 @@
 #include <cstring>
 #include <ctime>
 #include <format>
+#include <memory>
+#include <random>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -78,6 +81,159 @@ static void SaveSystemToggleSettings()
     SaveToggleOptionToIni("system", "SHOW_BATTLE_HP", SHOW_BATTLE_HP);
     SaveToggleOptionToIni("system", "WMP_4_PIC", WMP_4_PIC);
     SaveToggleOptionToIni("system", "EXPAND_GROUND", EXPAND_GROUND);
+}
+
+static std::string GrowthSettingLabel()
+{
+    switch (GetGrowthMode())
+    {
+    case GrowthMode::Original: return "原版";
+    case GrowthMode::FixedRandom: return "固定隨機";
+    case GrowthMode::Average: return "平均";
+    case GrowthMode::Maximum: return GetGrowthMaxPriority() == GrowthMaxPriority::Stats ? "最大三維" : "最大內力";
+    }
+    return "";
+}
+
+static void MenuGrowthSettings()
+{
+    constexpr int x = 133, y = 24, width = 500, height = 398;
+    const SDL_Rect panel = { x, y, width, height };
+    std::unique_ptr<SDL_Surface, decltype(&Presentation::destroy)> background(
+        SDL_CreateSurface(width, height, SDL_GetPixelFormatForMasks(32, RMask, GMask, BMask, AMask)), Presentation::destroy);
+    if (!screen || !background) return;
+    SDL_Rect destination = { 0, 0, width, height };
+    Presentation::blit(screen, &panel, background.get(), &destination);
+    auto restore = [&]()
+    {
+        SDL_Rect target = panel;
+        Presentation::blit(background.get(), nullptr, screen, &target);
+    };
+    const std::string names[] = { "原版隨機", "固定隨機", "平均成長", "最大成長" };
+    const std::string descriptions[] = {
+        "連升共用抽籤，可讀檔重抽。",
+        "逐級隨機，讀檔不會改變結果。",
+        "各項取平均，符合條件的能力 +1。",
+        "生命與能力取最高成長，保留三維內力取捨。"
+    };
+    const uint32_t disabledColor = SDL_MapSurfaceRGB(screen, 110, 110, 110);
+    const uint32_t descriptionColor = SDL_MapSurfaceRGB(screen, 195, 195, 185);
+    const uint32_t shadowColor = SDL_MapSurfaceRGB(screen, 0, 0, 0);
+    SDL_Rect targets[7];
+    for (int i = 0; i < 4; ++i) targets[i] = { x + 12, y + 72 + i * 48, width - 24, 46 };
+    targets[4] = { x + 12, y + 310, 232, 38 };
+    targets[5] = { x + 256, y + 310, 232, 38 };
+    targets[6] = { x + width - 92, y + height - 37, 80, 27 };
+    int selected = static_cast<int>(GetGrowthMode());
+    auto enabled = [&](int index)
+    {
+        return index < 4 || index == 6 || GetGrowthMode() == GrowthMode::Maximum;
+    };
+    auto draw = [&]()
+    {
+        restore();
+        DrawRectangle(screen, x, y, width - 1, height - 1, 0, ColColor(0xFF), 100);
+        DrawShadowText("升級成長", x + 14, y + 10, ColColor(0x64), ColColor(0x66));
+        DrawShadowText("只影響升級成長，戰鬥隨機不變", x + 14, y + 38, descriptionColor, shadowColor);
+        for (int i = 0; i < 7; ++i)
+        {
+            const auto& rect = targets[i];
+            bool active = i < 4 ? i == static_cast<int>(GetGrowthMode()) :
+                i < 6 ? i - 4 == static_cast<int>(GetGrowthMaxPriority()) : false;
+            uint32_t frame = !enabled(i) ? disabledColor : ColColor(i == selected ? 0x64 : 0x07);
+            if (i == selected || i >= 4)
+                DrawRectangle(screen, rect.x, rect.y, rect.w - 1, rect.h - 1, 0, frame, 55);
+            uint32_t text = !enabled(i) ? disabledColor : ColColor(active || i == selected ? 0x64 : 0x05);
+            if (i < 4)
+            {
+                DrawShadowText(active ? "[x]" : "[ ]", rect.x + 8, rect.y + 2, text, ColColor(0x07));
+                DrawShadowText(names[i], rect.x + 46, rect.y + 2, text, ColColor(0x07));
+                if (active) DrawShadowText("使用中", rect.x + rect.w - 72, rect.y + 2, text, ColColor(0x07));
+                DrawShadowText(descriptions[i], rect.x + 46, rect.y + 23, descriptionColor, shadowColor);
+            }
+            else if (i < 6)
+            {
+                DrawShadowText(active ? "[x]" : "[ ]", rect.x + 12, rect.y + 8, text, shadowColor);
+                DrawShadowText(i == 4 ? "三維高、內力低" : "內力高、三維低", rect.x + 52, rect.y + 8, text, shadowColor);
+            }
+            else DrawShadowText("返回", rect.x + 20, rect.y + 3, text, ColColor(0x07));
+        }
+        DrawShadowText("最大成長取捨", x + 14, y + 280, ColColor(0x05), ColColor(0x07));
+        DrawShadowText("僅最大檔生效", x + width - 154, y + 280, descriptionColor, shadowColor);
+        DrawShadowText("選擇即保存；Esc 返回", x + 14, y + height - 32, descriptionColor, shadowColor);
+        UpdateScreen(screen, x, y, width, height);
+    };
+    auto hit = [&](float px, float py)
+    {
+        int mx = int(px * ScreenWidth() / RESOLUTIONX), my = int(py * ScreenHeight() / RESOLUTIONY);
+        for (int i = 0; i < 7; ++i)
+        {
+            const auto& rect = targets[i];
+            if (enabled(i) && mx >= rect.x && mx < rect.x + rect.w && my >= rect.y && my < rect.y + rect.h) return i;
+        }
+        return -1;
+    };
+    draw();
+    while (SDL_WaitEvent(&event))
+    {
+        CheckBasicEvent();
+        bool activate = false, close = false;
+        switch (event.type)
+        {
+        case SDL_EVENT_KEY_DOWN:
+            if (event.key.key == SDLK_UP || event.key.key == SDLK_DOWN)
+            {
+                int step = event.key.key == SDLK_UP ? -1 : 1;
+                do { selected = (selected + step + 7) % 7; } while (!enabled(selected));
+            }
+            else if ((event.key.key == SDLK_LEFT || event.key.key == SDLK_RIGHT) && selected >= 4 && selected <= 5)
+            {
+                selected = selected == 4 ? 5 : 4;
+                activate = true;
+            }
+            else continue;
+            break;
+        case SDL_EVENT_KEY_UP:
+            close = event.key.key == SDLK_ESCAPE;
+            activate = event.key.key == SDLK_RETURN || event.key.key == SDLK_SPACE;
+            if (!close && !activate) continue;
+            break;
+        case SDL_EVENT_MOUSE_MOTION:
+        {
+            int index = hit(event.motion.x, event.motion.y);
+            if (index < 0 || index == selected) continue;
+            selected = index;
+            break;
+        }
+        case SDL_EVENT_MOUSE_BUTTON_UP:
+            close = event.button.button == SDL_BUTTON_RIGHT;
+            if (event.button.button == SDL_BUTTON_LEFT)
+            {
+                int index = hit(event.button.x, event.button.y);
+                if (index < 0) continue;
+                selected = index;
+                activate = true;
+            }
+            break;
+        default: continue;
+        }
+        if (close || (activate && selected == 6)) break;
+        if (activate)
+        {
+            if (selected < 4) SetGrowthMode(static_cast<GrowthMode>(selected));
+            else SetGrowthMaxPriority(static_cast<GrowthMaxPriority>(selected - 4));
+            SaveOptionToIni("rules", "growth_mode", GrowthModeName(GetGrowthMode()));
+            SaveOptionToIni("rules", "growth_max_priority", GrowthMaxPriorityName(GetGrowthMaxPriority()));
+#ifdef __EMSCRIPTEN__
+            EM_ASM({ Module.saveGrowthSettings($0, $1); }, static_cast<int>(GetGrowthMode()), static_cast<int>(GetGrowthMaxPriority()));
+#endif
+        }
+        draw();
+    }
+    event.key.key = 0;
+    event.button.button = 0;
+    restore();
+    UpdateScreen(screen, x, y, width, height);
 }
 
 static void MenuSettings()
@@ -182,7 +338,7 @@ static void MenuSettings()
 
         const std::string labels[17] = {
             "地圖延時", "場景延時", "戰鬥延時", "音樂音量", "音效音量", "經驗倍率",
-            "簡繁體", "全屏", "半即時", "觸摸行走", "戰鬥顯示血條", "升級屬性固定", "顯示場景名", "WMP四向圖", "擴展地面", "畫面風格", "返回"
+            "簡繁體", "全屏", "半即時", "觸摸行走", "戰鬥顯示血條", HasConfigurableGrowth() ? "升級成長" : "升級屬性固定", "顯示場景名", "WMP四向圖", "擴展地面", "畫面風格", "返回"
         };
         const std::string states[16] = {
             FormatNumericState(WALK_SPEED),
@@ -196,7 +352,7 @@ static void MenuSettings()
             SEMIREAL ? "打開" : "關閉",
             TouchWalk ? "打開" : "關閉",
             SHOW_BATTLE_HP ? "打開" : "關閉",
-            MAX_ADD_PRO ? "打開" : "關閉",
+            HasConfigurableGrowth() ? GrowthSettingLabel() : MAX_ADD_PRO ? "打開" : "關閉",
             SHOW_SUBSCENE_NAME ? "打開" : "關閉",
             WMP_4_PIC ? "打開" : "關閉",
             EXPAND_GROUND ? "打開" : "關閉",
@@ -395,8 +551,12 @@ static void MenuSettings()
             SaveSystemToggleSettings();
             break;
         case 11:
-            MAX_ADD_PRO = 1 - MAX_ADD_PRO;
-            SaveSystemToggleSettings();
+            if (HasConfigurableGrowth()) MenuGrowthSettings();
+            else
+            {
+                MAX_ADD_PRO = 1 - MAX_ADD_PRO;
+                SaveSystemToggleSettings();
+            }
             break;
         case 12:
             SHOW_SUBSCENE_NAME = 1 - SHOW_SUBSCENE_NAME;
@@ -1616,6 +1776,13 @@ bool InitialRole()
         ShowStatus(0);
         UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
 
+        if (HasConfigurableGrowth())
+        {
+            // Headless campaigns stay reproducible; neither frontend consumes
+            // battle randomness to create the independent growth seed.
+            uint32_t seed = Headless() ? HeadlessRandomState : std::random_device{}();
+            rules::growth::StartCampaign(Rrole, seed);
+        }
         StartAmi();
     }
     return named;
@@ -1691,6 +1858,7 @@ void LoadR(int num)
     fclose(grp);
 
     // 初始化世界地图入口
+    rules::growth::PrepareLoadedRoles({ Rrole, size_t(ItemOffset - RoleOffset) / sizeof(TRole) });
     SceneAmount = (MagicOffset - SceneOffset) / sizeof(TScene);
     for (int i = 0; i < 480; i++)
     {

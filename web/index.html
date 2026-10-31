@@ -89,6 +89,24 @@
           return saved === 'sharp' ? 0 : saved === 'smooth' ? 2 : fallback;
         } catch (_) { return fallback; }
       },
+      readGrowthMode(fallback) {
+        try {
+          const index = ['original','fixed_random','average','maximum'].indexOf(localStorage.getItem('kys-dragon.growth-mode'));
+          return index < 0 ? fallback : index;
+        } catch (_) { return fallback; }
+      },
+      readGrowthPriority(fallback) {
+        try {
+          const index = ['stats','mp'].indexOf(localStorage.getItem('kys-dragon.growth-priority'));
+          return index < 0 ? fallback : index;
+        } catch (_) { return fallback; }
+      },
+      saveGrowthSettings(mode, priority) {
+        try {
+          localStorage.setItem('kys-dragon.growth-mode',['original','fixed_random','average','maximum'][mode]);
+          localStorage.setItem('kys-dragon.growth-priority',['stats','mp'][priority]);
+        } catch (_) { }
+      },
       saveSmoothing(value) {
         try { localStorage.setItem('kys-dragon.smoothing',value === 0 ? 'sharp' : 'smooth'); } catch (_) {}
       },

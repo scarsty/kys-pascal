@@ -59,12 +59,24 @@ struct LevelGrowth
     int hp = 3, mp = 4, attack = 1, speed = 1, defence = 1;
 };
 
+enum class GrowthMode { Original, FixedRandom, Average, Maximum };
+enum class GrowthMaxPriority { Stats, Mp };
+
+bool HasConfigurableGrowth();
+GrowthMode GetGrowthMode();
+GrowthMaxPriority GetGrowthMaxPriority();
+void SetGrowthMode(GrowthMode mode);
+void SetGrowthMaxPriority(GrowthMaxPriority priority);
+const char* GrowthModeName(GrowthMode mode);
+const char* GrowthMaxPriorityName(GrowthMaxPriority priority);
+
 struct GameRuleDescription
 {
     std::string profile, progression, combat;
     bool cumulativeExperience = false, batchGrowth = false;
     std::vector<uint16_t> xpThresholds;
     std::optional<LevelGrowth> growth;
+    std::optional<std::string> growthMode, growthMaxPriority;
     std::optional<std::string> levelStatCaps;
 };
 

@@ -154,10 +154,16 @@ def package(source: Path, output: Path) -> None:
     for old in assets.glob("*.pack.gz"):
         if old.name not in manifest["bundles"]:
             old.unlink()
-    for name in ("index.html", "_headers"):
-        shutil.copyfile(Path(__file__).with_name(name), output / name)
     wasm = output / "kys-dragon.wasm"
     wasm.with_suffix(".wasm.gz").write_bytes(gzip.compress(wasm.read_bytes(), compresslevel=9, mtime=0))
+    # Pair the script and Wasm with this build even when a local server permits
+    # caching unversioned files. Player saves remain on the same origin.
+    version = hashlib.sha256((output / "kys-dragon.js").read_bytes() + wasm.read_bytes()).hexdigest()[:16]
+    html = Path(__file__).with_name("index.html").read_text(encoding="utf-8")
+    for name in ("kys-dragon.js", "kys-dragon.wasm.gz"):
+        html = html.replace("'" + name + "'", "'" + name + "?v=" + version + "'")
+    (output / "index.html").write_text(html, encoding="utf-8")
+    shutil.copyfile(Path(__file__).with_name("_headers"), output / "_headers")
     fallback = sum(size for name, size in manifest["sizes"].items() if name.startswith("font-fallback-"))
     print(f"{len(manifest['files'])} files -> {len(groups)} compressed bundles")
     print(f"Game data: {original_bytes:,} source bytes -> {total - fallback:,} compressed bytes + {fallback:,} optional font bytes")

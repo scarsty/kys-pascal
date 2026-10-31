@@ -16,6 +16,8 @@ struct Configuration
     Profile progression = Profile::Remake, combat = Profile::Remake;
     std::vector<uint16_t> xpThresholds;
     LevelGrowth growth;
+    GrowthMode growthMode = GrowthMode::Original;
+    GrowthMaxPriority growthMaxPriority = GrowthMaxPriority::Stats;
 };
 
 extern Configuration config;

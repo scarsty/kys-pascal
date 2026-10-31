@@ -39,6 +39,7 @@ add_library(kys_core STATIC
     kys_rules.cpp
     rules/remake.cpp
     rules/dragon_dos12.cpp
+    rules/growth_state.cpp
     "${MLCC_DIR}/filefunc.cpp"
     "${MLCC_DIR}/PotConv.cpp"
     "${MLCC_DIR}/SimpleCC.cpp"

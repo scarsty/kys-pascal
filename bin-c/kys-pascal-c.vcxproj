@@ -138,6 +138,7 @@
     <ClCompile Include="kys_rules.cpp" />
     <ClCompile Include="rules\remake.cpp" />
     <ClCompile Include="rules\dragon_dos12.cpp" />
+    <ClCompile Include="rules\growth_state.cpp" />
     <ClCompile Include="kys_draw.cpp" />
     <ClCompile Include="kys_engine.cpp" />
     <ClCompile Include="kys_event.cpp" />
@@ -157,6 +158,7 @@
     <ClInclude Include="kys_rules.h" />
     <ClInclude Include="rules\rules_internal.h" />
     <ClInclude Include="rules\dragon_dos12.h" />
+    <ClInclude Include="rules\growth_state.h" />
     <ClInclude Include="kys_draw.h" />
     <ClInclude Include="kys_engine.h" />
     <ClInclude Include="kys_event.h" />

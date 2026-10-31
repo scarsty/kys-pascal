@@ -14,7 +14,7 @@ struct HitContext
 
 int EffectiveLevel(const TRole&, const TMagic&, int trainedLevel);
 void PayMagicCost(TRole&, const TMagic&, int effectiveLevel);
-int LevelUp(TRole&, const RulesRandom& = RulesRandomDraw);
+int LevelUp(TRole&, const RulesRandom& = RulesRandomDraw, int roleIndex = -1);
 int HpDamage(const TRole&, const TRole&, const TMagic&, int effectiveLevel,
     const HitContext&, const RulesRandom& = RulesRandomDraw);
 int ApplyHpHit(TRole&, TRole&, const TMagic&, int trainedLevel, const HitContext&,
