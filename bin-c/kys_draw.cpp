@@ -7,6 +7,7 @@
 #include "kys_draw.h"
 #include "kys_engine.h"
 #include "kys_main.h"
+#include "mods/mod.h"
 #include "kys_type.h"
 #ifdef __EMSCRIPTEN__
 #include "kys_web.h"
@@ -28,10 +29,10 @@ void DrawTitlePic(int num, int px, int py)
         return;
     }
 #ifdef __EMSCRIPTEN__
-    if (MODVersion == 12 && num >= 0 && num <= 3)
+    if (const char* menuImage = mods::Active().titleMenuImage(); menuImage && num >= 0 && num <= 3)
     {
         static std::unique_ptr<SDL_Surface, decltype(&SDL_DestroySurface)> labels(
-            LoadSurfaceFromFile(checkFileName("resource/title-menu.webp")), SDL_DestroySurface);
+            LoadSurfaceFromFile(checkFileName(menuImage)), SDL_DestroySurface);
         if (labels && labels->h % 3 == 0)
         {
             SDL_SetSurfaceBlendMode(labels.get(), SDL_BLENDMODE_BLEND);

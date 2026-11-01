@@ -8,6 +8,7 @@
 #include "kys_event.h"
 #include "kys_main.h"
 #include "kys_rules.h"
+#include "mods/mod.h"
 #include "kys_type.h"
 
 #include <SDL3/SDL.h>
@@ -447,9 +448,9 @@ void BattleMainControl()
                     case 7: MenuStatus(); break;
                     case 8: Rest(i); break;
                     case 9:
-                        if (MODVersion == 51)
+                        if (int specialEvent = mods::Active().battleSpecialEvent(); specialEvent >= 0)
                         {
-                            CallEvent(1077);
+                            CallEvent(specialEvent);
                         }
                         else
                         {

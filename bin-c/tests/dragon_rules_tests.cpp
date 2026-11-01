@@ -5,6 +5,7 @@
 #include "kys_event.h"
 #include "kys_main.h"
 #include "kys_frontend.h"
+#include "mods/mod.h"
 #include <array>
 #include <chrono>
 #include <filesystem>
@@ -15,6 +16,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <utility>
+#include <tuple>
 
 namespace dos = rules::dragon_dos12;
 
@@ -58,6 +60,57 @@ RulesRandom sequence(unsigned& state)
     };
 }
 
+struct TemporaryIni
+{
+    std::filesystem::path path = std::filesystem::temp_directory_path() /
+        ("kys-mod-config-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()) + ".ini");
+    ~TemporaryIni() { std::filesystem::remove(path); }
+    void write(const std::string& text) const { std::ofstream out(path); out << text; }
+    void load(const std::string& text) const { write(text); LoadGameRules(path.string()); }
+};
+
+void selectMod(int version)
+{
+    TemporaryIni ini;
+    ini.write("[system]\nMODVersion=" + std::to_string(version) + "\n");
+    mods::LoadDefinition(ini.path.string());
+}
+
+void specialStartingStats()
+{
+    selectMod(12);
+    for (auto random : { zero, maximum })
+    {
+        auto ordinary = role();
+        auto expected = ordinary;
+        dos::RollStartingStats(expected, random);
+        auto result = mods::Active().createStartingStats(ordinary, "ordinary", random);
+        check(!result.fixed && std::memcmp(&ordinary, &expected, sizeof(ordinary)) == 0,
+            "Ordinary names must use the complete DOS starting roll and allow rerolls");
+        for (auto [name, attack, aptitude] : { std::tuple{ "\xe5\xb0\x8f\xe5\xb0\x8f\xe8\xb1\xac", 30, 100 }, { "\xe8\xa6\x8b\xe8\xb3\xa2\xe6\x80\x9d\xe9\xbd\x8a", 60, 45 } })
+        {
+            auto hero = role();
+            hero.DefPoi = 99;
+            int draws = 0;
+            result = mods::Active().createStartingStats(hero, name, [&](int bound) { ++draws; return random(bound); });
+            check(!result.fixed && draws == 17 && mods::Active().applySpecialStartingStats(hero, name),
+                "Special names must initialize DOS stats exactly once before selecting fixed stats");
+            check(hero.CurrentHP == 50 && hero.MaxHP == 50 && hero.CurrentMP == 50 && hero.MaxMP == 50 && hero.MPType == 2 && hero.IncLife == 10,
+                "Special names must set the original preset HP and MP");
+            check(hero.Attack == attack && hero.Defence == attack && hero.Speed == 30 && hero.Aptitude == aptitude,
+                "Special name preset must use the expected attributes");
+            check(hero.Medicine == 30 && hero.UsePoi == 30 && hero.MedPoi == 30 && hero.Fist == 30 && hero.Sword == 30 && hero.Knife == 30 && hero.Unusual == 30 && hero.HidWeapon == 30 && hero.DefPoi == expected.DefPoi,
+                "Special names must retain DOS initialization for attributes outside their presets");
+        }
+    }
+    selectMod(11);
+    auto hero = role();
+    auto result = mods::Active().createStartingStats(hero, "\xe5\xb0\x8f\xe5\xb0\x8f\xe8\xb1\xac", zero);
+    check(!result.fixed && hero.MaxHP == 25 && hero.MaxMP == 25 && hero.Aptitude == 1,
+        "Other mods must retain their own character creation");
+    selectMod(12);
+}
+
 void startingStats()
 {
     const std::array<int, 17> bounds = { 2, 20, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 5, 10, 35 };
@@ -94,7 +147,8 @@ void startingStats()
     r.Level = 2;
     dos::RollStartingStats(r, zero);
     check(r.MaxHP == 47, "Starting HP must account for the template's level");
-    check(RollProfileStartingStats(r), "Dragon progression must select DOS starting rolls");
+    mods::Active().createStartingStats(r, "ordinary", zero);
+    check(r.MaxHP == 47 && r.MaxMP == 21, "Dragon must select DOS starting rolls");
 }
 
 void levelGrowth()
@@ -403,15 +457,89 @@ void saveRoundTrip()
         std::ofstream grp(dir / "save/r1.grp", std::ios::binary);
         grp.write(original.data(), original.size());
     }
-    rules::config.progression = rules::Profile::Remake;
-    rules::SelectProfiles();
+    selectMod(0);
     LoadR(1);
     SaveR(2);
     std::ifstream remakeSaved(dir / "save/r2.grp", std::ios::binary);
     actual.assign(std::istreambuf_iterator<char>(remakeSaved), std::istreambuf_iterator<char>());
     check(actual == original, "Remake LoadR/SaveR must preserve unrelated role words without interpreting Dragon metadata");
-    rules::config.progression = rules::Profile::DragonDos12;
-    rules::SelectProfiles();
+    selectMod(12);
+}
+
+template<class F> void rejectsWith(F fn, const std::string& expected)
+{
+    try { fn(); }
+    catch (const std::runtime_error& error)
+    {
+        check(std::string(error.what()).find(expected) != std::string::npos, "Configuration error must explain the conflicting setting");
+        return;
+    }
+    throw std::runtime_error("Expected invalid mod configuration to be rejected");
+}
+
+void modConfiguration()
+{
+    TemporaryIni ini;
+    for (const char* text : { "[system]\nMODVersion=12\n", "[system]\nMODVersion=0x0c\n", "[system]\nMODVersion=014\n", "[system]\nMODVersion=+12\n", "[rules]\nprofile=dragon_dos12\n",
+             "[system]\nMODVersion=12\n[rules]\nprofile=dragon_dos12\nprogression=dragon_dos12\ncombat=dragon_dos12\n",
+             "[rules]\nprogression=dragon_dos12\n", "[rules]\ncombat=dragon_dos12\n" })
+    {
+        ini.load(text);
+        auto info = DescribeGameRules();
+        check(MODVersion == 12 && mods::Active().version() == 12 && HasConfigurableGrowth(), "Every Dragon selector must resolve one complete mod");
+        check(info.profile == "dragon_dos12" && info.progression == info.profile && info.combat == info.profile,
+            "Dragon must always report DOS combat and progression together");
+        check(MAX_LEVEL == 30 && MAX_HP == 999 && MAX_MP == 9999 && MAX_PHYSICAL_POWER == 100,
+            "MODVersion alone must select all DOS defaults");
+    }
+    for (const char* key : { "profile", "progression", "combat" })
+        for (const char* value : { "remake", "legacy" })
+            rejectsWith([&] { ini.load(std::string("[system]\nMODVersion=12\n[rules]\n") + key + "=" + value + "\n"); }, "DOS 1.2 rules only");
+    for (int version : { 0, 11, 31 })
+        rejectsWith([&] { ini.load("[system]\nMODVersion=" + std::to_string(version) + "\n[rules]\nprofile=dragon_dos12\n"); }, "conflicting MODVersion");
+    rejectsWith([&] { ini.load("[rules]\nprofile=dragon_dos12\ncombat=remake\n"); }, "combat=remake");
+    rejectsWith([&] { ini.load("[rules]\nprofile=remake\nprogression=dragon_dos12\n"); }, "profile=remake");
+    for (const char* key : { "profile", "progression", "combat" })
+        rejectsWith([&] { ini.load(std::string("[rules]\n") + key + "=typo\n"); }, "Unknown [rules]");
+    for (const char* value : { "", "typo", "12oops", "-1" })
+        rejectsWith([&] { ini.load(std::string("[system]\nMODVersion=") + value + "\n"); }, "Invalid [system] MODVersion");
+    for (const char* text : { "", "[rules]\nprofile=remake\n", "[rules]\nprofile=legacy\n",
+             "[system]\nMODVersion=31\n[rules]\nprofile=remake\nprogression=legacy\ncombat=remake\n" })
+    {
+        ini.load(text);
+        auto info = DescribeGameRules();
+        check(info.profile == "remake" && info.progression == info.profile && info.combat == info.profile && !HasConfigurableGrowth(),
+            "Other mods must retain remake rules and clear previous Dragon selection");
+    }
+    ini.load("[system]\nMODVersion=12\n");
+}
+
+void modCompatibility()
+{
+    selectMod(12);
+    SetMODVersion();
+    check(TitleString == "All Heros in Kam Yung's Stories - We Are Dragons" && TitlePosition.x == 200 && TitlePosition.y == 250,
+        "Dragon definition must own its presentation defaults");
+    check(mods::Active().defaultPlayerName("\xe8\xb3\x87") == "\xe5\xb0\x8f\xe8\x99\xbe\xe7\xb1\xb3" && mods::Active().defaultPlayerName("custom") == "custom" && !mods::Active().renameHomeScene(),
+        "Dragon must repair only the known broken default name and preserve its starting scene name");
+    int previousScene = CurScene;
+    for (int version : { 0, 12, 31 })
+    {
+        selectMod(version);
+        for (bool current : { false, true })
+        {
+            CurScene = current ? 4 : 3;
+            DData[4][0][9] = DData[4][0][10] = 1;
+            SData[4][3][1][1] = 77;
+            std::vector<int> event(13, -2);
+            event[0] = 4; event[1] = 0; event[11] = event[12] = 2;
+            instruct_3(event);
+            check(SData[4][3][1][1] == (current || version == 0 ? -1 : 77) && SData[4][3][2][2] == 0,
+                "Event compatibility must preserve remote tiles for Dragon and mod 31 while updating the new event position");
+        }
+    }
+    CurScene = previousScene;
+    selectMod(12);
 }
 
 void configOptions()
@@ -433,8 +561,7 @@ void configOptions()
     }
     rejects([&] { load("growth_mode=typo\n"); }, "Unknown growth mode must not silently select a default");
     rejects([&] { load("growth_max_priority=typo\n"); }, "Unknown maximum priority must be rejected");
-    for (const char* profiles : { "", "profile=remake\n", "profile=legacy\n",
-             "profile=remake\ncombat=dragon_dos12\n", "profile=dragon_dos12\nprogression=remake\n" })
+    for (const char* profiles : { "", "profile=remake\n", "profile=legacy\n" })
         for (const char* options : { "growth_mode=average\ngrowth_max_priority=mp\n",
                  "growth_mode=unrelated\ngrowth_max_priority=unrelated\n" })
         {
@@ -442,7 +569,7 @@ void configOptions()
             LoadGameRules(path.string());
             auto info = DescribeGameRules();
             check(!HasConfigurableGrowth() && !info.growthMode && !info.growthMaxPriority,
-                "Only Dragon progression may expose configurable growth, including mixed profiles");
+                "Only the Dragon mod may expose configurable growth");
             check(GetGrowthMode() == GrowthMode::Original && GetGrowthMaxPriority() == GrowthMaxPriority::Stats,
                 "Other profiles must ignore Dragon-only options, including unrelated values");
         }
@@ -456,6 +583,7 @@ void nonDragonIsolation()
     struct Restore
     {
         rules::Configuration config = rules::config;
+        int version = MODVersion;
         TRole hero = Rrole[0];
         decltype(MAX_ADD_PRO) maxAdd = MAX_ADD_PRO;
         int threshold = LevelUpList[0];
@@ -464,7 +592,7 @@ void nonDragonIsolation()
         ~Restore()
         {
             rules::config = config;
-            rules::SelectProfiles();
+            selectMod(version);
             Rrole[0] = hero;
             MAX_ADD_PRO = maxAdd;
             LevelUpList[0] = threshold;
@@ -479,17 +607,15 @@ void nonDragonIsolation()
     fixtures[2].TakingItemAmount[0] ^= 1;
     fixtures[3].TakingItem[0] = 5;
     fixtures[3].TakingItemAmount[0] = 9;
-    rules::config.progression = rules::Profile::Remake;
     LevelUpList[0] = 50;
     std::fill(std::begin(MaxProList), std::end(MaxProList), 999);
-    for (auto combat : { rules::Profile::Remake, rules::Profile::DragonDos12 })
+    for (int version : { 0, 11, 22, 31, 41 })
     {
-        rules::config.combat = combat;
-        rules::SelectProfiles();
+        selectMod(version);
         auto starting = role();
-        auto unchangedStarting = starting;
-        check(!RollProfileStartingStats(starting) && std::memcmp(&starting, &unchangedStarting, sizeof(starting)) == 0,
-            "Remake progression must retain its own starting rolls");
+        auto result = mods::Active().createStartingStats(starting, "ordinary", zero);
+        check(!result.fixed && starting.MaxHP == 25 && starting.MaxMP == 25 && starting.Aptitude == 1,
+            "Other mods must retain their own starting rolls");
         for (auto mode : { GrowthMode::Original, GrowthMode::FixedRandom, GrowthMode::Average, GrowthMode::Maximum })
         {
             SetGrowthMode(mode);
@@ -532,7 +658,7 @@ void nonDragonIsolation()
     }
 }
 
-void legacyDrainBenefits()
+void dosDrainBenefits()
 {
     TMagic magic{ };
     magic.AddMP[0] = 20;
@@ -726,7 +852,7 @@ void roundDamage()
     POISON_HURT = divisor;
 }
 
-void legacyDamage()
+void dosDamage()
 {
     auto a = role(), d = role();
     a.Attack = 100;
@@ -746,14 +872,15 @@ int main(int argc, char** argv)
     {
         check(argc == 2, "Pass a dragon_dos12 INI path");
         LoadGameRules(argv[1]);
-        for (auto [name, test] : { std::pair{ "DOS starting stats", startingStats }, { "original DOS batch growth", originalGrowth },
+        for (auto [name, test] : { std::pair{ "mod configuration", modConfiguration }, { "mod compatibility", modCompatibility },
+                 { "special starting stats", specialStartingStats }, { "DOS starting stats", startingStats }, { "original DOS batch growth", originalGrowth },
                  { "per-level growth", levelGrowth }, { "average and attainable maximum", averageAndMaximum },
                  { "fixed growth reload/order independence", fixedGrowth }, { "growth metadata storage", growthStorage },
                  { "native R save round trip", saveRoundTrip }, { "growth INI options", configOptions },
                  { "non-Dragon growth isolation", nonDragonIsolation },
-                 { "preserved DOS drain benefits", legacyDrainBenefits }, { "per-cast MP costs", magicCosts },
+                 { "preserved DOS drain benefits", dosDrainBenefits }, { "per-cast MP costs", magicCosts },
                  { "hidden weapon poison", hiddenPoison }, { "knockout experience", knockoutExperience },
-                 { "nonlethal round damage", roundDamage }, { "preserved DOS damage", legacyDamage } })
+                 { "nonlethal round damage", roundDamage }, { "preserved DOS damage", dosDamage } })
         {
             test();
             std::cout << "PASS " << name << '\n';

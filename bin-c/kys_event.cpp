@@ -10,6 +10,7 @@
 #include "kys_draw.h"
 #include "kys_engine.h"
 #include "kys_main.h"
+#include "mods/mod.h"
 #include "kys_type.h"
 #include "rules/growth_state.h"
 
@@ -375,12 +376,7 @@ void instruct_3(std::vector<int> list)
         list[12] = DData[list[0]][list[1]][10];
     }
     int prePic = DData[list[0]][list[1]][5];
-    bool modifyS = true;
-    if ((MODVersion == 12 || MODVersion == 31) && list[0] != CurScene)
-    {
-        modifyS = false;
-    }
-    if (modifyS)
+    if (mods::Active().clearPreviousEventTile(list[0], CurScene))
     {
         SData[list[0]][3][DData[list[0]][list[1]][10]][DData[list[0]][list[1]][9]] = -1;
     }
@@ -454,7 +450,7 @@ void instruct_10(int rnum)
 
 int instruct_11(int jump1, int jump2)
 {
-    std::string ms[3] = { " 否", " 是", (MODVersion != 0) ? "请選擇是或者否" : "是否需要住宿？" };
+    std::string ms[3] = { " 否", " 是", mods::Active().confirmationPrompt() };
     DrawTextWithRect(ms[2], CENTER_X - 75, CENTER_Y - 85, 150, ColColor(5), ColColor(7));
     int menu = CommonMenu2(CENTER_X - 49, CENTER_Y - 50, 98, ms);
     Redraw();
@@ -736,11 +732,7 @@ int instruct_28(int rnum, int e1, int e2, int jump1, int jump2)
 
 int instruct_29(int rnum, int r1, int r2, int jump1, int jump2)
 {
-    if (MODVersion == 41)
-    {
-        return (Rrole[rnum].Attack >= r1) ? jump1 : jump2;
-    }
-    return (Rrole[rnum].Attack >= r1 && Rrole[rnum].Attack <= r2) ? jump1 : jump2;
+    return mods::Active().attackRequirementMet(Rrole[rnum].Attack, r1, r2) ? jump1 : jump2;
 }
 
 void instruct_30(int x1, int y1, int x2, int y2)
@@ -1204,7 +1196,7 @@ void instruct_49(int rnum, int MPpro) { Rrole[rnum].MPType = MPpro; }
 
 int instruct_50(std::vector<int> list)
 {
-    if (list[0] > 128 || MODVersion == 11)
+    if (mods::Active().instruction50UsesItemCheck(list[0]))
     {
         int p = 0;
         for (int i = 0; i < 5; i++)
@@ -2055,7 +2047,7 @@ int instruct_50e(int code, int e1, int e2, int e3, int e4, int e5, int e6)
         switch (e2)
         {
         case 0:
-            if (Where != 1 || (MODVersion == 22 && CurEvent == -1))
+            if (mods::Active().eventUsesWorldPictures(Where, CurEvent))
             {
                 DrawMPic(e5 / 2, e3, e4);
                 GetPicSize(e5 / 2, MIdx.data(), MPic.data(), w, h, x, y);
@@ -2115,7 +2107,7 @@ int instruct_50e(int code, int e1, int e2, int e3, int e4, int e5, int e6)
         {
             NewTalk(e3, e4, e5, e6 % 100, (e6 % 100) / 10, e6 / 100, 0);
         }
-        else if (e2 == 176 && MODVersion == 22)
+        else if (mods::Active().eventRequestsNumber(e2))
         {
             x50[10032] = EnterNumber(0, 32767, CENTER_X, CENTER_Y - 100);
             x50[0x7000] = 0;

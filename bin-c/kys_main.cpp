@@ -11,6 +11,7 @@
 #include "kys_event.h"
 #include "kys_main.h"
 #include "kys_rules.h"
+#include "mods/mod.h"
 #include "rules/growth_state.h"
 #include "kys_type.h"
 
@@ -811,70 +812,7 @@ void SetMODVersion()
     TitlePosition.x = CENTER_X - 320 + 275;
     TitlePosition.y = CENTER_Y - 220 + 125;
 
-    switch (MODVersion)
-    {
-    case 0: break;
-    case 11:
-        TitleString = "All Heros in Kam Yung's Stories - A Pig";
-        TitlePosition.y = 270;
-        CENTER_Y = 240;
-        break;
-    case 12:
-        TitleString = "All Heros in Kam Yung's Stories - We Are Dragons";
-        TitlePosition.x = 200;
-        TitlePosition.y = 250;
-        break;
-    case 21:
-        TitleString = "All Heros in Kam Yung's Stories - Books";
-        TitlePosition.x = 275;
-        TitlePosition.y = 285;
-        break;
-    case 22:
-        TitleString = "Why I have to go after a pineapple in the period of Three Kingdoms??";
-        MAX_ITEM_AMOUNT = 456;
-        StartMusic = 37;
-        CENTER_Y = 240;
-        break;
-    case 23:
-        TitleString = "All Heros in Kam Yung's Stories - Four Dreams";
-        TitlePosition.y = 165;
-        StartMusic = 24;
-        CENTER_Y = 240;
-        break;
-    case 31:
-        TitleString = "All Heros in Kam Yung's Stories - Wider Rivers and Deeper Lakes";
-        break;
-    case 41:
-        TitleString = "All Heros in Kam Yung's Stories - Here is PTT";
-        TitlePosition.y = 255;
-        CENTER_Y = 240;
-        break;
-    case 51:
-        TitleString = "All Heros in Kam Yung's Stories - An Prime Minister of Tang";
-        break;
-    case 71:
-        TitleString = "All Heros in Kam Yung's Stories - Books from Heaven";
-        TitlePosition.x = 60;
-        TitlePosition.y = 270;
-        MAX_ITEM_AMOUNT = 400;
-        break;
-    case 72:
-        TitleString = "All Heros in Kam Yung's Stories - Shake the World";
-        MAX_ITEM_AMOUNT = 400;
-        break;
-    case 81:
-        TitleString = "All Heros in Kam Yung's Stories - Awaking of Dragons";
-        Music.resize(999, nullptr);
-        TitlePosition.x = 200;
-        TitlePosition.y = 250;
-        break;
-    case 91:
-        TitleString = "All Heros in Kam Yung's Stories - What's Loving";
-        break;
-    default:
-        TitlePosition.y = 270;
-        break;
-    }
+    mods::Active().applyPresentationDefaults();
 }
 
 void ReadFiles()
@@ -927,7 +865,6 @@ void ReadFiles()
     SHOW_BATTLE_HP = ini.getInt("system", "SHOW_BATTLE_HP", 1);
     SEMIREAL = ini.getInt("system", "SEMIREAL", 0);
     FULLSCREEN = ini.getInt("system", "FULLSCREEN", 0);
-    MODVersion = ini.getInt("system", "MODVersion", 0);
     CHINESE_FONT_SIZE = ini.getInt("system", "CHINESE_FONT_SIZE", 20);
     ENGLISH_FONT_SIZE = ini.getInt("system", "ENGLISH_FONT_SIZE", 19);
     NIGHT_EFFECT = ini.getInt("system", "NIGHT_EFFECT", 0);
@@ -1142,7 +1079,50 @@ void Start()
     }
 }
 
-// 严格按Pascal版: 输入姓名 + 随机属性 + 显示状态
+// Show explicit actions so both keyboard and touch users can finish character creation.
+static bool AcceptStartingStats(bool fixed)
+{
+    if (Headless())
+        return true;
+    const int width = 170, height = 30, gap = 16;
+    const int y = ScreenHeight() - height - 10;
+    const int left = (ScreenWidth() - (fixed ? width : 2 * width + gap)) / 2;
+    auto button = [&](int x, const std::string& label)
+    {
+        DrawRectangle(screen, x, y, width, height, 0, ColColor(0xFF), 50);
+        DrawShadowText(label, x + 10, y + 5, ColColor(0x64), ColColor(0x66));
+    };
+    if (!fixed)
+        button(left, "重抽（空格）");
+    button(fixed ? left : left + width + gap, "確定（回車）");
+    UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
+    while (SDL_WaitEvent(&event))
+    {
+        CheckBasicEvent();
+        if (event.type == SDL_EVENT_KEY_UP)
+        {
+            if (event.key.key == SDLK_RETURN || event.key.key == SDLK_KP_ENTER || event.key.key == SDLK_ESCAPE)
+                return true;
+            if (!fixed && event.key.key == SDLK_SPACE)
+                return false;
+        }
+        else if (event.type == SDL_EVENT_MOUSE_BUTTON_UP && event.button.button == SDL_BUTTON_LEFT)
+        {
+            int x = static_cast<int>(event.button.x * ScreenWidth() / RESOLUTIONX);
+            int mouseY = static_cast<int>(event.button.y * ScreenHeight() / RESOLUTIONY);
+            if (mouseY >= y && mouseY < y + height)
+            {
+                if (x >= left && x < left + width)
+                    return fixed;
+                if (!fixed && x >= left + width + gap && x < left + 2 * width + gap)
+                    return true;
+            }
+        }
+    }
+    return true;
+}
+
+// 输入姓名、选择初始属性并显示状态
 bool InitialRole()
 {
     LoadR(0);
@@ -1153,11 +1133,7 @@ bool InitialRole()
     std::string str1 = "請輸入主角之姓名";
     DrawTextWithRect(str1, CENTER_X - 83, CENTER_Y - 30, 166, ColColor(0x21), ColColor(0x23));
 
-    std::string default_name = cp950toutf8(Rrole[0].Name, sizeof(Rrole[0].Name));
-    if (MODVersion == 12 && default_name == "資")
-    {
-        default_name = "小虾米";
-    }
+    std::string default_name = mods::Active().defaultPlayerName(cp950toutf8(Rrole[0].Name, sizeof(Rrole[0].Name)));
     std::string input_name = default_name;
     bool named = EnterString(input_name, CENTER_X - 43, CENTER_Y + 10, 86, 100);
 
@@ -1184,7 +1160,7 @@ bool InitialRole()
             std::min(cp950name.size(), (size_t)9));
 
         // 设置家名 (BEGIN_SCENE)
-        if (MODVersion != 22 && MODVersion != 11 && MODVersion != 12 && MODVersion != 91)
+        if (mods::Active().renameHomeScene())
         {
             memset(&Rscene[BEGIN_SCENE].Data[1], 0, 5 * sizeof(int16_t));
             memcpy(Rscene[BEGIN_SCENE].Name, cp950home.c_str(),
@@ -1192,626 +1168,22 @@ bool InitialRole()
         }
 
         Redraw();
-        int key = 0;
+        bool accepted = false;
         do
         {
-            bool profileRolled = RollProfileStartingStats(Rrole[0]);
-            if (!profileRolled && MODVersion != 21)
-            {
-                Rrole[0].MaxHP = 25 + GameRandom() % 26;
-                Rrole[0].CurrentHP = Rrole[0].MaxHP;
-                Rrole[0].MaxMP = 25 + GameRandom() % 26;
-                Rrole[0].CurrentMP = Rrole[0].MaxMP;
-                Rrole[0].MPType = GameRandom() % 2;
-                Rrole[0].IncLife = 1 + GameRandom() % 10;
-                Rrole[0].Attack = 25 + GameRandom() % 6;
-                Rrole[0].Speed = 25 + GameRandom() % 6;
-                Rrole[0].Defence = 25 + GameRandom() % 6;
-                Rrole[0].Medicine = 25 + GameRandom() % 6;
-                Rrole[0].UsePoi = 25 + GameRandom() % 6;
-                Rrole[0].MedPoi = 25 + GameRandom() % 6;
-                Rrole[0].Fist = 25 + GameRandom() % 6;
-                Rrole[0].Sword = 25 + GameRandom() % 6;
-                Rrole[0].Knife = 25 + GameRandom() % 6;
-                Rrole[0].Unusual = 25 + GameRandom() % 6;
-                Rrole[0].HidWeapon = 25 + GameRandom() % 6;
-            }
-            if (!profileRolled)
-            {
-                Rrole[0].Aptitude = 1 + GameRandom() % 100;
-            }
-
-            if (MODVersion == 0)
-            {
-                Rrole[0].Magic[0] = 1;
-                if (GameRandom() % 100 < 70)
-                {
-                    Rrole[0].Magic[0] = GameRandom() % 93;
-                }
-            }
-            if (MODVersion == 31)
-            {
-                Rrole[0].Ethics = GameRandom() % 50 + GameRandom() % 50;
-            }
-            if (MODVersion == 41)
-            {
-                Rrole[0].Magic[0] = 0;
-            }
-
+            auto startingStats = mods::Active().createStartingStats(Rrole[0], input_name);
+            startingStats.fixed = mods::Active().applySpecialStartingStats(Rrole[0], input_name) || startingStats.fixed;
             Redraw();
             ShowStatus(0);
             UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
-            key = WaitAnyKey();
-        } while (key != SDLK_ESCAPE && key != SDLK_RETURN);
+            accepted = AcceptStartingStats(startingStats.fixed);
+        } while (!accepted);
 
-        // 特殊名字处理
-        if (MODVersion == 0 || MODVersion == 100)
-        {
-            if (input_name == "TXDX尊使")
-            {
-                Rrole[0].MaxHP = 50;
-                Rrole[0].CurrentHP = 50;
-                Rrole[0].MaxMP = 50;
-                Rrole[0].CurrentMP = 50;
-                Rrole[0].MPType = 2;
-                Rrole[0].IncLife = 10;
-                Rrole[0].Attack = 30;
-                Rrole[0].Speed = 30;
-                Rrole[0].Defence = 30;
-                Rrole[0].Medicine = 30;
-                Rrole[0].UsePoi = 30;
-                Rrole[0].MedPoi = 30;
-                Rrole[0].Fist = 30;
-                Rrole[0].Sword = 30;
-                Rrole[0].Knife = 30;
-                Rrole[0].Unusual = 30;
-                Rrole[0].HidWeapon = 30;
-                Rrole[0].Aptitude = 100;
-                Rrole[0].Magic[0] = 62;
-                Rrole[0].MagLevel[0] = 800;
-                Rmagic[62].Attack[9] = 2000;
-                Ritem[93].Magic = 26;
-                Ritem[66].OnlyPracRole = -1;
-                Ritem[79].OnlyPracRole = -1;
-                instruct_32(82, 1);
-                instruct_32(74, 1);
-            }
-            Rrole[13].Magic[1] = 91;
-        }
-
-        if (MODVersion == 22)
-        {
-            if (input_name == "k小邪")
-            {
-                Rrole[0].MaxHP = 50;
-                Rrole[0].CurrentHP = 50;
-                Rrole[0].MaxMP = 50;
-                Rrole[0].CurrentMP = 50;
-                Rrole[0].MPType = 2;
-                Rrole[0].IncLife = 10;
-                Rrole[0].Attack = 150;
-                Rrole[0].Speed = 150;
-                Rrole[0].Defence = 130;
-                Rrole[0].Medicine = 130;
-                Rrole[0].UsePoi = 130;
-                Rrole[0].MedPoi = 130;
-                Rrole[0].Fist = 130;
-                Rrole[0].Sword = 130;
-                Rrole[0].Knife = 130;
-                Rrole[0].Unusual = 130;
-                Rrole[0].HidWeapon = 130;
-                Rrole[0].Aptitude = 100;
-                Rrole[0].Knowledge = 85;
-                Rrole[0].Magic[0] = 94;
-                Rrole[0].MagLevel[0] = 850;
-                Rrole[0].Magic[1] = 93;
-                Rrole[0].AttPoi = 0;
-            }
-            if (input_name == "龍吟星落")
-            {
-                Rrole[0].MaxHP = 150;
-                Rrole[0].CurrentHP = 120;
-                Rrole[0].MaxMP = 150;
-                Rrole[0].CurrentMP = 220;
-                Rrole[0].MPType = 2;
-                Rrole[0].IncLife = 10;
-                Rrole[0].Attack = 130;
-                Rrole[0].Speed = 130;
-                Rrole[0].Defence = 130;
-                Rrole[0].Medicine = 130;
-                Rrole[0].UsePoi = 130;
-                Rrole[0].MedPoi = 130;
-                Rrole[0].Fist = 130;
-                Rrole[0].Sword = 130;
-                Rrole[0].Knife = 130;
-                Rrole[0].Unusual = 130;
-                Rrole[0].HidWeapon = 130;
-                Rrole[0].Aptitude = 100;
-                Rrole[0].Knowledge = 0;
-                Rrole[0].Magic[0] = 168;
-                Rrole[0].Magic[1] = 169;
-                Rrole[0].Magic[2] = 170;
-                Rrole[0].Magic[3] = 171;
-                Rrole[0].Magic[4] = 172;
-            }
-            if (input_name == "小隨")
-            {
-                Rrole[0].MaxHP = 150;
-                Rrole[0].CurrentHP = 120;
-                Rrole[0].MaxMP = 150;
-                Rrole[0].CurrentMP = 220;
-                Rrole[0].MPType = 2;
-                Rrole[0].IncLife = 10;
-                Rrole[0].Attack = 130;
-                Rrole[0].Speed = 130;
-                Rrole[0].Defence = 130;
-                Rrole[0].Medicine = 130;
-                Rrole[0].UsePoi = 130;
-                Rrole[0].MedPoi = 130;
-                Rrole[0].Fist = 130;
-                Rrole[0].Sword = 130;
-                Rrole[0].Knife = 130;
-                Rrole[0].Unusual = 130;
-                Rrole[0].HidWeapon = 130;
-                Rrole[0].Aptitude = 100;
-                Rrole[0].Knowledge = 0;
-                Rrole[0].Magic[0] = 94;
-                Rrole[0].MagLevel[0] = 850;
-                Rrole[0].AttTwice = 1;
-            }
-            if (input_name == "破大俠")
-            {
-                Rrole[0].MaxHP = 1150;
-                Rrole[0].CurrentHP = 1120;
-                Rrole[0].MaxMP = 1150;
-                Rrole[0].CurrentMP = 1220;
-                Rrole[0].MPType = 2;
-                Rrole[0].IncLife = 10;
-                Rrole[0].Attack = 230;
-                Rrole[0].Speed = 230;
-                Rrole[0].Defence = 230;
-                Rrole[0].Medicine = 230;
-                Rrole[0].UsePoi = 230;
-                Rrole[0].MedPoi = 230;
-                Rrole[0].Fist = 230;
-                Rrole[0].Sword = 230;
-                Rrole[0].Knife = 230;
-                Rrole[0].Unusual = 230;
-                Rrole[0].HidWeapon = 230;
-                Rrole[0].Aptitude = 100;
-                Rrole[0].Knowledge = 100;
-                Rrole[0].Magic[0] = 168;
-                Rrole[0].Magic[1] = 169;
-                Rrole[0].Magic[2] = 170;
-                Rrole[0].Magic[3] = 171;
-                Rrole[0].Magic[4] = 172;
-                Rrole[0].Magic[5] = 94;
-            }
-            if (input_name == "鳳凰")
-            {
-                Rrole[0].MaxHP = 250;
-                Rrole[0].CurrentHP = 50;
-                Rrole[0].MaxMP = 250;
-                Rrole[0].CurrentMP = 50;
-                Rrole[0].MPType = 2;
-                Rrole[0].IncLife = 10;
-                Rrole[0].Aptitude = 100;
-                for (int i = 1; i <= 14; i++)
-                {
-                    Rrole[i].MaxHP = 500;
-                    Rrole[i].CurrentHP = 500;
-                    Rrole[i].MaxMP = 500;
-                    Rrole[i].CurrentMP = 500;
-                    Rrole[i].MPType = 2;
-                    Rrole[i].IncLife = 30;
-                    Rrole[i].Attack = 300;
-                    Rrole[i].Speed = 100;
-                    Rrole[i].Defence = 130;
-                    Rrole[i].Medicine = 130;
-                    Rrole[i].UsePoi = 130;
-                    Rrole[i].MedPoi = 130;
-                    Rrole[i].Fist = 130;
-                    Rrole[i].Sword = 130;
-                    Rrole[i].Knife = 130;
-                    Rrole[i].Unusual = 130;
-                    Rrole[i].HidWeapon = 130;
-                    Rrole[i].Aptitude = 100;
-                }
-            }
-        }
-
-        if (MODVersion == 23)
-        {
-            if (input_name == "小小豬")
-            {
-                Rrole[0].MaxHP = 10;
-                Rrole[0].CurrentHP = 10;
-                Rrole[0].MaxMP = 50;
-                Rrole[0].CurrentMP = 50;
-                Rrole[0].MPType = 2;
-                Rrole[0].IncLife = 10;
-                Rrole[0].Attack = 10;
-                Rrole[0].Speed = 10;
-                Rrole[0].Defence = 30;
-                Rrole[0].Medicine = 30;
-                Rrole[0].UsePoi = 30;
-                Rrole[0].MedPoi = 30;
-                Rrole[0].Fist = 30;
-                Rrole[0].Sword = 30;
-                Rrole[0].Knife = 30;
-                Rrole[0].Unusual = 30;
-                Rrole[0].HidWeapon = 30;
-                Rrole[0].Aptitude = 100;
-                Rrole[0].Knowledge = 0;
-                Rrole[0].Magic[0] = 27;
-                Rrole[0].MagLevel[0] = 850;
-                Rrole[0].Magic[1] = 37;
-                Rrole[0].MagLevel[1] = 850;
-                Rrole[0].Magic[2] = 94;
-                Rrole[0].MagLevel[2] = 850;
-                Rrole[0].Magic[3] = 62;
-                Rrole[0].MagLevel[3] = 850;
-                Rrole[0].AttPoi = 0;
-            }
-            if (input_name == "k小邪")
-            {
-                Rrole[0].MaxHP = 150;
-                Rrole[0].CurrentHP = 120;
-                Rrole[0].MaxMP = 150;
-                Rrole[0].CurrentMP = 220;
-                Rrole[0].MPType = 2;
-                Rrole[0].IncLife = 10;
-                Rrole[0].Attack = 30;
-                Rrole[0].Speed = 30;
-                Rrole[0].Defence = 30;
-                Rrole[0].Medicine = 30;
-                Rrole[0].UsePoi = 30;
-                Rrole[0].MedPoi = 30;
-                Rrole[0].Fist = 30;
-                Rrole[0].Sword = 30;
-                Rrole[0].Knife = 30;
-                Rrole[0].Unusual = 30;
-                Rrole[0].HidWeapon = 30;
-                Rrole[0].Aptitude = 100;
-                Rrole[0].Knowledge = 0;
-                Rrole[0].Magic[0] = 27;
-                Rrole[0].MagLevel[0] = 850;
-                Rrole[0].AttPoi = 70;
-                Rrole[0].Magic[1] = 15;
-                for (int i = 0; i <= 9; i++)
-                {
-                    Rmagic[15].Attack[i] = 1400;
-                    Rmagic[16].Attack[i] = 1400;
-                    Rmagic[17].Attack[i] = 1000;
-                    Rmagic[15].AttDistance[i] = 6;
-                    Rmagic[16].AttDistance[i] = 4;
-                    Rmagic[17].AttDistance[i] = 8;
-                }
-            }
-            if (input_name == "南宮夢")
-            {
-                Rrole[0].MaxHP = 500;
-                Rrole[0].CurrentHP = 500;
-                Rrole[0].MaxMP = 500;
-                Rrole[0].CurrentMP = 500;
-                Rrole[0].MPType = 2;
-                Rrole[0].IncLife = 10;
-                Rrole[0].Attack = 70;
-                Rrole[0].Speed = 90;
-                Rrole[0].Defence = 30;
-                Rrole[0].Medicine = 30;
-                Rrole[0].UsePoi = 30;
-                Rrole[0].MedPoi = 30;
-                Rrole[0].Fist = 30;
-                Rrole[0].Sword = 60;
-                Rrole[0].Knife = 30;
-                Rrole[0].Unusual = 30;
-                Rrole[0].HidWeapon = 30;
-                Rrole[0].Aptitude = 100;
-                Rrole[0].Knowledge = 0;
-                Rrole[0].Magic[0] = 37;
-                Rrole[0].MagLevel[0] = 890;
-                Rmagic[37].AttAreaType = 3;
-                Rmagic[37].MoveDistance[9] = 4;
-                Rmagic[37].AttDistance[9] = 4;
-            }
-            if (input_name == "游客")
-            {
-                Rrole[0].MaxHP = 50;
-                Rrole[0].CurrentHP = 50;
-                Rrole[0].MaxMP = 50;
-                Rrole[0].CurrentMP = 50;
-                Rrole[0].MPType = 2;
-                Rrole[0].IncLife = 10;
-                Rrole[0].Attack = 30;
-                Rrole[0].Speed = 30;
-                Rrole[0].Defence = 30;
-                Rrole[0].Medicine = 30;
-                Rrole[0].UsePoi = 30;
-                Rrole[0].MedPoi = 30;
-                Rrole[0].Fist = 30;
-                Rrole[0].Sword = 30;
-                Rrole[0].Knife = 30;
-                Rrole[0].Unusual = 30;
-                Rrole[0].HidWeapon = 30;
-                Rrole[0].Aptitude = 100;
-                Rrole[0].Knowledge = 0;
-                Rrole[0].Magic[0] = 94;
-                Rrole[0].MagLevel[0] = 850;
-                Rrole[0].AttTwice = 1;
-            }
-            if (input_name == "飛蟲王")
-            {
-                Rrole[0].MaxHP = 50;
-                Rrole[0].CurrentHP = 50;
-                Rrole[0].MaxMP = 50;
-                Rrole[0].CurrentMP = 50;
-                Rrole[0].MPType = 2;
-                Rrole[0].IncLife = 10;
-                Rrole[0].Attack = 30;
-                Rrole[0].Speed = 30;
-                Rrole[0].Defence = 30;
-                Rrole[0].Medicine = 30;
-                Rrole[0].UsePoi = 30;
-                Rrole[0].MedPoi = 30;
-                Rrole[0].Fist = 30;
-                Rrole[0].Sword = 30;
-                Rrole[0].Knife = 30;
-                Rrole[0].Unusual = 30;
-                Rrole[0].HidWeapon = 30;
-                Rrole[0].Aptitude = 100;
-                Rrole[0].Knowledge = 60;
-                Rrole[0].Magic[0] = 62;
-                Rrole[0].MagLevel[0] = 850;
-                Rrole[0].AttPoi = 95;
-            }
-            if (input_name == "破劍式")
-            {
-                Rrole[0].MaxHP = 499;
-                Rrole[0].CurrentHP = 499;
-                Rrole[0].MaxMP = 499;
-                Rrole[0].CurrentMP = 499;
-                Rrole[0].MPType = 2;
-                Rrole[0].IncLife = 5;
-                Rrole[0].Attack = 90;
-                Rrole[0].Speed = 90;
-                Rrole[0].Defence = 90;
-                Rrole[0].Medicine = 90;
-                Rrole[0].UsePoi = 90;
-                Rrole[0].MedPoi = 90;
-                Rrole[0].Fist = 90;
-                Rrole[0].Sword = 90;
-                Rrole[0].Knife = 90;
-                Rrole[0].Unusual = 90;
-                Rrole[0].HidWeapon = 90;
-                Rrole[0].Aptitude = 100;
-                Rrole[0].Knowledge = 0;
-                Rrole[0].Magic[0] = 27;
-                Rrole[0].MagLevel[0] = 899;
-                Rrole[0].Magic[1] = 37;
-                Rrole[0].MagLevel[1] = 899;
-                Rrole[0].Magic[2] = 94;
-                Rrole[0].MagLevel[2] = 899;
-                Rrole[0].Magic[3] = 62;
-                Rrole[0].MagLevel[3] = 899;
-                Rrole[0].AttPoi = 90;
-            }
-            if (input_name == "9523")
-            {
-                Rrole[0].MPType = 2;
-                Rrole[0].IncLife = 10;
-                Rrole[0].Attack = 10;
-                Rrole[0].Speed = 10;
-                Rrole[0].Defence = 30;
-                Rrole[0].Medicine = 30;
-                Rrole[0].UsePoi = 30;
-                Rrole[0].MedPoi = 30;
-                Rrole[0].Fist = 30;
-                Rrole[0].Sword = 30;
-                Rrole[0].Knife = 30;
-                Rrole[0].Unusual = 30;
-                Rrole[0].HidWeapon = 30;
-                Rrole[0].Aptitude = 100;
-                for (int i = 0; i <= 9; i++)
-                {
-                    Rmagic[15].Attack[i] = 1400;
-                    Rmagic[16].Attack[i] = 1400;
-                    Rmagic[17].Attack[i] = 1000;
-                    Rmagic[15].AttDistance[i] = 6;
-                    Rmagic[16].AttDistance[i] = 4;
-                    Rmagic[17].AttDistance[i] = 8;
-                }
-                Rrole[0].Magic[0] = 15;
-                Rrole[0].Magic[1] = 16;
-                Rrole[0].Magic[2] = 17;
-            }
-            if (input_name == "鳳凰ice")
-            {
-                Rrole[0].MPType = 2;
-                Rrole[0].IncLife = 10;
-                Rrole[0].Aptitude = 100;
-                for (int i = 0; i < 100; i++)
-                {
-                    if (LeaveList[i] > 0)
-                    {
-                        Rrole[LeaveList[i]].IncLife = 30;
-                        Rrole[LeaveList[i]].MPType = 2;
-                        Rrole[LeaveList[i]].Attack = 90;
-                        Rrole[LeaveList[i]].Aptitude = 95;
-                    }
-                }
-            }
-            Rrole[401] = Rrole[0];
-            Rrole[402] = Rrole[0];
-            Rrole[403] = Rrole[0];
-            Rrole[404] = Rrole[0];
-        }
-
-        if (MODVersion == 11)
-        {
-            if (input_name == "小小豬")
-            {
-                Rrole[0].MaxHP = 50;
-                Rrole[0].CurrentHP = 50;
-                Rrole[0].MaxMP = 50;
-                Rrole[0].CurrentMP = 50;
-                Rrole[0].MPType = 2;
-                Rrole[0].IncLife = 10;
-                Rrole[0].Attack = 30;
-                Rrole[0].Speed = 30;
-                Rrole[0].Defence = 30;
-                Rrole[0].Medicine = 30;
-                Rrole[0].UsePoi = 30;
-                Rrole[0].MedPoi = 30;
-                Rrole[0].Fist = 30;
-                Rrole[0].Sword = 30;
-                Rrole[0].Knife = 30;
-                Rrole[0].Unusual = 30;
-                Rrole[0].HidWeapon = 30;
-                Rrole[0].Aptitude = 100;
-                Rrole[0].Ethics = 90;
-            }
-            if (input_name == "晴空飛雪")
-            {
-                Rrole[0].MaxHP = 50;
-                Rrole[0].CurrentHP = 50;
-                Rrole[0].MaxMP = 50;
-                Rrole[0].CurrentMP = 50;
-                Rrole[0].MPType = 2;
-                Rrole[0].IncLife = 10;
-                Rrole[0].Attack = 30;
-                Rrole[0].Speed = 30;
-                Rrole[0].Defence = 30;
-                Rrole[0].Medicine = 30;
-                Rrole[0].UsePoi = 30;
-                Rrole[0].MedPoi = 30;
-                Rrole[0].Fist = 30;
-                Rrole[0].Sword = 30;
-                Rrole[0].Knife = 30;
-                Rrole[0].Unusual = 30;
-                Rrole[0].HidWeapon = 30;
-                Rrole[0].Aptitude = 100;
-                instruct_32(19, 10000);
-            }
-        }
-
-        if (MODVersion == 12)
-        {
-            if (input_name == "小小豬")
-            {
-                Rrole[0].MaxHP = 50;
-                Rrole[0].CurrentHP = 50;
-                Rrole[0].MaxMP = 50;
-                Rrole[0].CurrentMP = 50;
-                Rrole[0].MPType = 2;
-                Rrole[0].IncLife = 10;
-                Rrole[0].Attack = 30;
-                Rrole[0].Speed = 30;
-                Rrole[0].Defence = 30;
-                Rrole[0].Medicine = 30;
-                Rrole[0].UsePoi = 30;
-                Rrole[0].MedPoi = 30;
-                Rrole[0].Fist = 30;
-                Rrole[0].Sword = 30;
-                Rrole[0].Knife = 30;
-                Rrole[0].Unusual = 30;
-                Rrole[0].HidWeapon = 30;
-                Rrole[0].Aptitude = 100;
-            }
-            if (input_name == "見賢思齊")
-            {
-                Rrole[0].MaxHP = 50;
-                Rrole[0].CurrentHP = 50;
-                Rrole[0].MaxMP = 50;
-                Rrole[0].CurrentMP = 50;
-                Rrole[0].MPType = 2;
-                Rrole[0].IncLife = 10;
-                Rrole[0].Attack = 60;
-                Rrole[0].Speed = 30;
-                Rrole[0].Defence = 60;
-                Rrole[0].Medicine = 30;
-                Rrole[0].UsePoi = 30;
-                Rrole[0].MedPoi = 30;
-                Rrole[0].Fist = 30;
-                Rrole[0].Sword = 30;
-                Rrole[0].Knife = 30;
-                Rrole[0].Unusual = 30;
-                Rrole[0].HidWeapon = 30;
-                Rrole[0].Aptitude = 45;
-            }
-        }
-
-        if (MODVersion == 31)
-        {
-            if (input_name == "南宮夢")
-            {
-                Rrole[0].MaxHP = 50;
-                Rrole[0].CurrentHP = 50;
-                Rrole[0].MaxMP = 50;
-                Rrole[0].CurrentMP = 50;
-                Rrole[0].MPType = 2;
-                Rrole[0].IncLife = 10;
-                Rrole[0].Attack = 300;
-                Rrole[0].Speed = 30;
-                Rrole[0].Defence = 300;
-                Rrole[0].Medicine = 300;
-                Rrole[0].UsePoi = 30;
-                Rrole[0].MedPoi = 30;
-                Rrole[0].Fist = 30;
-                Rrole[0].Sword = 300;
-                Rrole[0].Knife = 30;
-                Rrole[0].Unusual = 30;
-                Rrole[0].HidWeapon = 300;
-                Rrole[0].Aptitude = 100;
-                Rrole[0].Ethics = 95;
-            }
-        }
-
-        if (MODVersion == 41)
-        {
-            if (input_name == "leo")
-            {
-                Rrole[0].MaxHP = 50;
-                Rrole[0].CurrentHP = 50;
-                Rrole[0].MaxMP = 50;
-                Rrole[0].CurrentMP = 50;
-                Rrole[0].MPType = 2;
-                Rrole[0].IncLife = 10;
-                Rrole[0].Attack = 30;
-                Rrole[0].Speed = 30;
-                Rrole[0].Defence = 30;
-                Rrole[0].Medicine = 30;
-                Rrole[0].UsePoi = 30;
-                Rrole[0].MedPoi = 30;
-                Rrole[0].Fist = 30;
-                Rrole[0].Sword = 30;
-                Rrole[0].Knife = 30;
-                Rrole[0].Unusual = 30;
-                Rrole[0].HidWeapon = 30;
-                Rrole[0].Aptitude = 100;
-            }
-        }
-
-        if (MODVersion == 21)
-        {
-            if (input_name == "古天奇" || input_name == "青狼火花")
-            {
-                Rrole[0].MPType = 2;
-                Rrole[0].IncLife = 20;
-                Rrole[0].Aptitude = 100;
-            }
-        }
+        mods::Active().finishCharacterCreation(input_name);
 
         ShowStatus(0);
         UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
 
-        if (HasConfigurableGrowth())
-        {
-            // Headless campaigns stay reproducible; neither frontend consumes
-            // battle randomness to create the independent growth seed.
-            uint32_t seed = Headless() ? HeadlessRandomState : std::random_device{}();
-            rules::growth::StartCampaign(Rrole, seed);
-        }
         StartAmi();
     }
     return named;
@@ -2466,15 +1838,7 @@ bool CanWalk(int x, int y)
     {
         InShip = 0;
     }
-    if (MODVersion == 22)
-    {
-        if (InShip == 1)
-        {
-            result = false;
-            InShip = 0;
-        }
-    }
-    return result;
+    return mods::Active().worldStepPassable(result, InShip);
 }
 
 bool CheckEntrance()
@@ -3050,11 +2414,7 @@ bool CanWalkInScene(int x, int y)
     {
         result = false;
     }
-    if (MODVersion == 23 && (SData[CurScene][1][x][y] == 1358 * 2 || SData[CurScene][1][x][y] == 1269 * 2))
-    {
-        result = true;
-    }
-    return result;
+    return mods::Active().sceneTilePassable(SData[CurScene][1][x][y], result);
 }
 
 bool CanWalkInScene(int x1, int y1, int x, int y)
@@ -3205,21 +2565,7 @@ void FindWay(int x1, int y1)
 
         for (int i = 0; i < 4; i++)
         {
-            bool canwalk = false;
-            if (MODVersion == 22)
-            {
-                if ((InShip == 1 && Bgrid[i] == 5) || ((Bgrid[i] == 0 || Bgrid[i] == 4) && InShip == 0))
-                {
-                    canwalk = true;
-                }
-            }
-            else
-            {
-                if (Bgrid[i] == 0 || Bgrid[i] == 4 || Bgrid[i] == 5 || Bgrid[i] == 7)
-                {
-                    canwalk = true;
-                }
-            }
+            bool canwalk = mods::Active().worldPathTilePassable(Bgrid[i], InShip == 1);
             if (canwalk)
             {
                 int nx = curX + Xinc[i], ny = curY + Yinc[i];
@@ -3998,7 +3344,7 @@ void MenuEsc()
     menuStr[1] = "解毒";
     menuStr[2] = "物品";
     menuStr[3] = "狀態";
-    menuStr[4] = (MODVersion == 22) ? "特殊" : "離隊";
+    menuStr[4] = mods::Active().partyMenuLabel();
     menuStr[5] = "傳送";
     menuStr[6] = "系統";
 
@@ -4054,9 +3400,9 @@ void MenuEsc()
         case 4: MenuLeave(); break;
         case 3:
         {
-            if (MODVersion == 51)
+            if (int statusEvent = mods::Active().statusMenuEvent(); statusEvent >= 0)
             {
-                CallEvent(1092);
+                CallEvent(statusEvent);
                 Redraw();
                 UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
             }
@@ -4086,7 +3432,7 @@ void ShowMenu(int menu)
     word[1] = "解毒";
     word[2] = "物品";
     word[3] = "狀態";
-    word[4] = (MODVersion == 22) ? "特殊" : "離隊";
+    word[4] = mods::Active().partyMenuLabel();
     word[5] = "傳送";
     word[6] = "系統";
     int max = 6;
@@ -4987,7 +4333,7 @@ bool CanEquip(int rnum, int inum)
 
 void MenuLeave()
 {
-    std::string str = (MODVersion == 22) ? "選擇一個隊友" : "要求誰離隊？";
+    std::string str = mods::Active().partySelectionPrompt();
     DrawTextWithRect(str, 80, 30, 132, ColColor(0x21), ColColor(0x23));
     int menu = SelectOneTeamMember(80, 65, "%3d", 15, 0);
     if (menu >= 0)
@@ -5103,20 +4449,7 @@ void ShowStatus(int rnum, int x, int y)
     strs[20] = "受傷";
     strs[21] = "中毒";
 
-    if (MODVersion == 22)
-    {
-        strs[2] = "靈力";
-        strs[6] = "武力";
-        strs[8] = "移動";
-        strs[9] = "仙術能力";
-        strs[10] = "毒術能力";
-        strs[12] = "火系能力";
-        strs[13] = "水系能力";
-        strs[14] = "雷系能力";
-        strs[15] = "土系能力";
-        strs[16] = "射擊能力";
-        strs[19] = "所會法術";
-    }
+    mods::Active().customizeStatusLabels(strs);
 
     if (Where <= 2)
     {

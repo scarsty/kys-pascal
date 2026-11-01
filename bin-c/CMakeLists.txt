@@ -37,6 +37,22 @@ add_library(kys_core STATIC
     kys_event.cpp
     kys_battle.cpp
     kys_rules.cpp
+    mods/mod.cpp
+    mods/registry.cpp
+    mods/base.cpp
+    mods/xiaozhu.cpp
+    mods/dragon.cpp
+    mods/tianshu_qixia.cpp
+    mods/boluo_sanguo.cpp
+    mods/xiaomeng.cpp
+    mods/zaizhan.cpp
+    mods/ptt.cpp
+    mods/weizheng.cpp
+    mods/tianshu_jie.cpp
+    mods/shake_world.cpp
+    mods/zhenlong.cpp
+    mods/wenqing.cpp
+    mods/other.cpp
     rules/remake.cpp
     rules/dragon_dos12.cpp
     rules/growth_state.cpp
@@ -110,6 +126,12 @@ endif()
 
 include(CTest)
 if(BUILD_TESTING AND NOT EMSCRIPTEN)
+    add_executable(kys_mod_tests tests/mod_tests.cpp)
+    target_link_libraries(kys_mod_tests PRIVATE kys_core)
+    if(MSVC)
+        target_compile_options(kys_mod_tests PRIVATE /utf-8)
+    endif()
+    add_test(NAME mod_regressions COMMAND kys_mod_tests)
     add_executable(kys_dragon_rules_tests tests/dragon_rules_tests.cpp)
     target_link_libraries(kys_dragon_rules_tests PRIVATE kys_core)
     add_test(NAME dragon_rules_regressions COMMAND kys_dragon_rules_tests

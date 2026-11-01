@@ -6,8 +6,8 @@
 #include <string>
 #include <vector>
 
-// Configuration binds these interfaces once. Each implementation owns its
-// mechanics, costs and experience; frontends never select a profile themselves.
+// The active mod owns these interfaces and its mechanics, costs and experience.
+// Frontends consume the resolved behavior.
 enum class BattleSkill
 {
     Poison,
@@ -93,7 +93,6 @@ GameRuleDescription DescribeGameRules();
 void LoadGameRules(const std::string& iniPath);
 int NextLevelExperience(const TRole& role);    // -1 at cap
 int AdvanceRoleLevels(TRole& role);            // one settlement; zero when no level is due
-bool RollProfileStartingStats(TRole& role);    // false if the profile uses the existing remake rolls
 
 using RulesRandom = std::function<int(int)>;
 int RulesRandomDraw(int bound);

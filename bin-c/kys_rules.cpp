@@ -1,6 +1,7 @@
 #include "kys_rules.h"
 #include "INIReader.h"
 #include "kys_frontend.h"
+#include "mods/mod.h"
 #include "rules/rules_internal.h"
 #include <charconv>
 #include <sstream>
@@ -14,34 +15,10 @@ namespace rules
 Configuration config;
 RuleRuntimeState runtime;
 
-namespace
-{
-const ProgressionRules* progression = &RemakeProgression();
-const CombatRules* combat = &RemakeCombat();
-}    //namespace
-
-void SelectProfiles()
-{
-    progression = config.progression == Profile::Remake ? &RemakeProgression() : &DragonDos12Progression();
-    combat = config.combat == Profile::Remake ? &RemakeCombat() : &DragonDos12Combat();
-}
 }    //namespace rules
 
 namespace
 {
-rules::Profile mode(const std::string& name)
-{
-    if (name == "remake" || name == "legacy")
-    {
-        return rules::Profile::Remake;
-    }
-    if (name == "dragon_dos12")
-    {
-        return rules::Profile::DragonDos12;
-    }
-    throw std::runtime_error("Unknown rules mode: " + name + " (use remake or dragon_dos12)");
-}
-
 int integer(INIReaderNormal& ini, const std::string& key, int fallback, int low, int high)
 {
     auto text = ini.getString("rules", key, std::to_string(fallback));
@@ -59,18 +36,9 @@ void LoadGameRules(const std::string& iniPath)
 {
     INIReaderNormal ini;
     ini.loadFile(iniPath);
+    mods::LoadDefinition(iniPath);
     rules::config = { };
     rules::runtime = { };
-    rules::config.profile = ini.getString("rules", "profile", "remake");
-    mode(rules::config.profile);    // fail on typos, including an unused profile
-    if (rules::config.profile == "legacy")
-    {
-        rules::config.profile = "remake";
-    }
-    rules::config.progression = mode(ini.getString("rules", "progression", rules::config.profile));
-    rules::config.combat = mode(ini.getString("rules", "combat", rules::config.profile));
-    // These options and browser preferences belong only to Dragon progression.
-    // A combat-only Dragon profile must keep the remake growth behavior.
     if (HasConfigurableGrowth())
     {
         auto growth = ini.getString("rules", "growth_mode", "original");
@@ -88,8 +56,7 @@ void LoadGameRules(const std::string& iniPath)
         rules::config.growthMaxPriority = static_cast<GrowthMaxPriority>(EM_ASM_INT({ return Module.readGrowthPriority($0); }, static_cast<int>(rules::config.growthMaxPriority)));
 #endif
     }
-    rules::SelectProfiles();
-    auto progression = rules::progression->defaults();
+    auto progression = mods::Active().progression().defaults();
     auto combat = BattleRules().defaults();
     MAX_LEVEL = integer(ini, "max_level", progression.maxLevel, 1, 100);
     MAX_HP = integer(ini, "max_hp", progression.maxHp, 1, 32767);
@@ -145,17 +112,16 @@ void LoadGameRules(const std::string& iniPath)
     }
 }
 
-const CombatRules& BattleRules() { return *rules::combat; }
+const CombatRules& BattleRules() { return mods::Active().combat(); }
 
 int NextLevelExperience(const TRole& role)
 {
-    return role.Level < 1 || role.Level >= MAX_LEVEL ? -1 : rules::progression->nextExperience(role);
+    return role.Level < 1 || role.Level >= MAX_LEVEL ? -1 : mods::Active().progression().nextExperience(role);
 }
 
-int AdvanceRoleLevels(TRole& role) { return rules::progression->advance(role); }
-bool RollProfileStartingStats(TRole& role) { return rules::progression->rollStartingStats(role); }
+int AdvanceRoleLevels(TRole& role) { return mods::Active().progression().advance(role); }
 
-bool HasConfigurableGrowth() { return rules::config.progression == rules::Profile::DragonDos12; }
+bool HasConfigurableGrowth() { return mods::Active().configurableGrowth(); }
 GrowthMode GetGrowthMode() { return rules::config.growthMode; }
 GrowthMaxPriority GetGrowthMaxPriority() { return rules::config.growthMaxPriority; }
 void SetGrowthMode(GrowthMode mode) { GrowthModeName(mode); rules::config.growthMode = mode; }
@@ -186,10 +152,10 @@ const char* GrowthMaxPriorityName(GrowthMaxPriority priority)
 GameRuleDescription DescribeGameRules()
 {
     GameRuleDescription out;
-    out.profile = rules::config.profile;
-    out.progression = rules::progression->name();
-    out.combat = rules::combat->name();
-    rules::progression->describe(out);
+    out.profile = mods::Active().ruleProfile();
+    out.progression = mods::Active().progression().name();
+    out.combat = BattleRules().name();
+    mods::Active().progression().describe(out);
     return out;
 }
 

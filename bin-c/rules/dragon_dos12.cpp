@@ -342,12 +342,6 @@ public:
                 39400, 43450, 47650, 52000 } };
     }
 
-    bool rollStartingStats(TRole& role) const override
-    {
-        dragon_dos12::RollStartingStats(role);
-        return true;
-    }
-
     int nextExperience(const TRole& role) const override { return config.xpThresholds.at(role.Level - 1); }
 
     int advance(TRole& role) const override { return dragon_dos12::LevelUp(role); }
