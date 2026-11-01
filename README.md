@@ -7,6 +7,8 @@
 
 通过改变工作目录的方式，可以运行大部分MOD。
 
+C++ 各 MOD 的专属行为集中在 `bin-c/mods/` 的对应文件中，编号与文件对照见 [C++ MOD 定义](docs/MODs.md)。
+
 ## cpp版本
 
 **为区别于全新的kys-cpp，本项目的AI移植版命名为kys-pascal-c。**
@@ -81,7 +83,7 @@ CMake 也可构建 `kys_mcp`，通过 stdio MCP 操作原生事件、物品、�
 
 MCP 通过 `--mod` 选择模组，`--save-dir` 指定独立存档目录；工具列表自带操作说明。
 构建时可用 `KYS_BUILD_MCP` 开关控制 MCP。
-规则由 `[rules]` 配置选择，`profile=dragon_dos12` 启用苍龙 1.2 原版数值及[已核验的程序修复](docs/苍龙逐日.md)，保留原版武功伤害公式；省略或选择 `profile=remake` 则保持复刻规则。
+苍龙逐日由 `[system] MODVersion=12` 选择，统一使用 DOS 1.2 战斗、成长和初始属性，保留原版武功伤害公式及[已核验的程序修复](docs/苍龙逐日.md)。`[rules]` 只需配置成长随机模式和数值；旧的 `profile=dragon_dos12` 仍可识别为苍龙。苍龙不再提供复刻或混搭规则；其他 MOD 保持原有复刻规则。
 
 
 ### 网页版本
