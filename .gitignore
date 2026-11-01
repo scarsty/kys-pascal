@@ -77,3 +77,6 @@ bin-c/out
 bin-c/x64
 kys-pascal-androidstudio/export-cpp/ndk
 bin-c/kys-pascal-c/x64/
+
+# Local checkout of the mlcc build dependency
+/mlcc/

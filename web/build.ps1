@@ -1,7 +1,6 @@
 param(
     [string]$GameData,
     [string]$EmsdkRoot = $env:EMSDK,
-    [string]$WasmDeps,
     [string]$MlccDir = $env:MLCC_DIR,
     [string]$VcpkgRoot = $env:VCPKG_ROOT,
     [switch]$PackageOnly
@@ -10,11 +9,9 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 $repo = Split-Path -Parent $PSScriptRoot
-$projects = Split-Path -Parent $repo
-$reference = Join-Path $projects 'kys-cpp/kys-cpp'
-if (-not $GameData) { $GameData = Join-Path $repo 'work/kys-dragon' }
+if (-not $GameData) { throw 'Pass -GameData with the original game data directory.' }
 if (-not (Test-Path -LiteralPath (Join-Path $GameData 'kysmod.ini'))) {
-    throw "Local game data is missing: $GameData. Populate work/kys-dragon as described in docs/web-build.md; the build does not copy or select golden data."
+    throw "Local game data is missing: $GameData. Provide a complete game data directory via -GameData."
 }
 $GameData = (Resolve-Path -LiteralPath $GameData).ProviderPath
 Write-Host "Game data source: $GameData"
@@ -34,15 +31,13 @@ if ($PackageOnly) {
     return
 }
 
-if (-not $EmsdkRoot) { $EmsdkRoot = Join-Path $projects 'emsdk' }
-if (-not $WasmDeps) { $WasmDeps = Join-Path $reference 'wasm/vcpkg_installed/wasm32-emscripten' }
-if (-not $MlccDir) { $MlccDir = Join-Path $reference 'mlcc' }
-if (-not $VcpkgRoot) { $VcpkgRoot = Join-Path $projects 'vcpkg' }
+if (-not $EmsdkRoot) { throw 'Set EMSDK or pass -EmsdkRoot to the Emscripten SDK directory.' }
+if (-not $VcpkgRoot) { throw 'Set VCPKG_ROOT or pass -VcpkgRoot to the vcpkg directory.' }
+if (-not $MlccDir) { $MlccDir = Join-Path $repo 'mlcc' }
 
 foreach ($required in @(
     (Join-Path $GameData 'kysmod.ini'),
     (Join-Path $EmsdkRoot 'emsdk_env.ps1'),
-    (Join-Path $WasmDeps 'lib/libSDL3.a'),
     (Join-Path $MlccDir 'filefunc.cpp')
     (Join-Path $VcpkgRoot 'vcpkg.exe')
 )) {
@@ -51,18 +46,19 @@ foreach ($required in @(
 
 $env:EMSDK_QUIET = '1'
 & (Join-Path $EmsdkRoot 'emsdk_env.ps1') | Out-Null
-$build = Join-Path $repo 'tmp/wasm/build'
-$iconvInstall = Join-Path $repo 'tmp/wasm/vcpkg_installed'
+$build = Join-Path $repo 'tmp/wasm/build-web'
+$depsInstall = Join-Path $repo 'tmp/wasm/vcpkg_installed'
 & (Join-Path $VcpkgRoot 'vcpkg.exe') install --x-wait-for-lock `
-    "--x-manifest-root=$PSScriptRoot" "--x-install-root=$iconvInstall" `
-    "--overlay-triplets=$(Join-Path $PSScriptRoot 'triplets')" --triplet=wasm32-emscripten `
+    "--x-manifest-root=$PSScriptRoot" "--x-install-root=$depsInstall" `
+    "--overlay-triplets=$(Join-Path $PSScriptRoot 'triplets')" `
+    "--overlay-ports=$(Join-Path $PSScriptRoot 'ports')" --triplet=wasm32-emscripten `
     "--x-buildtrees-root=$(Join-Path $repo 'tmp/wasm/vcpkg-buildtrees')" `
     "--x-packages-root=$(Join-Path $repo 'tmp/wasm/vcpkg-packages')"
-if ($LASTEXITCODE -ne 0) { throw 'WebAssembly encoding dependency build failed' }
+if ($LASTEXITCODE -ne 0) { throw 'WebAssembly dependency build failed' }
 $toolchain = Join-Path $EmsdkRoot 'upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake'
 cmake -S (Join-Path $repo 'bin-c') -B $build -G Ninja `
-    "-DCMAKE_TOOLCHAIN_FILE=$toolchain" "-DWASM_DEPS_DIR=$WasmDeps" `
-    "-DMLCC_DIR=$MlccDir" "-DWASM_ICONV_DIR=$iconvInstall/wasm32-emscripten" `
+    "-DCMAKE_TOOLCHAIN_FILE=$toolchain" "-DWASM_DEPS_DIR=$depsInstall/wasm32-emscripten" `
+    "-DMLCC_DIR=$MlccDir" "-DWASM_ICONV_DIR=$depsInstall/wasm32-emscripten" `
     -DKYS_BUILD_MCP=OFF -DCMAKE_BUILD_TYPE=Release
 if ($LASTEXITCODE -ne 0) { throw 'WebAssembly configure failed' }
 cmake --build $build --parallel 6

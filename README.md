@@ -79,21 +79,12 @@ CMake 也可构建 `kys_mcp`，通过 stdio MCP 操作原生事件、物品、�
 
 MCP 通过 `--mod` 选择模组，`--save-dir` 指定独立存档目录；工具列表自带操作说明。
 构建时可用 `KYS_BUILD_MCP` 开关控制 MCP。
-规则由 `[rules]` 配置选择，`profile=dragon_dos12` 启用苍龙 1.2 原版数值及[已核验的程序修复](docs/dragon-dos12-verification.md)，保留原版武功伤害公式；省略或选择 `profile=remake` 则保持复刻规则。
+规则由 `[rules]` 配置选择，`profile=dragon_dos12` 启用苍龙 1.2 原版数值及[已核验的程序修复](docs/苍龙逐日.md)，保留原版武功伤害公式；省略或选择 `profile=remake` 则保持复刻规则。
 
 
 ### 网页版本
 
-使用 Emscripten 和 vcpkg 的 `wasm32-emscripten` 静态库构建，依赖 SDL3、SDL3_image（WebP）、SDL3_ttf 和 SDL3_mixer（FluidSynth）。
-`web/build.ps1` 默认复用相邻 `kys-cpp/kys-cpp` 工程的依赖，也可通过 `-EmsdkRoot`、`-WasmDeps`、`-MlccDir` 指定位置；Python 依赖通过 `python -m pip install -r web/requirements.txt` 安装。
-构建脚本还会用 vcpkg 编译 GNU libiconv，以支持中文姓名写回游戏数据；vcpkg 位置通过 `VCPKG_ROOT` 或 `-VcpkgRoot` 指定。这部分依赖和构建缓存统一放在 `tmp/wasm`。
-
-本地游戏数据放在 `work/kys-dragon`，运行 `./web/build.ps1`，结果在 `web/dist`；仅重新打包资源可运行 `./web/build.ps1 -PackageOnly`。
-`work/` 中的游戏数据、生成图片和图片源稿均被 Git 忽略。构建直接读取该目录，不自动使用或同步修复过剧情的 golden 数据，也不在构建时修改事件。当前本地树基于较早的 `tmp/runtime/kys-Dragon`，事件和初始存档模板保持该版本内容；配置另行启用苍龙 1.2 引擎规则。目录结构、图片准备与构建命令见[本地网页构建](docs/web-build.md)。
-打包器将独立 PNG 转为 **quality 80** WebP，直接使用本地资源中的 WebP，按游戏文本裁剪中文字体，将 MIDI 音色库压缩为 SF3，并把资源合并为按需下载的压缩包。原有调色板贴图仍使用原格式，字体和地图贴图在首次使用时加载；姓名中额外用到的汉字会按需加载完整字体。
-网页自动启动，支持画面缩放、触屏返回和存档导入导出；浏览器存档使用 IndexedDB。
-网页发布在 [Cloudflare Pages](https://kys-dragon.pages.dev)，不需要服务端程序或 Pages Functions。
-部署时上传 `index.html`、`kys-dragon.js`、`kys-dragon.wasm.gz`、`assets/` 和 `_headers`，省略未压缩的 `.wasm`，并保留 `web/_headers` 中的缓存设置。
+安装 Emscripten、vcpkg、CMake、Ninja 和 Python，在仓库的 `mlcc` 目录放置 [mlcc](https://github.com/scarsty/mlcc)，并设置 `EMSDK` 和 `VCPKG_ROOT`。准备完整游戏资源后，运行 `./web/build.ps1 -GameData <资源目录>`，输出位于 `web/dist`。Python 依赖可通过 `python -m pip install -r web/requirements.txt` 安装；工具链路径可通过构建脚本参数指定。
 
 ## 字符串的处理
 

@@ -8,3 +8,7 @@ set(VCPKG_BUILD_TYPE release)
 
 # musl can decode Big5 but cannot encode it, which is required for player names.
 set(X_VCPKG_BUILD_GNU_LIBICONV 1)
+
+# FluidSynth requires exception support in its WebAssembly build.
+set(VCPKG_C_FLAGS "-fexceptions")
+set(VCPKG_CXX_FLAGS "-fexceptions")
