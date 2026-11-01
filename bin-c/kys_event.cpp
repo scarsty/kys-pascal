@@ -72,6 +72,84 @@ std::string ReadTalk(int talknum)
     return cp950toutf8((const char*)buf.data());
 }
 
+// Dialogue taps advance on release; holding confirm repeats after a deliberate pause.
+// This state is local to dialogue waits so menus never auto-confirm.
+static int WaitDialogueAdvance()
+{
+    static uint64_t nextRepeat = 0;
+    static bool repeated = false;
+    constexpr uint64_t initialDelay = 650;
+    constexpr uint64_t repeatInterval = 350;
+
+    while (true)
+    {
+        while (SDL_PollEvent(&event))
+        {
+            CheckBasicEvent();
+            if (event.type == SDL_EVENT_WINDOW_FOCUS_LOST)
+            {
+                nextRepeat = 0;
+                repeated = false;
+            }
+            if (event.type == SDL_EVENT_KEY_UP || event.type == SDL_EVENT_MOUSE_BUTTON_UP)
+            {
+                const bool confirm = (event.type == SDL_EVENT_KEY_UP &&
+                    (event.key.key == SDLK_RETURN || event.key.key == SDLK_KP_ENTER || event.key.key == SDLK_SPACE)) ||
+                    (event.type == SDL_EVENT_MOUSE_BUTTON_UP && event.button.button == SDL_BUTTON_LEFT);
+                int key = event.key.key;
+                if (event.type == SDL_EVENT_MOUSE_BUTTON_UP)
+                {
+                    key = 0;
+                    if (event.button.button == SDL_BUTTON_LEFT)
+                    {
+                        key = SDLK_SPACE;
+                        if (CellPhone == 1)
+                        {
+                            int x, y;
+                            SDL_GetMouseState2(x, y);
+                            if (x > CENTER_X * 2 - 100 && y < 100)
+                                key = SDLK_Y;
+                        }
+                    }
+                    else if (event.button.button == SDL_BUTTON_RIGHT)
+                        key = SDLK_ESCAPE;
+                }
+                if (confirm && repeated)
+                {
+                    nextRepeat = 0;
+                    repeated = false;
+                    continue;
+                }
+                nextRepeat = 0;
+                repeated = false;
+                return key;
+            }
+        }
+
+        const bool* keys = SDL_GetKeyboardState(nullptr);
+        const bool held = keys[SDL_SCANCODE_RETURN] || keys[SDL_SCANCODE_KP_ENTER] ||
+            keys[SDL_SCANCODE_SPACE] || (SDL_GetMouseState(nullptr, nullptr) & SDL_BUTTON_LMASK);
+        if (!held)
+        {
+            nextRepeat = 0;
+            repeated = false;
+        }
+        else
+        {
+            const uint64_t now = SDL_GetTicks();
+            if (nextRepeat == 0)
+                nextRepeat = now + initialDelay;
+            else if (now >= nextRepeat)
+            {
+                repeated = true;
+                nextRepeat = now + repeatInterval;
+                return SDLK_RETURN;
+            }
+        }
+        SDL_Delay(20);
+    }
+}
+
 void talk_1(const std::string& talkstr, int headnum, int dismode)
 {
     if (Headless())
@@ -176,7 +254,7 @@ void talk_1(const std::string& talkstr, int headnum, int dismode)
             int key;
             do
             {
-                key = WaitAnyKey();
+                key = WaitDialogueAdvance();
             } while (key == SDLK_LEFT || key == SDLK_RIGHT || key == SDLK_UP || key == SDLK_DOWN);
             Redraw();
             DrawRectangleWithoutFrame(screen, 0, diagy - 10, CENTER_X * 2, 120, 0, 60);
@@ -191,7 +269,7 @@ void talk_1(const std::string& talkstr, int headnum, int dismode)
     int key;
     do
     {
-        key = WaitAnyKey();
+        key = WaitDialogueAdvance();
     } while (key == SDLK_LEFT || key == SDLK_RIGHT || key == SDLK_UP || key == SDLK_DOWN);
     Redraw();
 }
@@ -2416,7 +2494,7 @@ void NewTalk(int headnum, int talknum, int namenum, int place, int showhead, int
             if (I + 1 < len && TalkStr.substr(I, 2) == WaitAnyKeyCode)
             {
                 I += 2;
-                WaitAnyKey();
+                WaitDialogueAdvance();
                 continue;
             }
             // 检查##延时
@@ -2436,7 +2514,7 @@ void NewTalk(int headnum, int talknum, int namenum, int place, int showhead, int
                 {
                     if (I < len)
                     {
-                        WaitAnyKey();
+                        WaitDialogueAdvance();
                     }
                     break;
                 }
@@ -2504,10 +2582,10 @@ void NewTalk(int headnum, int talknum, int namenum, int place, int showhead, int
                         UpdateAllScreen();
                         if (SkipTalk == 0)
                         {
-                            WaitAnyKey();
+                            WaitDialogueAdvance();
                             if (skipSync)
                             {
-                                WaitAnyKey();
+                                WaitDialogueAdvance();
                             }
                             skipSync = false;
                         }
@@ -2525,10 +2603,10 @@ void NewTalk(int headnum, int talknum, int namenum, int place, int showhead, int
     UpdateAllScreen();
     if (SkipTalk == 0)
     {
-        WaitAnyKey();
+        WaitDialogueAdvance();
         if (false)
         {
-            WaitAnyKey();    // skipSync is local, already handled
+            WaitDialogueAdvance();    // skipSync is local, already handled
         }
     }
 }
