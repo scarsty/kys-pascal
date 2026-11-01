@@ -20,6 +20,23 @@ int noise(const RulesRandom& random, int bound)
 }
 }    //namespace
 
+void RollStartingStats(TRole& role, const RulesRandom& random)
+{
+    role.MPType = bounded(random, 2);
+    role.MaxMP = 21 + bounded(random, 20);
+    for (int index = 43; index <= 54; ++index)
+    {
+        role.Data[index] = 21 + bounded(random, 10);
+    }
+    role.IncLife = 3 + bounded(random, 5);
+    role.MaxHP = word(29 + 3 * role.IncLife * role.Level);
+    int aptitudeTier = bounded(random, 10);
+    role.Aptitude = aptitudeTier < 2 ? 30 + bounded(random, 35) :
+        aptitudeTier < 8 ? 60 + bounded(random, 20) : 75 + bounded(random, 20);
+    role.CurrentHP = role.MaxHP;
+    role.CurrentMP = role.MaxMP;
+}
+
 int EffectiveLevel(const TRole& role, const TMagic& magic, int trainedLevel)
 {
     int level = std::clamp(trainedLevel, 1, 10);
@@ -323,6 +340,12 @@ public:
             { 50, 150, 300, 500, 750, 1050, 1400, 1800, 2250, 2750, 3850, 5050, 6350, 7750,
                 9250, 10850, 12550, 14350, 16750, 18250, 21400, 24700, 28150, 31750, 35500,
                 39400, 43450, 47650, 52000 } };
+    }
+
+    bool rollStartingStats(TRole& role) const override
+    {
+        dragon_dos12::RollStartingStats(role);
+        return true;
     }
 
     int nextExperience(const TRole& role) const override { return config.xpThresholds.at(role.Level - 1); }

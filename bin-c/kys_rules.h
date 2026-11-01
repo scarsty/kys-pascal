@@ -93,6 +93,7 @@ GameRuleDescription DescribeGameRules();
 void LoadGameRules(const std::string& iniPath);
 int NextLevelExperience(const TRole& role);    // -1 at cap
 int AdvanceRoleLevels(TRole& role);            // one settlement; zero when no level is due
+bool RollProfileStartingStats(TRole& role);    // false if the profile uses the existing remake rolls
 
 using RulesRandom = std::function<int(int)>;
 int RulesRandomDraw(int bound);

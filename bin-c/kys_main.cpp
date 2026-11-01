@@ -1153,14 +1153,19 @@ bool InitialRole()
     std::string str1 = "請輸入主角之姓名";
     DrawTextWithRect(str1, CENTER_X - 83, CENTER_Y - 30, 166, ColColor(0x21), ColColor(0x23));
 
-    std::string input_name = cp950toutf8(Rrole[0].Name, sizeof(Rrole[0].Name));
+    std::string default_name = cp950toutf8(Rrole[0].Name, sizeof(Rrole[0].Name));
+    if (MODVersion == 12 && default_name == "資")
+    {
+        default_name = "小虾米";
+    }
+    std::string input_name = default_name;
     bool named = EnterString(input_name, CENTER_X - 43, CENTER_Y + 10, 86, 100);
 
     if (named)
     {
         if (input_name.empty())
         {
-            input_name = cp950toutf8(Rrole[0].Name, sizeof(Rrole[0].Name));
+            input_name = default_name;
         }
 
         input_name = Simplified2Traditional(input_name);
@@ -1190,7 +1195,8 @@ bool InitialRole()
         int key = 0;
         do
         {
-            if (MODVersion != 21)
+            bool profileRolled = RollProfileStartingStats(Rrole[0]);
+            if (!profileRolled && MODVersion != 21)
             {
                 Rrole[0].MaxHP = 25 + GameRandom() % 26;
                 Rrole[0].CurrentHP = Rrole[0].MaxHP;
@@ -1210,7 +1216,10 @@ bool InitialRole()
                 Rrole[0].Unusual = 25 + GameRandom() % 6;
                 Rrole[0].HidWeapon = 25 + GameRandom() % 6;
             }
-            Rrole[0].Aptitude = 1 + GameRandom() % 100;
+            if (!profileRolled)
+            {
+                Rrole[0].Aptitude = 1 + GameRandom() % 100;
+            }
 
             if (MODVersion == 0)
             {

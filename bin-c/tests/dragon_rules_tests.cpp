@@ -58,6 +58,45 @@ RulesRandom sequence(unsigned& state)
     };
 }
 
+void startingStats()
+{
+    const std::array<int, 17> bounds = { 2, 20, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 5, 10, 35 };
+    for (int tier : { 0, 1, 2, 7, 8, 9 })
+    {
+        for (bool high : { false, true })
+        {
+            auto r = role();
+            r.Ethics = 77;
+            int drawIndex = 0;
+            dos::RollStartingStats(r, [&](int bound)
+            {
+                check(drawIndex < static_cast<int>(bounds.size()), "Starting rolls must not draw extra values");
+                int expected = drawIndex == 16 && tier >= 2 ? 20 : bounds[drawIndex];
+                check(bound == expected, "Starting roll order and bounds must match DOS");
+                int value = drawIndex == 15 ? tier : high ? bound - 1 : 0;
+                ++drawIndex;
+                return value;
+            });
+            check(drawIndex == 17, "Starting rolls must consume every DOS draw");
+            int aptitudeBase = tier < 2 ? 30 : tier < 8 ? 60 : 75;
+            int aptitudeSpread = tier < 2 ? 35 : 20;
+            check(r.Aptitude == aptitudeBase + (high ? aptitudeSpread - 1 : 0), "Aptitude bands must match DOS");
+            check(r.MPType == int(high) && r.MaxMP == (high ? 40 : 21) && r.CurrentMP == r.MaxMP,
+                "Starting MP must match DOS and be full");
+            for (int i = 43; i <= 54; ++i)
+                check(r.Data[i] == (high ? 30 : 21), "All twelve DOS starting stats, including poison resistance, must be rolled");
+            check(r.IncLife == (high ? 7 : 3) && r.MaxHP == (high ? 50 : 38) && r.CurrentHP == r.MaxHP,
+                "Starting HP must be tied to the DOS growth base");
+            check(r.Ethics == 77 && r.Level == 1, "Starting rolls must preserve unrelated role data");
+        }
+    }
+    auto r = role();
+    r.Level = 2;
+    dos::RollStartingStats(r, zero);
+    check(r.MaxHP == 47, "Starting HP must account for the template's level");
+    check(RollProfileStartingStats(r), "Dragon progression must select DOS starting rolls");
+}
+
 void levelGrowth()
 {
     SetGrowthMode(GrowthMode::FixedRandom);
@@ -447,6 +486,10 @@ void nonDragonIsolation()
     {
         rules::config.combat = combat;
         rules::SelectProfiles();
+        auto starting = role();
+        auto unchangedStarting = starting;
+        check(!RollProfileStartingStats(starting) && std::memcmp(&starting, &unchangedStarting, sizeof(starting)) == 0,
+            "Remake progression must retain its own starting rolls");
         for (auto mode : { GrowthMode::Original, GrowthMode::FixedRandom, GrowthMode::Average, GrowthMode::Maximum })
         {
             SetGrowthMode(mode);
@@ -703,7 +746,7 @@ int main(int argc, char** argv)
     {
         check(argc == 2, "Pass a dragon_dos12 INI path");
         LoadGameRules(argv[1]);
-        for (auto [name, test] : { std::pair{ "original DOS batch growth", originalGrowth },
+        for (auto [name, test] : { std::pair{ "DOS starting stats", startingStats }, { "original DOS batch growth", originalGrowth },
                  { "per-level growth", levelGrowth }, { "average and attainable maximum", averageAndMaximum },
                  { "fixed growth reload/order independence", fixedGrowth }, { "growth metadata storage", growthStorage },
                  { "native R save round trip", saveRoundTrip }, { "growth INI options", configOptions },

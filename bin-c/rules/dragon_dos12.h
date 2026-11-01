@@ -12,6 +12,7 @@ struct HitContext
     int attackKnowledge = 0, defenceKnowledge = 0, distance = 1;
 };
 
+void RollStartingStats(TRole&, const RulesRandom& = RulesRandomDraw);
 int EffectiveLevel(const TRole&, const TMagic&, int trainedLevel);
 void PayMagicCost(TRole&, const TMagic&, int effectiveLevel);
 int LevelUp(TRole&, const RulesRandom& = RulesRandomDraw, int roleIndex = -1);

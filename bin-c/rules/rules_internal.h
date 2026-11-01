@@ -36,6 +36,7 @@ public:
     virtual ~ProgressionRules() = default;
     virtual const char* name() const = 0;
     virtual ProgressionDefaults defaults() const = 0;
+    virtual bool rollStartingStats(TRole&) const { return false; }
     virtual int nextExperience(const TRole&) const = 0;
     virtual int advance(TRole&) const = 0;
     virtual void describe(GameRuleDescription&) const = 0;

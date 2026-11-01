@@ -153,6 +153,7 @@ int NextLevelExperience(const TRole& role)
 }
 
 int AdvanceRoleLevels(TRole& role) { return rules::progression->advance(role); }
+bool RollProfileStartingStats(TRole& role) { return rules::progression->rollStartingStats(role); }
 
 bool HasConfigurableGrowth() { return rules::config.progression == rules::Profile::DragonDos12; }
 GrowthMode GetGrowthMode() { return rules::config.growthMode; }
