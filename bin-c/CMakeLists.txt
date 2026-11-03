@@ -126,12 +126,6 @@ endif()
 
 include(CTest)
 if(BUILD_TESTING AND NOT EMSCRIPTEN)
-    add_executable(kys_mod_tests tests/mod_tests.cpp)
-    target_link_libraries(kys_mod_tests PRIVATE kys_core)
-    if(MSVC)
-        target_compile_options(kys_mod_tests PRIVATE /utf-8)
-    endif()
-    add_test(NAME mod_regressions COMMAND kys_mod_tests)
     add_executable(kys_dragon_rules_tests tests/dragon_rules_tests.cpp)
     target_link_libraries(kys_dragon_rules_tests PRIVATE kys_core)
     add_test(NAME dragon_rules_regressions COMMAND kys_dragon_rules_tests

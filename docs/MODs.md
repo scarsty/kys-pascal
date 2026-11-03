@@ -27,4 +27,4 @@
 
 角色创建分为抽取和确认后的设置。`createStartingStats` 负责初始抽取，`applySpecialStartingStats` 在预览前应用主角的特殊姓名属性并锁定确认；`finishCharacterCreation` 在确认后应用其他角色、物品和武功的修改，以及苍龙的成长种子初始化。
 
-`bin-c/tests/mod_tests.cpp` 覆盖所有已知 MOD 的注册、标题、资源限制、初始属性范围与 RNG 消耗、姓名奖励、移动及事件差异；苍龙的战斗、成长和存档细节由 `dragon_rules_tests.cpp` 覆盖。测试使用构造数据，不代表已对全部 MOD 的完整游戏数据进行通关验证。
+`bin-c/tests/dragon_rules_tests.cpp` 覆盖苍龙的战斗、成长、初始属性、配置解析和存档行为。

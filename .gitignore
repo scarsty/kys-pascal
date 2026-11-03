@@ -64,6 +64,7 @@ kys-pascal-androidstudio/build
 *.apk
 cc
 bin-c/build
+/build/
 /tmp/
 /game-data/
 /work/
