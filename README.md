@@ -90,6 +90,8 @@ MCP 通过 `--mod` 选择模组，`--save-dir` 指定独立存档目录；工具
 
 安装 Emscripten、vcpkg、CMake、Ninja 和 Python，在仓库的 `mlcc` 目录放置 [mlcc](https://github.com/scarsty/mlcc)，并设置 `EMSDK` 和 `VCPKG_ROOT`。准备完整游戏资源后，运行 `./web/build.ps1 -GameData <资源目录>`，输出位于 `web/dist`。Python 依赖可通过 `python -m pip install -r web/requirements.txt` 安装；工具链路径可通过构建脚本参数指定。
 
+更新部署时沿用现有的 `web/dist`，打包会保留旧版本资源包，供仍在运行的网页继续按需加载；清空输出目录后重新部署会使这些网页需要刷新。
+
 ## 字符串的处理
 
 在Delphi和Lazarus中默认的字符串编码不同，但是可以强制设置。故目前在pascal版本中和cpp版本中都强制设置为utf-8编码，

@@ -8,6 +8,7 @@ import hashlib
 import io
 import json
 from pathlib import Path
+import re
 import shutil
 import struct
 
@@ -104,6 +105,8 @@ def package(source: Path, output: Path) -> None:
     if not (source / "kysmod.ini").is_file():
         raise ValueError(f"Game data is missing: {source / 'kysmod.ini'}")
     assets = output / "assets"
+    # Running tabs still request bundles from their original manifest.
+    # Keep prior content-hashed bundles available across deployments.
     assets.mkdir(parents=True, exist_ok=True)
     groups = defaultdict(list)
     original_bytes = 0
@@ -113,6 +116,8 @@ def package(source: Path, output: Path) -> None:
         if not path.is_file():
             continue
         relative = path.relative_to(source).as_posix()
+        if re.fullmatch(r"save/[rsd]\d+\.grp", relative, re.IGNORECASE):
+            continue
         data = path.read_bytes()
         original_bytes += len(data)
         if relative == "resource/chinese.ttf":
@@ -153,9 +158,6 @@ def package(source: Path, output: Path) -> None:
     manifest["startup"] = sorted({manifest["files"]["/game/" + name][0] for name in startup})
     (assets / "manifest.json").write_text(json.dumps(manifest, ensure_ascii=False,
                                                      separators=(",", ":")), encoding="utf-8")
-    for old in assets.glob("*.pack.gz"):
-        if old.name not in manifest["bundles"]:
-            old.unlink()
     wasm = output / "kys-dragon.wasm"
     wasm.with_suffix(".wasm.gz").write_bytes(gzip.compress(wasm.read_bytes(), compresslevel=9, mtime=0))
     # Pair the script and Wasm with this build even when a local server permits

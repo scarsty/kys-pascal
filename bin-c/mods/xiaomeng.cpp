@@ -103,7 +103,7 @@ public:
             role.MagLevel[0] = 890;
             return true;
         }
-        if (input_name == "游客")
+        if (input_name == "遊客" || input_name == "游客")
         {
             role.MaxHP = 50;
             role.CurrentHP = 50;

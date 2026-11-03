@@ -108,12 +108,6 @@ if(VCPKG_TARGET_IS_EMSCRIPTEN)
         file(INSTALL ${_version_h} DESTINATION "${CURRENT_PACKAGES_DIR}/include/fluidsynth")
     endif()
 
-    # Install cmake config
-    if(EXISTS "${CURRENT_BUILDTREES_DIR}/${TARGET_TRIPLET}-rel/FluidSynthConfig.cmake")
-        file(INSTALL "${CURRENT_BUILDTREES_DIR}/${TARGET_TRIPLET}-rel/FluidSynthConfig.cmake"
-             DESTINATION "${CURRENT_PACKAGES_DIR}/share/fluidsynth")
-    endif()
-
     # SDL3_mixer uses pkg-config to link static FluidSynth and its dependencies.
     set(_private_requires "")
     if("sndfile" IN_LIST FEATURES)

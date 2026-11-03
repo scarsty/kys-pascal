@@ -28,7 +28,8 @@
     {
       "name": "sdl3-mixer",
       "features": [
-        "fluidsynth"
+        "fluidsynth",
+        "mpg123"
       ]
     },
     "bzip2",

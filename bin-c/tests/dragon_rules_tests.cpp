@@ -108,6 +108,15 @@ void specialStartingStats()
     auto result = mods::Active().createStartingStats(hero, "\xe5\xb0\x8f\xe5\xb0\x8f\xe8\xb1\xac", zero);
     check(!result.fixed && hero.MaxHP == 25 && hero.MaxMP == 25 && hero.Aptitude == 1,
         "Other mods must retain their own character creation");
+    selectMod(23);
+    for (const char* name : { "遊客", "游客" })
+    {
+        hero = role();
+        check(mods::Active().applySpecialStartingStats(hero, name), "Xiaomeng must recognize both visitor spellings");
+        check(hero.MaxHP == 50 && hero.MaxMP == 50 && hero.Aptitude == 100
+                && hero.Magic[0] == 94 && hero.MagLevel[0] == 850 && hero.AttTwice == 1,
+            "The visitor preset must include its starting stats, magic and double attacks");
+    }
     selectMod(12);
 }
 
