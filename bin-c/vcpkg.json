@@ -1,10 +1,9 @@
 {
-  "name": "kys",
-  "version-string": "0.1",
+  "name": "kys-pascal-c",
+  "version-string": "0.1.0",
+  "builtin-baseline": "d90a9b159c08169f39adcd1b0f1ac0ca12c4b96c",
   "dependencies": [
-    "sdl3",
-    "sdl3-ttf",
-    "sdl3-mixer",
-    "libiconv"
+    "glaze", "libiconv", "sdl3", "sdl3-ttf",
+    { "name": "sdl3-mixer", "features": ["fluidsynth", "mpg123"] }
   ]
 }

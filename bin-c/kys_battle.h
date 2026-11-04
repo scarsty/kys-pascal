@@ -49,7 +49,6 @@ void Wait(int bnum);
 void RestoreRoleStatus();
 void AddExp();
 void CheckLevelUp();
-void LevelUp(int bnum);
 void CheckBook();
 int CalRNum(int team);
 

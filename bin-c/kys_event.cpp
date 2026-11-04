@@ -1,4 +1,5 @@
-﻿// kys_event.cpp - 事件系统实现
+﻿#include "kys_frontend.h"
+// kys_event.cpp - 事件系统实现
 // 对应 kys_event.pas
 
 #include "kys_event.h"
@@ -9,7 +10,9 @@
 #include "kys_draw.h"
 #include "kys_engine.h"
 #include "kys_main.h"
+#include "mods/mod.h"
 #include "kys_type.h"
+#include "rules/growth_state.h"
 
 #include <SDL3/SDL.h>
 #include <algorithm>
@@ -18,6 +21,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <format>
+#include <stdexcept>
 #include <string>
 #include <vector>
 #ifdef _WIN32
@@ -39,6 +43,12 @@ void instruct_0()
 
 std::string ReadTalk(int talknum)
 {
+#ifdef __EMSCRIPTEN__
+    if (TIdx.empty())
+    {
+        LoadIdxGrp(AppPath + "resource/talk.idx", AppPath + "resource/talk.grp", TIdx, TDef);
+    }
+#endif
     int offset = 0, len = 0;
     if (talknum == 0)
     {
@@ -63,8 +73,91 @@ std::string ReadTalk(int talknum)
     return cp950toutf8((const char*)buf.data());
 }
 
+// Dialogue taps advance on release; holding confirm repeats after a deliberate pause.
+// This state is local to dialogue waits so menus never auto-confirm.
+static int WaitDialogueAdvance()
+{
+    static uint64_t nextRepeat = 0;
+    static bool repeated = false;
+    constexpr uint64_t initialDelay = 650;
+    constexpr uint64_t repeatInterval = 350;
+
+    while (true)
+    {
+        while (SDL_PollEvent(&event))
+        {
+            CheckBasicEvent();
+            if (event.type == SDL_EVENT_WINDOW_FOCUS_LOST)
+            {
+                nextRepeat = 0;
+                repeated = false;
+            }
+            if (event.type == SDL_EVENT_KEY_UP || event.type == SDL_EVENT_MOUSE_BUTTON_UP)
+            {
+                const bool confirm = (event.type == SDL_EVENT_KEY_UP &&
+                    (event.key.key == SDLK_RETURN || event.key.key == SDLK_KP_ENTER || event.key.key == SDLK_SPACE)) ||
+                    (event.type == SDL_EVENT_MOUSE_BUTTON_UP && event.button.button == SDL_BUTTON_LEFT);
+                int key = event.key.key;
+                if (event.type == SDL_EVENT_MOUSE_BUTTON_UP)
+                {
+                    key = 0;
+                    if (event.button.button == SDL_BUTTON_LEFT)
+                    {
+                        key = SDLK_SPACE;
+                        if (CellPhone == 1)
+                        {
+                            int x, y;
+                            SDL_GetMouseState2(x, y);
+                            if (x > CENTER_X * 2 - 100 && y < 100)
+                                key = SDLK_Y;
+                        }
+                    }
+                    else if (event.button.button == SDL_BUTTON_RIGHT)
+                        key = SDLK_ESCAPE;
+                }
+                if (confirm && repeated)
+                {
+                    nextRepeat = 0;
+                    repeated = false;
+                    continue;
+                }
+                nextRepeat = 0;
+                repeated = false;
+                return key;
+            }
+        }
+
+        const bool* keys = SDL_GetKeyboardState(nullptr);
+        const bool held = keys[SDL_SCANCODE_RETURN] || keys[SDL_SCANCODE_KP_ENTER] ||
+            keys[SDL_SCANCODE_SPACE] || (SDL_GetMouseState(nullptr, nullptr) & SDL_BUTTON_LMASK);
+        if (!held)
+        {
+            nextRepeat = 0;
+            repeated = false;
+        }
+        else
+        {
+            const uint64_t now = SDL_GetTicks();
+            if (nextRepeat == 0)
+                nextRepeat = now + initialDelay;
+            else if (now >= nextRepeat)
+            {
+                repeated = true;
+                nextRepeat = now + repeatInterval;
+                return SDLK_RETURN;
+            }
+        }
+        SDL_Delay(20);
+    }
+}
+
 void talk_1(const std::string& talkstr, int headnum, int dismode)
 {
+    if (Headless())
+    {
+        Frontend->text(talkstr, headnum);
+        return;
+    }
     int headx, heady, diagx, diagy;
     switch (dismode)
     {
@@ -158,10 +251,11 @@ void talk_1(const std::string& talkstr, int headnum, int dismode)
         li++;
         if (li >= 4 && i < lines.size() - 1)
         {
-            UpdateScreen(screen, 0, 0, screen->w, screen->h);
+            UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
             int key;
-            do {
-                key = WaitAnyKey();
+            do
+            {
+                key = WaitDialogueAdvance();
             } while (key == SDLK_LEFT || key == SDLK_RIGHT || key == SDLK_UP || key == SDLK_DOWN);
             Redraw();
             DrawRectangleWithoutFrame(screen, 0, diagy - 10, CENTER_X * 2, 120, 0, 60);
@@ -172,10 +266,11 @@ void talk_1(const std::string& talkstr, int headnum, int dismode)
             li = 0;
         }
     }
-    UpdateScreen(screen, 0, 0, screen->w, screen->h);
+    UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
     int key;
-    do {
-        key = WaitAnyKey();
+    do
+    {
+        key = WaitDialogueAdvance();
     } while (key == SDLK_LEFT || key == SDLK_RIGHT || key == SDLK_UP || key == SDLK_DOWN);
     Redraw();
 }
@@ -189,6 +284,11 @@ void instruct_1(int talknum, int headnum, int dismode)
 void instruct_2(int inum, int amount)
 {
     instruct_32(inum, amount);
+    if (Headless())
+    {
+        Frontend->text(std::format("item {} {} {:+d}", inum, cp950toutf8(Ritem[inum].Name, sizeof(Ritem[inum].Name)), amount));
+        return;
+    }
     int x = CENTER_X;
     if (Where == 2)
     {
@@ -202,10 +302,10 @@ void instruct_2(int inum, int amount)
     DrawShadowText(word, x - 80, 150, ColColor(0x64), ColColor(0x66));
     auto buf = std::format(" {:5d}", amount);
     DrawEngShadowText(buf, x, 150, ColColor(0x64), ColColor(0x66));
-    UpdateScreen(screen, 0, 0, screen->w, screen->h);
+    UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
     WaitAnyKey();
     Redraw();
-    UpdateScreen(screen, 0, 0, screen->w, screen->h);
+    UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
 }
 
 void ReArrangeItem(int sort)
@@ -276,12 +376,7 @@ void instruct_3(std::vector<int> list)
         list[12] = DData[list[0]][list[1]][10];
     }
     int prePic = DData[list[0]][list[1]][5];
-    bool modifyS = true;
-    if ((MODVersion == 12 || MODVersion == 31) && list[0] != CurScene)
-    {
-        modifyS = false;
-    }
-    if (modifyS)
+    if (mods::Active().clearPreviousEventTile(list[0], CurScene))
     {
         SData[list[0]][3][DData[list[0]][list[1]][10]][DData[list[0]][list[1]][9]] = -1;
     }
@@ -307,7 +402,7 @@ int instruct_5(int jump1, int jump2)
     DrawTextWithRect(ms[2], CENTER_X - 75, CENTER_Y - 85, 150, ColColor(5), ColColor(7));
     int menu = CommonMenu2(CENTER_X - 49, CENTER_Y - 50, 98, ms);
     Redraw();
-    UpdateScreen(screen, 0, 0, screen->w, screen->h);
+    UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
     return (menu == 1) ? jump1 : jump2;
 }
 
@@ -324,7 +419,7 @@ int instruct_9(int jump1, int jump2)
     DrawTextWithRect(ms[2], CENTER_X - 75, CENTER_Y - 85, 150, ColColor(5), ColColor(7));
     int menu = CommonMenu2(CENTER_X - 49, CENTER_Y - 50, 98, ms);
     Redraw();
-    UpdateScreen(screen, 0, 0, screen->w, screen->h);
+    UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
     return (menu == 1) ? jump1 : jump2;
 }
 
@@ -355,11 +450,11 @@ void instruct_10(int rnum)
 
 int instruct_11(int jump1, int jump2)
 {
-    std::string ms[3] = { " 否", " 是", (MODVersion != 0) ? "请選擇是或者否" : "是否需要住宿？" };
+    std::string ms[3] = { " 否", " 是", mods::Active().confirmationPrompt() };
     DrawTextWithRect(ms[2], CENTER_X - 75, CENTER_Y - 85, 150, ColColor(5), ColColor(7));
     int menu = CommonMenu2(CENTER_X - 49, CENTER_Y - 50, 98, ms);
     Redraw();
-    UpdateScreen(screen, 0, 0, screen->w, screen->h);
+    UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
     return (menu == 1) ? jump1 : jump2;
 }
 
@@ -381,22 +476,30 @@ void instruct_12()
 
 void instruct_13()
 {
+    if (Headless())
+    {
+        return;
+    }
     InitialScene(0);
     NeedRefreshScene = 0;
     for (int i = 0; i <= 5; i++)
     {
         Redraw();
-        DrawRectangleWithoutFrame(screen, 0, 0, screen->w, screen->h, 0, 100 - i * 20);
-        UpdateScreen(screen, 0, 0, screen->w, screen->h);
+        DrawRectangleWithoutFrame(screen, 0, 0, ScreenWidth(), ScreenHeight(), 0, 100 - i * 20);
+        UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
     }
 }
 
 void instruct_14()
 {
+    if (Headless())
+    {
+        return;
+    }
     for (int i = 0; i <= 5; i++)
     {
-        DrawRectangleWithoutFrame(screen, 0, 0, screen->w, screen->h, 0, i * 20);
-        UpdateScreen(screen, 0, 0, screen->w, screen->h);
+        DrawRectangleWithoutFrame(screen, 0, 0, ScreenWidth(), ScreenHeight(), 0, i * 20);
+        UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
     }
 }
 
@@ -406,7 +509,7 @@ void instruct_15()
     Redraw();
     DrawShadowText(" 勝敗乃兵家常事，但是……", CENTER_X - 120, 340, ColColor(255), ColColor(255));
     DrawShadowText(" 地球上又多了一失蹤人口", CENTER_X - 110, 370, ColColor(255), ColColor(255));
-    UpdateScreen(screen, 0, 0, screen->w, screen->h);
+    UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
     WaitAnyKey();
 }
 
@@ -494,11 +597,19 @@ void instruct_22()
         }
     }
 }
+
 void instruct_23(int rnum, int Poison) { Rrole[rnum].UsePoi = Poison; }
-void instruct_24() {}
+
+void instruct_24() { }
 
 void instruct_25(int x1, int y1, int x2, int y2)
 {
+    if (Headless())
+    {
+        Cx = y2;
+        Cy = x2;
+        return;
+    }
     if (NeedRefreshScene == 1)
     {
         InitialScene(0);
@@ -515,7 +626,7 @@ void instruct_25(int x1, int y1, int x2, int y2)
             SDL_Delay(50);
             DrawSceneWithoutRole(y1, i);
             DrawRoleOnScene(y1, i);
-            UpdateScreen(screen, 0, 0, screen->w, screen->h);
+            UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
             i += s;
             if (s * (x2 - i) < 0)
             {
@@ -534,7 +645,7 @@ void instruct_25(int x1, int y1, int x2, int y2)
             SDL_Delay(50);
             DrawSceneWithoutRole(i, x2);
             DrawRoleOnScene(i, x2);
-            UpdateScreen(screen, 0, 0, screen->w, screen->h);
+            UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
             i += s;
             if (s * (y2 - i) < 0)
             {
@@ -564,6 +675,21 @@ void instruct_26(int snum, int en, int add1, int add2, int add3)
 
 void instruct_27(int en, int beginpic, int endpic)
 {
+    if (Headless())
+    {
+        if (en == -1)
+        {
+            SceneRolePic = (endpic + 1) / 2;
+        }
+        else
+        {
+            for (int i = 5; i <= 7; ++i)
+            {
+                DData[CurScene][en][i] = endpic + 1;
+            }
+        }
+        return;
+    }
     if (en == -1)
     {
         for (int i = beginpic;; i++)
@@ -572,7 +698,7 @@ void instruct_27(int en, int beginpic, int endpic)
             SceneRolePic = i / 2;
             SDL_Delay(20);
             DrawScene();
-            UpdateScreen(screen, 0, 0, screen->w, screen->h);
+            UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
             if (i > endpic)
             {
                 break;
@@ -590,7 +716,7 @@ void instruct_27(int en, int beginpic, int endpic)
             InitialScene(1);
             SDL_Delay(20);
             DrawScene();
-            UpdateScreen(screen, 0, 0, screen->w, screen->h);
+            UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
             if (i > endpic)
             {
                 break;
@@ -606,15 +732,27 @@ int instruct_28(int rnum, int e1, int e2, int jump1, int jump2)
 
 int instruct_29(int rnum, int r1, int r2, int jump1, int jump2)
 {
-    if (MODVersion == 41)
-    {
-        return (Rrole[rnum].Attack >= r1) ? jump1 : jump2;
-    }
-    return (Rrole[rnum].Attack >= r1 && Rrole[rnum].Attack <= r2) ? jump1 : jump2;
+    return mods::Active().attackRequirementMet(Rrole[rnum].Attack, r1, r2) ? jump1 : jump2;
 }
 
 void instruct_30(int x1, int y1, int x2, int y2)
 {
+    if (Headless())
+    {
+        Sx = y2;
+        Sy = x2;
+        Cx = Sx;
+        Cy = Sy;
+        if (y2 != y1)
+        {
+            SFace = y2 > y1 ? 3 : 0;
+        }
+        else if (x2 != x1)
+        {
+            SFace = x2 > x1 ? 1 : 2;
+        }
+        return;
+    }
     if (NeedRefreshScene == 1)
     {
         InitialScene(0);
@@ -649,7 +787,7 @@ void instruct_30(int x1, int y1, int x2, int y2)
             }
             SceneRolePic = BEGIN_WALKPIC + SFace * 7 + SStep;
             DrawRoleOnScene(Sx, Sy);
-            UpdateScreen(screen, 0, 0, screen->w, screen->h);
+            UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
             Sy += s;
             if (s * (x2 - Sy) < 0)
             {
@@ -681,7 +819,7 @@ void instruct_30(int x1, int y1, int x2, int y2)
             }
             SceneRolePic = BEGIN_WALKPIC + SFace * 7 + SStep;
             DrawRoleOnScene(Sx, Sy);
-            UpdateScreen(screen, 0, 0, screen->w, screen->h);
+            UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
             Sx += s;
             if (s * (y2 - Sx) < 0)
             {
@@ -697,7 +835,7 @@ void instruct_30(int x1, int y1, int x2, int y2)
     SceneRolePic = 2501 + SFace * 7;
     DrawSceneWithoutRole(Sx, Sy);
     DrawRoleOnScene(Sx, Sy);
-    UpdateScreen(screen, 0, 0, screen->w, screen->h);
+    UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
 }
 
 int instruct_31(int moneynum, int jump1, int jump2)
@@ -719,10 +857,11 @@ void instruct_32(int inum, int amount)
         return;
     }
     int i = 0;
-    while (RItemList[i].Number >= 0 && i < MAX_ITEM_AMOUNT)
+    while (i < MAX_ITEM_AMOUNT && RItemList[i].Number >= 0)
     {
         if (RItemList[i].Number == inum)
         {
+            int previousAmount = RItemList[i].Amount;
             RItemList[i].Amount += amount;
             if (RItemList[i].Amount < 0 && amount >= 0)
             {
@@ -731,6 +870,23 @@ void instruct_32(int inum, int amount)
             if (RItemList[i].Amount < 0 && amount < 0)
             {
                 RItemList[i].Amount = 0;
+            }
+            // Quest handovers must not leave an unowned weapon/armor granting
+            // bonuses. Only an actual last-unit removal changes these links;
+            // existing save inconsistencies and practice books stay untouched.
+            if (amount < 0 && previousAmount > 0 && RItemList[i].Amount == 0 && inum >= 0 && inum < static_cast<int>(std::size(Ritem)) && Ritem[inum].ItemType == 1)
+            {
+                for (auto& role : Rrole)
+                {
+                    for (auto& equipped : role.Equip)
+                    {
+                        if (equipped == inum)
+                        {
+                            equipped = -1;
+                        }
+                    }
+                }
+                Ritem[inum].User = -1;
             }
             break;
         }
@@ -762,13 +918,13 @@ void instruct_33(int rnum, int magicnum, int dismode)
             break;
         }
     }
-    if (dismode == 0)
+    if (dismode == 0 && !Headless())
     {
         DrawRectangle(screen, CENTER_X - 75, 98, 145, 76, 0, ColColor(255), 50);
         DrawShadowText("學會", CENTER_X - 70, 125, ColColor(0x05), ColColor(0x07));
         DrawBig5ShadowText(Rrole[rnum].Name, CENTER_X - 70, 100, ColColor(0x21), ColColor(0x23));
         DrawBig5ShadowText(Rmagic[magicnum].Name, CENTER_X - 70, 150, ColColor(0x64), ColColor(0x66));
-        UpdateScreen(screen, 0, 0, screen->w, screen->h);
+        UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
         WaitAnyKey();
         Redraw();
     }
@@ -788,7 +944,7 @@ void instruct_34(int rnum, int iq)
         DrawBig5ShadowText(Rrole[rnum].Name, CENTER_X - 70, 100, ColColor(0x21), ColColor(0x23));
         auto buf = std::format("{:3d}", iq);
         DrawEngShadowText(buf, CENTER_X + 30, 125, ColColor(0x64), ColColor(0x66));
-        UpdateScreen(screen, 0, 0, screen->w, screen->h);
+        UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
         WaitAnyKey();
         Redraw();
     }
@@ -871,6 +1027,7 @@ void instruct_40(int director)
 
 void instruct_41(int rnum, int inum, int amount)
 {
+    rules::growth::CheckPersonalItemWrite(rnum);
     int found = 0;
     for (int i = 0; i < 4; i++)
     {
@@ -929,6 +1086,12 @@ void instruct_44(int enum1, int beginpic1, int endpic1, int enum2, int beginpic2
     }
     SData[CurScene][3][DData[CurScene][enum1][10]][DData[CurScene][enum1][9]] = enum1;
     SData[CurScene][3][DData[CurScene][enum2][10]][DData[CurScene][enum2][9]] = enum2;
+    if (Headless())
+    {
+        DData[CurScene][enum1][5] = beginpic1 + (endpic1 - beginpic1 + 1);
+        DData[CurScene][enum2][5] = beginpic2 + (endpic1 - beginpic1 + 1);
+        return;
+    }
     for (int i = 0;; i++)
     {
         CheckBasicEvent();
@@ -937,7 +1100,7 @@ void instruct_44(int enum1, int beginpic1, int endpic1, int enum2, int beginpic2
         InitialScene(1);
         SDL_Delay(20);
         DrawScene();
-        UpdateScreen(screen, 0, 0, screen->w, screen->h);
+        UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
         if (i > endpic1 - beginpic1)
         {
             break;
@@ -950,6 +1113,14 @@ void instruct_44e(int enum1, int beginpic1, int endpic1, int enum2, int beginpic
     SData[CurScene][3][DData[CurScene][enum1][10]][DData[CurScene][enum1][9]] = enum1;
     SData[CurScene][3][DData[CurScene][enum2][10]][DData[CurScene][enum2][9]] = enum2;
     SData[CurScene][3][DData[CurScene][enum3][10]][DData[CurScene][enum3][9]] = enum3;
+    if (Headless())
+    {
+        int count = endpic1 - beginpic1 + 1;
+        DData[CurScene][enum1][5] = beginpic1 + count;
+        DData[CurScene][enum2][5] = beginpic2 + count;
+        DData[CurScene][enum3][5] = beginpic3 + count;
+        return;
+    }
     for (int i = 0;; i++)
     {
         CheckBasicEvent();
@@ -959,7 +1130,7 @@ void instruct_44e(int enum1, int beginpic1, int endpic1, int enum2, int beginpic
         InitialScene(1);
         SDL_Delay(20);
         DrawScene();
-        UpdateScreen(screen, 0, 0, screen->w, screen->h);
+        UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
         if (i > endpic1 - beginpic1)
         {
             break;
@@ -975,7 +1146,7 @@ void instruct_45(int rnum, int speed)
     DrawBig5ShadowText(Rrole[rnum].Name, CENTER_X - 70, 100, ColColor(0x21), ColColor(0x23));
     auto buf = std::format("{:4d}", speed);
     DrawEngShadowText(buf, CENTER_X + 20, 125, ColColor(0x64), ColColor(0x66));
-    UpdateScreen(screen, 0, 0, screen->w, screen->h);
+    UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
     WaitAnyKey();
     Redraw();
 }
@@ -989,7 +1160,7 @@ void instruct_46(int rnum, int mp)
     DrawBig5ShadowText(Rrole[rnum].Name, CENTER_X - 70, 100, ColColor(0x21), ColColor(0x23));
     auto buf = std::format("{:4d}", mp);
     DrawEngShadowText(buf, CENTER_X + 20, 125, ColColor(0x64), ColColor(0x66));
-    UpdateScreen(screen, 0, 0, screen->w, screen->h);
+    UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
     WaitAnyKey();
     Redraw();
 }
@@ -1002,7 +1173,7 @@ void instruct_47(int rnum, int Attack)
     DrawBig5ShadowText(Rrole[rnum].Name, CENTER_X - 70, 100, ColColor(0x21), ColColor(0x23));
     auto buf = std::format("{:4d}", Attack);
     DrawEngShadowText(buf, CENTER_X + 20, 125, ColColor(0x64), ColColor(0x66));
-    UpdateScreen(screen, 0, 0, screen->w, screen->h);
+    UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
     WaitAnyKey();
     Redraw();
 }
@@ -1016,7 +1187,7 @@ void instruct_48(int rnum, int hp)
     DrawBig5ShadowText(Rrole[rnum].Name, CENTER_X - 70, 100, ColColor(0x21), ColColor(0x23));
     auto buf = std::format("{:4d}", hp);
     DrawEngShadowText(buf, CENTER_X + 20, 125, ColColor(0x64), ColColor(0x66));
-    UpdateScreen(screen, 0, 0, screen->w, screen->h);
+    UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
     WaitAnyKey();
     Redraw();
 }
@@ -1025,7 +1196,7 @@ void instruct_49(int rnum, int MPpro) { Rrole[rnum].MPType = MPpro; }
 
 int instruct_50(std::vector<int> list)
 {
-    if (list[0] > 128 || MODVersion == 11)
+    if (mods::Active().instruction50UsesItemCheck(list[0]))
     {
         int p = 0;
         for (int i = 0; i < 5; i++)
@@ -1037,7 +1208,7 @@ int instruct_50(std::vector<int> list)
     return instruct_50e(list[0], list[1], list[2], list[3], list[4], list[5], list[6]);
 }
 
-void instruct_51() { instruct_1(SOFTSTAR_BEGIN_TALK + rand() % SOFTSTAR_NUM_TALK, 0x72, 0); }
+void instruct_51() { instruct_1(SOFTSTAR_BEGIN_TALK + GameRandom() % SOFTSTAR_NUM_TALK, 0x72, 0); }
 
 void instruct_52()
 {
@@ -1045,7 +1216,7 @@ void instruct_52()
     DrawShadowText("你的品德指數為：", CENTER_X - 105, 100, ColColor(0x05), ColColor(0x07));
     auto buf = std::format("{:3d}", Rrole[0].Ethics);
     DrawEngShadowText(buf, CENTER_X + 65, 100, ColColor(0x64), ColColor(0x66));
-    UpdateScreen(screen, 0, 0, screen->w, screen->h);
+    UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
     WaitAnyKey();
     Redraw();
 }
@@ -1056,7 +1227,7 @@ void instruct_53()
     DrawShadowText("你的聲望指數為：", CENTER_X - 105, 100, ColColor(0x05), ColColor(0x07));
     auto buf = std::format("{:3d}", Rrole[0].Repute);
     DrawEngShadowText(buf, CENTER_X + 65, 100, ColColor(0x64), ColColor(0x66));
-    UpdateScreen(screen, 0, 0, screen->w, screen->h);
+    UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
     WaitAnyKey();
     Redraw();
 }
@@ -1099,8 +1270,8 @@ void instruct_58()
     static const int headarray[30] = { 8, 21, 23, 31, 32, 43, 7, 11, 14, 20, 33, 34, 10, 12, 19, 22, 56, 68, 13, 55, 62, 67, 70, 71, 26, 57, 60, 64, 3, 69 };
     for (int i = 0; i < 15; i++)
     {
-        int p = rand() % 2;
-        instruct_1(2854 + i * 2 + p, headarray[i * 2 + p], rand() % 2 * 4 + rand() % 2);
+        int p = GameRandom() % 2;
+        instruct_1(2854 + i * 2 + p, headarray[i * 2 + p], GameRandom() % 2 * 4 + GameRandom() % 2);
         if (!Battle(102 + i * 2 + p, 0))
         {
             instruct_15();
@@ -1172,6 +1343,10 @@ void instruct_62(int enum1, int beginpic1, int endpic1, int enum2, int beginpic2
 
 void EndAmi()
 {
+    if (Headless())
+    {
+        return;
+    }
     instruct_14();
     Redraw();
     // 读取 end.txt 并逐行显示
@@ -1192,7 +1367,7 @@ void EndAmi()
             if (!line.empty())
             {
                 DrawShadowText(line, x, y, ColColor(0xFF), ColColor(0xFF));
-                UpdateScreen(screen, 0, 0, screen->w, screen->h);
+                UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
                 y += 25;
             }
             line.clear();
@@ -1220,14 +1395,14 @@ void instruct_63(int rnum, int sexual) { Rrole[rnum].Sexual = sexual; }
 
 void instruct_64()
 {
-    int shopnum = rand() % 5, amount = 0;
+    int shopnum = GameRandom() % 5, amount = 0;
     int list[5];
     std::string menuStr[5];
     for (int i = 0; i < 5; i++)
     {
         if (RShop[shopnum].Amount[i] > 0)
         {
-            auto buf = std::format("{:<20s}{:5d}", cp950toutf8(Ritem[RShop[shopnum].Item[i]].Name), RShop[shopnum].Price[i]);
+            auto buf = std::format("{:<20s}{:5d}", cp950toutf8(Ritem[RShop[shopnum].Item[i]].Name, sizeof(Ritem[RShop[shopnum].Item[i]].Name)), RShop[shopnum].Price[i]);
             menuStr[amount] = buf;
             list[amount] = i;
             amount++;
@@ -1262,6 +1437,7 @@ void instruct_66(int musicnum)
     StopMP3();
     PlayMP3(musicnum, -1);
 }
+
 void instruct_67(int Soundnum) { PlaySoundA(Soundnum, 0); }
 
 int e_GetValue(int bit, int t, int x)
@@ -1554,7 +1730,7 @@ int instruct_50e(int code, int e1, int e2, int e3, int e4, int e5, int e6)
             CurScene = e5;
             break;
         }
-        UpdateScreen(screen, 0, 0, screen->w, screen->h);
+        UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
     }
     break;
     case 26:
@@ -1686,7 +1862,7 @@ int instruct_50e(int code, int e1, int e2, int e3, int e4, int e5, int e6)
         {
             w = w1;
         }
-        UpdateScreen(screen, 0, 0, screen->w, screen->h);
+        UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
     }
     break;
     case 34:
@@ -1701,7 +1877,16 @@ int instruct_50e(int code, int e1, int e2, int e3, int e4, int e5, int e6)
     break;
     case 35:
     {
-        i = WaitAnyKey();
+        if (Headless())
+        {
+            static constexpr int keys[] = { SDLK_RETURN, SDLK_ESCAPE, SDLK_LEFT, SDLK_RIGHT, SDLK_UP, SDLK_DOWN, SDLK_Y, SDLK_N };
+            int selected = Frontend->choose("Script key input", { "Enter", "Escape", "Left", "Right", "Up", "Down", "Y", "N" });
+            i = selected < 0 ? SDLK_ESCAPE : keys[selected];
+        }
+        else
+        {
+            i = WaitAnyKey();
+        }
         x50[e1] = i;
         if (i == SDLK_LEFT)
         {
@@ -1778,8 +1963,8 @@ int instruct_50e(int code, int e1, int e2, int e3, int e4, int e5, int e6)
             p++;
         }
         DrawBig5ShadowText(p1, e3 + 3, e4 + 22 * i + 2, ColColor(e5 & 0xFF), ColColor((e5 & 0xFF00) << 8));
-        UpdateScreen(screen, 0, 0, screen->w, screen->h);
-        i = WaitAnyKey();
+        UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
+        i = Headless() ? (Frontend->choose("Script yes/no", { "No", "Yes" }) == 1 ? SDLK_RETURN : SDLK_ESCAPE) : WaitAnyKey();
         if (i == SDLK_Y || i == SDLK_RETURN || i == SDLK_SPACE)
         {
             x50[0x7000] = 0;
@@ -1793,13 +1978,16 @@ int instruct_50e(int code, int e1, int e2, int e3, int e4, int e5, int e6)
     case 37:
     {
         e2 = e_GetValue(0, e1, e2);
-        SDL_Delay(e2);
+        if (!Headless())
+        {
+            SDL_Delay(e2);
+        }
     }
     break;
     case 38:
     {
         e2 = e_GetValue(0, e1, e2);
-        x50[e3] = rand() % e2;
+        x50[e3] = GameRandom() % e2;
     }
     break;
     case 39:
@@ -1859,19 +2047,20 @@ int instruct_50e(int code, int e1, int e2, int e3, int e4, int e5, int e6)
         switch (e2)
         {
         case 0:
-            if (Where != 1 || (MODVersion == 22 && CurEvent == -1))
+            if (mods::Active().eventUsesWorldPictures(Where, CurEvent))
             {
                 DrawMPic(e5 / 2, e3, e4);
                 GetPicSize(e5 / 2, MIdx.data(), MPic.data(), w, h, x, y);
             }
             else
             {
-                DrawSPic(e5 / 2, e3, e4, 0, 0, screen->w, screen->h);
+                DrawSPic(e5 / 2, e3, e4, 0, 0, ScreenWidth(), ScreenHeight());
                 GetPicSize(e5 / 2, SIdx.data(), SPic.data(), w, h, x, y);
             }
             break;
         case 1:
             DrawHeadPic(e5, e3, e4);
+            EnsurePortraits();
             GetPicSize(e5 / 2, HIdx.data(), HPic.data(), w, h, x, y);
             break;
         case 2:
@@ -1881,7 +2070,7 @@ int instruct_50e(int code, int e1, int e2, int e3, int e4, int e5, int e6)
         }
         break;
         }
-        UpdateScreen(screen, 0, 0, screen->w, screen->h);
+        UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
     }
     break;
     case 42:
@@ -1918,7 +2107,7 @@ int instruct_50e(int code, int e1, int e2, int e3, int e4, int e5, int e6)
         {
             NewTalk(e3, e4, e5, e6 % 100, (e6 % 100) / 10, e6 / 100, 0);
         }
-        else if (e2 == 176 && MODVersion == 22)
+        else if (mods::Active().eventRequestsNumber(e2))
         {
             x50[10032] = EnterNumber(0, 32767, CENTER_X, CENTER_Y - 100);
             x50[0x7000] = 0;
@@ -1968,6 +2157,11 @@ int instruct_50e(int code, int e1, int e2, int e3, int e4, int e5, int e6)
         for (i = e1; i < e1 + e2; i++)
         {
             str += "x" + std::to_string(i) + "=" + std::to_string(x50[i]) + "\n";
+        }
+        if (Headless())
+        {
+            Frontend->text(str);
+            break;
         }
         if (FULLSCREEN == 0)
         {
@@ -2080,6 +2274,11 @@ std::string ReplaceStr(const std::string& S, const std::string& Srch, const std:
 
 void NewTalk(int headnum, int talknum, int namenum, int place, int showhead, int color, int frame, const std::string& content, const std::string& disname)
 {
+    if (Headless())
+    {
+        Frontend->text(content.empty() ? ReadTalk(talknum) : content, headnum);
+        return;
+    }
     const int RowSpacing = 25;
     const int ColSpacing = 20;
     const int MaxRow = 5;
@@ -2186,7 +2385,7 @@ void NewTalk(int headnum, int talknum, int namenum, int place, int showhead, int
             {
                 if (Rrole[i].HeadNum == HeadNumR || (i == 0 && HeadNumR == 0))
                 {
-                    NameStr = cp950toutf8(Rrole[i].Name, 20);
+                    NameStr = cp950toutf8(Rrole[i].Name, sizeof(Rrole[i].Name));
                     break;
                 }
             }
@@ -2202,7 +2401,7 @@ void NewTalk(int headnum, int talknum, int namenum, int place, int showhead, int
     }
 
     // 分析主角名字并替换
-    std::string FullNameStr = cp950toutf8(Rrole[0].Name, 20);
+    std::string FullNameStr = cp950toutf8(Rrole[0].Name, sizeof(Rrole[0].Name));
     if (TalkStr.find(FullNameCode) != std::string::npos)
     {
         std::string result;
@@ -2287,7 +2486,7 @@ void NewTalk(int headnum, int talknum, int namenum, int place, int showhead, int
             if (I + 1 < len && TalkStr.substr(I, 2) == WaitAnyKeyCode)
             {
                 I += 2;
-                WaitAnyKey();
+                WaitDialogueAdvance();
                 continue;
             }
             // 检查##延时
@@ -2307,7 +2506,7 @@ void NewTalk(int headnum, int talknum, int namenum, int place, int showhead, int
                 {
                     if (I < len)
                     {
-                        WaitAnyKey();
+                        WaitDialogueAdvance();
                     }
                     break;
                 }
@@ -2375,10 +2574,10 @@ void NewTalk(int headnum, int talknum, int namenum, int place, int showhead, int
                         UpdateAllScreen();
                         if (SkipTalk == 0)
                         {
-                            WaitAnyKey();
+                            WaitDialogueAdvance();
                             if (skipSync)
                             {
-                                WaitAnyKey();
+                                WaitDialogueAdvance();
                             }
                             skipSync = false;
                         }
@@ -2396,16 +2595,20 @@ void NewTalk(int headnum, int talknum, int namenum, int place, int showhead, int
     UpdateAllScreen();
     if (SkipTalk == 0)
     {
-        WaitAnyKey();
+        WaitDialogueAdvance();
         if (false)
         {
-            WaitAnyKey();    // skipSync is local, already handled
+            WaitDialogueAdvance();    // skipSync is local, already handled
         }
     }
 }
 
 int EnterNumber(int MinValue, int MaxValue, int x, int y, int Default)
 {
+    if (Headless())
+    {
+        return Frontend->number(MinValue, MaxValue, Default);
+    }
     CleanKeyValue();
     int Value = Default;
     if (MinValue < -32768)
@@ -2540,7 +2743,7 @@ int EnterNumber(int MinValue, int MaxValue, int x, int y, int Default)
             if (menu >= 0 && menu <= highButton)
             {
                 DrawRectangle(screen, Button[menu].x, Button[menu].y, Button[menu].w, Button[menu].h,
-                    ColColor(rand() % 20), ColColor(255), 50);
+                    ColColor(GameRandom() % 20), ColColor(255), 50);
             }
             for (int i = 0; i <= highButton; i++)
             {

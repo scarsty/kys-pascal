@@ -1,18 +1,25 @@
-﻿// kys_engine.cpp - 基础引擎实现
+﻿#include "kys_frontend.h"
+// kys_engine.cpp - 基础引擎实现
 // 对应 kys_engine.pas
 
 #define _USE_MATH_DEFINES
 
-#include "kys_engine.h"
 #include "PotConv.h"
 #include "SimpleCC.h"
 #include "filefunc.h"
 #include "kys_draw.h"
+#include "kys_engine.h"
 #include "kys_main.h"
+#include "kys_presenter.h"
 
 #include <SDL3/SDL.h>
 #include <SDL3_mixer/SDL_mixer.h>
 #include <SDL3_ttf/SDL_ttf.h>
+#ifdef __EMSCRIPTEN__
+#include "kys_web.h"
+#include <SDL3_image/SDL_image.h>
+#include <emscripten.h>
+#endif
 
 #include <algorithm>
 #include <cmath>
@@ -29,7 +36,7 @@ static SDL_Surface* CachedImage = nullptr;
 static std::string CachedImageName;
 static MIX_Mixer* gMixer = nullptr;
 static MIX_Track* MusicTrack = nullptr;
-static MIX_Track* SfxTracks[10] = {};
+static MIX_Track* SfxTracks[10] = { };
 static int SfxNextTrack = 0;
 
 // SimpleCC handles
@@ -39,6 +46,9 @@ static bool sccS2T_loaded = false;
 static bool sccT2S_loaded = false;
 
 static uint64_t tic_time = 0;
+#ifdef __EMSCRIPTEN__
+static TTF_Font* FullChineseFont = nullptr;
+#endif
 
 // ---- 内部辅助函数 ----
 
@@ -75,8 +85,46 @@ static uint32_t BlendRGBAByPercent(uint32_t src, uint32_t dst, int percent)
 
 // ---- 音频 ----
 
+#ifdef __EMSCRIPTEN__
+static MIX_Audio* LoadMusicAudio(int number)
+{
+    auto path = AppPath + "music/" + std::to_string(number) + ".mp3";
+    if (filefunc::fileExist(path))
+    {
+        return MIX_LoadAudio(nullptr, path.c_str(), false);
+    }
+    path = AppPath + "music/" + std::to_string(number) + ".mid";
+    if (!filefunc::fileExist(path))
+    {
+        return nullptr;
+    }
+    auto io = SDL_IOFromFile(path.c_str(), "rb");
+    if (!io)
+    {
+        return nullptr;
+    }
+    auto properties = SDL_CreateProperties();
+    SDL_SetPointerProperty(properties, MIX_PROP_AUDIO_LOAD_IOSTREAM_POINTER, io);
+    SDL_SetBooleanProperty(properties, MIX_PROP_AUDIO_LOAD_CLOSEIO_BOOLEAN, true);
+    SDL_SetStringProperty(properties, MIX_PROP_AUDIO_DECODER_STRING, "fluidsynth");
+    auto soundfont = checkFileName("music/mid.sf2");
+    SDL_SetStringProperty(properties, "SDL_mixer.decoder.fluidsynth.soundfont_path", soundfont.c_str());
+    auto synthProperties = SDL_CreateProperties();
+    SDL_SetNumberProperty(synthProperties, "synth.lock-memory", 0);
+    SDL_SetNumberProperty(properties, "SDL_mixer.decoder.fluidsynth.props", synthProperties);
+    auto audio = MIX_LoadAudioWithProperties(properties);
+    SDL_DestroyProperties(synthProperties);
+    SDL_DestroyProperties(properties);
+    return audio;
+}
+#endif
+
 void InitialMusic()
 {
+    if (Headless())
+    {
+        return;
+    }
     if (!MIX_Init())
     {
         return;
@@ -93,6 +141,7 @@ void InitialMusic()
     }
     SfxNextTrack = 0;
 
+#ifndef __EMSCRIPTEN__
     for (int i = 0; i < (int)Music.size(); i++)
     {
         if (Music[i])
@@ -196,10 +245,15 @@ void InitialMusic()
         fprintf(stderr, "[InitialMusic] loaded: Music=%d/%d  ESound=%d/%d  ASound=%d/%d  gMixer=%p\n",
             mc, (int)Music.size(), ec, (int)ESound.size(), ac, (int)ASound.size(), (void*)gMixer);
     }
+#endif
 }
 
 void ApplyAudioVolume()
 {
+    if (Headless())
+    {
+        return;
+    }
     if (MusicTrack)
     {
         MIX_SetTrackGain(MusicTrack, (float)VOLUME / 100.0f);
@@ -215,6 +269,10 @@ void ApplyAudioVolume()
 
 void PlayMP3(int MusicNum, int times, int frombeginning)
 {
+    if (Headless())
+    {
+        return;
+    }
     if (!gMixer)
     {
         return;
@@ -231,6 +289,18 @@ void PlayMP3(int MusicNum, int times, int frombeginning)
     {
         return;
     }
+#ifdef __EMSCRIPTEN__
+    if (!WebMusicReady(MusicNum))
+    {
+        WebDeferMusic(MusicNum, times, frombeginning);
+        return;
+    }
+    WebCancelMusic();
+    if (!Music[MusicNum])
+    {
+        Music[MusicNum] = LoadMusicAudio(MusicNum);
+    }
+#endif
     if (!Music[MusicNum])
     {
         return;
@@ -254,6 +324,10 @@ void PlayMP3(int MusicNum, int times, int frombeginning)
 
 void PlayMP3(const char* filename, int times)
 {
+    if (Headless())
+    {
+        return;
+    }
     if (!gMixer)
     {
         return;
@@ -285,6 +359,13 @@ void PlayMP3(const char* filename, int times)
 
 void StopMP3(int frombeginning)
 {
+#ifdef __EMSCRIPTEN__
+    WebCancelMusic();
+#endif
+    if (Headless())
+    {
+        return;
+    }
     if (MusicTrack)
     {
         MIX_StopTrack(MusicTrack, 0);
@@ -297,10 +378,21 @@ void StopMP3(int frombeginning)
 
 void PlaySound(int SoundNum, int times)
 {
+    if (Headless())
+    {
+        return;
+    }
     if (SoundNum < 0 || SoundNum >= (int)ESound.size())
     {
         return;
     }
+#ifdef __EMSCRIPTEN__
+    if (!ESound[SoundNum])
+    {
+        auto path = AppPath + std::format("sound/e{:02d}.wav", SoundNum);
+        ESound[SoundNum] = MIX_LoadAudio(nullptr, path.c_str(), false);
+    }
+#endif
     if (!ESound[SoundNum])
     {
         return;
@@ -315,20 +407,39 @@ void PlaySound(int SoundNum, int times)
 
 void PlaySound(int SoundNum)
 {
+    if (Headless())
+    {
+        return;
+    }
     PlaySound(SoundNum, 0);
 }
 
 void PlaySound(int SoundNum, int times, int x, int y, int z)
 {
+    if (Headless())
+    {
+        return;
+    }
     PlaySound(SoundNum, times);
 }
 
 void PlaySoundA(int SoundNum, int times)
 {
+    if (Headless())
+    {
+        return;
+    }
     if (SoundNum < 0 || SoundNum >= (int)ASound.size())
     {
         return;
     }
+#ifdef __EMSCRIPTEN__
+    if (!ASound[SoundNum])
+    {
+        auto path = AppPath + std::format("sound/atk{:02d}.wav", SoundNum);
+        ASound[SoundNum] = MIX_LoadAudio(nullptr, path.c_str(), false);
+    }
+#endif
     if (!ASound[SoundNum])
     {
         return;
@@ -374,21 +485,42 @@ void FreeFileBuffer(char*& p)
     p = nullptr;
 }
 
+template <class T>
+static void ReadBinaryVector(const std::string& path, std::vector<T>& data)
+{
+    FILE* file = fopen(path.c_str(), "rb");
+    if (!file)
+    {
+        data.clear();
+        return;
+    }
+    fseek(file, 0, SEEK_END);
+    long bytes = ftell(file);
+    rewind(file);
+    data.resize(bytes > 0 ? static_cast<size_t>(bytes) / sizeof(T) : 0);
+    data.resize(fread(data.data(), sizeof(T), data.size(), file));
+    fclose(file);
+}
+
 int LoadIdxGrp(const std::string& stridx, const std::string& strgrp,
     std::vector<int>& idxarray, std::vector<uint8_t>& grparray)
 {
-    filefunc::readFileToVector(stridx, idxarray);
+    ReadBinaryVector(stridx, idxarray);
     if (idxarray.empty())
     {
         return 0;
     }
-    filefunc::readFileToVector(strgrp, grparray);
+    ReadBinaryVector(strgrp, grparray);
     return (int)idxarray.size();
 }
 
 SDL_Surface* LoadSurfaceFromFile(const std::string& filename)
 {
+#ifdef __EMSCRIPTEN__
+    return IMG_Load(filename.c_str());
+#else
     return SDL_LoadSurface(filename.c_str());
+#endif
 }
 
 SDL_Surface* LoadSurfaceFromMem(const char* p, int len)
@@ -398,18 +530,30 @@ SDL_Surface* LoadSurfaceFromMem(const char* p, int len)
     {
         return nullptr;
     }
+#ifdef __EMSCRIPTEN__
+    SDL_Surface* s = IMG_Load_IO(io, true);
+#else
     SDL_Surface* s = SDL_LoadSurface_IO(io, true);
+#endif
     return s;
 }
 
 void FreeAllSurface()
 {
+    Presentation::shutdown();
+#ifdef __EMSCRIPTEN__
+    if (FullChineseFont)
+    {
+        TTF_CloseFont(FullChineseFont);
+        FullChineseFont = nullptr;
+    }
+#endif
     // 释放所有PNG tile surfaces
     for (auto& s : MPNGTile)
     {
         if (s)
         {
-            SDL_DestroySurface(s);
+            Presentation::destroy(s);
         }
     }
     MPNGTile.clear();
@@ -417,7 +561,7 @@ void FreeAllSurface()
     {
         if (s)
         {
-            SDL_DestroySurface(s);
+            Presentation::destroy(s);
         }
     }
     SPNGTile.clear();
@@ -425,7 +569,7 @@ void FreeAllSurface()
     {
         if (s)
         {
-            SDL_DestroySurface(s);
+            Presentation::destroy(s);
         }
     }
     BPNGTile.clear();
@@ -433,7 +577,7 @@ void FreeAllSurface()
     {
         if (s)
         {
-            SDL_DestroySurface(s);
+            Presentation::destroy(s);
         }
     }
     EPNGTile.clear();
@@ -441,7 +585,7 @@ void FreeAllSurface()
     {
         if (s)
         {
-            SDL_DestroySurface(s);
+            Presentation::destroy(s);
         }
     }
     CPNGTile.clear();
@@ -449,7 +593,7 @@ void FreeAllSurface()
     {
         if (s)
         {
-            SDL_DestroySurface(s);
+            Presentation::destroy(s);
         }
     }
     HeadSurface.clear();
@@ -457,7 +601,7 @@ void FreeAllSurface()
     {
         if (s)
         {
-            SDL_DestroySurface(s);
+            Presentation::destroy(s);
         }
     }
     ItemSurface.clear();
@@ -465,23 +609,43 @@ void FreeAllSurface()
 
 void ReadTiles()
 {
+    if (Headless())
+    {
+        return;
+    }
     std::string path = AppPath;
+#ifdef __EMSCRIPTEN__
+    ReadBinaryVector(path + "resource/mmap.idx", MIdx);
+    ReadBinaryVector(path + "resource/sdx", SIdx);
+    ReadBinaryVector(path + "resource/wdx", WIdx);
+    MPicAmount = (int)MIdx.size();
+    SPicAmount = (int)SIdx.size();
+    BPicAmount = (int)WIdx.size();
+#else
     LoadIdxGrp(path + "resource/mmap.idx", path + "resource/mmap.grp", MIdx, MPic);
     MPicAmount = (int)MIdx.size();
     LoadIdxGrp(path + "resource/sdx", path + "resource/smp", SIdx, SPic);
     SPicAmount = (int)SIdx.size();
     LoadIdxGrp(path + "resource/wdx", path + "resource/wmp", WIdx, WPic);
     BPicAmount = (int)WIdx.size();
+#endif
+#ifndef __EMSCRIPTEN__
     LoadIdxGrp(path + "resource/eft.idx", path + "resource/eft.grp", EIdx, EPic);
     EPicAmount = (int)EIdx.size();
     LoadIdxGrp(path + "resource/cloud.idx", path + "resource/cloud.grp", CIdx, CPic);
     CPicAmount = (int)CIdx.size();
     LoadIdxGrp(path + "resource/hdgrp.idx", path + "resource/hdgrp.grp", HIdx, HPic);
     HPicAmount = (int)HIdx.size();
-    LoadIdxGrp(path + "resource/title.idx", path + "resource/title.grp", TitleIdx, TitlePic);
     LoadIdxGrp(path + "resource/talk.idx", path + "resource/talk.grp", TIdx, TDef);
     LoadIdxGrp(path + "resource/kdef.idx", path + "resource/kdef.grp", KIdx, KDef);
+#else
+    ReadBinaryVector(path + "resource/cloud.idx", CIdx);
+    CPicAmount = static_cast<int>(CIdx.size());
+#endif
+    LoadIdxGrp(path + "resource/title.idx", path + "resource/title.grp", TitleIdx, TitlePic);
 
+    // Browser builds load each fighter when the battle needs it.
+#ifndef __EMSCRIPTEN__
     // 战斗图
     for (int i = 0; i < 1000; i++)
     {
@@ -491,6 +655,75 @@ void ReadTiles()
         {
             LoadIdxGrp(fidx, fgrp, FIdx[i], FPic[i]);
         }
+    }
+#endif
+}
+
+void EnsureMapTiles(MapTiles tiles)
+{
+#ifdef __EMSCRIPTEN__
+    switch (tiles)
+    {
+    case MapTiles::World:
+        if (MPic.empty())
+        {
+            WebLoading("正在准备大地图…");
+            ReadBinaryVector(AppPath + "resource/mmap.grp", MPic);
+            LoadIdxGrp(AppPath + "resource/cloud.idx", AppPath + "resource/cloud.grp", CIdx, CPic);
+        }
+        break;
+    case MapTiles::Scene:
+        if (SPic.empty())
+        {
+            WebLoading("正在准备场景…");
+            ReadBinaryVector(AppPath + "resource/smp", SPic);
+        }
+        break;
+    case MapTiles::Battle:
+        if (WPic.empty())
+        {
+            WebLoading("正在准备战斗…");
+            ReadBinaryVector(AppPath + "resource/wmp", WPic);
+        }
+        break;
+    }
+#endif
+}
+
+void EnsurePortraits()
+{
+#ifdef __EMSCRIPTEN__
+    if (HPic.empty())
+    {
+        HPicAmount = LoadIdxGrp(AppPath + "resource/hdgrp.idx", AppPath + "resource/hdgrp.grp", HIdx, HPic);
+    }
+#endif
+}
+
+void EnsureEffects()
+{
+#ifdef __EMSCRIPTEN__
+    if (EPic.empty())
+    {
+        EPicAmount = LoadIdxGrp(AppPath + "resource/eft.idx", AppPath + "resource/eft.grp", EIdx, EPic);
+    }
+#endif
+}
+
+void InitialFonts()
+{
+    if (ChineseFont)
+    {
+        return;
+    }
+    ChineseFont = TTF_OpenFont(checkFileName(CHINESE_FONT).c_str(), CHINESE_FONT_SIZE);
+    EnglishFont = TTF_OpenFont(checkFileName(ENGLISH_FONT).c_str(), ENGLISH_FONT_SIZE);
+    SDL_Color white = { 255, 255, 255, 255 };
+    SDL_Surface* text = TTF_RenderText_Solid(ChineseFont, " ", 1, white);
+    if (text)
+    {
+        CHNFONT_SPACEWIDTH = text->w;
+        Presentation::destroy(text);
     }
 }
 
@@ -512,6 +745,10 @@ uint32_t GetPixel(SDL_Surface* surface, int x, int y)
 
 void PutPixel(SDL_Surface* surface, int x, int y, uint32_t pixel)
 {
+    if (Headless())
+    {
+        return;
+    }
     if (!surface)
     {
         return;
@@ -521,11 +758,16 @@ void PutPixel(SDL_Surface* surface, int x, int y, uint32_t pixel)
         return;
     }
     uint32_t* pixels = (uint32_t*)surface->pixels;
+    Presentation::pixel(surface, x, y, pixel);
     pixels[y * (surface->pitch / 4) + x] = pixel;
 }
 
 void display_img(const char* file_name, int x, int y)
 {
+    if (Headless())
+    {
+        return;
+    }
     std::string name(file_name);
     SDL_Surface* img = nullptr;
     if (name == CachedImageName && CachedImage)
@@ -536,10 +778,10 @@ void display_img(const char* file_name, int x, int y)
     {
         if (CachedImage)
         {
-            SDL_DestroySurface(CachedImage);
+            Presentation::destroy(CachedImage);
         }
         std::string fullpath = checkFileName(name);
-        img = SDL_LoadSurface(fullpath.c_str());
+        img = LoadSurfaceFromFile(fullpath);
         CachedImage = img;
         CachedImageName = name;
     }
@@ -556,11 +798,15 @@ void display_img(const char* file_name, int x, int y)
         y = CENTER_Y - img->h / 2;
     }
     SDL_Rect dst = { x, y, img->w, img->h };
-    SDL_BlitSurface(img, nullptr, screen, &dst);
+    Presentation::blit(img, nullptr, screen, &dst);
 }
 
 uint32_t ColColor(uint8_t num)
 {
+    if (Headless())
+    {
+        return 0;
+    }
     if (num * 3 + 2 >= 768)
     {
         return 0;
@@ -573,6 +819,10 @@ uint32_t ColColor(uint8_t num)
 void DrawRectangle(SDL_Surface* sur, int x, int y, int w, int h,
     int colorin, uint32_t colorframe, int alpha)
 {
+    if (Headless())
+    {
+        return;
+    }
     if (!sur)
     {
         return;
@@ -590,7 +840,7 @@ void DrawRectangle(SDL_Surface* sur, int x, int y, int w, int h,
     SDL_GetRGB(colorframe, SDL_GetPixelFormatDetails(tempscr->format),
         SDL_GetSurfacePalette(tempscr), &r1, &g1, &b1);
 
-    SDL_FillSurfaceRect(tempscr, nullptr,
+    Presentation::fill(tempscr, nullptr,
         SDL_MapSurfaceRGBA(tempscr, r, g, b, (uint8_t)(alpha * 255 / 100)));
 
     for (int i1 = 0; i1 <= w; i1++)
@@ -618,13 +868,17 @@ void DrawRectangle(SDL_Surface* sur, int x, int y, int w, int h,
     }
 
     SDL_Rect dst = { x, y, 0, 0 };
-    SDL_BlitSurface(tempscr, nullptr, sur, &dst);
-    SDL_DestroySurface(tempscr);
+    Presentation::blit(tempscr, nullptr, sur, &dst);
+    Presentation::destroy(tempscr);
 }
 
 void DrawRectangleWithoutFrame(SDL_Surface* sur, int x, int y, int w, int h,
     uint32_t colorin, int alpha)
 {
+    if (Headless())
+    {
+        return;
+    }
     if (!sur)
     {
         return;
@@ -635,18 +889,18 @@ void DrawRectangleWithoutFrame(SDL_Surface* sur, int x, int y, int w, int h,
     {
         return;
     }
-    SDL_FillSurfaceRect(temp, nullptr, colorin | 0xFF000000);
+    Presentation::fill(temp, nullptr, colorin | 0xFF000000);
     SDL_SetSurfaceAlphaMod(temp, (uint8_t)(alpha * 255 / 100));
     SDL_Rect dst = { x, y, 0, 0 };
-    SDL_BlitSurface(temp, nullptr, sur, &dst);
-    SDL_DestroySurface(temp);
+    Presentation::blit(temp, nullptr, sur, &dst);
+    Presentation::destroy(temp);
 }
 
 // ---- RLE8绘图 ----
 
 bool JudgeInScreen(int px, int py, int w, int h, int xs, int ys)
 {
-    return (px + w > 0 && px - xs < screen->w && py + h > 0 && py - ys < screen->h);
+    return (px + w > 0 && px - xs < ScreenWidth() && py + h > 0 && py - ys < ScreenHeight());
 }
 
 bool JudgeInScreen(int px, int py, int w, int h, int xs, int ys,
@@ -661,6 +915,10 @@ void DrawRLE8Pic(const char* colorPanel, int num, int px, int py,
     const char* RectArea, SDL_Surface* Image,
     int widthI, int heightI, int sizeI, int shadow)
 {
+    if (Headless())
+    {
+        return;
+    }
     DrawRLE8Pic(colorPanel, num, px, py, Pidx, Ppic, RectArea, Image,
         widthI, heightI, sizeI, shadow, 0);
 }
@@ -672,6 +930,10 @@ void DrawRLE8Pic(const char* colorPanel, int num, int px, int py,
     int widthI, int heightI, int sizeI,
     int shadow, int alpha)
 {
+    if (Headless())
+    {
+        return;
+    }
     DrawRLE8Pic(colorPanel, num, px, py, Pidx, Ppic, RectArea, Image,
         widthI, heightI, sizeI, shadow, alpha,
         nullptr, nullptr, 0, 0, 0, 0, 0, 0, 0);
@@ -701,6 +963,10 @@ void DrawRLE8Pic(const char* colorPanel, int num, int px, int py,
     int widthW, int heightW, int sizeW,
     int depth, uint32_t mixColor, int mixAlpha, int totalpix)
 {
+    if (Headless())
+    {
+        return;
+    }
     if (!Pidx || !Ppic)
     {
         return;
@@ -943,11 +1209,19 @@ std::string cp950toutf8(const char* str, int len)
         return "";
     }
     int slen = (len < 0) ? (int)strlen(str) : len;
+    if (len >= 0)
+    {
+        const char* end = static_cast<const char*>(memchr(str, '\0', slen));
+        if (end)
+        {
+            slen = static_cast<int>(end - str);
+        }
+    }
     if (slen == 0)
     {
         return "";
     }
-    return PotConv::cp950toutf8(std::string(str));    //这里暂时不处理len参数了，后续如果有需要再加上
+    return PotConv::cp950toutf8(std::string(str, slen));
 }
 
 std::string utf8tocp950(const std::string& str)
@@ -960,6 +1234,22 @@ std::string utf8tocp950(const std::string& str)
 }
 
 // ---- 文字绘制 ----
+
+static TTF_Font* ChineseGlyphFont(uint32_t codepoint)
+{
+#ifdef __EMSCRIPTEN__
+    // A BOM in the opening text has no visible glyph in either font.
+    if (codepoint != 0xFEFF && !TTF_FontHasGlyph(ChineseFont, codepoint))
+    {
+        if (!FullChineseFont)
+        {
+            FullChineseFont = TTF_OpenFont(checkFileName("resource/chinese-full.ttf").c_str(), CHINESE_FONT_SIZE);
+        }
+        return FullChineseFont;
+    }
+#endif
+    return ChineseFont;
+}
 
 int utf8follow(char c1)
 {
@@ -985,11 +1275,16 @@ int utf8follow(char c1)
 
 void DrawText(const std::string& word, int x_pos, int y_pos, uint32_t color)
 {
+    if (Headless())
+    {
+        return;
+    }
     SDL_Surface* sur = screen;
     if (!sur || word.empty())
     {
         return;
     }
+    InitialFonts();
     if (!ChineseFont)
     {
         return;
@@ -1034,6 +1329,8 @@ void DrawText(const std::string& word, int x_pos, int y_pos, uint32_t color)
                 SDL_Rect dst;
                 dst.x = x_pos;
                 dst.y = y_pos + 2;
+                char bytes[2] = { text[i], 0 };
+                Presentation::glyph(EnglishFont, bytes, dst.x, dst.y, { r, g, b, 255 });
                 SDL_BlitSurface(glyph, nullptr, sur, &dst);
             }
             x_pos += 10;
@@ -1048,7 +1345,8 @@ void DrawText(const std::string& word, int x_pos, int y_pos, uint32_t color)
             {
                 SDL_Color white = { 255, 255, 255, 255 };
                 char buf[3] = { text[i], text[i + 1], 0 };
-                SDL_Surface* glyph = TTF_RenderText_Blended(ChineseFont, buf, 2, white);
+                uint32_t codepoint = ((c & 31) << 6) | ((uint8_t)text[i + 1] & 63);
+                SDL_Surface* glyph = TTF_RenderText_Blended(ChineseGlyphFont(codepoint), buf, 2, white);
                 if (glyph)
                 {
                     fonts[k] = glyph;
@@ -1064,6 +1362,9 @@ void DrawText(const std::string& word, int x_pos, int y_pos, uint32_t color)
                 SDL_Rect dst;
                 dst.x = x_pos;
                 dst.y = y_pos;
+                char bytes[3] = { text[i], text[i + 1], 0 };
+                uint32_t codepoint = ((c & 31) << 6) | ((uint8_t)text[i + 1] & 63);
+                Presentation::glyph(ChineseGlyphFont(codepoint), bytes, dst.x, dst.y, { r, g, b, 255 });
                 SDL_BlitSurface(glyph, nullptr, sur, &dst);
             }
             x_pos += 10;
@@ -1078,7 +1379,8 @@ void DrawText(const std::string& word, int x_pos, int y_pos, uint32_t color)
             {
                 SDL_Color white = { 255, 255, 255, 255 };
                 char buf[4] = { text[i], text[i + 1], text[i + 2], 0 };
-                SDL_Surface* glyph = TTF_RenderText_Blended(ChineseFont, buf, 3, white);
+                uint32_t codepoint = ((c & 15) << 12) | (((uint8_t)text[i + 1] & 63) << 6) | ((uint8_t)text[i + 2] & 63);
+                SDL_Surface* glyph = TTF_RenderText_Blended(ChineseGlyphFont(codepoint), buf, 3, white);
                 if (glyph)
                 {
                     fonts[k] = glyph;
@@ -1094,6 +1396,9 @@ void DrawText(const std::string& word, int x_pos, int y_pos, uint32_t color)
                 SDL_Rect dst;
                 dst.x = x_pos;
                 dst.y = y_pos;
+                char bytes[4] = { text[i], text[i + 1], text[i + 2], 0 };
+                uint32_t codepoint = ((c & 15) << 12) | (((uint8_t)text[i + 1] & 63) << 6) | ((uint8_t)text[i + 2] & 63);
+                Presentation::glyph(ChineseGlyphFont(codepoint), bytes, dst.x, dst.y, { r, g, b, 255 });
                 SDL_BlitSurface(glyph, nullptr, sur, &dst);
             }
             x_pos += 20;
@@ -1110,28 +1415,50 @@ void DrawText(const std::string& word, int x_pos, int y_pos, uint32_t color)
 
 void DrawEngText(const std::string& word, int x_pos, int y_pos, uint32_t color)
 {
+    if (Headless())
+    {
+        return;
+    }
     DrawText(word, x_pos, y_pos + 2, color);
 }
 
 void DrawShadowText(const std::string& word, int x_pos, int y_pos, uint32_t color1, uint32_t color2)
 {
+    if (Headless())
+    {
+        Frontend->text(word);
+        return;
+    }
     DrawText(word, x_pos + 1, y_pos, color2);
     DrawText(word, x_pos, y_pos, color1);
 }
 
 void DrawEngShadowText(const std::string& word, int x_pos, int y_pos, uint32_t color1, uint32_t color2)
 {
+    if (Headless())
+    {
+        return;
+    }
     DrawShadowText(word, x_pos, y_pos, color1, color2);
 }
 
 void DrawBig5Text(const char* str, int x_pos, int y_pos, uint32_t color)
 {
+    if (Headless())
+    {
+        return;
+    }
     std::string utf8 = cp950toutf8(str);
     DrawText(utf8, x_pos, y_pos, color);
 }
 
 void DrawBig5ShadowText(const char* word, int x_pos, int y_pos, uint32_t color1, uint32_t color2)
 {
+    if (Headless())
+    {
+        Frontend->text(cp950toutf8(word));
+        return;
+    }
     std::string utf8 = cp950toutf8(word);
     DrawText(utf8, x_pos + 1, y_pos, color2);
     DrawText(utf8, x_pos, y_pos, color1);
@@ -1139,6 +1466,12 @@ void DrawBig5ShadowText(const char* word, int x_pos, int y_pos, uint32_t color1,
 
 void DrawTextWithRect(const std::string& word, int x, int y, int w, uint32_t color1, uint32_t color2)
 {
+    if (Headless())
+    {
+        Frontend->context(word);
+        Frontend->text(word);
+        return;
+    }
     if (w < 0)
     {
         w = DrawLength(word) * 10 + 7;
@@ -1150,6 +1483,10 @@ void DrawTextWithRect(const std::string& word, int x, int y, int w, uint32_t col
 
 void DrawTextWithRectNoUpdate(const std::string& word, int x, int y, int w, uint32_t color1, uint32_t color2)
 {
+    if (Headless())
+    {
+        return;
+    }
     if (w < 0)
     {
         w = DrawLength(word) * 10 + 7;
@@ -1160,8 +1497,20 @@ void DrawTextWithRectNoUpdate(const std::string& word, int x, int y, int w, uint
 
 // ---- 屏幕管理 ----
 
+void ApplyRenderScale()
+{
+    if (screenTex)
+    {
+        SDL_SetTextureScaleMode(screenTex, SMOOTH == 0 ? SDL_SCALEMODE_NEAREST : SDL_SCALEMODE_LINEAR);
+    }
+}
+
 void UpdateScreen(SDL_Surface* scr1, int x, int y, int w, int h)
 {
+    if (Headless())
+    {
+        return;
+    }
     if (!render || !scr1)
     {
         return;
@@ -1179,15 +1528,28 @@ void UpdateScreen(SDL_Surface* scr1, int x, int y, int w, int h)
 
     if (scr1 == screen)
     {
+#ifdef __EMSCRIPTEN__
+        WebPollMusic();
+#endif
         void* p = (void*)((uintptr_t)screen->pixels + y * screen->pitch + x * 4);
         SDL_UpdateTexture(screenTex, &dest, p, screen->pitch);
-        SDL_RenderTexture(render, screenTex, nullptr, nullptr);
+        if (!Presentation::present(render))
+        {
+            SDL_RenderTexture(render, screenTex, nullptr, nullptr);
+        }
         SDL_RenderPresent(render);
+#ifdef __EMSCRIPTEN__
+        EM_ASM({ Module.gamePresented(); });
+#endif
     }
 }
 
 void UpdateAllScreen()
 {
+    if (Headless())
+    {
+        return;
+    }
     if (screen)
     {
         UpdateScreen(screen, 0, 0, CENTER_X * 2, CENTER_Y * 2);
@@ -1196,6 +1558,10 @@ void UpdateAllScreen()
 
 void TransBlackScreen()
 {
+    if (Headless())
+    {
+        return;
+    }
     DrawRectangleWithoutFrame(screen, 0, 0, CENTER_X * 2, CENTER_Y * 2, 0, 50);
 }
 
@@ -1224,14 +1590,21 @@ void SDL_GetMouseState2(int& x, int& y)
 {
     float fx, fy;
     SDL_GetMouseState(&fx, &fy);
-    x = (int)(fx * screen->w / RESOLUTIONX + 0.5f);
-    y = (int)(fy * screen->h / RESOLUTIONY + 0.5f);
+    x = (int)(fx * ScreenWidth() / RESOLUTIONX + 0.5f);
+    y = (int)(fy * ScreenHeight() / RESOLUTIONY + 0.5f);
 }
 
 void GetMousePosition(int& x, int& y, int x0, int y0, int yp)
 {
-    int x1, y1;
-    SDL_GetMouseState2(x1, y1);
+    float px, py;
+    SDL_GetMouseState(&px, &py);
+    GetMapPositionFromScreen(x, y, px, py, x0, y0, yp);
+}
+
+void GetMapPositionFromScreen(int& x, int& y, float px, float py, int x0, int y0, int yp)
+{
+    int x1 = (int)(px * ScreenWidth() / RESOLUTIONX + 0.5f);
+    int y1 = (int)(py * ScreenHeight() / RESOLUTIONY + 0.5f);
     x = (-x1 + CENTER_X + 2 * (y1 + yp) - 2 * CENTER_Y + 18) / 36 + x0;
     y = (x1 - CENTER_X + 2 * (y1 + yp) - 2 * CENTER_Y + 18) / 36 + y0;
 }
@@ -1277,10 +1650,14 @@ uint32_t inVirtualKey(int x, int y, uint32_t& key)
 
     // Tab区域1: 右下角 200x200（与Pascal版一致）
     if (InRegion(x, y, CENTER_X * 2 - 200, CENTER_Y * 2 - 200, 200, 200))
+    {
         result = SDLK_TAB;
+    }
     // Tab区域2: 十字键左侧+下方大区域
     if (InRegion(x, y, 0, crossY, keySize * 2 + crossX, CENTER_Y * 2 - crossY))
+    {
         result = SDLK_TAB;
+    }
     // Up button
     if (InRegion(x, y, crossX, crossY, keySize, keySize))
     {
@@ -1334,6 +1711,10 @@ bool EventFilter(void* p, SDL_Event* e)
 
 uint32_t CheckBasicEvent()
 {
+    if (Headless())
+    {
+        return 0;
+    }
     // 刷掉无用事件
     SDL_FlushEvent(SDL_EVENT_MOUSE_WHEEL);
     SDL_FlushEvent(SDL_EVENT_JOYSTICK_AXIS_MOTION);
@@ -1533,19 +1914,20 @@ void QuitConfirm()
         return;
     }
     AskingQuit = true;
-    SDL_Surface* tempscr = SDL_ConvertSurface(screen, screen->format);
-    SDL_BlitSurface(tempscr, nullptr, screen, nullptr);
-    DrawRectangleWithoutFrame(screen, 0, 0, screen->w, screen->h, 0, 50);
-    UpdateScreen(screen, 0, 0, screen->w, screen->h);
+    SDL_Surface* tempscr = SDL_CreateSurface(screen->w, screen->h, screen->format);
+    Presentation::blit(screen, nullptr, tempscr, nullptr);
+    Presentation::blit(tempscr, nullptr, screen, nullptr);
+    DrawRectangleWithoutFrame(screen, 0, 0, ScreenWidth(), ScreenHeight(), 0, 50);
+    UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
     std::string menuStr[2] = { "取消", "確認" };
     if (CommonMenu(CENTER_X * 2 - 50, 2, 45, 1, menuStr) == 1)
     {
         Quit();
     }
     Redraw();
-    SDL_BlitSurface(tempscr, nullptr, screen, nullptr);
-    UpdateScreen(screen, 0, 0, screen->w, screen->h);
-    SDL_DestroySurface(tempscr);
+    Presentation::blit(tempscr, nullptr, screen, nullptr);
+    UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
+    Presentation::destroy(tempscr);
     AskingQuit = false;
 }
 
@@ -1556,19 +1938,39 @@ int AngleToDirection(double y, double x)
     const double angleregion = M_PI / 4;
     int result = 0;
     if (fabs(angle + M_PI / 8) < angleregion)
+    {
         result = SDLK_RIGHT;
+    }
     if (fabs(angle - M_PI * 3 / 8) < angleregion)
+    {
         result = SDLK_UP;
+    }
     if (fabs(angle - M_PI * 7 / 8) < angleregion || angle < -M_PI * 7 / 8)
+    {
         result = SDLK_LEFT;
+    }
     if (fabs(angle + M_PI * 5 / 8) < angleregion)
+    {
         result = SDLK_DOWN;
+    }
     if (ScreenRotate == 1)
     {
-        if      (result == SDLK_UP)    result = SDLK_LEFT;
-        else if (result == SDLK_DOWN)  result = SDLK_RIGHT;
-        else if (result == SDLK_LEFT)  result = SDLK_DOWN;
-        else if (result == SDLK_RIGHT) result = SDLK_UP;
+        if (result == SDLK_UP)
+        {
+            result = SDLK_LEFT;
+        }
+        else if (result == SDLK_DOWN)
+        {
+            result = SDLK_RIGHT;
+        }
+        else if (result == SDLK_LEFT)
+        {
+            result = SDLK_DOWN;
+        }
+        else if (result == SDLK_RIGHT)
+        {
+            result = SDLK_UP;
+        }
     }
     return result;
 }
@@ -1657,6 +2059,10 @@ void QuickSortB(TBuildInfo* a, int l, int r)
 
 void ChangeCol()
 {
+    if (Headless())
+    {
+        return;
+    }
     uint32_t now = SDL_GetTicks();
     if (NIGHT_EFFECT == 1)
     {
@@ -1735,10 +2141,10 @@ void kyslog(const char* fmt, ...)
 {
     va_list args;
     va_start(args, fmt);
-    vprintf(fmt, args);
+    vfprintf(stderr, fmt, args);
     va_end(args);
-    printf("\n");
-    fflush(stdout);
+    fprintf(stderr, "\n");
+    fflush(stderr);
 }
 
 std::string checkFileName(const std::string& f)

@@ -1,4 +1,5 @@
-﻿// kys_battle.cpp - 战斗系统实现
+﻿#include "kys_frontend.h"
+// kys_battle.cpp - 战斗系统实现
 // 对应 kys_battle.pas
 
 #include "kys_battle.h"
@@ -6,6 +7,8 @@
 #include "kys_engine.h"
 #include "kys_event.h"
 #include "kys_main.h"
+#include "kys_rules.h"
+#include "mods/mod.h"
 #include "kys_type.h"
 
 #include <SDL3/SDL.h>
@@ -32,6 +35,10 @@ static int maxdelaypicnum;
 
 bool Battle(int battlenum, int getexp)
 {
+    if (Headless())
+    {
+        return Frontend->battle(battlenum, getexp);
+    }
     BattleResult = 0;
     CurrentBattle = battlenum;
     BattleRound = 1;
@@ -113,7 +120,7 @@ bool Battle(int battlenum, int getexp)
         CheckLevelUp();
         CheckBook();
     }
-    UpdateScreen(screen, 0, 0, screen->w, screen->h);
+    UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
 
     if (SEMIREAL == 1)
     {
@@ -209,7 +216,7 @@ void InitialBRole(int i, int rnum, int team, int x, int y)
     Brole[i].ExpGot = 0;
     Brole[i].Auto = 0;
     Brole[i].RealSpeed = 0;
-    Brole[i].RealProgress = rand() % 7000;
+    Brole[i].RealProgress = GameRandom() % 7000;
 }
 
 int SelectTeamMembers()
@@ -220,7 +227,7 @@ int SelectTeamMembers()
     {
         if (TeamList[i] >= 0)
         {
-            menuStr[i + 1] = cp950toutf8(Rrole[TeamList[i]].Name);
+            menuStr[i + 1] = cp950toutf8(Rrole[TeamList[i]].Name, sizeof(Rrole[TeamList[i]].Name));
             max++;
         }
     }
@@ -302,8 +309,8 @@ int SelectTeamMembers()
         }
         if (event.type == SDL_EVENT_MOUSE_BUTTON_UP)
         {
-            float mx = event.button.x / (RESOLUTIONX / (float)screen->w);
-            float my = event.button.y / (RESOLUTIONY / (float)screen->h);
+            float mx = event.button.x / (RESOLUTIONX / (float)ScreenWidth());
+            float my = event.button.y / (RESOLUTIONY / (float)ScreenHeight());
             if (mx >= CENTER_X - 75 && mx < CENTER_X + 75 && my >= 150 && my < max * 22 + 178)
             {
                 if (event.button.button == SDL_BUTTON_LEFT && menu != max)
@@ -330,8 +337,8 @@ int SelectTeamMembers()
         }
         if (event.type == SDL_EVENT_MOUSE_MOTION)
         {
-            float mx = event.motion.x / (RESOLUTIONX / (float)screen->w);
-            float my = event.motion.y / (RESOLUTIONY / (float)screen->h);
+            float mx = event.motion.x / (RESOLUTIONX / (float)ScreenWidth());
+            float my = event.motion.y / (RESOLUTIONY / (float)ScreenHeight());
             if (mx >= CENTER_X - 75 && mx < CENTER_X + 75 && my >= 150 && my < max * 22 + 178)
             {
                 int menup = menu;
@@ -370,7 +377,7 @@ void BattleMainControl()
         if (SEMIREAL == 1)
         {
             DrawBField(0);
-            RecordFreshScreen(0, 0, screen->w, screen->h);
+            RecordFreshScreen(0, 0, ScreenWidth(), ScreenHeight());
             DrawProgress();
             int act = 0;
             while (SDL_PollEvent(&event) || true)
@@ -389,9 +396,9 @@ void BattleMainControl()
                 {
                     break;
                 }
-                LoadFreshScreen(0, 0, screen->w, screen->h);
+                LoadFreshScreen(0, 0, ScreenWidth(), ScreenHeight());
                 DrawProgress();
-                UpdateScreen(screen, 0, 0, screen->w, screen->h);
+                UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
                 SDL_Delay(delaytime);
                 CheckBasicEvent();
             }
@@ -401,7 +408,7 @@ void BattleMainControl()
             i = 0;
         }
 
-        TBattleRole tempBrole = {};
+        TBattleRole tempBrole = { };
         while (i < BRoleAmount && BattleResult == 0)
         {
             while (SDL_PollEvent(&event) || true)
@@ -441,9 +448,9 @@ void BattleMainControl()
                     case 7: MenuStatus(); break;
                     case 8: Rest(i); break;
                     case 9:
-                        if (MODVersion == 51)
+                        if (int specialEvent = mods::Active().battleSpecialEvent(); specialEvent >= 0)
                         {
-                            CallEvent(1077);
+                            CallEvent(specialEvent);
                         }
                         else
                         {
@@ -467,8 +474,7 @@ void BattleMainControl()
                             {
                                 BField[2][tempBrole.X][tempBrole.Y] = i;
                             }
-                            if ((Brole[i].X != tempBrole.X || Brole[i].Y != tempBrole.Y) &&
-                                Brole[i].X >= 0 && Brole[i].X <= 63 && Brole[i].Y >= 0 && Brole[i].Y <= 63)
+                            if ((Brole[i].X != tempBrole.X || Brole[i].Y != tempBrole.Y) && Brole[i].X >= 0 && Brole[i].X <= 63 && Brole[i].Y >= 0 && Brole[i].Y <= 63)
                             {
                                 BField[2][Brole[i].X][Brole[i].Y] = -1;
                             }
@@ -545,7 +551,7 @@ void ReArrangeBRole()
     {
         for (int i2 = i1 + 1; i2 < BRoleAmount; i2++)
         {
-            if (Rrole[Brole[i1].rnum].Speed * 10 + rand() % 10 < Rrole[Brole[i2].rnum].Speed * 10 + rand() % 10)
+            if (Rrole[Brole[i1].rnum].Speed * 10 + GameRandom() % 10 < Rrole[Brole[i2].rnum].Speed * 10 + GameRandom() % 10)
             {
                 std::swap(Brole[i1], Brole[i2]);
             }
@@ -642,7 +648,7 @@ int BattleMenu(int bnum)
     auto buf = std::format("回合{}", BattleRound);
     std::string s(buf);
     DrawTextWithRect(s, 160, 50, DrawLength(s) * 10 + 6, ColColor(0x21), ColColor(0x23));
-    RecordFreshScreen(0, 0, screen->w, screen->h);
+    RecordFreshScreen(0, 0, ScreenWidth(), ScreenHeight());
 
     auto ShowBMenu = [&]()
     {
@@ -663,7 +669,7 @@ int BattleMenu(int bnum)
     };
 
     ShowBMenu();
-    UpdateScreen(screen, 0, 0, screen->w, screen->h);
+    UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
     while (SDL_WaitEvent(&event))
     {
         CheckBasicEvent();
@@ -699,8 +705,8 @@ int BattleMenu(int bnum)
         }
         if (event.type == SDL_EVENT_MOUSE_BUTTON_UP)
         {
-            float mx = event.button.x / (RESOLUTIONX / (float)screen->w);
-            float my = event.button.y / (RESOLUTIONY / (float)screen->h);
+            float mx = event.button.x / (RESOLUTIONX / (float)ScreenWidth());
+            float my = event.button.y / (RESOLUTIONY / (float)ScreenHeight());
             if (event.button.button == SDL_BUTTON_LEFT && mx >= 100 && mx < 147 && my >= 50 && my < max * 22 + 78)
             {
                 break;
@@ -713,8 +719,8 @@ int BattleMenu(int bnum)
         }
         if (event.type == SDL_EVENT_MOUSE_MOTION)
         {
-            float mx = event.button.x / (RESOLUTIONX / (float)screen->w);
-            float my = event.button.y / (RESOLUTIONY / (float)screen->h);
+            float mx = event.button.x / (RESOLUTIONX / (float)ScreenWidth());
+            float my = event.button.y / (RESOLUTIONY / (float)ScreenHeight());
             if (mx >= 100 && mx < 147 && my >= 50 && my < max * 22 + 78)
             {
                 int menup = menu;
@@ -787,12 +793,18 @@ bool MoveAnimation(int bnum)
                     linebx[a] = tx;
                     lineby[a] = ty;
                     seekError = false;
-                    break;
+                    // Equal-distance paths may enter an enemy's adjacency.
+                    // Prefer a predecessor that can be traversed without
+                    // stopping, as in Pascal MoveAmination.
+                    if (BField[7][tx][ty] == 0 || (BField[7][tx][ty] == 1 && tx == Ax && ty == Ay))
+                    {
+                        break;
+                    }
                 }
             }
             if (seekError)
             {
-                break;
+                return false;
             }
             a--;
         }
@@ -833,8 +845,11 @@ bool MoveAnimation(int bnum)
             j++;
             Brole[bnum].Step--;
             Redraw();
-            UpdateScreen(screen, 0, 0, screen->w, screen->h);
-            SDL_Delay(BATTLE_SPEED);
+            UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
+            if (!Headless())
+            {
+                SDL_Delay(BATTLE_SPEED);
+            }
         }
         Brole[bnum].X = Bx;
         Brole[bnum].Y = By;
@@ -846,13 +861,17 @@ bool MoveAnimation(int bnum)
 
 bool SelectAim(int bnum, int step, int AreaType, int AreaRange)
 {
+    if (Headless())
+    {
+        return Frontend->aim(bnum, step, AreaType, AreaRange);
+    }
     Ax = Bx;
     Ay = By;
     BattleSelecting = true;
     Redraw();
     SetAnimationPosition(AreaType, step, AreaRange);
     DrawBFieldWithCursor(step);
-    UpdateScreen(screen, 0, 0, screen->w, screen->h);
+    UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
     while (SDL_WaitEvent(&event))
     {
         CheckBasicEvent();
@@ -918,8 +937,8 @@ bool SelectAim(int bnum, int step, int AreaType, int AreaRange)
         {
             if (TouchWalk)
             {
-                int axp = (int)(-(event.button.x / (RESOLUTIONX / (float)screen->w)) + CENTER_X + 2 * (event.button.y / (RESOLUTIONY / (float)screen->h)) - 2 * CENTER_Y + 18) / 36 + Bx;
-                int ayp = (int)((event.button.x / (RESOLUTIONX / (float)screen->w)) - CENTER_X + 2 * (event.button.y / (RESOLUTIONY / (float)screen->h)) - 2 * CENTER_Y + 18) / 36 + By;
+                int axp = (int)(-(event.button.x / (RESOLUTIONX / (float)ScreenWidth())) + CENTER_X + 2 * (event.button.y / (RESOLUTIONY / (float)ScreenHeight())) - 2 * CENTER_Y + 18) / 36 + Bx;
+                int ayp = (int)((event.button.x / (RESOLUTIONX / (float)ScreenWidth())) - CENTER_X + 2 * (event.button.y / (RESOLUTIONY / (float)ScreenHeight())) - 2 * CENTER_Y + 18) / 36 + By;
                 if (axp >= 0 && axp <= 63 && ayp >= 0 && ayp <= 63 && abs(axp - Bx) + abs(ayp - By) <= step && BField[3][axp][ayp] >= 0)
                 {
                     Ax = axp;
@@ -933,7 +952,7 @@ bool SelectAim(int bnum, int step, int AreaType, int AreaRange)
         {
             ShowSimpleStatus(Brole[BField[2][Ax][Ay]].rnum, CENTER_X + 100, 50);
         }
-        UpdateScreen(screen, 0, 0, screen->w, screen->h);
+        UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
     }
     BattleSelecting = false;
     return false;
@@ -957,7 +976,7 @@ bool SelectDirector(int bnum, int step)
 
     std::string str = "選擇攻擊方向";
     DrawTextWithRect(str, 280, 200, 125, ColColor(0x23), ColColor(0x21));
-    UpdateScreen(screen, 0, 0, screen->w, screen->h);
+    UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
     bool result = false;
     while (SDL_WaitEvent(&event))
     {
@@ -1020,8 +1039,8 @@ bool SelectDirector(int bnum, int step)
             {
                 Ax = Bx;
                 Ay = By;
-                float mx = event.button.x / ((float)RESOLUTIONX / screen->w);
-                float my = event.button.y / ((float)RESOLUTIONY / screen->h);
+                float mx = event.button.x / ((float)RESOLUTIONX / ScreenWidth());
+                float my = event.button.y / ((float)RESOLUTIONY / ScreenHeight());
                 if (mx < CENTER_X && my < CENTER_Y)
                 {
                     Ay = By - 1;
@@ -1042,7 +1061,7 @@ bool SelectDirector(int bnum, int step)
         }
         SetAnimationPosition(1, step);
         DrawBFieldWithCursor(-1);
-        UpdateScreen(screen, 0, 0, screen->w, screen->h);
+        UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
     }
     BattleSelecting = false;
     return result;
@@ -1050,11 +1069,13 @@ bool SelectDirector(int bnum, int step)
 
 void SeekPath2(int x, int y, int step, int myteam, int mode)
 {
-    // BFS寻路
+    // Pascal movement rules: water and living actors block movement; entering
+    // enemy adjacency ends a route. Subsequent moves retain the first range.
     struct QNode
     {
         int x, y, s;
     };
+
     std::vector<QNode> queue;
     queue.push_back({ x, y, 0 });
     BField[3][x][y] = 0;
@@ -1067,27 +1088,63 @@ void SeekPath2(int x, int y, int step, int myteam, int mode)
         {
             continue;
         }
+        int kind[4]{ };
         for (int d = 0; d < 4; d++)
         {
             int nx = cur.x + dx[d], ny = cur.y + dy[d];
             if (nx < 0 || nx >= 64 || ny < 0 || ny >= 64)
             {
+                kind[d] = 4;
                 continue;
             }
             if (BField[3][nx][ny] >= 0)
             {
-                continue;
+                kind[d] = 5;
             }
-            bool canPass = true;
-            if (mode == 0)
+            else if (BField[1][nx][ny] > 0)
             {
-                if (BField[1][nx][ny] > 0 || (BField[2][nx][ny] >= 0 && BField[2][nx][ny] != -1))
+                kind[d] = 1;
+            }
+            else if (BField[2][nx][ny] >= 0 && Brole[BField[2][nx][ny]].Dead == 0)
+            {
+                kind[d] = Brole[BField[2][nx][ny]].Team == myteam ? 2 : 3;
+            }
+            else
+            {
+                int ground = BField[0][nx][ny] / 2;
+                if ((ground >= 179 && ground <= 190) || ground == 261 || ground == 511 || (ground >= 224 && ground <= 232) || (ground >= 662 && ground <= 674))
                 {
-                    canPass = false;
+                    kind[d] = 6;
+                }
+                else if (BField[6][nx][ny] < 0)
+                {
+                    kind[d] = 8;
                 }
             }
-            if (canPass)
+            for (int j = 0; j < 4; ++j)
             {
+                int ex = nx + dx[j], ey = ny + dy[j];
+                // Retain Pascal's adjacency-marker bounds while avoiding its
+                // possible write outside the field for an invalid neighbor.
+                if (ex >= 0 && ex < 63 && ey >= 0 && ey < 63 && BField[2][ex][ey] >= 0 && Brole[BField[2][ex][ey]].Dead == 0 && Brole[BField[2][ex][ey]].Team != myteam)
+                {
+                    BField[7][nx][ny] = 1;
+                }
+            }
+        }
+        bool canContinue = mode != 0 || cur.s == 0 || std::none_of(std::begin(kind), std::end(kind), [](int value)
+                               {
+                                   return value == 3;
+                               });
+        if (!canContinue)
+        {
+            continue;
+        }
+        for (int d = 0; d < 4; ++d)
+        {
+            if (kind[d] == 0 || (mode != 0 && (kind[d] == 2 || kind[d] == 3)))
+            {
+                int nx = cur.x + dx[d], ny = cur.y + dy[d];
                 BField[3][nx][ny] = cur.s + 1;
                 queue.push_back({ nx, ny, cur.s + 1 });
             }
@@ -1108,8 +1165,17 @@ void CalCanSelect(int bnum, int mode, int step)
 
     if (mode == 0)
     {
+        std::memset(BField[7], 0, sizeof(BField[7]));
+        if (Brole[bnum].Acted == 0)
+        {
+            std::memset(BField[6], 0, sizeof(BField[6]));
+        }
         BField[3][x][y] = 0;
         SeekPath2(x, y, step, Brole[bnum].Team, mode);
+        if (Brole[bnum].Acted == 0)
+        {
+            std::memcpy(BField[6], BField[3], sizeof(BField[3]));
+        }
     }
 
     if (mode == 1)
@@ -1188,7 +1254,7 @@ void Attack(int bnum)
         case 2:
             SetAnimationPosition(AreaType, Rmagic[mnum].MoveDistance[level - 1], Rmagic[mnum].AttDistance[level - 1]);
             DrawBFieldWithCursor(-1);
-            UpdateScreen(screen, 0, 0, screen->w, screen->h);
+            UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
             {
                 int key = 0;
                 while (key != SDLK_RETURN && key != SDLK_SPACE && key != SDLK_ESCAPE)
@@ -1218,23 +1284,21 @@ void AttackAction(int bnum, int i, int mnum, int level)
     {
         return;
     }
-
-    for (int i1 = 0; i1 <= (Rrole[rnum].AttTwice > 0 ? 1 : 0); i1++)
+    const auto& rules = BattleRules();
+    for (int strike = 0; strike < rules.strikeCount(Rrole[rnum]); ++strike)
     {
-        Rrole[rnum].MagLevel[i] += rand() % 2 + 1;
-        if (Rrole[rnum].MagLevel[i] > 999)
-        {
-            Rrole[rnum].MagLevel[i] = 999;
-        }
+        int tier = rules.beginStrike(Rrole[rnum], i, level);
         if (Rmagic[mnum].Unknown[4] > 0)
         {
             CallEvent(Rmagic[mnum].Unknown[4]);
         }
         else
         {
-            AttackAction(bnum, mnum, level);
+            AttackAction(bnum, mnum, tier);
         }
+        rules.finishStrike(Rrole[rnum], i);
     }
+    rules.finishAttack(Rrole[rnum]);
 }
 
 void AttackAction(int bnum, int mnum, int level)
@@ -1260,19 +1324,23 @@ void AttackActionAll(int bnum, int mnum, int level)
 
 void ShowMagicName(int mnum, int mode)
 {
+    if (Headless())
+    {
+        return;
+    }
     Redraw();
     std::string str;
     if (mode == 1)
     {
-        str = cp950toutf8(Ritem[mnum].Name);
+        str = cp950toutf8(Ritem[mnum].Name, sizeof(Ritem[mnum].Name));
     }
     else
     {
-        str = cp950toutf8(Rmagic[mnum].Name);
+        str = cp950toutf8(Rmagic[mnum].Name, sizeof(Rmagic[mnum].Name));
     }
     int l = DrawLength(str);
     DrawTextWithRectNoUpdate(str, CENTER_X - l * 5, CENTER_Y - 150, l * 10 + 7, ColColor(0x14), ColColor(0x16));
-    UpdateScreen(screen, 0, 0, screen->w, screen->h);
+    UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
     SDL_Delay(500);
 }
 
@@ -1288,7 +1356,7 @@ int SelectMagic(int rnum)
         if (Rrole[rnum].Magic[i] > 0)
         {
             menuStatus |= (1 << i);
-            menuString[i] = cp950toutf8(Rmagic[Rrole[rnum].Magic[i]].Name);
+            menuString[i] = cp950toutf8(Rmagic[Rrole[rnum].Magic[i]].Name, sizeof(Rmagic[Rrole[rnum].Magic[i]].Name));
             menuEngString[i] = std::format("{:3d}", Rrole[rnum].MagLevel[i] / 100 + 1);
             maxMenu++;
         }
@@ -1324,11 +1392,11 @@ int SelectMagic(int rnum)
                 p2++;
             }
         }
-        UpdateScreen(screen, 0, 0, screen->w, screen->h);
+        UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
     };
 
     Redraw();
-    UpdateScreen(screen, 0, 0, screen->w, screen->h);
+    UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
     ShowMagicMenu();
 
     int result = 0;
@@ -1440,7 +1508,7 @@ void SetAnimationPosition2(int bx1, int by1, int ax1, int ay1, int mode, int ste
         {
             for (int i2 = std::max(ay1 - range, 0); i2 <= std::min(ay1 + range, 63); i2++)
             {
-                BField[4][i1][i2] = (abs(i1 - bx1) + abs(i2 - by1)) * 1 + rand() % 24 + 1;
+                BField[4][i1][i2] = (abs(i1 - bx1) + abs(i2 - by1)) * 1 + GameRandom() % 24 + 1;
             }
         }
         break;
@@ -1500,6 +1568,10 @@ void SetAnimationPosition2(int bx1, int by1, int ax1, int ay1, int mode, int ste
 
 void PlayMagicAnimation(int bnum, int enumv, int ForTeam, int mode)
 {
+    if (Headless())
+    {
+        return;
+    }
     if (enumv < 0 || enumv > 199)
     {
         return;
@@ -1548,7 +1620,7 @@ void PlayMagicAnimation(int bnum, int enumv, int ForTeam, int mode)
     {
         CheckBasicEvent();
         DrawBFieldWithEft(p, beginPic, endPic, min_, bnum, ForTeam, 1, 0xFFFFFFFF);
-        UpdateScreen(screen, 0, 0, screen->w, screen->h);
+        UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
         SDL_Delay(BATTLE_SPEED);
         p++;
         if (p > endPic + max_ - min_)
@@ -1561,185 +1633,12 @@ void PlayMagicAnimation(int bnum, int enumv, int ForTeam, int mode)
 
 void CalHurtRole(int bnum, int mnum, int level)
 {
-    int rnum = Brole[bnum].rnum;
-    Rrole[rnum].PhyPower -= 3;
-    // 根据内力调整等级
-    if (Rrole[rnum].CurrentMP < Rmagic[mnum].NeedMP * ((level + 1) / 2))
-    {
-        level = Rrole[rnum].CurrentMP / Rmagic[mnum].NeedMP * 2;
-    }
-    if (level > 10)
-    {
-        level = 10;
-    }
-    Rrole[rnum].CurrentMP -= Rmagic[mnum].NeedMP * ((level + 1) / 2);
-
-    for (int i = 0; i < BRoleAmount; i++)
-    {
-        Brole[i].ShowNumber = -1;
-        if (BField[4][Brole[i].X][Brole[i].Y] != 0 && Brole[bnum].Team != Brole[i].Team && Brole[i].Dead == 0)
-        {
-            // 生命伤害
-            if (Rmagic[mnum].HurtType == 0)
-            {
-                int hurt = CalHurtValue(bnum, i, mnum, level);
-                Brole[i].ShowNumber = hurt;
-                Rrole[Brole[i].rnum].CurrentHP -= hurt;
-                Rrole[Brole[i].rnum].Hurt += hurt / LIFE_HURT;
-                if (Rrole[Brole[i].rnum].Hurt > 99)
-                {
-                    Rrole[Brole[i].rnum].Hurt = 99;
-                }
-                Brole[bnum].ExpGot += hurt / 2;
-                if (Rrole[Brole[i].rnum].CurrentHP <= 0)
-                {
-                    Brole[bnum].ExpGot += hurt / 2;
-                }
-                if (Brole[bnum].ExpGot < 0)
-                {
-                    Brole[bnum].ExpGot = 32767;
-                }
-            }
-            // 内力伤害
-            if (Rmagic[mnum].HurtType == 1)
-            {
-                int hurt = Rmagic[mnum].HurtMP[level - 1] + rand() % 5 - rand() % 5;
-                Brole[i].ShowNumber = hurt;
-                Rrole[Brole[i].rnum].CurrentMP -= hurt;
-                if (Rrole[Brole[i].rnum].CurrentMP <= 0)
-                {
-                    Rrole[Brole[i].rnum].CurrentMP = 0;
-                }
-                // 增加己方内力及最大值
-                Rrole[rnum].CurrentMP += hurt;
-                Brole[bnum].ExpGot += hurt;
-                Rrole[rnum].MaxMP += rand() % (hurt / 2 + 1);
-                if (Rrole[rnum].MaxMP > MAX_MP)
-                {
-                    Rrole[rnum].MaxMP = MAX_MP;
-                }
-                if (Rrole[rnum].CurrentMP > Rrole[rnum].MaxMP)
-                {
-                    Rrole[rnum].CurrentMP = Rrole[rnum].MaxMP;
-                }
-            }
-            // 中毒
-            int addpoi = Rrole[rnum].AttPoi / 5 + Rmagic[mnum].Poison * level / 2 * (100 - Rrole[Brole[i].rnum].DefPoi) / 100;
-            if (addpoi + Rrole[Brole[i].rnum].Poison > 99)
-            {
-                addpoi = 99 - Rrole[Brole[i].rnum].Poison;
-            }
-            if (addpoi < 0)
-            {
-                addpoi = 0;
-            }
-            if (Rrole[Brole[i].rnum].DefPoi >= 99)
-            {
-                addpoi = 0;
-            }
-            Rrole[Brole[i].rnum].Poison += addpoi;
-        }
-    }
+    BattleRules().resolveMagic(bnum, mnum, level);
 }
 
 int CalHurtValue(int bnum1, int bnum2, int mnum, int level)
 {
-    int rnum1 = Brole[bnum1].rnum, rnum2 = Brole[bnum2].rnum;
-
-    // 计算双方武学常识
-    int k1 = 0, k2 = 0;
-    for (int i = 0; i < BRoleAmount; i++)
-    {
-        if (Brole[i].Team == Brole[bnum1].Team && Brole[i].Dead == 0 && Rrole[Brole[i].rnum].Knowledge > MIN_KNOWLEDGE)
-        {
-            k1 += Rrole[Brole[i].rnum].Knowledge;
-        }
-        if (Brole[i].Team == Brole[bnum2].Team && Brole[i].Dead == 0 && Rrole[Brole[i].rnum].Knowledge > MIN_KNOWLEDGE)
-        {
-            k2 += Rrole[Brole[i].rnum].Knowledge;
-        }
-    }
-
-    int mhurt = 0;
-    if (level > 0)
-    {
-        mhurt = Rmagic[mnum].Attack[level - 1];
-    }
-
-    int att = Rrole[rnum1].Attack + k1 * 3 / 2 + mhurt / 3;
-    int def = Rrole[rnum2].Defence * 2 + k2 * 3;
-
-    // 武功类型加成
-    switch (Rmagic[mnum].MagicType)
-    {
-    case 1:
-        att += Rrole[rnum1].Fist;
-        def += Rrole[rnum2].Fist;
-        break;
-    case 2:
-        att += Rrole[rnum1].Sword;
-        def += Rrole[rnum2].Sword;
-        break;
-    case 3:
-        att += Rrole[rnum1].Knife;
-        def += Rrole[rnum2].Knife;
-        break;
-    case 4:
-        att += Rrole[rnum1].Unusual;
-        def += Rrole[rnum2].Unusual;
-        break;
-    }
-
-    // 按受伤折扣
-    att = att * (100 - Rrole[rnum1].Hurt / 2) / 100;
-    def = def * (100 - Rrole[rnum2].Hurt / 2) / 100;
-
-    // 武器加攻击 + 配合列表
-    if (Rrole[rnum1].Equip[0] >= 0)
-    {
-        att += Ritem[Rrole[rnum1].Equip[0]].AddAttack;
-        for (int i = 0; i < MAX_WEAPON_MATCH; i++)
-        {
-            if (Rrole[rnum1].Equip[0] == MatchList[i][0] && mnum == MatchList[i][1])
-            {
-                att += MatchList[i][2] * 2 / 3;
-                break;
-            }
-        }
-    }
-    // 防具加攻击
-    if (Rrole[rnum1].Equip[1] >= 0)
-    {
-        att += Ritem[Rrole[rnum1].Equip[1]].AddAttack;
-    }
-    // 对方武器防具加防御
-    if (Rrole[rnum2].Equip[0] >= 0)
-    {
-        def += Ritem[Rrole[rnum2].Equip[0]].AddDefence;
-    }
-    if (Rrole[rnum2].Equip[1] >= 0)
-    {
-        def += Ritem[Rrole[rnum2].Equip[1]].AddDefence;
-    }
-
-    int result = att - def + rand() % 20 - rand() % 20;
-    int dis = abs(Brole[bnum1].X - Brole[bnum2].X) + abs(Brole[bnum1].Y - Brole[bnum2].Y);
-    if (dis > 10)
-    {
-        dis = 10;
-    }
-
-    result = std::max(result, att / 10 + rand() % 10 - rand() % 10);
-    result = result * (100 - (dis - 1) * 3) / 100;
-    if (result <= 0 || level <= 0)
-    {
-        result = rand() % 10 + 1;
-    }
-    if (result > 9999)
-    {
-        result = 9999;
-    }
-    return result;
+    return BattleRules().hpDamage(bnum1, bnum2, mnum, level);
 }
 
 int CalHurtValue2(int bnum1, int bnum2, int mnum, int level)
@@ -1795,6 +1694,10 @@ void SelectModeColor(int mode, uint32_t& color1, uint32_t& color2, std::string& 
 
 void ShowHurtValue(int mode)
 {
+    if (Headless())
+    {
+        return;
+    }
     uint32_t color1, color2;
     std::string str;
     SelectModeColor(mode, color1, color2, str);
@@ -1824,7 +1727,7 @@ void ShowHurtValue(int mode)
             }
         }
         SDL_Delay(BATTLE_SPEED);
-        UpdateScreen(screen, 0, 0, screen->w, screen->h);
+        UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
         i1++;
         if (i1 > 10)
         {
@@ -1832,25 +1735,15 @@ void ShowHurtValue(int mode)
         }
     }
     Redraw();
-    UpdateScreen(screen, 0, 0, screen->w, screen->h);
+    UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
 }
 
 void CalPoiHurtLife()
 {
-    for (int i = 0; i < BRoleAmount; i++)
+    for (int i = 0; i < BRoleAmount; ++i)
     {
         Brole[i].ShowNumber = -1;
-        if (Rrole[Brole[i].rnum].Poison > 0 && Brole[i].Dead == 0 && Brole[i].Acted == 1)
-        {
-            if (POISON_HURT != 0)
-            {
-                Rrole[Brole[i].rnum].CurrentHP -= Rrole[Brole[i].rnum].Poison / POISON_HURT + 1;
-            }
-            if (Rrole[Brole[i].rnum].CurrentHP <= 0)
-            {
-                Rrole[Brole[i].rnum].CurrentHP = 1;
-            }
-        }
+        BattleRules().roundEnd(i);
     }
 }
 
@@ -1867,7 +1760,7 @@ void ClearDeadRolePic()
         }
     }
     // 撤退渐变效果
-    if (needeffect)
+    if (needeffect && !Headless())
     {
         int fade = 0;
         while ((SDL_PollEvent(&event) || true) && needeffect)
@@ -1893,7 +1786,7 @@ void ClearDeadRolePic()
                 }
             }
             DrawProgress();
-            UpdateScreen(screen, 0, 0, screen->w, screen->h);
+            UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
             SDL_Delay(BATTLE_SPEED / 2);
             fade += 5;
             if (fade > 100)
@@ -2022,75 +1915,32 @@ void AddExp()
             DrawShadowText(str, 103, 237, ColColor(0x23), ColColor(0x21));
             auto buf2 = std::format("{:5d}", Brole[i].ExpGot + basicvalue);
             DrawEngShadowText(buf2, 188, 237, ColColor(0x66), ColColor(0x64));
-            UpdateScreen(screen, 0, 0, screen->w, screen->h);
+            UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
             WaitAnyKey();
         }
+    }
+}
+
+static void ShowLevelUp(int bnum)
+{
+    if (Brole[bnum].Team == 0)
+    {
+        ShowStatus(Brole[bnum].rnum);
+        DrawTextWithRect("昇級", 58, CENTER_Y - 150, 46, ColColor(0x23), ColColor(0x21));
+        WaitAnyKey();
     }
 }
 
 void CheckLevelUp()
 {
     Redraw();
-    RecordFreshScreen(0, 0, screen->w, screen->h);
-    for (int i = 0; i < BRoleAmount; i++)
+    RecordFreshScreen(0, 0, ScreenWidth(), ScreenHeight());
+    for (int i = 0; i < BRoleAmount; ++i)
     {
-        int rnum = Brole[i].rnum;
-        while ((uint16_t)Rrole[rnum].Exp >= (uint16_t)LevelUpList[Rrole[rnum].Level - 1] && Rrole[rnum].Level < MAX_LEVEL)
+        while (AdvanceRoleLevels(Rrole[Brole[i].rnum]) > 0)
         {
-            Rrole[rnum].Exp -= LevelUpList[Rrole[rnum].Level - 1];
-            Rrole[rnum].Level++;
-            LevelUp(i);
+            ShowLevelUp(i);
         }
-    }
-}
-
-void LevelUp(int bnum)
-{
-    int rnum = Brole[bnum].rnum;
-    // MaxHP: IncLife * 3 + random(6)
-    Rrole[rnum].MaxHP = Rrole[rnum].MaxHP + Rrole[rnum].IncLife * 3 + rand() % 6;
-    Rrole[rnum].MaxHP = std::min((int)Rrole[rnum].MaxHP, MAX_HP);
-    Rrole[rnum].CurrentHP = Rrole[rnum].MaxHP;
-
-    int add = Rrole[rnum].Aptitude / 15 + 1;
-    if (MAX_ADD_PRO == 0)
-    {
-        add = rand() % add + 1;
-    }
-
-    // MaxMP: (9 - add) * 3
-    Rrole[rnum].MaxMP = Rrole[rnum].MaxMP + (9 - add) * 3;
-    Rrole[rnum].MaxMP = std::min((int)Rrole[rnum].MaxMP, MAX_MP);
-    Rrole[rnum].CurrentMP = Rrole[rnum].MaxMP;
-
-    Rrole[rnum].Attack += add;
-    Rrole[rnum].Speed += add;
-    Rrole[rnum].Defence += add;
-
-    // 抗性成长 Data[46..54]
-    for (int j = 46; j <= 54; j++)
-    {
-        if (Rrole[rnum].Data[j] > 0)
-        {
-            Rrole[rnum].Data[j] += rand() % 3 + 1;
-        }
-    }
-    // 属性上限 Data[43..58]
-    for (int j = 43; j <= 58; j++)
-    {
-        Rrole[rnum].Data[j] = std::min((int)Rrole[rnum].Data[j], MaxProList[j - 43]);
-    }
-
-    Rrole[rnum].PhyPower = MAX_PHYSICAL_POWER;
-    Rrole[rnum].Hurt = 0;
-    Rrole[rnum].Poison = 0;
-
-    if (Brole[bnum].Team == 0)
-    {
-        ShowStatus(rnum);
-        std::string str = "昇級";
-        DrawTextWithRect(str, 58, CENTER_Y - 150, 46, ColColor(0x23), ColColor(0x21));
-        WaitAnyKey();
     }
 }
 
@@ -2181,7 +2031,7 @@ void CheckBook()
                     p2++;
                 }
             }
-            p2 = rand() % std::max(1, p2);
+            p2 = GameRandom() % std::max(1, p2);
             int needitem = Ritem[inum].NeedMaterial;
             if (Ritem[inum].GetItem[p2] >= 0)
             {
@@ -2201,8 +2051,8 @@ void CheckBook()
                     DrawRectangle(screen, 115, 63, 145, 25, 0, ColColor(255), 50);
                     std::string str = "製藥成功";
                     DrawShadowText(str, 147, 65, ColColor(0x23), ColColor(0x21));
-                    UpdateScreen(screen, 0, 0, screen->w, screen->h);
-                    instruct_2(Ritem[inum].GetItem[p2], 1 + rand() % 5);
+                    UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
+                    instruct_2(Ritem[inum].GetItem[p2], 1 + GameRandom() % 5);
                     instruct_32(needitem, -needitemamount);
                     Rrole[rnum].ExpForMakeItem = 0;
                     WaitAnyKey();
@@ -2250,6 +2100,10 @@ void BattleMenuItem(int bnum)
 
 void PlayActionAnimation(int bnum, int mode, int mnum)
 {
+    if (Headless())
+    {
+        return;
+    }
     int rnum = Brole[bnum].rnum;
 
     // 方向至少朝向一个将被打中的敌人
@@ -2322,8 +2176,11 @@ void PlayActionAnimation(int bnum, int mode, int mnum)
             {
                 PlaySoundA(Rmagic[mnum].SoundNum, 0);
             }
-            UpdateScreen(screen, 0, 0, screen->w, screen->h);
-            SDL_Delay(BATTLE_SPEED);
+            UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
+            if (!Headless())
+            {
+                SDL_Delay(BATTLE_SPEED);
+            }
             p++;
             if (p > endPic)
             {
@@ -2370,23 +2227,14 @@ void UsePoison(int bnum)
     if (BField[2][Ax][Ay] >= 0 && select)
     {
         Brole[bnum].Acted = 1;
-        Rrole[rnum].PhyPower -= 3;
+        BattleRules().paySkillCost(Rrole[rnum], BattleSkill::Poison);
         int bnum1 = BField[2][Ax][Ay];
         if (Brole[bnum1].Team != Brole[bnum].Team)
         {
             int rnum1 = Brole[bnum1].rnum;
-            int addpoi = Rrole[rnum].UsePoi / 3 - Rrole[rnum1].DefPoi / 4;
-            if (addpoi < 0)
-            {
-                addpoi = 0;
-            }
-            if (addpoi + Rrole[rnum1].Poison > 99)
-            {
-                addpoi = 99 - Rrole[rnum1].Poison;
-            }
-            Rrole[rnum1].Poison += addpoi;
+            int addpoi = BattleRules().poison(Rrole[rnum], Rrole[rnum1]);
+            BattleRules().awardSkillExperience(bnum, bnum1, addpoi);
             Brole[bnum1].ShowNumber = addpoi;
-            Brole[bnum1].ExpGot += addpoi;
             SetAnimationPosition(0, 0);
             PlayActionAnimation(bnum, 0);
             PlayMagicAnimation(bnum, 30, 0, 2);
@@ -2420,14 +2268,14 @@ void Medicine(int bnum)
     if (BField[2][Ax][Ay] >= 0 && select)
     {
         Brole[bnum].Acted = 1;
-        Rrole[rnum].PhyPower -= 5;
+        BattleRules().paySkillCost(Rrole[rnum], BattleSkill::Medicine);
         int bnum1 = BField[2][Ax][Ay];
         if (Brole[bnum1].Team == Brole[bnum].Team)
         {
             int rnum1 = Brole[bnum1].rnum;
             int addlife = EffectMedcine(rnum, rnum1);
             Brole[bnum1].ShowNumber = addlife;
-            Brole[bnum1].ExpGot += addlife;
+            BattleRules().awardSkillExperience(bnum, bnum1, addlife);
             SetAnimationPosition(0, 0);
             PlayActionAnimation(bnum, 0);
             PlayMagicAnimation(bnum, 0, 1, 3);
@@ -2461,14 +2309,14 @@ void MedPoison(int bnum)
     if (BField[2][Ax][Ay] >= 0 && select)
     {
         Brole[bnum].Acted = 1;
-        Rrole[rnum].PhyPower -= 5;
+        BattleRules().paySkillCost(Rrole[rnum], BattleSkill::Detox);
         int bnum1 = BField[2][Ax][Ay];
         if (Brole[bnum1].Team == Brole[bnum].Team)
         {
             int rnum1 = Brole[bnum1].rnum;
             int minuspoi = EffectMedPoison(rnum, rnum1);
             Brole[bnum1].ShowNumber = minuspoi;
-            Brole[bnum1].ExpGot += minuspoi;
+            BattleRules().awardSkillExperience(bnum, bnum1, minuspoi);
             SetAnimationPosition(0, 0);
             PlayActionAnimation(bnum, 0);
             PlayMagicAnimation(bnum, 36, 1, 4);
@@ -2551,14 +2399,8 @@ void UseHiddenWeapon(int bnum, int inum)
             int bnum1 = BField[2][Ax][Ay];
             if (Brole[bnum1].Team != Brole[bnum].Team)
             {
-                int rnum1 = Brole[bnum1].rnum;
-                int hurt = hidden / 2 - Ritem[inum].AddCurrentHP / 3 - Rrole[rnum1].HidWeapon;
-                hurt = std::max(hurt * (Rrole[rnum1].Hurt / 33 + 1), 1 + rand() % 10);
-                Rrole[rnum1].CurrentHP -= hurt;
+                int hurt = BattleRules().hiddenWeapon(bnum, bnum1, Ritem[inum]);
                 Brole[bnum1].ShowNumber = hurt;
-                Brole[bnum1].ExpGot += hurt;
-                Rrole[rnum1].Hurt = std::min<int>(Rrole[rnum1].Hurt + hurt / LIFE_HURT, 99);
-                Rrole[rnum1].Poison = std::min<int>(Rrole[rnum1].Poison + Ritem[inum].AddPoi * (100 - Rrole[rnum1].DefPoi) / 100, 99);
                 SetAnimationPosition(0, 0);
                 ShowMagicName(inum, 1);
                 PlayActionAnimation(bnum, 0);
@@ -2571,11 +2413,8 @@ void UseHiddenWeapon(int bnum, int inum)
 
 void Rest(int bnum)
 {
-    int rnum = Brole[bnum].rnum;
     Brole[bnum].Acted = 1;
-    Rrole[rnum].CurrentHP = std::min<int>(Rrole[rnum].CurrentHP + (5 + Brole[bnum].Step) * Rrole[rnum].MaxHP / 200, Rrole[rnum].MaxHP);
-    Rrole[rnum].CurrentMP = std::min<int>(Rrole[rnum].CurrentMP + (5 + Brole[bnum].Step) * Rrole[rnum].MaxMP / 200, Rrole[rnum].MaxMP);
-    Rrole[rnum].PhyPower = std::min<int>(Rrole[rnum].PhyPower + (5 + Brole[bnum].Step) * MAX_PHYSICAL_POWER / 200, MAX_PHYSICAL_POWER);
+    BattleRules().rest(bnum);
 }
 
 bool TeamModeMenu(int bnum)
@@ -2593,7 +2432,7 @@ bool TeamModeMenu(int bnum)
     {
         if (Brole[i].Team == 0 && Brole[i].Dead == 0)
         {
-            namestr.push_back(std::string(" ") + cp950toutf8(Rrole[Brole[i].rnum].Name));
+            namestr.push_back(std::string(" ") + cp950toutf8(Rrole[Brole[i].rnum].Name, sizeof(Rrole[Brole[i].rnum].Name)));
             a.push_back(i);
             amount++;
         }
@@ -2638,7 +2477,7 @@ bool TeamModeMenu(int bnum)
     };
 
     bool result = true;
-    RecordFreshScreen(0, 0, screen->w, screen->h);
+    RecordFreshScreen(0, 0, ScreenWidth(), ScreenHeight());
     ShowTeamModeMenu();
 
     while (SDL_WaitEvent(&event))
@@ -2768,15 +2607,18 @@ void AutoBattle(int bnum)
 {
     int rnum = Brole[bnum].rnum;
     ShowSimpleStatus(rnum, CENTER_X + 100, 50);
-    SDL_Delay(450);
+    if (!Headless())
+    {
+        SDL_Delay(450);
+    }
 
     if (((Brole[bnum].Team == 0) && (Brole[bnum].AutoMode == 2)) || (Brole[bnum].Team != 0))
     {
         if (Brole[bnum].Acted != 1 && Rrole[rnum].CurrentHP < Rrole[rnum].MaxHP / 5)
         {
-            if (rand() % 100 < 70)
+            if (GameRandom() % 100 < 70)
             {
-                if (Rrole[rnum].Medicine >= 50 && Rrole[rnum].PhyPower >= 50 && rand() % 100 < 50)
+                if (Rrole[rnum].Medicine >= 50 && Rrole[rnum].PhyPower >= 50 && GameRandom() % 100 < 50)
                 {
                     Medicine(bnum);
                 }
@@ -2789,7 +2631,7 @@ void AutoBattle(int bnum)
 
         if (Brole[bnum].Acted != 1 && Rrole[rnum].CurrentMP < Rrole[rnum].MaxMP / 5)
         {
-            if (rand() % 100 < 60)
+            if (GameRandom() % 100 < 60)
             {
                 AutoUseItem(bnum, 50);
             }
@@ -2797,7 +2639,7 @@ void AutoBattle(int bnum)
 
         if (Brole[bnum].Acted != 1 && Rrole[rnum].PhyPower < 20)
         {
-            if (rand() % 100 < 80)
+            if (GameRandom() % 100 < 80)
             {
                 AutoUseItem(bnum, 48);
             }
@@ -2813,7 +2655,7 @@ void AutoBattle(int bnum)
 
         if (Brole[bnum].Acted != 1 && Rrole[rnum].Medicine > 50 && Rrole[rnum].PhyPower >= 70)
         {
-            if (rand() % 100 < 50)
+            if (GameRandom() % 100 < 50)
             {
                 NearestMoveByPro(moveX, moveY, targetX, targetY, bnum, 1, 0, 17, -1, 1);
                 if (targetX != -1)
@@ -2830,7 +2672,7 @@ void AutoBattle(int bnum)
 
         if (Brole[bnum].Acted != 1 && Rrole[rnum].MedPoi > 50 && Rrole[rnum].PhyPower >= 70)
         {
-            if (rand() % 100 < 50)
+            if (GameRandom() % 100 < 50)
             {
                 NearestMoveByPro(moveX, moveY, targetX, targetY, bnum, 1, 0, 20, 1, 2);
                 if (targetX != -1)
@@ -2847,7 +2689,7 @@ void AutoBattle(int bnum)
 
         if (Brole[bnum].Acted != 1 && Rrole[rnum].UsePoi > Rrole[rnum].Attack && Rrole[rnum].PhyPower >= 60)
         {
-            if (rand() % 100 < 50)
+            if (GameRandom() % 100 < 50)
             {
                 NearestMoveByPro(moveX, moveY, targetX, targetY, bnum, 0, std::min(Rrole[rnum].UsePoi / 15 + 1, 15), 49, -1, 0);
                 if (targetX != -1)
@@ -2861,7 +2703,6 @@ void AutoBattle(int bnum)
                 }
             }
         }
-
     }
 
     // 暗器：HidWeapon > Attack 或没有攻击武功时使用暗器
@@ -2872,7 +2713,11 @@ void AutoBattle(int bnum)
         bool hasNoMagic = true;
         for (int i = 0; i < 10; i++)
         {
-            if (Rrole[rnum].Magic[i] > 0) { hasNoMagic = false; break; }
+            if (Rrole[rnum].Magic[i] > 0)
+            {
+                hasNoMagic = false;
+                break;
+            }
         }
         if (Rrole[rnum].HidWeapon > Rrole[rnum].Attack || hasNoMagic)
         {
@@ -2993,7 +2838,7 @@ void AutoUseItem(int bnum, int list)
     {
         int inum = (Brole[bnum].Team != 0) ? Rrole[rnum].TakingItem[p] : RItemList[p].Number;
         Redraw();
-        UpdateScreen(screen, 0, 0, screen->w, screen->h);
+        UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
         EatOneItem(rnum, inum);
         if (Brole[bnum].Team != 0)
         {
@@ -3063,7 +2908,7 @@ void TryMoveAttack(int& Mx1, int& My1, int& Ax1, int& Ay1, int& tempmaxhurt, int
                         {
                             if (aimHurt[i1][i2] > 0)
                             {
-                                temphurt = aimHurt[i1][i2] + rand() % 5 - rand() % 5;
+                                temphurt = aimHurt[i1][i2] + GameRandom() % 5 - GameRandom() % 5;
                             }
                         }
                         else

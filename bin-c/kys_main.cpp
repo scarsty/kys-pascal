@@ -1,18 +1,27 @@
-﻿// kys_main.cpp - 游戏主流程实现
+﻿#include "kys_frontend.h"
+#include "kys_presenter.h"
+// kys_main.cpp - 游戏主流程实现
 // 对应 kys_main.pas
 
-#include "kys_main.h"
 #include "INIReader.h"
 #include "filefunc.h"
 #include "kys_battle.h"
 #include "kys_draw.h"
 #include "kys_engine.h"
 #include "kys_event.h"
+#include "kys_main.h"
+#include "kys_rules.h"
+#include "mods/mod.h"
+#include "rules/growth_state.h"
 #include "kys_type.h"
 
 #include <SDL3/SDL.h>
 #include <SDL3_mixer/SDL_mixer.h>
 #include <SDL3_ttf/SDL_ttf.h>
+#ifdef __EMSCRIPTEN__
+#include "kys_web.h"
+#include <emscripten.h>
+#endif
 
 #include <algorithm>
 #include <cmath>
@@ -21,6 +30,9 @@
 #include <cstring>
 #include <ctime>
 #include <format>
+#include <memory>
+#include <random>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -72,12 +84,174 @@ static void SaveSystemToggleSettings()
     SaveToggleOptionToIni("system", "EXPAND_GROUND", EXPAND_GROUND);
 }
 
+static std::string GrowthSettingLabel()
+{
+    switch (GetGrowthMode())
+    {
+    case GrowthMode::Original: return "原版";
+    case GrowthMode::FixedRandom: return "固定隨機";
+    case GrowthMode::Average: return "平均";
+    case GrowthMode::Maximum: return GetGrowthMaxPriority() == GrowthMaxPriority::Stats ? "最大三維" : "最大內力";
+    }
+    return "";
+}
+
+static void MenuGrowthSettings(const SDL_Rect& parent, const std::function<void()>& onChange)
+{
+    const int x = parent.x + parent.w + 7, y = parent.y;
+    const int width = std::min(390, ScreenWidth() - x - 10);
+    constexpr int rowHeight = 48;
+    const int priorityY = 52 + 4 * rowHeight + 8;
+    const int height = std::max(parent.h, priorityY + 122);
+    const SDL_Rect panel = { x, y, width, height };
+    std::unique_ptr<SDL_Surface, decltype(&Presentation::destroy)> background(
+        SDL_CreateSurface(width, height, SDL_GetPixelFormatForMasks(32, RMask, GMask, BMask, AMask)), Presentation::destroy);
+    if (!screen || !background) return;
+    SDL_Rect destination = { 0, 0, width, height };
+    Presentation::blit(screen, &panel, background.get(), &destination);
+    auto restore = [&]()
+    {
+        SDL_Rect target = panel;
+        Presentation::blit(background.get(), nullptr, screen, &target);
+    };
+    const std::string names[] = { "原版隨機", "固定隨機", "平均成長", "最大成長" };
+    const std::string descriptions[] = {
+        "連升共用抽籤，可讀檔重抽。",
+        "逐級隨機，讀檔不會重抽。",
+        "各項取平均，符合條件的能力 +1。",
+        "生命與能力最高，三維、內力擇一。"
+    };
+    const uint32_t disabledColor = SDL_MapSurfaceRGB(screen, 110, 110, 110);
+    const uint32_t descriptionColor = SDL_MapSurfaceRGB(screen, 195, 195, 185);
+    const uint32_t shadowColor = SDL_MapSurfaceRGB(screen, 0, 0, 0);
+    SDL_Rect targets[7];
+    for (int i = 0; i < 4; ++i) targets[i] = { x + 8, y + 52 + i * rowHeight, width - 16, rowHeight - 2 };
+    targets[4] = { x + 8, y + priorityY + 24, width - 16, 28 };
+    targets[5] = { x + 8, y + priorityY + 56, width - 16, 28 };
+    targets[6] = { x + 8, y + height - 31, 88, 25 };
+    int selected = static_cast<int>(GetGrowthMode());
+    auto enabled = [&](int index)
+    {
+        return index < 4 || index == 6 || GetGrowthMode() == GrowthMode::Maximum;
+    };
+    auto draw = [&]()
+    {
+        restore();
+        DrawRectangle(screen, x, y, width - 1, height - 1, 0, ColColor(0xFF), 75);
+        DrawShadowText("升級成長", x + 12, y + 4, ColColor(0x64), ColColor(0x66));
+        DrawShadowText("戰鬥隨機不變", x + 12, y + 27, descriptionColor, shadowColor);
+        for (int i = 0; i < 7; ++i)
+        {
+            const auto& rect = targets[i];
+            bool active = i < 4 ? i == static_cast<int>(GetGrowthMode()) :
+                i < 6 ? i - 4 == static_cast<int>(GetGrowthMaxPriority()) : false;
+            uint32_t frame = !enabled(i) ? disabledColor : ColColor(i == selected ? 0x64 : 0x07);
+            if (i == selected || i >= 4)
+                DrawRectangle(screen, rect.x, rect.y, rect.w - 1, rect.h - 1, 0, frame, 55);
+            uint32_t text = !enabled(i) ? disabledColor : ColColor(active || i == selected ? 0x64 : 0x05);
+            if (i < 4)
+            {
+                DrawShadowText(active ? "[x]" : "[ ]", rect.x + 4, rect.y, text, ColColor(0x07));
+                DrawShadowText(names[i], rect.x + 42, rect.y, text, ColColor(0x07));
+                if (active) DrawShadowText("使用中", rect.x + rect.w - 64, rect.y, text, ColColor(0x07));
+                DrawShadowText(descriptions[i], rect.x + 4, rect.y + 21, descriptionColor, shadowColor);
+            }
+            else if (i < 6)
+            {
+                DrawShadowText(active ? "[x]" : "[ ]", rect.x + 4, rect.y + 3, text, shadowColor);
+                DrawShadowText(i == 4 ? "三維高、內力低" : "內力高、三維低", rect.x + 42, rect.y + 3, text, shadowColor);
+            }
+            else DrawShadowText("< 返回", rect.x + 8, rect.y + 2, text, ColColor(0x07));
+        }
+        DrawShadowText("最大檔取捨", x + 12, y + priorityY, ColColor(0x05), ColColor(0x07));
+        DrawShadowText("僅最大檔生效", x + width - 132, y + priorityY, descriptionColor, shadowColor);
+        DrawShadowText("選擇即保存", x + width - 112, y + height - 29, descriptionColor, shadowColor);
+        UpdateScreen(screen, x, y, width, height);
+    };
+    auto hit = [&](float px, float py)
+    {
+        int mx = int(px * ScreenWidth() / RESOLUTIONX), my = int(py * ScreenHeight() / RESOLUTIONY);
+        for (int i = 0; i < 7; ++i)
+        {
+            const auto& rect = targets[i];
+            if (enabled(i) && mx >= rect.x && mx < rect.x + rect.w && my >= rect.y && my < rect.y + rect.h) return i;
+        }
+        return -1;
+    };
+    draw();
+    while (SDL_WaitEvent(&event))
+    {
+        CheckBasicEvent();
+        bool activate = false, close = false;
+        switch (event.type)
+        {
+        case SDL_EVENT_KEY_DOWN:
+            if (event.key.key == SDLK_UP || event.key.key == SDLK_DOWN)
+            {
+                int step = event.key.key == SDLK_UP ? -1 : 1;
+                do { selected = (selected + step + 7) % 7; } while (!enabled(selected));
+            }
+            else continue;
+            break;
+        case SDL_EVENT_KEY_UP:
+            close = event.key.key == SDLK_ESCAPE || event.key.key == SDLK_LEFT;
+            activate = event.key.key == SDLK_RETURN || event.key.key == SDLK_SPACE;
+            if (!close && !activate) continue;
+            break;
+        case SDL_EVENT_MOUSE_MOTION:
+        {
+            int index = hit(event.motion.x, event.motion.y);
+            if (index < 0 || index == selected) continue;
+            selected = index;
+            break;
+        }
+        case SDL_EVENT_MOUSE_BUTTON_UP:
+            close = event.button.button == SDL_BUTTON_RIGHT;
+            if (event.button.button == SDL_BUTTON_LEFT)
+            {
+                const int mx = int(event.button.x * ScreenWidth() / RESOLUTIONX);
+                const int my = int(event.button.y * ScreenHeight() / RESOLUTIONY);
+                if (mx >= parent.x && mx < parent.x + parent.w && my >= parent.y && my < parent.y + parent.h)
+                {
+                    // Let the settings menu handle the same click after closing its child.
+                    SDL_PushEvent(&event);
+                    close = true;
+                    break;
+                }
+                int index = hit(event.button.x, event.button.y);
+                if (index < 0) continue;
+                selected = index;
+                activate = true;
+            }
+            break;
+        default: continue;
+        }
+        if (close || (activate && selected == 6)) break;
+        if (activate)
+        {
+            if (selected < 4) SetGrowthMode(static_cast<GrowthMode>(selected));
+            else SetGrowthMaxPriority(static_cast<GrowthMaxPriority>(selected - 4));
+            SaveOptionToIni("rules", "growth_mode", GrowthModeName(GetGrowthMode()));
+            SaveOptionToIni("rules", "growth_max_priority", GrowthMaxPriorityName(GetGrowthMaxPriority()));
+#ifdef __EMSCRIPTEN__
+            EM_ASM({ Module.saveGrowthSettings($0, $1); }, static_cast<int>(GetGrowthMode()), static_cast<int>(GetGrowthMaxPriority()));
+#endif
+            onChange();
+        }
+        draw();
+    }
+    event.key.key = 0;
+    event.button.button = 0;
+    restore();
+    UpdateScreen(screen, x, y, width, height);
+}
+
 static void MenuSettings()
 {
     constexpr int settingsMenuX = 133;
     constexpr int settingsMenuY = 30;
     constexpr int settingsMenuW = 260;
-    constexpr int settingsMenuMax = 15;
+    constexpr int settingsMenuMax = 16;
     constexpr int settingsMenuH = settingsMenuMax * 22 + 29;
 
     auto ClampSetting = [](int value, int minValue, int maxValue)
@@ -152,7 +326,7 @@ static void MenuSettings()
         {
             SDL_Rect src = { settingsMenuX, settingsMenuY, settingsMenuW + 1, settingsMenuH };
             SDL_Rect dst = { 0, 0, settingsMenuW + 1, settingsMenuH };
-            SDL_BlitSurface(screen, &src, settingsBackground, &dst);
+            Presentation::blit(screen, &src, settingsBackground, &dst);
         }
     }
 
@@ -164,7 +338,7 @@ static void MenuSettings()
         }
         SDL_Rect src = { 0, 0, settingsMenuW + 1, settingsMenuH };
         SDL_Rect dst = { settingsMenuX, settingsMenuY, settingsMenuW + 1, settingsMenuH };
-        SDL_BlitSurface(settingsBackground, &src, screen, &dst);
+        Presentation::blit(settingsBackground, &src, screen, &dst);
     };
 
     auto ShowSettingsMenu = [&](int menu)
@@ -172,11 +346,11 @@ static void MenuSettings()
         RestoreSettingsBackground();
         DrawRectangle(screen, settingsMenuX, settingsMenuY, settingsMenuW, settingsMenuMax * 22 + 28, 0, ColColor(0xFF), 50);
 
-        const std::string labels[16] = {
+        const std::string labels[17] = {
             "地圖延時", "場景延時", "戰鬥延時", "音樂音量", "音效音量", "經驗倍率",
-            "簡繁體", "全屏", "半即時", "觸摸行走", "戰鬥顯示血條", "升級屬性固定", "顯示場景名", "WMP四向圖", "擴展地面", "返回"
+            "簡繁體", "全屏", "半即時", "觸摸行走", "戰鬥顯示血條", HasConfigurableGrowth() ? "升級成長" : "升級屬性固定", "顯示場景名", "WMP四向圖", "擴展地面", "畫面風格", "返回"
         };
-        const std::string states[15] = {
+        const std::string states[16] = {
             FormatNumericState(WALK_SPEED),
             FormatNumericState(WALK_SPEED2),
             FormatNumericState(BATTLE_SPEED),
@@ -188,10 +362,11 @@ static void MenuSettings()
             SEMIREAL ? "打開" : "關閉",
             TouchWalk ? "打開" : "關閉",
             SHOW_BATTLE_HP ? "打開" : "關閉",
-            MAX_ADD_PRO ? "打開" : "關閉",
+            HasConfigurableGrowth() ? GrowthSettingLabel() : MAX_ADD_PRO ? "打開" : "關閉",
             SHOW_SUBSCENE_NAME ? "打開" : "關閉",
             WMP_4_PIC ? "打開" : "關閉",
-            EXPAND_GROUND ? "打開" : "關閉"
+            EXPAND_GROUND ? "打開" : "關閉",
+            SMOOTH == 0 ? "銳利" : "平滑"
         };
         const int stateRight = settingsMenuX + settingsMenuW - 10;
 
@@ -203,8 +378,10 @@ static void MenuSettings()
             DrawShadowText(labels[row], settingsMenuX + 3, y, col1, col2);
             if (row < settingsMenuMax)
             {
-                int stateX = stateRight - DrawLength(states[row]) * 10;
+                const bool submenu = row == 11 && HasConfigurableGrowth();
+                int stateX = stateRight - DrawLength(states[row]) * 10 - (submenu ? 16 : 0);
                 DrawShadowText(states[row], stateX, y, col1, col2);
+                if (submenu) DrawShadowText(">", stateRight - 10, y, col1, col2);
             }
         }
 
@@ -251,6 +428,10 @@ static void MenuSettings()
                 {
                     ShowSettingsMenu(i);
                 }
+                else if (i == 11 && HasConfigurableGrowth() && !event.key.repeat)
+                {
+                    activate = true;
+                }
             }
             break;
         case SDL_EVENT_KEY_UP:
@@ -275,8 +456,8 @@ static void MenuSettings()
             }
             if (event.button.button == SDL_BUTTON_LEFT)
             {
-                float sx = (float)RESOLUTIONX / screen->w;
-                float sy = (float)RESOLUTIONY / screen->h;
+                float sx = (float)RESOLUTIONX / ScreenWidth();
+                float sy = (float)RESOLUTIONY / ScreenHeight();
                 int emx = (int)(event.button.x / sx);
                 int emy = (int)(event.button.y / sy);
                 if (emx > settingsMenuX && emx < settingsMenuX + settingsMenuW && emy > settingsMenuY && emy < settingsMenuY + settingsMenuH)
@@ -317,8 +498,8 @@ static void MenuSettings()
             continue;
         case SDL_EVENT_MOUSE_MOTION:
         {
-            float sx = (float)RESOLUTIONX / screen->w;
-            float sy = (float)RESOLUTIONY / screen->h;
+            float sx = (float)RESOLUTIONX / ScreenWidth();
+            float sy = (float)RESOLUTIONY / ScreenHeight();
             int emx = (int)(event.motion.x / sx);
             int emy = (int)(event.motion.y / sy);
             if (emx >= settingsMenuX && emx < settingsMenuX + settingsMenuW && emy > settingsMenuY && emy < settingsMenuY + settingsMenuH)
@@ -386,8 +567,16 @@ static void MenuSettings()
             SaveSystemToggleSettings();
             break;
         case 11:
-            MAX_ADD_PRO = 1 - MAX_ADD_PRO;
-            SaveSystemToggleSettings();
+            if (HasConfigurableGrowth())
+            {
+                const SDL_Rect parent = { settingsMenuX, settingsMenuY, settingsMenuW, settingsMenuH };
+                MenuGrowthSettings(parent, [&]() { ShowSettingsMenu(i); });
+            }
+            else
+            {
+                MAX_ADD_PRO = 1 - MAX_ADD_PRO;
+                SaveSystemToggleSettings();
+            }
             break;
         case 12:
             SHOW_SUBSCENE_NAME = 1 - SHOW_SUBSCENE_NAME;
@@ -415,6 +604,14 @@ static void MenuSettings()
             Redraw();
             break;
         case 15:
+            SMOOTH = SMOOTH == 0 ? 2 : 0;
+            SaveIntegerSetting("system", "SMOOTH", SMOOTH);
+            ApplyRenderScale();
+#ifdef __EMSCRIPTEN__
+            EM_ASM({ Module.saveSmoothing($0); }, SMOOTH);
+#endif
+            break;
+        case 16:
             i = -1;
             break;
         }
@@ -432,7 +629,7 @@ static void MenuSettings()
     RestoreSettingsBackground();
     if (settingsBackground)
     {
-        SDL_DestroySurface(settingsBackground);
+        Presentation::destroy(settingsBackground);
     }
     UpdateScreen(screen, settingsMenuX, settingsMenuY, settingsMenuW + 1, settingsMenuH);
 }
@@ -444,7 +641,7 @@ void Run()
 #ifdef _WIN32
     SetConsoleOutputCP(65001);
     AppPath = "";
-#else
+#elif defined(__ANDROID__)
     AppPath = "/sdcard/kys-pascal/";
     if (!filefunc::fileExist(AppPath + "kysmod.ini") && !filefunc::fileExist(AppPath + "games.ini"))
     {
@@ -458,6 +655,8 @@ void Run()
     SDL_Log("[kys] AppPath=%s", AppPath.c_str());
     SDL_SetHint(SDL_HINT_ORIENTATIONS, "LandscapeLeft LandscapeRight");
     CellPhone = 1;
+#else
+    AppPath = "";
 #endif
 
     //CellPhone = 1;    //仅调试使用
@@ -482,20 +681,9 @@ void Run()
 
     // 初始化 TTF
     TTF_Init();
-    std::string fontPath = checkFileName(CHINESE_FONT);
-    ChineseFont = TTF_OpenFont(fontPath.c_str(), CHINESE_FONT_SIZE);
-    fontPath = checkFileName(ENGLISH_FONT);
-    EnglishFont = TTF_OpenFont(fontPath.c_str(), ENGLISH_FONT_SIZE);
-
-    // 测试空格宽度
-    SDL_Color white = { 255, 255, 255, 255 };
-    uint16_t space[2] = { 32, 0 };
-    SDL_Surface* text = TTF_RenderText_Solid(ChineseFont, (const char*)space, 1, white);
-    if (text)
-    {
-        CHNFONT_SPACEWIDTH = text->w;
-        SDL_DestroySurface(text);
-    }
+#ifndef __EMSCRIPTEN__
+    InitialFonts();
+#endif
 
     MIX_Init();
 
@@ -507,16 +695,10 @@ void Run()
         return;
     }
 
-    if (SMOOTH >= 2)
-    {
-        SDL_SetHint("SDL_RENDER_SCALE_QUALITY", "1");
-    }
-    else
-    {
-        SDL_SetHint("SDL_RENDER_SCALE_QUALITY", "0");
-    }
-
     uint32_t screenFlag = SDL_WINDOW_RESIZABLE;
+#ifdef __EMSCRIPTEN__
+    screenFlag |= SDL_WINDOW_HIGH_PIXEL_DENSITY;
+#endif
     window = SDL_CreateWindow(TitleString.c_str(), RESOLUTIONX, RESOLUTIONY, screenFlag);
     if (CellPhone == 1)
     {
@@ -542,6 +724,9 @@ void Run()
         render_str = "software";
     }
     SDL_SetHint(SDL_HINT_RENDER_DRIVER, "direct3d,direct3d12,direct3d11,opengl,software");
+#elif defined(__EMSCRIPTEN__)
+    render_str = "opengles2";
+    SDL_SetHint(SDL_HINT_RENDER_DRIVER, "opengles2,software");
 #else
     render_str = "opengles2";
     if (RENDERER == 1)
@@ -559,6 +744,7 @@ void Run()
         SDL_GetPixelFormatForMasks(32, RMask, GMask, BMask, AMask));
     screenTex = SDL_CreateTexture(render, SDL_PIXELFORMAT_ARGB8888,
         SDL_TEXTUREACCESS_STREAMING, CENTER_X * 2, CENTER_Y * 2);
+    ApplyRenderScale();
     freshscreen = SDL_CreateSurface(CENTER_X * 2, CENTER_Y * 2,
         SDL_GetPixelFormatForMasks(32, RMask, GMask, BMask, AMask));
 
@@ -581,7 +767,9 @@ void Run()
 
     SDL_AddEventWatch((SDL_EventFilter)EventFilter, nullptr);
     mutex = SDL_CreateMutex();
+#ifndef __EMSCRIPTEN__
     SDL_AddTimer(200, UpdateSceneAmi, nullptr);
+#endif
 
     Start();
     Quit();
@@ -591,7 +779,7 @@ void Quit()
 {
     for (auto& p : fonts)
     {
-        SDL_DestroySurface(p.second);
+        Presentation::destroy(p.second);
     }
     fonts.clear();
     FreeAllSurface();
@@ -624,70 +812,7 @@ void SetMODVersion()
     TitlePosition.x = CENTER_X - 320 + 275;
     TitlePosition.y = CENTER_Y - 220 + 125;
 
-    switch (MODVersion)
-    {
-    case 0: break;
-    case 11:
-        TitleString = "All Heros in Kam Yung's Stories - A Pig";
-        TitlePosition.y = 270;
-        CENTER_Y = 240;
-        break;
-    case 12:
-        TitleString = "All Heros in Kam Yung's Stories - We Are Dragons";
-        TitlePosition.x = 200;
-        TitlePosition.y = 250;
-        break;
-    case 21:
-        TitleString = "All Heros in Kam Yung's Stories - Books";
-        TitlePosition.x = 275;
-        TitlePosition.y = 285;
-        break;
-    case 22:
-        TitleString = "Why I have to go after a pineapple in the period of Three Kingdoms??";
-        MAX_ITEM_AMOUNT = 456;
-        StartMusic = 37;
-        CENTER_Y = 240;
-        break;
-    case 23:
-        TitleString = "All Heros in Kam Yung's Stories - Four Dreams";
-        TitlePosition.y = 165;
-        StartMusic = 24;
-        CENTER_Y = 240;
-        break;
-    case 31:
-        TitleString = "All Heros in Kam Yung's Stories - Wider Rivers and Deeper Lakes";
-        break;
-    case 41:
-        TitleString = "All Heros in Kam Yung's Stories - Here is PTT";
-        TitlePosition.y = 255;
-        CENTER_Y = 240;
-        break;
-    case 51:
-        TitleString = "All Heros in Kam Yung's Stories - An Prime Minister of Tang";
-        break;
-    case 71:
-        TitleString = "All Heros in Kam Yung's Stories - Books from Heaven";
-        TitlePosition.x = 60;
-        TitlePosition.y = 270;
-        MAX_ITEM_AMOUNT = 400;
-        break;
-    case 72:
-        TitleString = "All Heros in Kam Yung's Stories - Shake the World";
-        MAX_ITEM_AMOUNT = 400;
-        break;
-    case 81:
-        TitleString = "All Heros in Kam Yung's Stories - Awaking of Dragons";
-        Music.resize(999, nullptr);
-        TitlePosition.x = 200;
-        TitlePosition.y = 250;
-        break;
-    case 91:
-        TitleString = "All Heros in Kam Yung's Stories - What's Loving";
-        break;
-    default:
-        TitlePosition.y = 270;
-        break;
-    }
+    mods::Active().applyPresentationDefaults();
 }
 
 void ReadFiles()
@@ -728,6 +853,9 @@ void ReadFiles()
     WALK_SPEED = ini.getInt("system", "WALK_SPEED", 10);
     WALK_SPEED2 = ini.getInt("system", "WALK_SPEED2", WALK_SPEED);
     SMOOTH = ini.getInt("system", "SMOOTH", 1);
+#ifdef __EMSCRIPTEN__
+    SMOOTH = EM_ASM_INT({ return Module.readSmoothing($0); }, SMOOTH);
+#endif
     SIMPLE = ini.getInt("system", "SIMPLE", 1);
     VOLUME = ini.getInt("music", "VOLUME", 30);
     VOLUMEWAV = ini.getInt("music", "VOLUMEWAV", 30);
@@ -737,7 +865,6 @@ void ReadFiles()
     SHOW_BATTLE_HP = ini.getInt("system", "SHOW_BATTLE_HP", 1);
     SEMIREAL = ini.getInt("system", "SEMIREAL", 0);
     FULLSCREEN = ini.getInt("system", "FULLSCREEN", 0);
-    MODVersion = ini.getInt("system", "MODVersion", 0);
     CHINESE_FONT_SIZE = ini.getInt("system", "CHINESE_FONT_SIZE", 20);
     ENGLISH_FONT_SIZE = ini.getInt("system", "ENGLISH_FONT_SIZE", 19);
     NIGHT_EFFECT = ini.getInt("system", "NIGHT_EFFECT", 0);
@@ -798,6 +925,7 @@ void ReadFiles()
     ReadFileToBuffer((char*)LeaveList, AppPath + "list/leave.bin", 200, 0);
     ReadFileToBuffer((char*)EffectList, AppPath + "list/effect.bin", 400, 0);
     ReadFileToBuffer((char*)LevelUpList, AppPath + "list/levelup.bin", 200, 0);
+    LoadGameRules(filename);
     ReadFileToBuffer((char*)MatchList, AppPath + "list/match.bin", MAX_WEAPON_MATCH * 3 * 2, 0);
 
     HeadSurface.resize(999, nullptr);
@@ -813,9 +941,9 @@ void Start()
     PlayMP3(StartMusic, -1);
     Where = 3;
     Redraw();
-    UpdateScreen(screen, 0, 0, screen->w, screen->h);
+    UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
 
-    BeginTime = rand() % 1440;
+    BeginTime = GameRandom() % 1440;
     NowTime = BeginTime;
     for (int i = 0; i < 480; i++)
     {
@@ -837,8 +965,11 @@ void Start()
     Redraw();
     DrawTitlePic(0, x, y);
     DrawTitlePic(menu + 1, x, y + menu * 20);
-    UpdateScreen(screen, 0, 0, screen->w, screen->h);
+    UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
 
+#ifdef __EMSCRIPTEN__
+    EM_ASM({ Module.gameReady($0, $1); }, ScreenWidth(), ScreenHeight());
+#endif
     bool selected = false;
     while (SDL_WaitEvent(&event))
     {
@@ -860,7 +991,7 @@ void Start()
                 Redraw();
                 DrawTitlePic(0, x, y);
                 DrawTitlePic(menu + 1, x, y + menu * 20);
-                UpdateScreen(screen, 0, 0, screen->w, screen->h);
+                UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
             }
             if (event.key.key == SDLK_DOWN)
             {
@@ -872,14 +1003,14 @@ void Start()
                 Redraw();
                 DrawTitlePic(0, x, y);
                 DrawTitlePic(menu + 1, x, y + menu * 20);
-                UpdateScreen(screen, 0, 0, screen->w, screen->h);
+                UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
             }
             break;
         case SDL_EVENT_MOUSE_BUTTON_UP:
             if (event.button.button == SDL_BUTTON_LEFT)
             {
-                int mx = (int)(event.button.x / ((float)RESOLUTIONX / screen->w));
-                int my = (int)(event.button.y / ((float)RESOLUTIONY / screen->h));
+                int mx = (int)(event.button.x / ((float)RESOLUTIONX / ScreenWidth()));
+                int my = (int)(event.button.y / ((float)RESOLUTIONY / ScreenHeight()));
                 if (mx > x && mx < x + 80 && my > y && my < y + 60)
                 {
                     selected = true;
@@ -889,17 +1020,18 @@ void Start()
             break;
         case SDL_EVENT_MOUSE_MOTION:
         {
-            int mx = (int)(event.motion.x / ((float)RESOLUTIONX / screen->w));
-            int my = (int)(event.motion.y / ((float)RESOLUTIONY / screen->h));
+            int mx = (int)(event.motion.x / ((float)RESOLUTIONX / ScreenWidth()));
+            int my = (int)(event.motion.y / ((float)RESOLUTIONY / ScreenHeight()));
             if (mx > x && mx < x + 80 && my > y && my < y + 60)
             {
                 int menup = menu;
                 menu = (my - y) / 20;
                 if (menu != menup)
                 {
+                    Redraw();
                     DrawTitlePic(0, x, y);
                     DrawTitlePic(menu + 1, x, y + menu * 20);
-                    UpdateScreen(screen, 0, 0, screen->w, screen->h);
+                    UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
                 }
             }
             break;
@@ -941,13 +1073,56 @@ void Start()
             Redraw();
             DrawTitlePic(0, x, y);
             DrawTitlePic(menu + 1, x, y + menu * 20);
-            UpdateScreen(screen, 0, 0, screen->w, screen->h);
+            UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
             selected = false;
         }
     }
 }
 
-// 严格按Pascal版: 输入姓名 + 随机属性 + 显示状态
+// Show explicit actions so both keyboard and touch users can finish character creation.
+static bool AcceptStartingStats(bool fixed)
+{
+    if (Headless())
+        return true;
+    const int width = 170, height = 30, gap = 16;
+    const int y = ScreenHeight() - height - 10;
+    const int left = (ScreenWidth() - (fixed ? width : 2 * width + gap)) / 2;
+    auto button = [&](int x, const std::string& label)
+    {
+        DrawRectangle(screen, x, y, width, height, 0, ColColor(0xFF), 50);
+        DrawShadowText(label, x + 10, y + 5, ColColor(0x64), ColColor(0x66));
+    };
+    if (!fixed)
+        button(left, "重抽（空格）");
+    button(fixed ? left : left + width + gap, "確定（回車）");
+    UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
+    while (SDL_WaitEvent(&event))
+    {
+        CheckBasicEvent();
+        if (event.type == SDL_EVENT_KEY_UP)
+        {
+            if (event.key.key == SDLK_RETURN || event.key.key == SDLK_KP_ENTER || event.key.key == SDLK_ESCAPE)
+                return true;
+            if (!fixed && event.key.key == SDLK_SPACE)
+                return false;
+        }
+        else if (event.type == SDL_EVENT_MOUSE_BUTTON_UP && event.button.button == SDL_BUTTON_LEFT)
+        {
+            int x = static_cast<int>(event.button.x * ScreenWidth() / RESOLUTIONX);
+            int mouseY = static_cast<int>(event.button.y * ScreenHeight() / RESOLUTIONY);
+            if (mouseY >= y && mouseY < y + height)
+            {
+                if (x >= left && x < left + width)
+                    return fixed;
+                if (!fixed && x >= left + width + gap && x < left + 2 * width + gap)
+                    return true;
+            }
+        }
+    }
+    return true;
+}
+
+// 输入姓名、选择初始属性并显示状态
 bool InitialRole()
 {
     LoadR(0);
@@ -958,14 +1133,15 @@ bool InitialRole()
     std::string str1 = "請輸入主角之姓名";
     DrawTextWithRect(str1, CENTER_X - 83, CENTER_Y - 30, 166, ColColor(0x21), ColColor(0x23));
 
-    std::string input_name = cp950toutf8(Rrole[0].Name);
+    std::string default_name = mods::Active().defaultPlayerName(cp950toutf8(Rrole[0].Name, sizeof(Rrole[0].Name)));
+    std::string input_name = default_name;
     bool named = EnterString(input_name, CENTER_X - 43, CENTER_Y + 10, 86, 100);
 
     if (named)
     {
         if (input_name.empty())
         {
-            input_name = cp950toutf8(Rrole[0].Name);
+            input_name = default_name;
         }
 
         input_name = Simplified2Traditional(input_name);
@@ -984,7 +1160,7 @@ bool InitialRole()
             std::min(cp950name.size(), (size_t)9));
 
         // 设置家名 (BEGIN_SCENE)
-        if (MODVersion != 22 && MODVersion != 11 && MODVersion != 12 && MODVersion != 91)
+        if (mods::Active().renameHomeScene())
         {
             memset(&Rscene[BEGIN_SCENE].Data[1], 0, 5 * sizeof(int16_t));
             memcpy(Rscene[BEGIN_SCENE].Name, cp950home.c_str(),
@@ -992,613 +1168,21 @@ bool InitialRole()
         }
 
         Redraw();
-        int key = 0;
-        do {
-            if (MODVersion != 21)
-            {
-                Rrole[0].MaxHP = 25 + rand() % 26;
-                Rrole[0].CurrentHP = Rrole[0].MaxHP;
-                Rrole[0].MaxMP = 25 + rand() % 26;
-                Rrole[0].CurrentMP = Rrole[0].MaxMP;
-                Rrole[0].MPType = rand() % 2;
-                Rrole[0].IncLife = 1 + rand() % 10;
-                Rrole[0].Attack = 25 + rand() % 6;
-                Rrole[0].Speed = 25 + rand() % 6;
-                Rrole[0].Defence = 25 + rand() % 6;
-                Rrole[0].Medicine = 25 + rand() % 6;
-                Rrole[0].UsePoi = 25 + rand() % 6;
-                Rrole[0].MedPoi = 25 + rand() % 6;
-                Rrole[0].Fist = 25 + rand() % 6;
-                Rrole[0].Sword = 25 + rand() % 6;
-                Rrole[0].Knife = 25 + rand() % 6;
-                Rrole[0].Unusual = 25 + rand() % 6;
-                Rrole[0].HidWeapon = 25 + rand() % 6;
-            }
-            Rrole[0].Aptitude = 1 + rand() % 100;
-
-            if (MODVersion == 0)
-            {
-                Rrole[0].Magic[0] = 1;
-                if (rand() % 100 < 70)
-                {
-                    Rrole[0].Magic[0] = rand() % 93;
-                }
-            }
-            if (MODVersion == 31)
-            {
-                Rrole[0].Ethics = rand() % 50 + rand() % 50;
-            }
-            if (MODVersion == 41)
-            {
-                Rrole[0].Magic[0] = 0;
-            }
-
+        bool accepted = false;
+        do
+        {
+            auto startingStats = mods::Active().createStartingStats(Rrole[0], input_name);
+            startingStats.fixed = mods::Active().applySpecialStartingStats(Rrole[0], input_name) || startingStats.fixed;
             Redraw();
             ShowStatus(0);
-            UpdateScreen(screen, 0, 0, screen->w, screen->h);
-            key = WaitAnyKey();
-        } while (key != SDLK_ESCAPE && key != SDLK_RETURN);
+            UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
+            accepted = AcceptStartingStats(startingStats.fixed);
+        } while (!accepted);
 
-        // 特殊名字处理
-        if (MODVersion == 0 || MODVersion == 100)
-        {
-            if (input_name == "TXDX尊使")
-            {
-                Rrole[0].MaxHP = 50;
-                Rrole[0].CurrentHP = 50;
-                Rrole[0].MaxMP = 50;
-                Rrole[0].CurrentMP = 50;
-                Rrole[0].MPType = 2;
-                Rrole[0].IncLife = 10;
-                Rrole[0].Attack = 30;
-                Rrole[0].Speed = 30;
-                Rrole[0].Defence = 30;
-                Rrole[0].Medicine = 30;
-                Rrole[0].UsePoi = 30;
-                Rrole[0].MedPoi = 30;
-                Rrole[0].Fist = 30;
-                Rrole[0].Sword = 30;
-                Rrole[0].Knife = 30;
-                Rrole[0].Unusual = 30;
-                Rrole[0].HidWeapon = 30;
-                Rrole[0].Aptitude = 100;
-                Rrole[0].Magic[0] = 62;
-                Rrole[0].MagLevel[0] = 800;
-                Rmagic[62].Attack[9] = 2000;
-                Ritem[93].Magic = 26;
-                Ritem[66].OnlyPracRole = -1;
-                Ritem[79].OnlyPracRole = -1;
-                instruct_32(82, 1);
-                instruct_32(74, 1);
-            }
-            Rrole[13].Magic[1] = 91;
-        }
-
-        if (MODVersion == 22)
-        {
-            if (input_name == "k小邪")
-            {
-                Rrole[0].MaxHP = 50;
-                Rrole[0].CurrentHP = 50;
-                Rrole[0].MaxMP = 50;
-                Rrole[0].CurrentMP = 50;
-                Rrole[0].MPType = 2;
-                Rrole[0].IncLife = 10;
-                Rrole[0].Attack = 150;
-                Rrole[0].Speed = 150;
-                Rrole[0].Defence = 130;
-                Rrole[0].Medicine = 130;
-                Rrole[0].UsePoi = 130;
-                Rrole[0].MedPoi = 130;
-                Rrole[0].Fist = 130;
-                Rrole[0].Sword = 130;
-                Rrole[0].Knife = 130;
-                Rrole[0].Unusual = 130;
-                Rrole[0].HidWeapon = 130;
-                Rrole[0].Aptitude = 100;
-                Rrole[0].Knowledge = 85;
-                Rrole[0].Magic[0] = 94;
-                Rrole[0].MagLevel[0] = 850;
-                Rrole[0].Magic[1] = 93;
-                Rrole[0].AttPoi = 0;
-            }
-            if (input_name == "龍吟星落")
-            {
-                Rrole[0].MaxHP = 150;
-                Rrole[0].CurrentHP = 120;
-                Rrole[0].MaxMP = 150;
-                Rrole[0].CurrentMP = 220;
-                Rrole[0].MPType = 2;
-                Rrole[0].IncLife = 10;
-                Rrole[0].Attack = 130;
-                Rrole[0].Speed = 130;
-                Rrole[0].Defence = 130;
-                Rrole[0].Medicine = 130;
-                Rrole[0].UsePoi = 130;
-                Rrole[0].MedPoi = 130;
-                Rrole[0].Fist = 130;
-                Rrole[0].Sword = 130;
-                Rrole[0].Knife = 130;
-                Rrole[0].Unusual = 130;
-                Rrole[0].HidWeapon = 130;
-                Rrole[0].Aptitude = 100;
-                Rrole[0].Knowledge = 0;
-                Rrole[0].Magic[0] = 168;
-                Rrole[0].Magic[1] = 169;
-                Rrole[0].Magic[2] = 170;
-                Rrole[0].Magic[3] = 171;
-                Rrole[0].Magic[4] = 172;
-            }
-            if (input_name == "小隨")
-            {
-                Rrole[0].MaxHP = 150;
-                Rrole[0].CurrentHP = 120;
-                Rrole[0].MaxMP = 150;
-                Rrole[0].CurrentMP = 220;
-                Rrole[0].MPType = 2;
-                Rrole[0].IncLife = 10;
-                Rrole[0].Attack = 130;
-                Rrole[0].Speed = 130;
-                Rrole[0].Defence = 130;
-                Rrole[0].Medicine = 130;
-                Rrole[0].UsePoi = 130;
-                Rrole[0].MedPoi = 130;
-                Rrole[0].Fist = 130;
-                Rrole[0].Sword = 130;
-                Rrole[0].Knife = 130;
-                Rrole[0].Unusual = 130;
-                Rrole[0].HidWeapon = 130;
-                Rrole[0].Aptitude = 100;
-                Rrole[0].Knowledge = 0;
-                Rrole[0].Magic[0] = 94;
-                Rrole[0].MagLevel[0] = 850;
-                Rrole[0].AttTwice = 1;
-            }
-            if (input_name == "破大俠")
-            {
-                Rrole[0].MaxHP = 1150;
-                Rrole[0].CurrentHP = 1120;
-                Rrole[0].MaxMP = 1150;
-                Rrole[0].CurrentMP = 1220;
-                Rrole[0].MPType = 2;
-                Rrole[0].IncLife = 10;
-                Rrole[0].Attack = 230;
-                Rrole[0].Speed = 230;
-                Rrole[0].Defence = 230;
-                Rrole[0].Medicine = 230;
-                Rrole[0].UsePoi = 230;
-                Rrole[0].MedPoi = 230;
-                Rrole[0].Fist = 230;
-                Rrole[0].Sword = 230;
-                Rrole[0].Knife = 230;
-                Rrole[0].Unusual = 230;
-                Rrole[0].HidWeapon = 230;
-                Rrole[0].Aptitude = 100;
-                Rrole[0].Knowledge = 100;
-                Rrole[0].Magic[0] = 168;
-                Rrole[0].Magic[1] = 169;
-                Rrole[0].Magic[2] = 170;
-                Rrole[0].Magic[3] = 171;
-                Rrole[0].Magic[4] = 172;
-                Rrole[0].Magic[5] = 94;
-            }
-            if (input_name == "鳳凰")
-            {
-                Rrole[0].MaxHP = 250;
-                Rrole[0].CurrentHP = 50;
-                Rrole[0].MaxMP = 250;
-                Rrole[0].CurrentMP = 50;
-                Rrole[0].MPType = 2;
-                Rrole[0].IncLife = 10;
-                Rrole[0].Aptitude = 100;
-                for (int i = 1; i <= 14; i++)
-                {
-                    Rrole[i].MaxHP = 500;
-                    Rrole[i].CurrentHP = 500;
-                    Rrole[i].MaxMP = 500;
-                    Rrole[i].CurrentMP = 500;
-                    Rrole[i].MPType = 2;
-                    Rrole[i].IncLife = 30;
-                    Rrole[i].Attack = 300;
-                    Rrole[i].Speed = 100;
-                    Rrole[i].Defence = 130;
-                    Rrole[i].Medicine = 130;
-                    Rrole[i].UsePoi = 130;
-                    Rrole[i].MedPoi = 130;
-                    Rrole[i].Fist = 130;
-                    Rrole[i].Sword = 130;
-                    Rrole[i].Knife = 130;
-                    Rrole[i].Unusual = 130;
-                    Rrole[i].HidWeapon = 130;
-                    Rrole[i].Aptitude = 100;
-                }
-            }
-        }
-
-        if (MODVersion == 23)
-        {
-            if (input_name == "小小豬")
-            {
-                Rrole[0].MaxHP = 10;
-                Rrole[0].CurrentHP = 10;
-                Rrole[0].MaxMP = 50;
-                Rrole[0].CurrentMP = 50;
-                Rrole[0].MPType = 2;
-                Rrole[0].IncLife = 10;
-                Rrole[0].Attack = 10;
-                Rrole[0].Speed = 10;
-                Rrole[0].Defence = 30;
-                Rrole[0].Medicine = 30;
-                Rrole[0].UsePoi = 30;
-                Rrole[0].MedPoi = 30;
-                Rrole[0].Fist = 30;
-                Rrole[0].Sword = 30;
-                Rrole[0].Knife = 30;
-                Rrole[0].Unusual = 30;
-                Rrole[0].HidWeapon = 30;
-                Rrole[0].Aptitude = 100;
-                Rrole[0].Knowledge = 0;
-                Rrole[0].Magic[0] = 27;
-                Rrole[0].MagLevel[0] = 850;
-                Rrole[0].Magic[1] = 37;
-                Rrole[0].MagLevel[1] = 850;
-                Rrole[0].Magic[2] = 94;
-                Rrole[0].MagLevel[2] = 850;
-                Rrole[0].Magic[3] = 62;
-                Rrole[0].MagLevel[3] = 850;
-                Rrole[0].AttPoi = 0;
-            }
-            if (input_name == "k小邪")
-            {
-                Rrole[0].MaxHP = 150;
-                Rrole[0].CurrentHP = 120;
-                Rrole[0].MaxMP = 150;
-                Rrole[0].CurrentMP = 220;
-                Rrole[0].MPType = 2;
-                Rrole[0].IncLife = 10;
-                Rrole[0].Attack = 30;
-                Rrole[0].Speed = 30;
-                Rrole[0].Defence = 30;
-                Rrole[0].Medicine = 30;
-                Rrole[0].UsePoi = 30;
-                Rrole[0].MedPoi = 30;
-                Rrole[0].Fist = 30;
-                Rrole[0].Sword = 30;
-                Rrole[0].Knife = 30;
-                Rrole[0].Unusual = 30;
-                Rrole[0].HidWeapon = 30;
-                Rrole[0].Aptitude = 100;
-                Rrole[0].Knowledge = 0;
-                Rrole[0].Magic[0] = 27;
-                Rrole[0].MagLevel[0] = 850;
-                Rrole[0].AttPoi = 70;
-                Rrole[0].Magic[1] = 15;
-                for (int i = 0; i <= 9; i++)
-                {
-                    Rmagic[15].Attack[i] = 1400;
-                    Rmagic[16].Attack[i] = 1400;
-                    Rmagic[17].Attack[i] = 1000;
-                    Rmagic[15].AttDistance[i] = 6;
-                    Rmagic[16].AttDistance[i] = 4;
-                    Rmagic[17].AttDistance[i] = 8;
-                }
-            }
-            if (input_name == "南宮夢")
-            {
-                Rrole[0].MaxHP = 500;
-                Rrole[0].CurrentHP = 500;
-                Rrole[0].MaxMP = 500;
-                Rrole[0].CurrentMP = 500;
-                Rrole[0].MPType = 2;
-                Rrole[0].IncLife = 10;
-                Rrole[0].Attack = 70;
-                Rrole[0].Speed = 90;
-                Rrole[0].Defence = 30;
-                Rrole[0].Medicine = 30;
-                Rrole[0].UsePoi = 30;
-                Rrole[0].MedPoi = 30;
-                Rrole[0].Fist = 30;
-                Rrole[0].Sword = 60;
-                Rrole[0].Knife = 30;
-                Rrole[0].Unusual = 30;
-                Rrole[0].HidWeapon = 30;
-                Rrole[0].Aptitude = 100;
-                Rrole[0].Knowledge = 0;
-                Rrole[0].Magic[0] = 37;
-                Rrole[0].MagLevel[0] = 890;
-                Rmagic[37].AttAreaType = 3;
-                Rmagic[37].MoveDistance[9] = 4;
-                Rmagic[37].AttDistance[9] = 4;
-            }
-            if (input_name == "游客")
-            {
-                Rrole[0].MaxHP = 50;
-                Rrole[0].CurrentHP = 50;
-                Rrole[0].MaxMP = 50;
-                Rrole[0].CurrentMP = 50;
-                Rrole[0].MPType = 2;
-                Rrole[0].IncLife = 10;
-                Rrole[0].Attack = 30;
-                Rrole[0].Speed = 30;
-                Rrole[0].Defence = 30;
-                Rrole[0].Medicine = 30;
-                Rrole[0].UsePoi = 30;
-                Rrole[0].MedPoi = 30;
-                Rrole[0].Fist = 30;
-                Rrole[0].Sword = 30;
-                Rrole[0].Knife = 30;
-                Rrole[0].Unusual = 30;
-                Rrole[0].HidWeapon = 30;
-                Rrole[0].Aptitude = 100;
-                Rrole[0].Knowledge = 0;
-                Rrole[0].Magic[0] = 94;
-                Rrole[0].MagLevel[0] = 850;
-                Rrole[0].AttTwice = 1;
-            }
-            if (input_name == "飛蟲王")
-            {
-                Rrole[0].MaxHP = 50;
-                Rrole[0].CurrentHP = 50;
-                Rrole[0].MaxMP = 50;
-                Rrole[0].CurrentMP = 50;
-                Rrole[0].MPType = 2;
-                Rrole[0].IncLife = 10;
-                Rrole[0].Attack = 30;
-                Rrole[0].Speed = 30;
-                Rrole[0].Defence = 30;
-                Rrole[0].Medicine = 30;
-                Rrole[0].UsePoi = 30;
-                Rrole[0].MedPoi = 30;
-                Rrole[0].Fist = 30;
-                Rrole[0].Sword = 30;
-                Rrole[0].Knife = 30;
-                Rrole[0].Unusual = 30;
-                Rrole[0].HidWeapon = 30;
-                Rrole[0].Aptitude = 100;
-                Rrole[0].Knowledge = 60;
-                Rrole[0].Magic[0] = 62;
-                Rrole[0].MagLevel[0] = 850;
-                Rrole[0].AttPoi = 95;
-            }
-            if (input_name == "破劍式")
-            {
-                Rrole[0].MaxHP = 499;
-                Rrole[0].CurrentHP = 499;
-                Rrole[0].MaxMP = 499;
-                Rrole[0].CurrentMP = 499;
-                Rrole[0].MPType = 2;
-                Rrole[0].IncLife = 5;
-                Rrole[0].Attack = 90;
-                Rrole[0].Speed = 90;
-                Rrole[0].Defence = 90;
-                Rrole[0].Medicine = 90;
-                Rrole[0].UsePoi = 90;
-                Rrole[0].MedPoi = 90;
-                Rrole[0].Fist = 90;
-                Rrole[0].Sword = 90;
-                Rrole[0].Knife = 90;
-                Rrole[0].Unusual = 90;
-                Rrole[0].HidWeapon = 90;
-                Rrole[0].Aptitude = 100;
-                Rrole[0].Knowledge = 0;
-                Rrole[0].Magic[0] = 27;
-                Rrole[0].MagLevel[0] = 899;
-                Rrole[0].Magic[1] = 37;
-                Rrole[0].MagLevel[1] = 899;
-                Rrole[0].Magic[2] = 94;
-                Rrole[0].MagLevel[2] = 899;
-                Rrole[0].Magic[3] = 62;
-                Rrole[0].MagLevel[3] = 899;
-                Rrole[0].AttPoi = 90;
-            }
-            if (input_name == "9523")
-            {
-                Rrole[0].MPType = 2;
-                Rrole[0].IncLife = 10;
-                Rrole[0].Attack = 10;
-                Rrole[0].Speed = 10;
-                Rrole[0].Defence = 30;
-                Rrole[0].Medicine = 30;
-                Rrole[0].UsePoi = 30;
-                Rrole[0].MedPoi = 30;
-                Rrole[0].Fist = 30;
-                Rrole[0].Sword = 30;
-                Rrole[0].Knife = 30;
-                Rrole[0].Unusual = 30;
-                Rrole[0].HidWeapon = 30;
-                Rrole[0].Aptitude = 100;
-                for (int i = 0; i <= 9; i++)
-                {
-                    Rmagic[15].Attack[i] = 1400;
-                    Rmagic[16].Attack[i] = 1400;
-                    Rmagic[17].Attack[i] = 1000;
-                    Rmagic[15].AttDistance[i] = 6;
-                    Rmagic[16].AttDistance[i] = 4;
-                    Rmagic[17].AttDistance[i] = 8;
-                }
-                Rrole[0].Magic[0] = 15;
-                Rrole[0].Magic[1] = 16;
-                Rrole[0].Magic[2] = 17;
-            }
-            if (input_name == "鳳凰ice")
-            {
-                Rrole[0].MPType = 2;
-                Rrole[0].IncLife = 10;
-                Rrole[0].Aptitude = 100;
-                for (int i = 0; i < 100; i++)
-                {
-                    if (LeaveList[i] > 0)
-                    {
-                        Rrole[LeaveList[i]].IncLife = 30;
-                        Rrole[LeaveList[i]].MPType = 2;
-                        Rrole[LeaveList[i]].Attack = 90;
-                        Rrole[LeaveList[i]].Aptitude = 95;
-                    }
-                }
-            }
-            Rrole[401] = Rrole[0];
-            Rrole[402] = Rrole[0];
-            Rrole[403] = Rrole[0];
-            Rrole[404] = Rrole[0];
-        }
-
-        if (MODVersion == 11)
-        {
-            if (input_name == "小小豬")
-            {
-                Rrole[0].MaxHP = 50;
-                Rrole[0].CurrentHP = 50;
-                Rrole[0].MaxMP = 50;
-                Rrole[0].CurrentMP = 50;
-                Rrole[0].MPType = 2;
-                Rrole[0].IncLife = 10;
-                Rrole[0].Attack = 30;
-                Rrole[0].Speed = 30;
-                Rrole[0].Defence = 30;
-                Rrole[0].Medicine = 30;
-                Rrole[0].UsePoi = 30;
-                Rrole[0].MedPoi = 30;
-                Rrole[0].Fist = 30;
-                Rrole[0].Sword = 30;
-                Rrole[0].Knife = 30;
-                Rrole[0].Unusual = 30;
-                Rrole[0].HidWeapon = 30;
-                Rrole[0].Aptitude = 100;
-                Rrole[0].Ethics = 90;
-            }
-            if (input_name == "晴空飛雪")
-            {
-                Rrole[0].MaxHP = 50;
-                Rrole[0].CurrentHP = 50;
-                Rrole[0].MaxMP = 50;
-                Rrole[0].CurrentMP = 50;
-                Rrole[0].MPType = 2;
-                Rrole[0].IncLife = 10;
-                Rrole[0].Attack = 30;
-                Rrole[0].Speed = 30;
-                Rrole[0].Defence = 30;
-                Rrole[0].Medicine = 30;
-                Rrole[0].UsePoi = 30;
-                Rrole[0].MedPoi = 30;
-                Rrole[0].Fist = 30;
-                Rrole[0].Sword = 30;
-                Rrole[0].Knife = 30;
-                Rrole[0].Unusual = 30;
-                Rrole[0].HidWeapon = 30;
-                Rrole[0].Aptitude = 100;
-                instruct_32(19, 10000);
-            }
-        }
-
-        if (MODVersion == 12)
-        {
-            if (input_name == "小小豬")
-            {
-                Rrole[0].MaxHP = 50;
-                Rrole[0].CurrentHP = 50;
-                Rrole[0].MaxMP = 50;
-                Rrole[0].CurrentMP = 50;
-                Rrole[0].MPType = 2;
-                Rrole[0].IncLife = 10;
-                Rrole[0].Attack = 30;
-                Rrole[0].Speed = 30;
-                Rrole[0].Defence = 30;
-                Rrole[0].Medicine = 30;
-                Rrole[0].UsePoi = 30;
-                Rrole[0].MedPoi = 30;
-                Rrole[0].Fist = 30;
-                Rrole[0].Sword = 30;
-                Rrole[0].Knife = 30;
-                Rrole[0].Unusual = 30;
-                Rrole[0].HidWeapon = 30;
-                Rrole[0].Aptitude = 100;
-            }
-            if (input_name == "見賢思齊")
-            {
-                Rrole[0].MaxHP = 50;
-                Rrole[0].CurrentHP = 50;
-                Rrole[0].MaxMP = 50;
-                Rrole[0].CurrentMP = 50;
-                Rrole[0].MPType = 2;
-                Rrole[0].IncLife = 10;
-                Rrole[0].Attack = 60;
-                Rrole[0].Speed = 30;
-                Rrole[0].Defence = 60;
-                Rrole[0].Medicine = 30;
-                Rrole[0].UsePoi = 30;
-                Rrole[0].MedPoi = 30;
-                Rrole[0].Fist = 30;
-                Rrole[0].Sword = 30;
-                Rrole[0].Knife = 30;
-                Rrole[0].Unusual = 30;
-                Rrole[0].HidWeapon = 30;
-                Rrole[0].Aptitude = 45;
-            }
-        }
-
-        if (MODVersion == 31)
-        {
-            if (input_name == "南宮夢")
-            {
-                Rrole[0].MaxHP = 50;
-                Rrole[0].CurrentHP = 50;
-                Rrole[0].MaxMP = 50;
-                Rrole[0].CurrentMP = 50;
-                Rrole[0].MPType = 2;
-                Rrole[0].IncLife = 10;
-                Rrole[0].Attack = 300;
-                Rrole[0].Speed = 30;
-                Rrole[0].Defence = 300;
-                Rrole[0].Medicine = 300;
-                Rrole[0].UsePoi = 30;
-                Rrole[0].MedPoi = 30;
-                Rrole[0].Fist = 30;
-                Rrole[0].Sword = 300;
-                Rrole[0].Knife = 30;
-                Rrole[0].Unusual = 30;
-                Rrole[0].HidWeapon = 300;
-                Rrole[0].Aptitude = 100;
-                Rrole[0].Ethics = 95;
-            }
-        }
-
-        if (MODVersion == 41)
-        {
-            if (input_name == "leo")
-            {
-                Rrole[0].MaxHP = 50;
-                Rrole[0].CurrentHP = 50;
-                Rrole[0].MaxMP = 50;
-                Rrole[0].CurrentMP = 50;
-                Rrole[0].MPType = 2;
-                Rrole[0].IncLife = 10;
-                Rrole[0].Attack = 30;
-                Rrole[0].Speed = 30;
-                Rrole[0].Defence = 30;
-                Rrole[0].Medicine = 30;
-                Rrole[0].UsePoi = 30;
-                Rrole[0].MedPoi = 30;
-                Rrole[0].Fist = 30;
-                Rrole[0].Sword = 30;
-                Rrole[0].Knife = 30;
-                Rrole[0].Unusual = 30;
-                Rrole[0].HidWeapon = 30;
-                Rrole[0].Aptitude = 100;
-            }
-        }
-
-        if (MODVersion == 21)
-        {
-            if (input_name == "古天奇" || input_name == "青狼火花")
-            {
-                Rrole[0].MPType = 2;
-                Rrole[0].IncLife = 20;
-                Rrole[0].Aptitude = 100;
-            }
-        }
+        mods::Active().finishCharacterCreation(input_name);
 
         ShowStatus(0);
-        UpdateScreen(screen, 0, 0, screen->w, screen->h);
+        UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
 
         StartAmi();
     }
@@ -1675,6 +1259,7 @@ void LoadR(int num)
     fclose(grp);
 
     // 初始化世界地图入口
+    rules::growth::PrepareLoadedRoles({ Rrole, size_t(ItemOffset - RoleOffset) / sizeof(TRole) });
     SceneAmount = (MagicOffset - SceneOffset) / sizeof(TScene);
     for (int i = 0; i < 480; i++)
     {
@@ -1815,6 +1400,10 @@ void SaveR(int num)
 
 int WaitAnyKey()
 {
+    if (Headless())
+    {
+        return SDLK_RETURN;
+    }
     event.key.key = 0;
     event.button.button = 0;
     while (SDL_PollEvent(&event) || true)
@@ -1873,13 +1462,12 @@ void Walk()
     int Speed = 0;
     int gotoEntrance = -1;
     DrawMMap();
-    UpdateScreen(screen, 0, 0, screen->w, screen->h);
+    UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
     MainMapStill = 0;
     MainMapStillcount = 0;
 
     while (true)
     {
-        SDL_PollEvent(&event);
         if (Where >= 3)
         {
             break;
@@ -1930,154 +1518,172 @@ void Walk()
             next_time = now + 320;
         }
 
-        CheckBasicEvent();
-        switch (event.type)
+        // Drain input before rendering; a quick press/release still takes one step.
+        bool releaseAfterStep = false;
+        while (SDL_PollEvent(&event))
         {
-        case SDL_EVENT_KEY_DOWN:
-            if (event.key.key == SDLK_LEFT)
+            CheckBasicEvent();
+            switch (event.type)
             {
-                MFace = 2;
-                walking = 1;
-            }
-            if (event.key.key == SDLK_RIGHT)
-            {
-                MFace = 1;
-                walking = 1;
-            }
-            if (event.key.key == SDLK_UP)
-            {
-                MFace = 0;
-                walking = 1;
-            }
-            if (event.key.key == SDLK_DOWN)
-            {
-                MFace = 3;
-                walking = 1;
-            }
-            break;
-        case SDL_EVENT_KEY_UP:
-        {
-            const bool* ks = SDL_GetKeyboardState(nullptr);
-            if (!ks[SDL_SCANCODE_LEFT] && !ks[SDL_SCANCODE_RIGHT] && !ks[SDL_SCANCODE_UP] && !ks[SDL_SCANCODE_DOWN])
-            {
-                walking = 0;
-                Speed = 0;
-            }
-            if (event.key.key == SDLK_ESCAPE)
-            {
-                MenuEsc();
-            }
-            break;
-        }
-        case SDL_EVENT_MOUSE_MOTION:
-            if (ShowVirtualKey == 0)
-            {
-                int mx2, my2;
-                SDL_GetMouseState2(mx2, my2);
-                if (mx2 < CENTER_X && my2 < CENTER_Y)
+            case SDL_EVENT_KEY_DOWN:
+                if (event.key.key == SDLK_LEFT)
                 {
                     MFace = 2;
+                    walking = 1;
+                    releaseAfterStep = false;
                 }
-                if (mx2 > CENTER_X && my2 < CENTER_Y)
-                {
-                    MFace = 0;
-                }
-                if (mx2 < CENTER_X && my2 > CENTER_Y)
-                {
-                    MFace = 3;
-                }
-                if (mx2 > CENTER_X && my2 > CENTER_Y)
+                if (event.key.key == SDLK_RIGHT)
                 {
                     MFace = 1;
+                    walking = 1;
+                    releaseAfterStep = false;
                 }
-            }
-            break;
-        case SDL_EVENT_MOUSE_BUTTON_UP:
-            if (event.button.button == SDL_BUTTON_RIGHT)
-            {
-                event.button.button = 0;
-                MenuEsc();
-                nowstep = -1;
-                walking = 0;
-            }
-            if (event.button.button == SDL_BUTTON_LEFT && TouchWalk)
-            {
-                walking = 2;
-                int axp, ayp;
-                GetMousePosition(axp, ayp, Mx, My);
-                if (ayp >= 0 && ayp <= 479 && axp >= 0 && axp <= 479)
+                if (event.key.key == SDLK_UP)
                 {
-                    memset(PathCost, 0xFF, sizeof(PathCost));
-                    FindWay(Mx, My);
-                    gotoEntrance = -1;
-                    if (BuildY[axp][ayp] > 0 && Entrance[axp][ayp] < 0)
+                    MFace = 0;
+                    walking = 1;
+                    releaseAfterStep = false;
+                }
+                if (event.key.key == SDLK_DOWN)
+                {
+                    MFace = 3;
+                    walking = 1;
+                    releaseAfterStep = false;
+                }
+                break;
+            case SDL_EVENT_KEY_UP:
+            {
+                const bool* ks = SDL_GetKeyboardState(nullptr);
+                if (walking == 1 && !ks[SDL_SCANCODE_LEFT] && !ks[SDL_SCANCODE_RIGHT] && !ks[SDL_SCANCODE_UP] && !ks[SDL_SCANCODE_DOWN])
+                {
+                    if (Speed == 0)
                     {
-                        int bx = BuildX[axp][ayp];
-                        int by = BuildY[axp][ayp];
-                        axp = bx;
-                        ayp = by;
-                        auto SetBuildingEntrance = [&]()
+                        releaseAfterStep = true;
+                    }
+                    else
+                    {
+                        walking = 0;
+                        Speed = 0;
+                    }
+                }
+                if (event.key.key == SDLK_ESCAPE)
+                {
+                    MenuEsc();
+                    nowstep = -1;
+                    walking = 0;
+                    Speed = 0;
+                }
+                break;
+            }
+            case SDL_EVENT_MOUSE_MOTION:
+                if (ShowVirtualKey == 0)
+                {
+                    int mx2, my2;
+                    SDL_GetMouseState2(mx2, my2);
+                    if (mx2 < CENTER_X && my2 < CENTER_Y)
+                    {
+                        MFace = 2;
+                    }
+                    if (mx2 > CENTER_X && my2 < CENTER_Y)
+                    {
+                        MFace = 0;
+                    }
+                    if (mx2 < CENTER_X && my2 > CENTER_Y)
+                    {
+                        MFace = 3;
+                    }
+                    if (mx2 > CENTER_X && my2 > CENTER_Y)
+                    {
+                        MFace = 1;
+                    }
+                }
+                break;
+            case SDL_EVENT_MOUSE_BUTTON_UP:
+                if (event.button.button == SDL_BUTTON_RIGHT)
+                {
+                    event.button.button = 0;
+                    MenuEsc();
+                    nowstep = -1;
+                    walking = 0;
+                }
+                if (event.button.button == SDL_BUTTON_LEFT && TouchWalk)
+                {
+                    walking = 2;
+                    int axp, ayp;
+                    GetMapPositionFromScreen(axp, ayp, event.button.x, event.button.y, Mx, My);
+                    if (ayp >= 0 && ayp <= 479 && axp >= 0 && axp <= 479)
+                    {
+                        memset(PathCost, 0xFF, sizeof(PathCost));
+                        FindWay(Mx, My);
+                        gotoEntrance = -1;
+                        if (BuildY[axp][ayp] > 0 && Entrance[axp][ayp] < 0)
                         {
-                            for (int i1 = bx - 3; i1 <= bx; i1++)
+                            int bx = BuildX[axp][ayp];
+                            int by = BuildY[axp][ayp];
+                            axp = bx;
+                            ayp = by;
+                            auto SetBuildingEntrance = [&]()
                             {
-                                for (int i2 = by - 3; i2 <= by; i2++)
+                                for (int i1 = bx - 3; i1 <= bx; i1++)
                                 {
-                                    if (i1 >= 0 && i2 >= 0 && Entrance[i1][i2] >= 0 && BuildX[i1][i2] == bx && BuildY[i1][i2] == by)
+                                    for (int i2 = by - 3; i2 <= by; i2++)
                                     {
-                                        axp = i1;
-                                        ayp = i2;
-                                        return;
+                                        if (i1 >= 0 && i2 >= 0 && Entrance[i1][i2] >= 0 && BuildX[i1][i2] == bx && BuildY[i1][i2] == by)
+                                        {
+                                            axp = i1;
+                                            ayp = i2;
+                                            return;
+                                        }
+                                    }
+                                }
+                            };
+                            SetBuildingEntrance();
+                        }
+                        if (Entrance[axp][ayp] >= 0)
+                        {
+                            int minstep = 4096;
+                            for (int i = 0; i < 4; i++)
+                            {
+                                int axp1 = axp, ayp1 = ayp;
+                                switch (i)
+                                {
+                                case 0: axp1 = axp - 1; break;
+                                case 1: ayp1 = ayp + 1; break;
+                                case 2: ayp1 = ayp - 1; break;
+                                case 3: axp1 = axp + 1; break;
+                                }
+                                if (axp1 >= 0 && axp1 < 480 && ayp1 >= 0 && ayp1 < 480)
+                                {
+                                    int step = PathCost[axp1][ayp1];
+                                    if (step >= 0 && minstep > step)
+                                    {
+                                        gotoEntrance = i;
+                                        minstep = step;
                                     }
                                 }
                             }
-                        };
-                        SetBuildingEntrance();
-                    }
-                    if (Entrance[axp][ayp] >= 0)
-                    {
-                        int minstep = 4096;
-                        for (int i = 0; i < 4; i++)
-                        {
-                            int axp1 = axp, ayp1 = ayp;
-                            switch (i)
+                            if (gotoEntrance >= 0)
                             {
-                            case 0: axp1 = axp - 1; break;
-                            case 1: ayp1 = ayp + 1; break;
-                            case 2: ayp1 = ayp - 1; break;
-                            case 3: axp1 = axp + 1; break;
-                            }
-                            if (axp1 >= 0 && axp1 < 480 && ayp1 >= 0 && ayp1 < 480)
-                            {
-                                int step = PathCost[axp1][ayp1];
-                                if (step >= 0 && minstep > step)
+                                switch (gotoEntrance)
                                 {
-                                    gotoEntrance = i;
-                                    minstep = step;
+                                case 0: axp = axp - 1; break;
+                                case 1: ayp = ayp + 1; break;
+                                case 2: ayp = ayp - 1; break;
+                                case 3: axp = axp + 1; break;
                                 }
+                                gotoEntrance = 3 - gotoEntrance;
                             }
                         }
-                        if (gotoEntrance >= 0)
-                        {
-                            switch (gotoEntrance)
-                            {
-                            case 0: axp = axp - 1; break;
-                            case 1: ayp = ayp + 1; break;
-                            case 2: ayp = ayp - 1; break;
-                            case 3: axp = axp + 1; break;
-                            }
-                            gotoEntrance = 3 - gotoEntrance;
-                        }
+                        Moveman(Mx, My, axp, ayp);
+                        nowstep = PathCost[axp][ayp] - 1;
                     }
-                    FindWay(Mx, My);
-                    Moveman(Mx, My, axp, ayp);
-                    nowstep = PathCost[axp][ayp] - 1;
+                    else
+                    {
+                        walking = 0;
+                    }
                 }
-                else
-                {
-                    walking = 0;
-                }
+                break;
             }
-            break;
         }
 
         // 行走处理
@@ -2162,7 +1768,7 @@ void Walk()
             }
             }
             Redraw();
-            UpdateScreen(screen, 0, 0, screen->w, screen->h);
+            UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
             if (CheckEntrance())
             {
                 walking = 0;
@@ -2173,7 +1779,7 @@ void Walk()
                 if (MMAPAMI == 0)
                 {
                     Redraw();
-                    UpdateScreen(screen, 0, 0, screen->w, screen->h);
+                    UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
                 }
             }
         }
@@ -2182,6 +1788,12 @@ void Walk()
         if (Where == 1)
         {
             WalkInScene(0);
+        }
+
+        if (releaseAfterStep && walking == 1)
+        {
+            walking = 0;
+            Speed = 0;
         }
 
         event.key.key = 0;
@@ -2196,7 +1808,7 @@ void Walk()
                 GetMousePosition(axp2, ayp2, Mx, My);
                 TPosition pos = GetPositionOnScreen(axp2, ayp2, Mx, My);
                 DrawMPic(1, pos.x, pos.y, 0, 50, 0, 0);
-                UpdateScreen(screen, 0, 0, screen->w, screen->h);
+                UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
             }
             SDL_Delay(40);
         }
@@ -2226,15 +1838,7 @@ bool CanWalk(int x, int y)
     {
         InShip = 0;
     }
-    if (MODVersion == 22)
-    {
-        if (InShip == 1)
-        {
-            result = false;
-            InShip = 0;
-        }
-    }
-    return result;
+    return mods::Active().worldStepPassable(result, InShip);
 }
 
 bool CheckEntrance()
@@ -2265,6 +1869,15 @@ bool CheckEntrance()
         SStep = 0;
         Sx = Rscene[CurScene].EntranceX;
         Sy = Rscene[CurScene].EntranceY;
+        if (Headless())
+        {
+            Where = 1;
+            Cx = Sx;
+            Cy = Sy;
+            HeadlessJumpGuardX = HeadlessJumpGuardY = -1;
+            CheckEvent3();
+            return true;
+        }
         SaveR(11);
         WalkInScene(0);
         event.key.key = 0;
@@ -2284,7 +1897,17 @@ bool CheckCanEnter(int snum)
     {
         return true;
     }
-    return (Rscene[snum].EnCondition == 2);
+    if (Rscene[snum].EnCondition == 2)
+    {
+        for (int role : TeamList)
+        {
+            if (role >= 0 && Rrole[role].Speed > 70)
+            {
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 uint32_t UpdateSceneAmi(void* param, SDL_TimerID timerid, uint32_t interval)
@@ -2331,7 +1954,7 @@ int WalkInScene(int Open)
         SceneRolePic = 3445;
         CurEvent = BEGIN_EVENT;
         CallEvent(BEGIN_EVENT);
-        UpdateScreen(screen, 0, 0, screen->w, screen->h);
+        UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
         CurEvent = -1;
     }
 
@@ -2340,7 +1963,7 @@ int WalkInScene(int Open)
     ShowSceneName(CurScene);
     CheckEvent3();
 
-    while (SDL_PollEvent(&event) || true)
+    while (true)
     {
         if (Where != 1)
         {
@@ -2378,7 +2001,12 @@ int WalkInScene(int Open)
                     }
                 }
             }
+#ifdef __EMSCRIPTEN__
+            // Browser timer callbacks must not render or suspend a second Asyncify stack.
+            if (SCENEAMI != 0)
+#else
             if (SCENEAMI == 1)
+#endif
             {
                 InitialScene(1);
             }
@@ -2438,188 +2066,204 @@ int WalkInScene(int Open)
             CheckEvent3();
         }
 
-        CheckBasicEvent();
-        switch (event.type)
+        // Drain input before rendering; a quick press/release still takes one step.
+        bool releaseAfterStep = false;
+        while (SDL_PollEvent(&event))
         {
-        case SDL_EVENT_KEY_UP:
-        {
-            const bool* ks = SDL_GetKeyboardState(nullptr);
-            if (!ks[SDL_SCANCODE_LEFT] && !ks[SDL_SCANCODE_RIGHT] && !ks[SDL_SCANCODE_UP] && !ks[SDL_SCANCODE_DOWN])
+            CheckBasicEvent();
+            switch (event.type)
             {
-                walking = 0;
-                Speed = 0;
-            }
-            if (event.key.key == SDLK_ESCAPE)
+            case SDL_EVENT_KEY_UP:
             {
-                MenuEsc();
-                walking = 0;
-                Speed = 0;
-            }
-            if (event.key.key == SDLK_RETURN || event.key.key == SDLK_SPACE)
-            {
-                CheckEvent1();
-            }
-            break;
-        }
-        case SDL_EVENT_KEY_DOWN:
-            if (event.key.key == SDLK_LEFT)
-            {
-                SFace = 2;
-                walking = 1;
-            }
-            if (event.key.key == SDLK_RIGHT)
-            {
-                SFace = 1;
-                walking = 1;
-            }
-            if (event.key.key == SDLK_UP)
-            {
-                SFace = 0;
-                walking = 1;
-            }
-            if (event.key.key == SDLK_DOWN)
-            {
-                SFace = 3;
-                walking = 1;
-            }
-            break;
-        case SDL_EVENT_MOUSE_MOTION:
-            if (ShowVirtualKey == 0)
-            {
-                int mx2, my2;
-                SDL_GetMouseState2(mx2, my2);
-                if (mx2 < CENTER_X && my2 < CENTER_Y)
+                const bool* ks = SDL_GetKeyboardState(nullptr);
+                if (walking == 1 && !ks[SDL_SCANCODE_LEFT] && !ks[SDL_SCANCODE_RIGHT] && !ks[SDL_SCANCODE_UP] && !ks[SDL_SCANCODE_DOWN])
                 {
-                    MFace = 2;
-                }
-                if (mx2 > CENTER_X && my2 < CENTER_Y)
-                {
-                    MFace = 0;
-                }
-                if (mx2 < CENTER_X && my2 > CENTER_Y)
-                {
-                    MFace = 3;
-                }
-                if (mx2 > CENTER_X && my2 > CENTER_Y)
-                {
-                    MFace = 1;
-                }
-            }
-            break;
-        case SDL_EVENT_MOUSE_BUTTON_UP:
-            if (event.button.button == SDL_BUTTON_RIGHT)
-            {
-                MenuEsc();
-                nowstep = 0;
-                walking = 0;
-                Speed = 0;
-                if (Where == 0)
-                {
-                    if (CurScene >= 0 && Rscene[CurScene].ExitMusic >= 0)
+                    if (Speed == 0)
                     {
-                        StopMP3();
-                        PlayMP3(Rscene[CurScene].ExitMusic, -1);
+                        releaseAfterStep = true;
                     }
-                    Redraw();
-                    UpdateScreen(screen, 0, 0, screen->w, screen->h);
-                    return 0;
-                }
-            }
-            if (event.button.button == SDL_BUTTON_MIDDLE)
-            {
-                CheckEvent1();
-            }
-            if (event.button.button == SDL_BUTTON_LEFT && TouchWalk)
-            {
-                if (walking == 0)
-                {
-                    walking = 2;
-                    int axp, ayp;
-                    GetMousePosition(axp, ayp, Sx, Sy, SData[CurScene][4][Sx][Sy]);
-                    if (ayp >= 0 && ayp <= 63 && axp >= 0 && axp <= 63)
+                    else
                     {
-                        memset(PathCost, 0xFF, sizeof(PathCost));
-                        FindWay(Sx, Sy);
-                        gotoevent_local = -1;
-                        if (SData[CurScene][3][axp][ayp] >= 0)
+                        walking = 0;
+                        Speed = 0;
+                    }
+                }
+                if (event.key.key == SDLK_ESCAPE)
+                {
+                    MenuEsc();
+                    walking = 0;
+                    Speed = 0;
+                }
+                if (event.key.key == SDLK_RETURN || event.key.key == SDLK_SPACE)
+                {
+                    CheckEvent1();
+                }
+                break;
+            }
+            case SDL_EVENT_KEY_DOWN:
+                if (event.key.key == SDLK_LEFT)
+                {
+                    SFace = 2;
+                    walking = 1;
+                    releaseAfterStep = false;
+                }
+                if (event.key.key == SDLK_RIGHT)
+                {
+                    SFace = 1;
+                    walking = 1;
+                    releaseAfterStep = false;
+                }
+                if (event.key.key == SDLK_UP)
+                {
+                    SFace = 0;
+                    walking = 1;
+                    releaseAfterStep = false;
+                }
+                if (event.key.key == SDLK_DOWN)
+                {
+                    SFace = 3;
+                    walking = 1;
+                    releaseAfterStep = false;
+                }
+                break;
+            case SDL_EVENT_MOUSE_MOTION:
+                if (ShowVirtualKey == 0)
+                {
+                    int mx2, my2;
+                    SDL_GetMouseState2(mx2, my2);
+                    if (mx2 < CENTER_X && my2 < CENTER_Y)
+                    {
+                        MFace = 2;
+                    }
+                    if (mx2 > CENTER_X && my2 < CENTER_Y)
+                    {
+                        MFace = 0;
+                    }
+                    if (mx2 < CENTER_X && my2 > CENTER_Y)
+                    {
+                        MFace = 3;
+                    }
+                    if (mx2 > CENTER_X && my2 > CENTER_Y)
+                    {
+                        MFace = 1;
+                    }
+                }
+                break;
+            case SDL_EVENT_MOUSE_BUTTON_UP:
+                if (event.button.button == SDL_BUTTON_RIGHT)
+                {
+                    MenuEsc();
+                    nowstep = 0;
+                    walking = 0;
+                    Speed = 0;
+                    if (Where == 0)
+                    {
+                        if (CurScene >= 0 && Rscene[CurScene].ExitMusic >= 0)
                         {
-                            if (abs(axp - Sx) + abs(ayp - Sy) == 1)
+                            StopMP3();
+                            PlayMP3(Rscene[CurScene].ExitMusic, -1);
+                        }
+                        Redraw();
+                        UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
+                        return 0;
+                    }
+                }
+                if (event.button.button == SDL_BUTTON_MIDDLE)
+                {
+                    CheckEvent1();
+                }
+                if (event.button.button == SDL_BUTTON_LEFT && TouchWalk)
+                {
+                    if (walking == 0)
+                    {
+                        walking = 2;
+                        int axp, ayp;
+                        GetMapPositionFromScreen(axp, ayp, event.button.x, event.button.y, Sx, Sy, SData[CurScene][4][Sx][Sy]);
+                        if (ayp >= 0 && ayp <= 63 && axp >= 0 && axp <= 63)
+                        {
+                            memset(PathCost, 0xFF, sizeof(PathCost));
+                            FindWay(Sx, Sy);
+                            gotoevent_local = -1;
+                            if (SData[CurScene][3][axp][ayp] >= 0)
                             {
-                                if (axp < Sx)
+                                if (abs(axp - Sx) + abs(ayp - Sy) == 1)
                                 {
-                                    SFace = 0;
-                                }
-                                if (axp > Sx)
-                                {
-                                    SFace = 3;
-                                }
-                                if (ayp < Sy)
-                                {
-                                    SFace = 2;
-                                }
-                                if (ayp > Sy)
-                                {
-                                    SFace = 1;
-                                }
-                                if (CheckEvent1())
-                                {
-                                    walking = 0;
-                                }
-                            }
-                            else
-                            {
-                                if (!CanWalkInScene(axp, ayp))
-                                {
-                                    int minstep = 4096;
-                                    for (int i = 0; i < 4; i++)
+                                    if (axp < Sx)
                                     {
-                                        int axp1 = axp, ayp1 = ayp;
-                                        switch (i)
+                                        SFace = 0;
+                                    }
+                                    if (axp > Sx)
+                                    {
+                                        SFace = 3;
+                                    }
+                                    if (ayp < Sy)
+                                    {
+                                        SFace = 2;
+                                    }
+                                    if (ayp > Sy)
+                                    {
+                                        SFace = 1;
+                                    }
+                                    if (CheckEvent1())
+                                    {
+                                        walking = 0;
+                                    }
+                                }
+                                else
+                                {
+                                    if (!CanWalkInScene(axp, ayp))
+                                    {
+                                        int minstep = 4096;
+                                        for (int i = 0; i < 4; i++)
                                         {
-                                        case 0: axp1 = axp - 1; break;
-                                        case 1: ayp1 = ayp + 1; break;
-                                        case 2: ayp1 = ayp - 1; break;
-                                        case 3: axp1 = axp + 1; break;
-                                        }
-                                        if (axp1 >= 0 && axp1 < 64 && ayp1 >= 0 && ayp1 < 64)
-                                        {
-                                            int step = PathCost[axp1][ayp1];
-                                            if (step >= 0 && minstep > step)
+                                            int axp1 = axp, ayp1 = ayp;
+                                            switch (i)
                                             {
-                                                gotoevent_local = i;
-                                                minstep = step;
+                                            case 0: axp1 = axp - 1; break;
+                                            case 1: ayp1 = ayp + 1; break;
+                                            case 2: ayp1 = ayp - 1; break;
+                                            case 3: axp1 = axp + 1; break;
+                                            }
+                                            if (axp1 >= 0 && axp1 < 64 && ayp1 >= 0 && ayp1 < 64)
+                                            {
+                                                int step = PathCost[axp1][ayp1];
+                                                if (step >= 0 && minstep > step)
+                                                {
+                                                    gotoevent_local = i;
+                                                    minstep = step;
+                                                }
                                             }
                                         }
-                                    }
-                                    if (gotoevent_local >= 0)
-                                    {
-                                        switch (gotoevent_local)
+                                        if (gotoevent_local >= 0)
                                         {
-                                        case 0: axp = axp - 1; break;
-                                        case 1: ayp = ayp + 1; break;
-                                        case 2: ayp = ayp - 1; break;
-                                        case 3: axp = axp + 1; break;
+                                            switch (gotoevent_local)
+                                            {
+                                            case 0: axp = axp - 1; break;
+                                            case 1: ayp = ayp + 1; break;
+                                            case 2: ayp = ayp - 1; break;
+                                            case 3: axp = axp + 1; break;
+                                            }
+                                            gotoevent_local = 3 - gotoevent_local;
                                         }
-                                        gotoevent_local = 3 - gotoevent_local;
                                     }
                                 }
                             }
+                            Moveman(Sx, Sy, axp, ayp);
+                            nowstep = PathCost[axp][ayp] - 1;
                         }
-                        Moveman(Sx, Sy, axp, ayp);
-                        nowstep = PathCost[axp][ayp] - 1;
+                        else
+                        {
+                            walking = 0;
+                        }
                     }
                     else
                     {
                         walking = 0;
                     }
+                    event.button.button = 0;
                 }
-                else
-                {
-                    walking = 0;
-                }
-                event.button.button = 0;
+                break;
             }
-            break;
         }
 
         // 行走处理
@@ -2704,8 +2348,14 @@ int WalkInScene(int Open)
             }
             }
             Redraw();
-            UpdateScreen(screen, 0, 0, screen->w, screen->h);
+            UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
             CheckEvent3();
+        }
+
+        if (releaseAfterStep && walking == 1)
+        {
+            walking = 0;
+            Speed = 0;
         }
 
         event.key.key = 0;
@@ -2726,7 +2376,7 @@ int WalkInScene(int Open)
                         DrawMPic(1, pos.x, pos.y - SData[CurScene][4][axp2][ayp2], 0, 50, 0, 0);
                     }
                 }
-                UpdateScreen(screen, 0, 0, screen->w, screen->h);
+                UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
             }
             SDL_Delay(40);
         }
@@ -2764,11 +2414,7 @@ bool CanWalkInScene(int x, int y)
     {
         result = false;
     }
-    if (MODVersion == 23 && (SData[CurScene][1][x][y] == 1358 * 2 || SData[CurScene][1][x][y] == 1269 * 2))
-    {
-        result = true;
-    }
-    return result;
+    return mods::Active().sceneTilePassable(SData[CurScene][1][x][y], result);
 }
 
 bool CanWalkInScene(int x1, int y1, int x, int y)
@@ -2839,7 +2485,7 @@ void FindWay(int x1, int y1)
         int curX = Xlist[curgrid];
         int curY = Ylist[curgrid];
         int curstep = steplist[curgrid];
-        int Bgrid[4] = {};
+        int Bgrid[4] = { };
 
         if (Where == 1)
         {
@@ -2919,21 +2565,7 @@ void FindWay(int x1, int y1)
 
         for (int i = 0; i < 4; i++)
         {
-            bool canwalk = false;
-            if (MODVersion == 22)
-            {
-                if ((InShip == 1 && Bgrid[i] == 5) || ((Bgrid[i] == 0 || Bgrid[i] == 4) && InShip == 0))
-                {
-                    canwalk = true;
-                }
-            }
-            else
-            {
-                if (Bgrid[i] == 0 || Bgrid[i] == 4 || Bgrid[i] == 5 || Bgrid[i] == 7)
-                {
-                    canwalk = true;
-                }
-            }
+            bool canwalk = mods::Active().worldPathTilePassable(Bgrid[i], InShip == 1);
             if (canwalk)
             {
                 int nx = curX + Xinc[i], ny = curY + Yinc[i];
@@ -2988,9 +2620,11 @@ void ShowSceneName(int snum)
     {
         return;
     }
-    UpdateScreen(screen, 0, 0, screen->w, screen->h);
-    std::string name = cp950toutf8(Rscene[snum].Name);
-    int nameLen = (int)strlen((const char*)Rscene[snum].Name);
+    UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
+    std::string name = cp950toutf8(Rscene[snum].Name, sizeof(Rscene[snum].Name));
+    int nameLen = static_cast<int>(std::find(std::begin(Rscene[snum].Name),
+                                       std::end(Rscene[snum].Name), '\0')
+        - std::begin(Rscene[snum].Name));
     DrawTextWithRect(name, CENTER_X - nameLen * 5 + 7, 100, nameLen * 10 + 6, ColColor(5), ColColor(7));
     if (Rscene[snum].EntranceMusic >= 0)
     {
@@ -3016,6 +2650,10 @@ int CommonMenu(int x, int y, int w, int max, int default_, const std::string men
 
 int CommonMenu(int x, int y, int w, int max, int default_, const std::string menuString[], TPInt1 fn, int count)
 {
+    if (Headless())
+    {
+        return Frontend->choose("menu", { menuString, menuString + max + 1 });
+    }
     int menu = default_;
     if (menu < 0)
     {
@@ -3112,8 +2750,8 @@ int CommonMenu(int x, int y, int w, int max, int default_, const std::string men
             break;
         case SDL_EVENT_MOUSE_MOTION:
         {
-            float sx = (float)RESOLUTIONX / screen->w;
-            float sy = (float)RESOLUTIONY / screen->h;
+            float sx = (float)RESOLUTIONX / ScreenWidth();
+            float sy = (float)RESOLUTIONY / ScreenHeight();
             int emx = (int)(event.motion.x / sx);
             int emy = (int)(event.motion.y / sy);
             if (emx >= x && emx < x + w && emy > y && emy < y + menuH)
@@ -3148,6 +2786,10 @@ int CommonMenu(int x, int y, int w, int max, int default_, const std::string men
 // 仅有两个选项的横排选单 - 严格按Pascal版
 int CommonMenu2(int x, int y, int w, const std::string menuString[])
 {
+    if (Headless())
+    {
+        return Frontend->choose(menuString[2], { menuString[0], menuString[1] });
+    }
     int menu = 0;
 
     auto ShowCommonMenu2 = [&]()
@@ -3203,8 +2845,8 @@ int CommonMenu2(int x, int y, int w, const std::string menuString[])
             }
             if (event.button.button == SDL_BUTTON_LEFT)
             {
-                float sx = (float)RESOLUTIONX / screen->w;
-                float sy = (float)RESOLUTIONY / screen->h;
+                float sx = (float)RESOLUTIONX / ScreenWidth();
+                float sy = (float)RESOLUTIONY / ScreenHeight();
                 int emx = (int)(event.button.x / sx);
                 int emy = (int)(event.button.y / sy);
                 if (emx >= x && emx < x + w && emy > y && emy < y + 29)
@@ -3215,8 +2857,8 @@ int CommonMenu2(int x, int y, int w, const std::string menuString[])
             break;
         case SDL_EVENT_MOUSE_MOTION:
         {
-            float sx = (float)RESOLUTIONX / screen->w;
-            float sy = (float)RESOLUTIONY / screen->h;
+            float sx = (float)RESOLUTIONX / ScreenWidth();
+            float sy = (float)RESOLUTIONY / ScreenHeight();
             int emx = (int)(event.motion.x / sx);
             int emy = (int)(event.motion.y / sy);
             if (emx >= x && emx < x + w && emy > y && emy < y + 29)
@@ -3247,6 +2889,10 @@ int CommonMenu2(int x, int y, int w, const std::string menuString[])
 // 卷动选单 - 严格按Pascal版
 int CommonScrollMenu(int x, int y, int w, int max, int maxshow, const std::string menuString[])
 {
+    if (Headless())
+    {
+        return Frontend->choose("menu", { menuString, menuString + max + 1 });
+    }
     int menu = 0, menutop = 0;
     if (max + 1 < maxshow)
     {
@@ -3368,8 +3014,8 @@ int CommonScrollMenu(int x, int y, int w, int max, int maxshow, const std::strin
             }
             if (event.button.button == SDL_BUTTON_LEFT)
             {
-                float sx = (float)RESOLUTIONX / screen->w;
-                float sy = (float)RESOLUTIONY / screen->h;
+                float sx = (float)RESOLUTIONX / ScreenWidth();
+                float sy = (float)RESOLUTIONY / ScreenHeight();
                 int emx = (int)(event.button.x / sx);
                 int emy = (int)(event.button.y / sy);
                 if (emx >= x && emx < x + w && emy > y && emy < y + max * 22 + 29)
@@ -3416,8 +3062,8 @@ int CommonScrollMenu(int x, int y, int w, int max, int maxshow, const std::strin
             break;
         case SDL_EVENT_MOUSE_MOTION:
         {
-            float sx = (float)RESOLUTIONX / screen->w;
-            float sy = (float)RESOLUTIONY / screen->h;
+            float sx = (float)RESOLUTIONX / ScreenWidth();
+            float sy = (float)RESOLUTIONY / ScreenHeight();
             int emx = (int)(event.motion.x / sx);
             int emy = (int)(event.motion.y / sy);
             if (emx >= x && emx < x + w && emy > y && emy < y + max * 22 + 29)
@@ -3447,6 +3093,13 @@ int CommonScrollMenu(int x, int y, int w, int max, int maxshow, const std::strin
 
 int CommonGridMenu(int x, int y, int cols, int cellW, int maxShowRows, int maxItem, const std::string menuString[], const bool* disabled)
 {
+    if (Headless())
+    {
+        std::vector<std::string> options(menuString, menuString + maxItem + 1);
+        int selected;
+        do { selected = Frontend->choose("menu", options); } while (selected >= 0 && disabled && disabled[selected]);
+        return selected;
+    }
     if (maxItem < 0)
     {
         return -1;
@@ -3650,7 +3303,7 @@ int SelectOneTeamMember(int x, int y, const std::string& str, int list1, int lis
     {
         if (TeamList[i] >= 0)
         {
-            menuString[i] = cp950toutf8(Rrole[TeamList[i]].Name);
+            menuString[i] = cp950toutf8(Rrole[TeamList[i]].Name, sizeof(Rrole[TeamList[i]].Name));
             if (!str.empty())
             {
                 char buf[32];
@@ -3691,7 +3344,7 @@ void MenuEsc()
     menuStr[1] = "解毒";
     menuStr[2] = "物品";
     menuStr[3] = "狀態";
-    menuStr[4] = (MODVersion == 22) ? "特殊" : "離隊";
+    menuStr[4] = mods::Active().partyMenuLabel();
     menuStr[5] = "傳送";
     menuStr[6] = "系統";
 
@@ -3720,7 +3373,7 @@ void MenuEsc()
                     i1 = TeleportByList();
                 }
                 Redraw();
-                UpdateScreen(screen, 0, 0, screen->w, screen->h);
+                UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
                 if (i1 != 0)
                 {
                     i = -1;
@@ -3747,11 +3400,11 @@ void MenuEsc()
         case 4: MenuLeave(); break;
         case 3:
         {
-            if (MODVersion == 51)
+            if (int statusEvent = mods::Active().statusMenuEvent(); statusEvent >= 0)
             {
-                CallEvent(1092);
+                CallEvent(statusEvent);
                 Redraw();
-                UpdateScreen(screen, 0, 0, screen->w, screen->h);
+                UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
             }
             else
             {
@@ -3761,14 +3414,14 @@ void MenuEsc()
         }
         }
         Redraw();
-        UpdateScreen(screen, 80, 0, screen->w - 80, screen->h);
+        UpdateScreen(screen, 80, 0, ScreenWidth() - 80, ScreenHeight());
         if (Where == 3)
         {
             break;
         }
     }
     Redraw();
-    UpdateScreen(screen, 0, 0, screen->w, screen->h);
+    UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
     NeedRefreshScene = 1;
 }
 
@@ -3779,7 +3432,7 @@ void ShowMenu(int menu)
     word[1] = "解毒";
     word[2] = "物品";
     word[3] = "狀態";
-    word[4] = (MODVersion == 22) ? "特殊" : "離隊";
+    word[4] = mods::Active().partyMenuLabel();
     word[5] = "傳送";
     word[6] = "系統";
     int max = 6;
@@ -3796,7 +3449,7 @@ void ShowMenu(int menu)
             DrawShadowText(word[i], 30, 32 + 22 * i, ColColor(0x5), ColColor(0x7));
         }
     }
-    UpdateScreen(screen, 0, 0, screen->w, screen->h);
+    UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
 }
 
 void MenuMedcine()
@@ -3914,7 +3567,7 @@ bool MenuItem()
         if (menu >= 0 && menu < 6)
         {
             Redraw();
-            RecordFreshScreen(0, 0, screen->w, screen->h);
+            RecordFreshScreen(0, 0, ScreenWidth(), ScreenHeight());
             int iamount = ReadItemList(itemType);
             atlu = 0;
             x = 0;
@@ -3924,7 +3577,7 @@ bool MenuItem()
             auto ShowMenuItem = [&]()
             {
                 int w2 = col * 42 + 8;
-                LoadFreshScreen(0, 0, screen->w, screen->h);
+                LoadFreshScreen(0, 0, ScreenWidth(), ScreenHeight());
                 DrawRectangle(screen, 110, 30, w2, 25, 0, ColColor(255), 50);
                 DrawRectangle(screen, 110, 60, w2, 25, 0, ColColor(255), 50);
                 DrawRectangle(screen, 110, 90, w2, 218, 0, ColColor(255), 50);
@@ -3965,10 +3618,10 @@ bool MenuItem()
                     auto buf = std::format("{:5d}", RItemList[listnum2].Amount);
                     DrawEngShadowText(buf, 110 + w2 - 80, 32, ColColor(0x64), ColColor(0x66));
 
-                    std::string itemName = cp950toutf8(Ritem[item2].Name);
+                    std::string itemName = cp950toutf8(Ritem[item2].Name, sizeof(Ritem[item2].Name));
                     DrawShadowText(itemName, 110 + w2 / 2 - (int)DrawLength(itemName) * 5, 32, ColColor(0x21), ColColor(0x23));
 
-                    std::string intro = cp950toutf8(Ritem[item2].Introduction);
+                    std::string intro = cp950toutf8(Ritem[item2].Introduction, sizeof(Ritem[item2].Introduction));
                     DrawShadowText(intro, 110 + w2 / 2 - (int)DrawLength(intro) * 5, 62, ColColor(0x5), ColColor(0x7));
 
                     std::string typeNames[] = { "劇情物品", "神兵寶甲", "武功秘笈", "靈丹妙藥", "傷人暗器" };
@@ -3980,7 +3633,7 @@ bool MenuItem()
                     if (Ritem[item2].User >= 0)
                     {
                         DrawShadowText("使用人：", 207, 315, ColColor(0x21), ColColor(0x23));
-                        std::string userName = cp950toutf8(Rrole[Ritem[item2].User].Name);
+                        std::string userName = cp950toutf8(Rrole[Ritem[item2].User].Name, sizeof(Rrole[Ritem[item2].User].Name));
                         DrawShadowText(userName, 297, 315, ColColor(0x64), ColColor(0x66));
                     }
                     if (item2 == COMPASS_ID)
@@ -4116,7 +3769,7 @@ bool MenuItem()
 
                     if (hasOnlyPracRole)
                     {
-                        std::string roleName = cp950toutf8(Rrole[Ritem[item2].OnlyPracRole].Name);
+                        std::string roleName = cp950toutf8(Rrole[Ritem[item2].OnlyPracRole].Name, sizeof(Rrole[Ritem[item2].OnlyPracRole].Name));
                         int onlyRoleY = (rows22 + rows32) * 20 + 346;
                         DrawShadowText("僅限修煉", 117, onlyRoleY, ColColor(0x50), ColColor(0x4E));
                         DrawShadowText(roleName, 207, onlyRoleY, ColColor(0x64), ColColor(0x66));
@@ -4126,7 +3779,7 @@ bool MenuItem()
                     if (Ritem[item2].Magic > 0 && Ritem[item2].Magic < 999)
                     {
                         int mnum = Ritem[item2].Magic;
-                        std::string magicName = cp950toutf8(Rmagic[mnum].Name);
+                        std::string magicName = cp950toutf8(Rmagic[mnum].Name, sizeof(Rmagic[mnum].Name));
                         int atk10 = Rmagic[mnum].Attack[9];
                         int areaType = Rmagic[mnum].AttAreaType;
                         std::string areaStr;
@@ -4155,134 +3808,109 @@ bool MenuItem()
             };
 
             ShowMenuItem();
-            UpdateScreen(screen, 0, 0, screen->w, screen->h);
+            UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
 
             auto RunItemMenu = [&]()
             {
-            while (SDL_WaitEvent(&event))
-            {
-                CheckBasicEvent();
-                switch (event.type)
+                while (SDL_WaitEvent(&event))
                 {
-                case SDL_EVENT_KEY_DOWN:
-                    if (event.key.key == SDLK_DOWN)
+                    CheckBasicEvent();
+                    switch (event.type)
                     {
-                        y++;
-                        if (y < 0)
+                    case SDL_EVENT_KEY_DOWN:
+                        if (event.key.key == SDLK_DOWN)
                         {
-                            y = 0;
-                        }
-                        if (y >= row)
-                        {
-                            if (ItemList[atlu + col * row] >= 0)
-                            {
-                                atlu += col;
-                            }
-                            y = row - 1;
-                        }
-                        ShowMenuItem();
-                        UpdateScreen(screen, 0, 0, screen->w, screen->h);
-                    }
-                    if (event.key.key == SDLK_UP)
-                    {
-                        y--;
-                        if (y < 0)
-                        {
-                            y = 0;
-                            if (atlu > 0)
-                            {
-                                atlu -= col;
-                            }
-                        }
-                        ShowMenuItem();
-                        UpdateScreen(screen, 0, 0, screen->w, screen->h);
-                    }
-                    if (event.key.key == SDLK_PAGEDOWN)
-                    {
-                        atlu += col * row;
-                        if (y < 0)
-                        {
-                            y = 0;
-                        }
-                        if (ItemList[atlu + col * row] < 0 && iamount > col * row)
-                        {
-                            y = y - (iamount - atlu) / col - 1 + row;
-                            atlu = (iamount / col - row + 1) * col;
-                            if (y >= row)
-                            {
-                                y = row - 1;
-                            }
-                        }
-                        ShowMenuItem();
-                        UpdateScreen(screen, 0, 0, screen->w, screen->h);
-                    }
-                    if (event.key.key == SDLK_PAGEUP)
-                    {
-                        atlu -= col * row;
-                        if (atlu < 0)
-                        {
-                            y += atlu / col;
-                            atlu = 0;
+                            y++;
                             if (y < 0)
                             {
                                 y = 0;
                             }
-                        }
-                        ShowMenuItem();
-                        UpdateScreen(screen, 0, 0, screen->w, screen->h);
-                    }
-                    if (event.key.key == SDLK_RIGHT)
-                    {
-                        x++;
-                        if (x >= col)
-                        {
-                            x = 0;
-                        }
-                        ShowMenuItem();
-                        UpdateScreen(screen, 0, 0, screen->w, screen->h);
-                    }
-                    if (event.key.key == SDLK_LEFT)
-                    {
-                        x--;
-                        if (x < 0)
-                        {
-                            x = col - 1;
-                        }
-                        ShowMenuItem();
-                        UpdateScreen(screen, 0, 0, screen->w, screen->h);
-                    }
-                    break;
-                case SDL_EVENT_KEY_UP:
-                    if (event.key.key == SDLK_ESCAPE)
-                    {
-                        return;
-                    }
-                    if (event.key.key == SDLK_RETURN || event.key.key == SDLK_SPACE)
-                    {
-                        int sel_idx = y * col + x + atlu;
-                        if (ItemList[sel_idx] >= 0)
-                        {
-                            CurItem = RItemList[ItemList[sel_idx]].Number;
-                            if (Where != 2 && CurItem >= 0)
+                            if (y >= row)
                             {
-                                UseItem(CurItem);
+                                if (ItemList[atlu + col * row] >= 0)
+                                {
+                                    atlu += col;
+                                }
+                                y = row - 1;
                             }
+                            ShowMenuItem();
+                            UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
                         }
-                        return;
-                    }
-                    break;
-                case SDL_EVENT_MOUSE_BUTTON_UP:
-                    if (event.button.button == SDL_BUTTON_RIGHT)
-                    {
-                        return;
-                    }
-                    if (event.button.button == SDL_BUTTON_LEFT)
-                    {
-                        // 手机触屏防误触: TouchWalk关闭时(防误触模式)鼠标点击无效，仅虚拟按键可操作
-                        if (CellPhone != 0 && !TouchWalk) { break; }
-                        int mx = (int)(event.button.x / ((float)RESOLUTIONX / screen->w));
-                        int my = (int)(event.button.y / ((float)RESOLUTIONY / screen->h));
-                        if (mx >= 110 && mx < 110 + w && my > 90 && my < 308)
+                        if (event.key.key == SDLK_UP)
+                        {
+                            y--;
+                            if (y < 0)
+                            {
+                                y = 0;
+                                if (atlu > 0)
+                                {
+                                    atlu -= col;
+                                }
+                            }
+                            ShowMenuItem();
+                            UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
+                        }
+                        if (event.key.key == SDLK_PAGEDOWN)
+                        {
+                            atlu += col * row;
+                            if (y < 0)
+                            {
+                                y = 0;
+                            }
+                            if (ItemList[atlu + col * row] < 0 && iamount > col * row)
+                            {
+                                y = y - (iamount - atlu) / col - 1 + row;
+                                atlu = (iamount / col - row + 1) * col;
+                                if (y >= row)
+                                {
+                                    y = row - 1;
+                                }
+                            }
+                            ShowMenuItem();
+                            UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
+                        }
+                        if (event.key.key == SDLK_PAGEUP)
+                        {
+                            atlu -= col * row;
+                            if (atlu < 0)
+                            {
+                                y += atlu / col;
+                                atlu = 0;
+                                if (y < 0)
+                                {
+                                    y = 0;
+                                }
+                            }
+                            ShowMenuItem();
+                            UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
+                        }
+                        if (event.key.key == SDLK_RIGHT)
+                        {
+                            x++;
+                            if (x >= col)
+                            {
+                                x = 0;
+                            }
+                            ShowMenuItem();
+                            UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
+                        }
+                        if (event.key.key == SDLK_LEFT)
+                        {
+                            x--;
+                            if (x < 0)
+                            {
+                                x = col - 1;
+                            }
+                            ShowMenuItem();
+                            UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
+                        }
+                        break;
+                    case SDL_EVENT_KEY_UP:
+                        if (event.key.key == SDLK_ESCAPE)
+                        {
+                            return;
+                        }
+                        if (event.key.key == SDLK_RETURN || event.key.key == SDLK_SPACE)
                         {
                             int sel_idx = y * col + x + atlu;
                             if (ItemList[sel_idx] >= 0)
@@ -4295,8 +3923,33 @@ bool MenuItem()
                             }
                             return;
                         }
-                    }
-                    break;
+                        break;
+                    case SDL_EVENT_MOUSE_BUTTON_UP:
+                        if (event.button.button == SDL_BUTTON_RIGHT)
+                        {
+                            return;
+                        }
+                        if (event.button.button == SDL_BUTTON_LEFT)
+                        {
+                            // 手机触屏防误触: TouchWalk关闭时(防误触模式)鼠标点击无效，仅虚拟按键可操作
+                            if (CellPhone != 0 && !TouchWalk) { break; }
+                            int mx = (int)(event.button.x / ((float)RESOLUTIONX / ScreenWidth()));
+                            int my = (int)(event.button.y / ((float)RESOLUTIONY / ScreenHeight()));
+                            if (mx >= 110 && mx < 110 + w && my > 90 && my < 308)
+                            {
+                                int sel_idx = y * col + x + atlu;
+                                if (ItemList[sel_idx] >= 0)
+                                {
+                                    CurItem = RItemList[ItemList[sel_idx]].Number;
+                                    if (Where != 2 && CurItem >= 0)
+                                    {
+                                        UseItem(CurItem);
+                                    }
+                                }
+                                return;
+                            }
+                        }
+                        break;
                     case SDL_EVENT_MOUSE_WHEEL:
                         // 手机触屏防误触: TouchWalk关闭时(防误触模式)滚轮（手指滑动）无效
                         if (CellPhone != 0 && !TouchWalk) { break; }
@@ -4312,7 +3965,7 @@ bool MenuItem()
                                 y = row - 1;
                             }
                             ShowMenuItem();
-                            UpdateScreen(screen, 0, 0, screen->w, screen->h);
+                            UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
                         }
                         if (event.wheel.y > 0)
                         {
@@ -4326,44 +3979,44 @@ bool MenuItem()
                                 }
                             }
                             ShowMenuItem();
-                            UpdateScreen(screen, 0, 0, screen->w, screen->h);
+                            UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
                         }
                         break;
                     case SDL_EVENT_MOUSE_MOTION:
+                    {
+                        // 手机触屏防误触: TouchWalk关闭时(防误触模式)鼠标移动无效
+                        if (CellPhone != 0 && !TouchWalk) { break; }
+                        int mx = (int)(event.motion.x / ((float)RESOLUTIONX / ScreenWidth()));
+                        int my = (int)(event.motion.y / ((float)RESOLUTIONY / ScreenHeight()));
+                        if (mx >= 110 && mx < 110 + w && my > 90 && my < 308)
                         {
-                            // 手机触屏防误触: TouchWalk关闭时(防误触模式)鼠标移动无效
-                            if (CellPhone != 0 && !TouchWalk) { break; }
-                            int mx = (int)(event.motion.x / ((float)RESOLUTIONX / screen->w));
-                            int my = (int)(event.motion.y / ((float)RESOLUTIONY / screen->h));
-                            if (mx >= 110 && mx < 110 + w && my > 90 && my < 308)
+                            int xp = x, yp = y;
+                            x = (mx - 115) / 42;
+                            y = (my - 95) / 42;
+                            if (x >= col)
                             {
-                                int xp = x, yp = y;
-                                x = (mx - 115) / 42;
-                                y = (my - 95) / 42;
-                                if (x >= col)
-                                {
-                                    x = col - 1;
-                                }
-                                if (y >= row)
-                                {
-                                    y = row - 1;
-                                }
-                                if (x < 0)
-                                {
-                                    x = 0;
-                                }
-                                if (y < 0)
-                                {
-                                    y = 0;
-                                }
-                                if (x != xp || y != yp)
-                                {
-                                    ShowMenuItem();
-                                    UpdateScreen(screen, 0, 0, screen->w, screen->h);
-                                }
+                                x = col - 1;
                             }
-                            break;
+                            if (y >= row)
+                            {
+                                y = row - 1;
+                            }
+                            if (x < 0)
+                            {
+                                x = 0;
+                            }
+                            if (y < 0)
+                            {
+                                y = 0;
+                            }
+                            if (x != xp || y != yp)
+                            {
+                                ShowMenuItem();
+                                UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
+                            }
                         }
+                        break;
+                    }
                     }
                 }
             };
@@ -4437,6 +4090,10 @@ void UseItem(int inum)
             case 2: y--; break;
             case 3: x++; break;
             }
+            if (x < 0 || x >= 64 || y < 0 || y >= 64)
+            {
+                break;
+            }
             if (SData[CurScene][3][x][y] >= 0)
             {
                 CurEvent = SData[CurScene][3][x][y];
@@ -4465,10 +4122,10 @@ void UseItem(int inum)
         if (menu == 1)
         {
             Redraw();
-            std::string str1 = cp950toutf8(Ritem[inum].Name);
+            std::string str1 = cp950toutf8(Ritem[inum].Name, sizeof(Ritem[inum].Name));
             DrawTextWithRect("誰要裝備", 80, 30, (int)str1.size() * 11 + 80, ColColor(0x21), ColColor(0x23));
             DrawShadowText(str1, 160, 32, ColColor(0x64), ColColor(0x66));
-            UpdateScreen(screen, 0, 0, screen->w, screen->h);
+            UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
             int sel = SelectOneTeamMember(80, 65, "", 0, 0);
             if (sel >= 0)
             {
@@ -4514,10 +4171,10 @@ void UseItem(int inum)
         if (menu == 1)
         {
             Redraw();
-            std::string str1 = cp950toutf8(Ritem[inum].Name);
+            std::string str1 = cp950toutf8(Ritem[inum].Name, sizeof(Ritem[inum].Name));
             DrawTextWithRect("誰要修煉", 80, 30, (int)str1.size() * 11 + 80, ColColor(0x21), ColColor(0x23));
             DrawShadowText(str1, 160, 32, ColColor(0x64), ColColor(0x66));
-            UpdateScreen(screen, 0, 0, screen->w, screen->h);
+            UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
             int sel = SelectOneTeamMember(80, 65, "", 0, 0);
             if (sel >= 0)
             {
@@ -4550,10 +4207,10 @@ void UseItem(int inum)
         int sel = -1;
         if (Where != 2)
         {
-            std::string str1 = cp950toutf8(Ritem[inum].Name);
+            std::string str1 = cp950toutf8(Ritem[inum].Name, sizeof(Ritem[inum].Name));
             DrawTextWithRect("誰要服用", 80, 30, (int)str1.size() * 11 + 80, ColColor(0x21), ColColor(0x23));
             DrawShadowText(str1, 160, 32, ColColor(0x64), ColColor(0x66));
-            UpdateScreen(screen, 0, 0, screen->w, screen->h);
+            UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
             sel = SelectOneTeamMember(80, 65, "", 0, 0);
         }
         if (sel >= 0)
@@ -4676,7 +4333,7 @@ bool CanEquip(int rnum, int inum)
 
 void MenuLeave()
 {
-    std::string str = (MODVersion == 22) ? "選擇一個隊友" : "要求誰離隊？";
+    std::string str = mods::Active().partySelectionPrompt();
     DrawTextWithRect(str, 80, 30, 132, ColColor(0x21), ColColor(0x23));
     int menu = SelectOneTeamMember(80, 65, "%3d", 15, 0);
     if (menu >= 0)
@@ -4687,24 +4344,24 @@ void MenuLeave()
             {
                 Redraw();
                 CallEvent(BEGIN_LEAVE_EVENT + i * 2);
-                UpdateScreen(screen, 0, 0, screen->w, screen->h);
+                UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
                 break;
             }
         }
     }
     Redraw();
-    UpdateScreen(screen, 0, 0, screen->w, screen->h);
+    UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
 }
 
 void MenuStatus()
 {
     Redraw();
-    RecordFreshScreen(0, 0, screen->w, screen->h);
-    UpdateScreen(screen, 0, 0, screen->w, screen->h);
+    RecordFreshScreen(0, 0, ScreenWidth(), ScreenHeight());
+    UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
 
     if (Where == 2)
     {
-        CalCanSelect(0,0, 32);
+        CalCanSelect(0, 0, 32);
         for (int i = 0; i < 64; i++)
         {
             for (int j = 0; j < 64; j++)
@@ -4720,7 +4377,7 @@ void MenuStatus()
             if (BField[2][Ax][Ay] >= 0 && BField[2][Ax][Ay] < BRoleAmount)
             {
                 ShowStatus(Brole[BField[2][Ax][Ay]].rnum);
-                UpdateScreen(screen, 0, 0, screen->w, screen->h);
+                UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
                 WaitAnyKey();
             }
         }
@@ -4735,14 +4392,14 @@ void MenuStatus()
         {
             if (TeamList[i] >= 0)
             {
-                menuStr[i] = cp950toutf8(Rrole[TeamList[i]].Name);
+                menuStr[i] = cp950toutf8(Rrole[TeamList[i]].Name, sizeof(Rrole[TeamList[i]].Name));
                 Amount++;
             }
         }
         CommonMenu(10, 65, 85, Amount - 1, 0, menuStr, ShowStatusByTeam);
     }
     Redraw();
-    UpdateScreen(screen, 0, 0, screen->w, screen->h);
+    UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
 }
 
 void ShowStatusByTeam(int tnum)
@@ -4764,6 +4421,10 @@ void ShowStatus(int rnum)
 
 void ShowStatus(int rnum, int x, int y)
 {
+    if (Headless())
+    {
+        return;
+    }
     std::string strs[22];
     strs[0] = "等級";
     strs[1] = "生命";
@@ -4788,30 +4449,17 @@ void ShowStatus(int rnum, int x, int y)
     strs[20] = "受傷";
     strs[21] = "中毒";
 
-    if (MODVersion == 22)
-    {
-        strs[2] = "靈力";
-        strs[6] = "武力";
-        strs[8] = "移動";
-        strs[9] = "仙術能力";
-        strs[10] = "毒術能力";
-        strs[12] = "火系能力";
-        strs[13] = "水系能力";
-        strs[14] = "雷系能力";
-        strs[15] = "土系能力";
-        strs[16] = "射擊能力";
-        strs[19] = "所會法術";
-    }
+    mods::Active().customizeStatusLabels(strs);
 
     if (Where <= 2)
     {
-        LoadFreshScreen(0, 0, screen->w, screen->h);
+        LoadFreshScreen(0, 0, ScreenWidth(), ScreenHeight());
     }
 
     DrawRectangle(screen, x, y, 545, 315, 0, ColColor(255), 50);
 
     DrawHeadPic(Rrole[rnum].HeadNum, x + 60, y + 80);
-    std::string Name = cp950toutf8(Rrole[rnum].Name, 5);
+    std::string Name = cp950toutf8(Rrole[rnum].Name, sizeof(Rrole[rnum].Name));
     DrawShadowText(Name, x + 88 - DrawLength(Name) * 5, y + 85, ColColor(0x66), ColColor(0x63));
 
     for (int i = 0; i <= 5; i++)
@@ -4928,10 +4576,9 @@ void ShowStatus(int rnum, int x, int y)
     buf = std::format("{:5d}", (uint16_t)Rrole[rnum].Exp);
     DrawEngShadowText(buf, x + 100, y + 194, ColColor(0x5), ColColor(0x7));
     // 升级所需经验
-    int lvl = Rrole[rnum].Level;
-    if (lvl >= 1 && lvl <= 100)
+    if (NextLevelExperience(Rrole[rnum]) >= 0)
     {
-        buf = std::format("{:5d}", (uint16_t)LevelUpList[lvl - 1]);
+        buf = std::format("{:5d}", NextLevelExperience(Rrole[rnum]));
     }
     else
     {
@@ -4946,7 +4593,7 @@ void ShowStatus(int rnum, int x, int y)
         {
             int mnum = Rrole[rnum].Magic[i];
             int levelIdx = Rrole[rnum].MagLevel[i] / 100;    // 0-based index
-            std::string mname = cp950toutf8(Rmagic[mnum].Name);
+            std::string mname = cp950toutf8(Rmagic[mnum].Name, sizeof(Rmagic[mnum].Name));
             DrawShadowText(mname, x + 335, y + 26 + 21 * i, ColColor(0x5), ColColor(0x7));
             buf = std::format("{:2d}", levelIdx + 1);
             DrawEngShadowText(buf, x + 462, y + 26 + 21 * i, ColColor(0x64), ColColor(0x66));
@@ -5009,6 +4656,7 @@ void ShowStatus(int rnum, int x, int y)
         int hy = y;
         DrawRectangle(screen, hx, hy, 140, 292, 0, ColColor(255), 50);
         DrawShadowText("隱藏屬性", hx + 5, hy + 5, ColColor(0x21), ColColor(0x23));
+
         struct
         {
             const char* label;
@@ -5028,6 +4676,7 @@ void ShowStatus(int rnum, int x, int y)
             { "道德", Rrole[rnum].Ethics, ColColor(0x21), ColColor(0x23) },
             { "聲望", Rrole[rnum].Repute, ColColor(0x21), ColColor(0x23) },
         };
+
         constexpr int hiddenAttrCount = sizeof(hiddenAttrs) / sizeof(hiddenAttrs[0]);
         for (int i = 0; i < hiddenAttrCount; i++)
         {
@@ -5056,12 +4705,16 @@ void ShowStatus(int rnum, int x, int y)
 
 void ShowSimpleStatus(int rnum, int x, int y)
 {
+    if (Headless())
+    {
+        return;
+    }
     // 匹配Pascal版简易状态显示
     std::string strs[4] = { "等級", "生命", "內力", "體力" };
 
     DrawRectangle(screen, x, y, 145, 173, 0, ColColor(255), 50);
     DrawHeadPic(Rrole[rnum].HeadNum, x + 50, y + 63);
-    std::string Name = cp950toutf8(Rrole[rnum].Name, 5);
+    std::string Name = cp950toutf8(Rrole[rnum].Name, sizeof(Rrole[rnum].Name));
     DrawShadowText(Name, x + 80 - DrawLength(Name) * 5, y + 65, ColColor(0x64), ColColor(0x66));
     for (int i = 0; i <= 3; i++)
     {
@@ -5158,7 +4811,7 @@ int MenuSystem()
         }
         Redraw();
         ShowMenu(6);
-        UpdateScreen(screen, 133, 0, screen->w - 133, screen->h);
+        UpdateScreen(screen, 133, 0, ScreenWidth() - 133, ScreenHeight());
     }
     return i;
 }
@@ -5193,7 +4846,7 @@ void MenuLoad()
         {
             ShowSceneName(CurScene);
         }
-        UpdateScreen(screen, 0, 0, screen->w, screen->h);
+        UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
     }
     ShowMenu(6);
 }
@@ -5203,7 +4856,7 @@ int MenuLoadAtBeginning()
     const char* names[] = { "載入進度一", "載入進度二", "載入進度三", "載入進度四", "載入進度五",
         "載入進度六", "載入進度七", "載入進度八", "載入進度九", "載入進度十", "載入自動檔" };
     Redraw();
-    UpdateScreen(screen, 0, 0, screen->w, screen->h);
+    UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
     std::string menuStr[11];
     for (int i = 0; i < 11; i++)
     {
@@ -5254,26 +4907,9 @@ void MenuQuit()
 
 int EffectMedcine(int role1, int role2)
 {
-    int addlife = Rrole[role1].Medicine * MED_LIFE * (10 - Rrole[role2].Hurt / 15) / 10;
-    if (Rrole[role2].Hurt - Rrole[role1].Medicine > 20)
-    {
-        addlife = 0;
-    }
-    int minushurt = addlife / LIFE_HURT;
-    if (minushurt > Rrole[role2].Hurt)
-    {
-        minushurt = Rrole[role2].Hurt;
-    }
-    Rrole[role2].Hurt -= minushurt;
-    if (Rrole[role2].Hurt < 0)
-    {
-        Rrole[role2].Hurt = 0;
-    }
-    if (addlife > Rrole[role2].MaxHP - Rrole[role2].CurrentHP)
-    {
-        addlife = Rrole[role2].MaxHP - Rrole[role2].CurrentHP;
-    }
-    Rrole[role2].CurrentHP += addlife;
+    int injury = Rrole[role2].Hurt;
+    int addlife = BattleRules().heal(Rrole[role1], Rrole[role2]);
+    int minushurt = injury - Rrole[role2].Hurt;
 
     if (Where != 2)
     {
@@ -5287,7 +4923,7 @@ int EffectMedcine(int role1, int role2)
         buf = std::format("{:4d}", minushurt);
         DrawEngShadowText(buf, 220, 150, ColColor(0x64), ColColor(0x66));
         ShowSimpleStatus(role2, 350, 50);
-        UpdateScreen(screen, 0, 0, screen->w, screen->h);
+        UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
         WaitAnyKey();
         Redraw();
     }
@@ -5296,12 +4932,7 @@ int EffectMedcine(int role1, int role2)
 
 int EffectMedPoison(int role1, int role2)
 {
-    int minuspoi = Rrole[role1].MedPoi;
-    if (minuspoi > Rrole[role2].Poison)
-    {
-        minuspoi = Rrole[role2].Poison;
-    }
-    Rrole[role2].Poison -= minuspoi;
+    int minuspoi = BattleRules().detox(Rrole[role1], Rrole[role2]);
 
     if (Where != 2)
     {
@@ -5312,7 +4943,7 @@ int EffectMedPoison(int role1, int role2)
         auto buf = std::format("{:4d}", minuspoi);
         DrawEngShadowText(buf, 220, 125, ColColor(0x64), ColColor(0x66));
         ShowSimpleStatus(role2, 350, 50);
-        UpdateScreen(screen, 0, 0, screen->w, screen->h);
+        UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
         WaitAnyKey();
         Redraw();
     }
@@ -5321,6 +4952,10 @@ int EffectMedPoison(int role1, int role2)
 
 int EatOneItem(int rnum, int inum, int times, int display)
 {
+    if (Headless())
+    {
+        display = 0;
+    }
     if (inum < 0 || inum >= 725)
     {
         return 0;
@@ -5333,7 +4968,7 @@ int EatOneItem(int rnum, int inum, int times, int display)
         50, 51, 52, 53, 54, 55, 56,    // 14-20: 拳掌/御剑/耍刀/特殊/暗器/知识/品德
         58, 57, 19                     // 21: 左右互搏, 22: 攻击带毒, 23: 受伤
     };
-    int addvalue[24] = {};
+    int addvalue[24] = { };
     for (int i = 0; i <= 22; i++)
     {
         if (i != 4 && i != 21)
@@ -5488,7 +5123,7 @@ int EatOneItem(int rnum, int inum, int times, int display)
         };
 
         // 显示"服用"或"練成N次"
-        std::string itemName = cp950toutf8(Ritem[inum].Name, 20);
+        std::string itemName = cp950toutf8(Ritem[inum].Name, sizeof(Ritem[inum].Name));
         int nameW = 100 + DrawLength(itemName) * 10;
         DrawRectangle(screen, 100, 70, nameW, 25, 0, ColColor(255), 50);
         std::string headerStr;
@@ -5590,7 +5225,7 @@ int EatOneItem(int rnum, int inum, int times, int display)
             sx = 440;
         }
         ShowSimpleStatus(rnum, sx, 50);
-        UpdateScreen(screen, 0, 0, screen->w, screen->h);
+        UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
     }
     else
     {
@@ -5616,359 +5251,6 @@ int EatOneItem(int rnum, int inum, int times, int display)
 
 // ---- 事件调用 ----
 
-void CallEvent(int num)
-{
-    SStep = 0;
-    SceneRolePic = BEGIN_WALKPIC + SFace * 7;
-    NeedRefreshScene = 0;
-
-    auto RunKDefEvent = [&]()
-    {
-        int offset, len;
-        if (num == 0)
-        {
-            offset = 0;
-            len = KIdx[0];
-        }
-        else
-        {
-            offset = KIdx[num - 1];
-            len = KIdx[num] - offset;
-        }
-        int ecount = len / 2 + 1;
-        std::vector<int16_t> e(ecount, 0);
-        if (len > 0)
-        {
-            memcpy(e.data(), KDef.data() + offset, len);
-        }
-        int i = 0;
-
-        while (i < ecount - 1)
-        {
-            SDL_PollEvent(&event);
-            CheckBasicEvent();
-            if (e[i] < 0)
-            {
-                break;
-            }
-            switch (e[i])
-            {
-            case 0:
-                instruct_0();
-                i += 1;
-                break;
-            case 1:
-                instruct_1(e[i + 1], e[i + 2], e[i + 3]);
-                i += 4;
-                break;
-            case 2:
-                instruct_2(e[i + 1], e[i + 2]);
-                i += 3;
-                break;
-            case 3:
-            {
-                std::vector<int> list(13);
-                for (int j = 0; j < 13; j++)
-                {
-                    list[j] = e[i + 1 + j];
-                }
-                instruct_3(list);
-                i += 14;
-                break;
-            }
-            case 4:
-                i += instruct_4(e[i + 1], e[i + 2], e[i + 3]);
-                i += 4;
-                break;
-            case 5:
-                i += instruct_5(e[i + 1], e[i + 2]);
-                i += 3;
-                break;
-            case 6:
-                i += instruct_6(e[i + 1], e[i + 2], e[i + 3], e[i + 4]);
-                i += 5;
-                break;
-            case 7:
-                i += 1;
-                return;
-            case 8:
-                instruct_8(e[i + 1]);
-                i += 2;
-                break;
-            case 9:
-                i += instruct_9(e[i + 1], e[i + 2]);
-                i += 3;
-                break;
-            case 10:
-                instruct_10(e[i + 1]);
-                i += 2;
-                break;
-            case 11:
-                i += instruct_11(e[i + 1], e[i + 2]);
-                i += 3;
-                break;
-            case 12:
-                instruct_12();
-                i += 1;
-                break;
-            case 13:
-                instruct_13();
-                i += 1;
-                break;
-            case 14:
-                instruct_14();
-                i += 1;
-                break;
-            case 15:
-                instruct_15();
-                i += 1;
-                return;
-            case 16:
-                i += instruct_16(e[i + 1], e[i + 2], e[i + 3]);
-                i += 4;
-                break;
-            case 17:
-            {
-                std::vector<int> list(5);
-                for (int j = 0; j < 5; j++)
-                {
-                    list[j] = e[i + 1 + j];
-                }
-                instruct_17(list);
-                i += 6;
-                break;
-            }
-            case 18:
-                i += instruct_18(e[i + 1], e[i + 2], e[i + 3]);
-                i += 4;
-                break;
-            case 19:
-                instruct_19(e[i + 1], e[i + 2]);
-                i += 3;
-                break;
-            case 20:
-                i += instruct_20(e[i + 1], e[i + 2]);
-                i += 3;
-                break;
-            case 21:
-                instruct_21(e[i + 1]);
-                i += 2;
-                break;
-            case 22:
-                instruct_22();
-                i += 1;
-                break;
-            case 23:
-                instruct_23(e[i + 1], e[i + 2]);
-                i += 3;
-                break;
-            case 24:
-                instruct_24();
-                i += 1;
-                break;
-            case 25:
-                instruct_25(e[i + 1], e[i + 2], e[i + 3], e[i + 4]);
-                i += 5;
-                break;
-            case 26:
-                instruct_26(e[i + 1], e[i + 2], e[i + 3], e[i + 4], e[i + 5]);
-                i += 6;
-                break;
-            case 27:
-                instruct_27(e[i + 1], e[i + 2], e[i + 3]);
-                i += 4;
-                break;
-            case 28:
-                i += instruct_28(e[i + 1], e[i + 2], e[i + 3], e[i + 4], e[i + 5]);
-                i += 6;
-                break;
-            case 29:
-                i += instruct_29(e[i + 1], e[i + 2], e[i + 3], e[i + 4], e[i + 5]);
-                i += 6;
-                break;
-            case 30:
-                instruct_30(e[i + 1], e[i + 2], e[i + 3], e[i + 4]);
-                i += 5;
-                break;
-            case 31:
-                i += instruct_31(e[i + 1], e[i + 2], e[i + 3]);
-                i += 4;
-                break;
-            case 32:
-                instruct_32(e[i + 1], e[i + 2]);
-                i += 3;
-                break;
-            case 33:
-                instruct_33(e[i + 1], e[i + 2], e[i + 3]);
-                i += 4;
-                break;
-            case 34:
-                instruct_34(e[i + 1], e[i + 2]);
-                i += 3;
-                break;
-            case 35:
-                instruct_35(e[i + 1], e[i + 2], e[i + 3], e[i + 4]);
-                i += 5;
-                break;
-            case 36:
-                i += instruct_36(e[i + 1], e[i + 2], e[i + 3]);
-                i += 4;
-                break;
-            case 37:
-                instruct_37(e[i + 1]);
-                i += 2;
-                break;
-            case 38:
-                instruct_38(e[i + 1], e[i + 2], e[i + 3], e[i + 4]);
-                i += 5;
-                break;
-            case 39:
-                instruct_39(e[i + 1]);
-                i += 2;
-                break;
-            case 40:
-                instruct_40(e[i + 1]);
-                i += 2;
-                break;
-            case 41:
-                instruct_41(e[i + 1], e[i + 2], e[i + 3]);
-                i += 4;
-                break;
-            case 42:
-                i += instruct_42(e[i + 1], e[i + 2]);
-                i += 3;
-                break;
-            case 43:
-                i += instruct_43(e[i + 1], e[i + 2], e[i + 3]);
-                i += 4;
-                break;
-            case 44:
-                instruct_44(e[i + 1], e[i + 2], e[i + 3], e[i + 4], e[i + 5], e[i + 6]);
-                i += 7;
-                break;
-            case 45:
-                instruct_45(e[i + 1], e[i + 2]);
-                i += 3;
-                break;
-            case 46:
-                instruct_46(e[i + 1], e[i + 2]);
-                i += 3;
-                break;
-            case 47:
-                instruct_47(e[i + 1], e[i + 2]);
-                i += 3;
-                break;
-            case 48:
-                instruct_48(e[i + 1], e[i + 2]);
-                i += 3;
-                break;
-            case 49:
-                instruct_49(e[i + 1], e[i + 2]);
-                i += 3;
-                break;
-            case 50:
-            {
-                std::vector<int> list(7);
-                for (int j = 0; j < 7; j++)
-                {
-                    list[j] = e[i + 1 + j];
-                }
-                int p = instruct_50(list);
-                i += 8;
-                if (p < 622592)
-                {
-                    i += p;
-                }
-                else
-                {
-                    e[i + ((p + 32768) / 655360) - 1] = p % 655360;
-                }
-                break;
-            }
-            case 51:
-                instruct_51();
-                i += 1;
-                break;
-            case 52:
-                instruct_52();
-                i += 1;
-                break;
-            case 53:
-                instruct_53();
-                i += 1;
-                break;
-            case 54:
-                instruct_54();
-                i += 1;
-                break;
-            case 55:
-                i += instruct_55(e[i + 1], e[i + 2], e[i + 3], e[i + 4]);
-                i += 5;
-                break;
-            case 56:
-                instruct_56(e[i + 1]);
-                i += 2;
-                break;
-            case 57:
-                instruct_57();
-                i += 1;
-                break;
-            case 58:
-                instruct_58();
-                i += 1;
-                break;
-            case 59:
-                instruct_59();
-                i += 1;
-                break;
-            case 60:
-                i += instruct_60(e[i + 1], e[i + 2], e[i + 3], e[i + 4], e[i + 5]);
-                i += 6;
-                break;
-            case 61:
-                i += instruct_61(e[i + 1], e[i + 2]);
-                i += 3;
-                break;
-            case 62:
-                instruct_62(e[i + 1], e[i + 2], e[i + 3], e[i + 4], e[i + 5], e[i + 6]);
-                i += 7;
-                return;
-            case 63:
-                instruct_63(e[i + 1], e[i + 2]);
-                i += 3;
-                break;
-            case 64:
-                instruct_64();
-                i += 1;
-                break;
-            case 65: i += 1; break;    // NOP
-            case 66:
-                instruct_66(e[i + 1]);
-                i += 2;
-                break;
-            case 67:
-                instruct_67(e[i + 1]);
-                i += 2;
-                break;
-            default: i += 1; break;
-            }
-        }
-    };
-
-    RunKDefEvent();
-
-    if (NeedRefreshScene == 1)
-    {
-        InitialScene(0);
-    }
-    NeedRefreshScene = 1;
-    if (MMAPAMI * SCENEAMI == 0)
-    {
-        Redraw();
-        UpdateScreen(screen, 0, 0, screen->w, screen->h);
-    }
-}
-
 // ---- 云 ----
 
 // 严格按Pascal版: CloudCreateOnSide先初始化所有字段, CloudCreate再覆盖Positionx
@@ -5982,15 +5264,15 @@ void CloudCreateOnSide(int num)
     {
         Cloud.resize(num + 1);
     }
-    Cloud[num].Picnum = rand() % std::max(1, CPicAmount);
+    Cloud[num].Picnum = GameRandom() % std::max(1, CPicAmount);
     Cloud[num].Shadow = 0;
-    Cloud[num].Alpha = 10 + rand() % 50;
-    Cloud[num].mixColor = (uint32_t)(rand() % 256) + ((uint32_t)(rand() % 256) << 8)
-        + ((uint32_t)(rand() % 256) << 16) + ((uint32_t)(rand() % 256) << 24);
-    Cloud[num].mixAlpha = 10 + rand() % 50;
+    Cloud[num].Alpha = 10 + GameRandom() % 50;
+    Cloud[num].mixColor = (uint32_t)(GameRandom() % 256) + ((uint32_t)(GameRandom() % 256) << 8)
+        + ((uint32_t)(GameRandom() % 256) << 16) + ((uint32_t)(GameRandom() % 256) << 24);
+    Cloud[num].mixAlpha = 10 + GameRandom() % 50;
     Cloud[num].Positionx = 0;
-    Cloud[num].Positiony = rand() % 8640;
-    Cloud[num].Speedx = 1 + rand() % 3;
+    Cloud[num].Positiony = GameRandom() % 8640;
+    Cloud[num].Speedx = 1 + GameRandom() % 3;
     Cloud[num].Speedy = 0;
 }
 
@@ -5999,7 +5281,7 @@ void CloudCreate(int num)
     CloudCreateOnSide(num);
     if (num >= 0 && num < (int)Cloud.size())
     {
-        Cloud[num].Positionx = rand() % 17280;
+        Cloud[num].Positionx = GameRandom() % 17280;
     }
 }
 
@@ -6011,117 +5293,131 @@ bool IsCave(int snum)
 int teleport()
 {
     Redraw();
-    DrawRectangleWithoutFrame(screen, 0, 0, screen->w, screen->h, 0xFF000000, 50);
-    // 绘制小地图：每个地块绘制一个像素
-    for (int x = 0; x < 480; x++)
-    {
-        for (int y = 0; y < 480; y++)
-        {
-            int x1 = CENTER_X - (x - y);
-            int y1 = (x + y) / 2;
-            DrawMPic(Earth[x][y] / 2, x1, y1 + 18, 0, 0, 0, 0, 1);
-        }
-    }
-    RecordFreshScreen(0, 0, screen->w, screen->h);
+    DrawRectangleWithoutFrame(screen, 0, 0, ScreenWidth(), ScreenHeight(), 0xFF000000, 50);
+    WorldMapOverview overview(ScreenWidth(), ScreenHeight());
+    overview.draw();
+    RecordFreshScreen(0, 0, ScreenWidth(), ScreenHeight());
 
-    int result = 0;
-    auto FinishTeleport = [&]()
+    auto SceneAt = [&](int x, int y)
     {
-        return result;
-    };
-
-    while (true)
-    {
-        // drawtelemap: 绘制场景标记点
-        LoadFreshScreen(0, 0, screen->w, screen->h);
-        int mx2, my2;
-        SDL_GetMouseState2(mx2, my2);
-        int hoverScene = -1;
-        int hx = 0, hy = 0;
+        int scene = -1;
+        int nearest = 19;
         for (int i = 0; i < SceneAmount; i++)
         {
             int sx = Rscene[i].MainEntranceX1;
             int sy = Rscene[i].MainEntranceY1;
-            if (sx > 0 && sy > 0)
+            if (sx <= 0 || sx >= 480 || sy <= 0 || sy >= 480)
             {
-                int dx = CENTER_X - (sx - sy);
-                int dy = (sx + sy) / 2;
-                DrawRectangleWithoutFrame(screen, dx, dy, 5, 5, 0xFFFFFFFF, 50);
-                if (InRegion(mx2, my2, dx, dy, 5, 5))
-                {
-                    hoverScene = i;
-                    hx = dx;
-                    hy = dy;
-                }
+                continue;
+            }
+            auto point = overview.screenPosition(sx, sy);
+            int dx = x - point.x, dy = y - point.y;
+            int distance = dx * dx + dy * dy;
+            if (std::abs(dx) <= 3 && std::abs(dy) <= 3 && distance < nearest)
+            {
+                scene = i;
+                nearest = distance;
             }
         }
-        // 绘制当前位置红点
-        int px = CENTER_X - (Mx - My);
-        int py = (Mx + My) / 2;
-        DrawRectangleWithoutFrame(screen, px, py, 5, 5, 0xFFFF0000, 50);
-        // 高亮悬停场景
+        return scene;
+    };
+
+    auto DrawOverview = [&](int hoverScene)
+    {
+        LoadFreshScreen(0, 0, ScreenWidth(), ScreenHeight());
+        for (int i = 0; i < SceneAmount; i++)
+        {
+            int sx = Rscene[i].MainEntranceX1;
+            int sy = Rscene[i].MainEntranceY1;
+            if (sx > 0 && sx < 480 && sy > 0 && sy < 480)
+            {
+                auto point = overview.screenPosition(sx, sy);
+                DrawRectangleWithoutFrame(screen, point.x - 2, point.y - 2, 5, 5, 0xFFFFFFFF, 50);
+            }
+        }
+        auto player = overview.screenPosition(Mx, My);
+        DrawRectangleWithoutFrame(screen, player.x - 2, player.y - 2, 5, 5, 0xFFFF0000, 50);
         if (hoverScene >= 0)
         {
-            DrawRectangleWithoutFrame(screen, hx, hy, 5, 5, 0xFFFFFFFF, 50);
-            std::string name = cp950toutf8(Rscene[hoverScene].Name);
-            DrawTextWithRect(name, hx + 7, hy - 5, -1, ColColor(5), ColColor(7));
+            auto point = overview.screenPosition(Rscene[hoverScene].MainEntranceX1, Rscene[hoverScene].MainEntranceY1);
+            DrawRectangleWithoutFrame(screen, point.x - 2, point.y - 2, 5, 5, 0xFFFFFFFF, 50);
+            std::string name = cp950toutf8(Rscene[hoverScene].Name, sizeof(Rscene[hoverScene].Name));
+            int width = DrawLength(name) * 10 + 7;
+            int x = std::clamp(point.x + 7, 0, std::max(0, ScreenWidth() - width - 1));
+            int y = std::clamp(point.y - 5, 0, std::max(0, ScreenHeight() - 29));
+            DrawTextWithRectNoUpdate(name, x, y, width, ColColor(5), ColColor(7));
         }
-        SDL_Delay(16);
         UpdateAllScreen();
+    };
 
-        if (!SDL_PollEvent(&event))
+    int mx, my;
+    SDL_GetMouseState2(mx, my);
+    int hoverScene = SceneAt(mx, my);
+    DrawOverview(hoverScene);
+    while (SDL_WaitEvent(&event))
+    {
+        // Drain queued motion before redrawing. Clicks use their own coordinates,
+        // so neither a previous hover nor a later pointer move changes the target.
+        do
         {
-            SDL_zero(event);
-        }
-        CheckBasicEvent();
-        switch (event.type)
-        {
-        case SDL_EVENT_KEY_UP:
-            if (event.key.key == SDLK_ESCAPE)
+            CheckBasicEvent();
+            switch (event.type)
             {
-                return FinishTeleport();
-            }
-            if (event.key.key == SDLK_RETURN || event.key.key == SDLK_SPACE)
-            {
-                return FinishTeleport();
-            }
-            break;
-        case SDL_EVENT_MOUSE_BUTTON_UP:
-            if (event.button.button == SDL_BUTTON_RIGHT)
-            {
-                return FinishTeleport();
-            }
-            if (event.button.button == SDL_BUTTON_LEFT)
-            {
-                SDL_GetMouseState2(mx2, my2);
-                int tx = (my2 * 2 - mx2 + CENTER_X) / 2;
-                int ty = my2 * 2 - tx;
-                if (InRegion(tx, ty, 0, 0, 480, 480))
+            case SDL_EVENT_KEY_UP:
+                if (event.key.key == SDLK_ESCAPE || event.key.key == SDLK_RETURN || event.key.key == SDLK_SPACE)
                 {
-                    Mx = tx;
-                    My = ty;
-                    result = 1;
-                    if (hoverScene >= 0)
+                    return 0;
+                }
+                break;
+            case SDL_EVENT_MOUSE_MOTION:
+                mx = (int)std::lround(event.motion.x * ScreenWidth() / RESOLUTIONX);
+                my = (int)std::lround(event.motion.y * ScreenHeight() / RESOLUTIONY);
+                break;
+            case SDL_EVENT_MOUSE_BUTTON_UP:
+                if (event.button.button == SDL_BUTTON_RIGHT)
+                {
+                    return 0;
+                }
+                if (event.button.button == SDL_BUTTON_LEFT)
+                {
+                    mx = (int)std::lround(event.button.x * ScreenWidth() / RESOLUTIONX);
+                    my = (int)std::lround(event.button.y * ScreenHeight() / RESOLUTIONY);
+                    int scene = SceneAt(mx, my);
+                    auto tile = overview.mapPosition((float)mx, (float)my);
+                    if (scene >= 0)
                     {
-                        if (CheckCanEnter(hoverScene))
+                        tile = { Rscene[scene].MainEntranceX1, Rscene[scene].MainEntranceY1 };
+                    }
+                    if (InRegion(tile.x, tile.y, 0, 0, 480, 480))
+                    {
+                        Mx = tile.x;
+                        My = tile.y;
+                        if (scene >= 0 && CheckCanEnter(scene))
                         {
                             instruct_14();
-                            CurScene = hoverScene;
+                            CurScene = scene;
                             SStep = 0;
                             Sx = Rscene[CurScene].EntranceX;
                             Sy = Rscene[CurScene].EntranceY;
                             SaveR(11);
                             WalkInScene(0);
                         }
+                        event.key.key = 0;
+                        event.button.button = 0;
+                        return 1;
                     }
-                    event.key.key = 0;
-                    event.button.button = 0;
-                    return FinishTeleport();
                 }
+                break;
             }
-            break;
+        } while (SDL_PollEvent(&event));
+        int nextHover = SceneAt(mx, my);
+        if (nextHover != hoverScene)
+        {
+            hoverScene = nextHover;
+            DrawOverview(hoverScene);
         }
     }
+    return 0;
 }
 
 int TeleportByList()
@@ -6146,7 +5442,7 @@ int TeleportByList()
             continue;
         }
         sceneIdx.push_back(i);
-        std::string nameStr = cp950toutf8(Rscene[i].Name);
+        std::string nameStr = cp950toutf8(Rscene[i].Name, sizeof(Rscene[i].Name));
         if (DrawLength(nameStr) <= 0)
         {
             nameStr = std::format("場景{}", i);
@@ -6197,7 +5493,7 @@ int TeleportByList()
     for (int i = 0; i < (int)sceneIdx.size(); i++)
     {
         int sc = sceneIdx[i];
-        std::string nameStr = cp950toutf8(Rscene[sc].Name);
+        std::string nameStr = cp950toutf8(Rscene[sc].Name, sizeof(Rscene[sc].Name));
         if (DrawLength(nameStr) <= 0)
         {
             nameStr = std::format("場景{}", sc);
@@ -6265,7 +5561,7 @@ void StartAmi()
             DrawShadowText(line, x, y, ColColor(0xFF), ColColor(0xFF));
             p = i + 1;
             y += 25;
-            UpdateScreen(screen, 0, 0, screen->w, screen->h);
+            UpdateScreen(screen, 0, 0, ScreenWidth(), ScreenHeight());
         }
         if (str[i] == '*')
         {
@@ -6283,6 +5579,13 @@ void StartAmi()
 // EnterString (from event system, moved here for accessibility)
 bool EnterString(std::string& str, int x, int y, int w, int h)
 {
+    if (Headless())
+    {
+        return true;
+    }
+#ifdef __EMSCRIPTEN__
+    return WebEnterString(str);
+#endif
     int drawX = x;
     int drawY = y;
     if (CellPhone != 0)

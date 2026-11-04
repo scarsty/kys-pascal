@@ -2,9 +2,9 @@
 // 对应 kys_event.pas
 
 #pragma once
+#include "kys_type.h"
 #include <string>
 #include <vector>
-#include "kys_type.h"
 
 // 事件指令
 void instruct_0();

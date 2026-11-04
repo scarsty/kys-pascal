@@ -77,6 +77,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
+      <AdditionalIncludeDirectories>$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <WarningLevel>Level3</WarningLevel>
     </ClCompile>
@@ -89,7 +90,7 @@
     <ClCompile>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>C:\project\mlcc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);C:\project\mlcc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <SDLCheck>false</SDLCheck>
       <AdditionalOptions>/FS /utf-8 %(AdditionalOptions)</AdditionalOptions>
@@ -101,6 +102,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
+      <AdditionalIncludeDirectories>$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <WarningLevel>Level3</WarningLevel>
     </ClCompile>
@@ -115,7 +117,7 @@
     <ClCompile>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>C:\project\mlcc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);C:\project\mlcc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <SDLCheck>false</SDLCheck>
       <AdditionalOptions>/FS /utf-8 %(AdditionalOptions)</AdditionalOptions>
@@ -133,10 +135,32 @@
     <ClCompile Include="C:\project\mlcc\SimpleCC.cpp" />
     <ClCompile Include="C:\project\mlcc\strfunc.cpp" />
     <ClCompile Include="kys_battle.cpp" />
+    <ClCompile Include="kys_rules.cpp" />
+    <ClCompile Include="mods\mod.cpp" />
+    <ClCompile Include="mods\registry.cpp" />
+    <ClCompile Include="mods\base.cpp" />
+    <ClCompile Include="mods\xiaozhu.cpp" />
+    <ClCompile Include="mods\dragon.cpp" />
+    <ClCompile Include="mods\tianshu_qixia.cpp" />
+    <ClCompile Include="mods\boluo_sanguo.cpp" />
+    <ClCompile Include="mods\xiaomeng.cpp" />
+    <ClCompile Include="mods\zaizhan.cpp" />
+    <ClCompile Include="mods\ptt.cpp" />
+    <ClCompile Include="mods\weizheng.cpp" />
+    <ClCompile Include="mods\tianshu_jie.cpp" />
+    <ClCompile Include="mods\shake_world.cpp" />
+    <ClCompile Include="mods\zhenlong.cpp" />
+    <ClCompile Include="mods\wenqing.cpp" />
+    <ClCompile Include="mods\other.cpp" />
+    <ClCompile Include="rules\remake.cpp" />
+    <ClCompile Include="rules\dragon_dos12.cpp" />
+    <ClCompile Include="rules\growth_state.cpp" />
     <ClCompile Include="kys_draw.cpp" />
     <ClCompile Include="kys_engine.cpp" />
     <ClCompile Include="kys_event.cpp" />
     <ClCompile Include="kys_main.cpp" />
+    <ClCompile Include="kys_frontend.cpp" />
+    <ClCompile Include="kys_script.cpp" />
     <ClCompile Include="kys_type.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
@@ -147,10 +171,18 @@
     <ClInclude Include="C:\project\mlcc\SimpleCC.h" />
     <ClInclude Include="C:\project\mlcc\strfunc.h" />
     <ClInclude Include="kys_battle.h" />
+    <ClInclude Include="kys_rules.h" />
+    <ClInclude Include="mods\mod.h" />
+    <ClInclude Include="mods\definitions.h" />
+    <ClInclude Include="rules\rules_internal.h" />
+    <ClInclude Include="rules\dragon_dos12.h" />
+    <ClInclude Include="rules\growth_state.h" />
     <ClInclude Include="kys_draw.h" />
     <ClInclude Include="kys_engine.h" />
     <ClInclude Include="kys_event.h" />
     <ClInclude Include="kys_main.h" />
+    <ClInclude Include="kys_frontend.h" />
+    <ClInclude Include="kys_script.h" />
     <ClInclude Include="kys_type.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

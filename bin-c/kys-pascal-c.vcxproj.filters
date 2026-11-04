@@ -15,7 +15,73 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="kys_frontend.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="kys_script.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="kys_battle.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rules\remake.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rules\dragon_dos12.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rules\growth_state.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="kys_rules.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mods\mod.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mods\registry.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mods\base.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mods\xiaozhu.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mods\dragon.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mods\tianshu_qixia.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mods\boluo_sanguo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mods\xiaomeng.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mods\zaizhan.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mods\ptt.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mods\weizheng.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mods\tianshu_jie.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mods\shake_world.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mods\zhenlong.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mods\wenqing.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mods\other.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="kys_draw.cpp">
@@ -50,7 +116,31 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="kys_frontend.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="kys_script.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="kys_battle.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="rules\rules_internal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="rules\dragon_dos12.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="rules\growth_state.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="kys_rules.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="mods\mod.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="mods\definitions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="kys_draw.h">

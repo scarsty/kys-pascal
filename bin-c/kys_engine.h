@@ -18,6 +18,16 @@ void PlaySoundA(int SoundNum, int times);
 
 // 文件读取
 void ReadTiles();
+enum class MapTiles
+{
+    World,
+    Scene,
+    Battle
+};
+void EnsureMapTiles(MapTiles tiles);
+void EnsurePortraits();
+void EnsureEffects();
+void InitialFonts();
 char* ReadFileToBuffer(char* p, const std::string& filename, int size, int malloc_flag);
 void FreeFileBuffer(char*& p);
 int LoadIdxGrp(const std::string& stridx, const std::string& strgrp,
@@ -82,12 +92,14 @@ void QuitConfirm();
 uint32_t CheckBasicEvent();
 int AngleToDirection(double y, double x);
 void UpdateAllScreen();
+void ApplyRenderScale();
 void TransBlackScreen();
 void CleanKeyValue();
 bool inReturn(int x, int y);
 bool inEscape(int x, int y);
 uint32_t inVirtualKey(int x, int y, uint32_t& value);
 void GetMousePosition(int& x, int& y, int x0, int y0, int yp = 0);
+void GetMapPositionFromScreen(int& x, int& y, float px, float py, int x0, int y0, int yp = 0);
 bool MouseInRegion(int x, int y, int w, int h);
 bool MouseInRegion(int x, int y, int w, int h, int& x1, int& y1);
 int RegionParameter(int x, int x1, int x2);
@@ -112,4 +124,3 @@ std::string checkFileName(const std::string& f);
 bool InRegion(int x1, int y1, int x, int y, int w, int h);
 
 bool EventFilter(void* p, SDL_Event* e);
-

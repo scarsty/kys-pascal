@@ -64,9 +64,20 @@ kys-pascal-androidstudio/build
 *.apk
 cc
 bin-c/build
+/build/
+/tmp/
+/game-data/
+/work/
+/web/dist/
+/.cloudflare/
+/.wrangler/
+**/__pycache__/
 bin-c/.vs
 bin-c/x64
 bin-c/out
 bin-c/x64
 kys-pascal-androidstudio/export-cpp/ndk
 bin-c/kys-pascal-c/x64/
+
+# Local checkout of the mlcc build dependency
+/mlcc/
