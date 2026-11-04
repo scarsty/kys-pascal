@@ -102,12 +102,12 @@ int LevelUp(TRole& role, const RulesRandom& random, int roleIndex)
             return mode == GrowthMode::Average ? ((tier + 1) * factor + int(half)) / 2 : gain * factor * levels;
         };
         int mpGain = mode == GrowthMode::Average ? ((17 - tier) * config.growth.mp + int(!half)) / 2 : config.growth.mp * (9 - gain) * levels;
-        role.MaxHP = std::min<int>(word(role.MaxHP + levels * config.growth.hp * (role.IncLife + draw(1, 3))), MAX_HP);
+        role.MaxHP = std::min<int>(role.MaxHP + levels * config.growth.hp * (role.IncLife + draw(1, 3)), MAX_HP);
         role.CurrentHP = role.MaxHP;
         role.Hurt = 0;
         role.Poison = 0;
         role.PhyPower = MAX_PHYSICAL_POWER;
-        role.MaxMP = std::min<int>(word(role.MaxMP + mpGain), MAX_MP);
+        role.MaxMP = std::min<int>(role.MaxMP + mpGain, MAX_MP);
         role.CurrentMP = role.MaxMP;
         role.Attack = word(role.Attack + statGain(config.growth.attack));
         role.Speed = word(role.Speed + statGain(config.growth.speed));
@@ -176,11 +176,11 @@ int ApplyMpHit(TRole& a, TRole& d, const TMagic& m, int trained, const RulesRand
 {
     int level = std::clamp(trained, 1, 10) - 1;
     int recoverNoise = noise(random, 3);
-    a.CurrentMP = word(a.CurrentMP + m.AddMP[level]);
-    a.MaxMP = std::min<int>(word(a.MaxMP + bounded(random, m.AddMP[level] / 2)), MAX_MP);
-    a.CurrentMP = std::min<int>(word(a.CurrentMP + recoverNoise), a.MaxMP);
+    int recovered = a.CurrentMP + m.AddMP[level] + recoverNoise;
+    a.MaxMP = std::min<int>(a.MaxMP + bounded(random, m.AddMP[level] / 2), MAX_MP);
+    a.CurrentMP = std::clamp<int>(recovered, 0, a.MaxMP);
     int lostNoise = noise(random, 3), before = d.CurrentMP;
-    d.CurrentMP = std::max<int>(word(d.CurrentMP - m.HurtMP[level] - lostNoise), 0);
+    d.CurrentMP = std::clamp<int>(d.CurrentMP - m.HurtMP[level] - lostNoise, 0, d.MaxMP);
     return before - d.CurrentMP;
 }
 
@@ -225,7 +225,7 @@ int Heal(TRole& a, TRole& d, const RulesRandom& random)
         medicine = 0;
     }
     amount = std::min<int>(amount, d.MaxHP - d.CurrentHP);
-    d.CurrentHP = std::min<int>(word(d.CurrentHP + amount), d.MaxHP);
+    d.CurrentHP = std::min<int>(d.CurrentHP + amount, d.MaxHP);
     d.Hurt = std::max<int>(word(d.Hurt - medicine), 0);
     a.PhyPower = word(a.PhyPower - 2);
     return amount;
@@ -238,7 +238,7 @@ int HiddenWeapon(const TRole& a, TRole& d, const TItem& item, const RulesRandom&
                                                                          1;
     int change = (word(item.AddCurrentHP / divisor - bounded(random, 5)) - 2 * a.HidWeapon) / 3;
     d.Hurt = std::clamp<int>(word(d.Hurt - change / 4), 0, 99);
-    d.CurrentHP = std::clamp<int>(word(d.CurrentHP + change), 0, d.MaxHP);
+    d.CurrentHP = std::clamp<int>(d.CurrentHP + change, 0, d.MaxHP);
     if (item.AddPoi > 0)
     {
         int poison = item.AddPoi / 2 - d.DefPoi;
@@ -255,12 +255,12 @@ int HiddenWeapon(const TRole& a, TRole& d, const TItem& item, const RulesRandom&
 
 void Rest(TRole& r, int steps, const RulesRandom& random)
 {
-    r.PhyPower = std::min<int>(word(r.PhyPower + (steps == r.Speed / 10 ? 3 : 2) + bounded(random, 3)), MAX_PHYSICAL_POWER);
+    r.PhyPower = std::min<int>(r.PhyPower + (steps == r.Speed / 10 ? 3 : 2) + bounded(random, 3), MAX_PHYSICAL_POWER);
     if (r.PhyPower >= 30)
     {
         int bound = r.PhyPower / 10 - 2;
-        r.CurrentHP = std::min<int>(word(r.CurrentHP + 3 + bounded(random, bound)), r.MaxHP);
-        r.CurrentMP = std::min<int>(word(r.CurrentMP + 3 + bounded(random, bound)), r.MaxMP);
+        r.CurrentHP = std::min<int>(r.CurrentHP + 3 + bounded(random, bound), r.MaxHP);
+        r.CurrentMP = std::min<int>(r.CurrentMP + 3 + bounded(random, bound), r.MaxMP);
     }
 }
 

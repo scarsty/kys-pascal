@@ -300,7 +300,12 @@ void CallEvent(int num)
                 }
                 else
                 {
-                    e[i + ((p + 32768) / 655360) - 1] = p % 655360;
+                    auto target = i + ((static_cast<int64_t>(p) + 32768) / 655360) - 1;
+                    if (target < 0 || target >= len / 2)
+                    {
+                        throw std::runtime_error("Invalid event mutation target at script " + std::to_string(num) + " pc " + std::to_string(i - 8));
+                    }
+                    e[target] = p % 655360;
                 }
                 break;
             }

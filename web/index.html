@@ -2,12 +2,12 @@
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#000000">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <title>苍龙逐日</title>
   <style>
-    *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;background:#000;color:#ece8d6;font-family:system-ui,sans-serif;touch-action:none}
+    *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;background:#000;color:#ece8d6;font-family:system-ui,sans-serif}
     #wrap{position:fixed;inset:0;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#000}
     canvas{display:block;outline:none;border:0;background:#000;touch-action:none}
     #overlay{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;background:#000;z-index:10;transition:opacity .3s}
@@ -276,12 +276,20 @@
     document.getElementById('save-file').onchange = async event => {
       try {
         const file = event.target.files[0]; if (!file) return;
-        if (file.size > 60000000) throw new Error('存档文件过大。');
+        const manifest = await Module.assetManifest;
+        const sizes = Object.fromEntries([['r','ranger'],['s','allsin'],['d','alldef']].map(([prefix,name])=>[prefix,manifest.files['/game/save/'+name+'.grp'][1]]));
+        const maxSize = 1024 + 20 * Object.values(sizes).reduce((total,size)=>total + 4 * Math.ceil(size / 3) + 32,0);
+        if (file.size > maxSize) throw new Error('存档文件过大。');
         const save = JSON.parse(await file.text());
         if (save.game !== 'kys-dragon' || save.version !== 1 || !save.files || typeof save.files !== 'object') throw new Error('不是有效的苍龙逐日存档。');
         const files = Object.entries(save.files).map(([name,text])=>{
           if (!/^[rsd](?:[1-9]|1\d|20)\.grp$/.test(name) || typeof text !== 'string') throw new Error('存档内容不正确。');
-          return [name,Uint8Array.from(atob(text),c=>c.charCodeAt(0))];
+          const bytes = Uint8Array.from(atob(text),c=>c.charCodeAt(0));
+          if (bytes.length !== sizes[name[0]]) throw new Error('存档数据长度不正确：'+name);
+          for (const prefix of ['r','s','d']) {
+            if (!Object.hasOwn(save.files,prefix+name.slice(1))) throw new Error('存档缺少配套文件：'+name.slice(1));
+          }
+          return [name,bytes];
         });
         if (!files.length) throw new Error('存档为空。');
         for (const [name,bytes] of files) Module.FS.writeFile('/persist/'+name,bytes);

@@ -24,8 +24,7 @@ public:
         role.Exp -= LevelUpList[role.Level - 1];
         role.Level++;
         // MaxHP: IncLife * 3 + random(6)
-        role.MaxHP = role.MaxHP + role.IncLife * 3 + GameRandom() % 6;
-        role.MaxHP = std::min((int)role.MaxHP, MAX_HP);
+        role.MaxHP = std::min<int>(role.MaxHP + role.IncLife * 3 + GameRandom() % 6, MAX_HP);
         role.CurrentHP = role.MaxHP;
 
         int add = role.Aptitude / 15 + 1;
@@ -35,8 +34,7 @@ public:
         }
 
         // MaxMP: (9 - add) * 3
-        role.MaxMP = role.MaxMP + (9 - add) * 3;
-        role.MaxMP = std::min((int)role.MaxMP, MAX_MP);
+        role.MaxMP = std::min<int>(role.MaxMP + (9 - add) * 3, MAX_MP);
         role.CurrentMP = role.MaxMP;
 
         role.Attack += add;
@@ -131,27 +129,16 @@ public:
                     }
                 }
                 // 内力伤害
-                if (Rmagic[mnum].HurtType == 1)
+                if (Rmagic[mnum].HurtType == 1 && level > 0)
                 {
-                    int hurt = Rmagic[mnum].HurtMP[level - 1] + GameRandom() % 5 - GameRandom() % 5;
+                    int hurt = std::max<int>(Rmagic[mnum].HurtMP[level - 1] + GameRandom() % 5 - GameRandom() % 5, 0);
                     Brole[i].ShowNumber = hurt;
-                    Rrole[Brole[i].rnum].CurrentMP -= hurt;
-                    if (Rrole[Brole[i].rnum].CurrentMP <= 0)
-                    {
-                        Rrole[Brole[i].rnum].CurrentMP = 0;
-                    }
+                    Rrole[Brole[i].rnum].CurrentMP = std::max<int>(Rrole[Brole[i].rnum].CurrentMP - hurt, 0);
                     // 增加己方内力及最大值
-                    Rrole[rnum].CurrentMP += hurt;
+                    int recovered = Rrole[rnum].CurrentMP + hurt;
                     Brole[bnum].ExpGot += hurt;
-                    Rrole[rnum].MaxMP += GameRandom() % (hurt / 2 + 1);
-                    if (Rrole[rnum].MaxMP > MAX_MP)
-                    {
-                        Rrole[rnum].MaxMP = MAX_MP;
-                    }
-                    if (Rrole[rnum].CurrentMP > Rrole[rnum].MaxMP)
-                    {
-                        Rrole[rnum].CurrentMP = Rrole[rnum].MaxMP;
-                    }
+                    Rrole[rnum].MaxMP = std::min<int>(Rrole[rnum].MaxMP + GameRandom() % (hurt / 2 + 1), MAX_MP);
+                    Rrole[rnum].CurrentMP = std::min<int>(recovered, Rrole[rnum].MaxMP);
                 }
                 // 中毒
                 int addpoi = Rrole[rnum].AttPoi / 5 + Rmagic[mnum].Poison * level / 2 * (100 - Rrole[Brole[i].rnum].DefPoi) / 100;

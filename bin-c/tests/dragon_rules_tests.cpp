@@ -218,6 +218,42 @@ template<class F> void rejects(F fn, const char* message)
     check(rejected, message);
 }
 
+void scriptMutationBounds()
+{
+    struct ScriptFrontend : GameFrontend
+    {
+        int lastOpcode = -1;
+        void text(const std::string&, int) override { }
+        int choose(const std::string&, const std::vector<std::string>&, bool) override { return 0; }
+        int number(int minimum, int, int) override { return minimum; }
+        bool battle(int, int) override { return false; }
+        bool aim(int, int, int, int) override { return false; }
+        void instruction(int, int, int opcode) override { lastOpcode = opcode; }
+    } frontend;
+    struct Restore
+    {
+        decltype(KIdx) idx = std::move(KIdx);
+        decltype(KDef) def = std::move(KDef);
+        GameFrontend* frontend = Frontend;
+        int16_t value = x50[0];
+        ~Restore() { KIdx = std::move(idx); KDef = std::move(def); Frontend = frontend; x50[0] = value; }
+    } restore;
+    Frontend = &frontend;
+    x50[0] = 7;
+    auto run = [](int16_t target)
+    {
+        const std::array<int16_t, 9> script = { 50, 32, 0, 0, target, 0, 0, 0, 99 };
+        KIdx = { sizeof(script) };
+        KDef.resize(sizeof(script));
+        std::memcpy(KDef.data(), script.data(), sizeof(script));
+        CallEvent(0);
+    };
+    rejects([&] { run(100); }, "Script mutation must reject targets beyond the script");
+    rejects([&] { run(1); }, "Script mutation must not write into the synthetic terminator");
+    run(0);
+    check(frontend.lastOpcode == 7, "A valid mutation must replace and execute the next opcode");
+}
+
 void originalGrowth()
 {
     SetGrowthMode(GrowthMode::Original);
@@ -771,6 +807,58 @@ void magicCosts()
     check(Rrole[0].CurrentMP == 5, "HP attacks must also pay their own cost when missing");
 }
 
+void resourceBounds()
+{
+    TemporaryIni ini;
+    ini.load("[system]\nMODVersion=12\n[rules]\nmax_hp=32767\nmax_mp=32767\nmax_stamina=32767\n");
+    for (auto mode : { GrowthMode::Original, GrowthMode::Average, GrowthMode::Maximum })
+    {
+        SetGrowthMode(mode);
+        auto r = role();
+        r.MaxHP = r.CurrentHP = r.MaxMP = r.CurrentMP = 32760;
+        r.Exp = 50;
+        check(dos::LevelUp(r, maximum) == 1 && r.MaxHP == 32767 && r.CurrentHP == 32767
+                && r.MaxMP == 32767 && r.CurrentMP == 32767,
+            "DOS growth must clamp resources before narrowing to signed words");
+    }
+    auto a = role(), d = role();
+    a.MaxMP = a.CurrentMP = 32760;
+    TMagic magic{ };
+    magic.AddMP[0] = 20;
+    magic.HurtMP[0] = 30;
+    dos::ApplyMpHit(a, d, magic, 1, maximum);
+    check(a.MaxMP == 32767 && a.CurrentMP == 32767, "DOS absorption must clamp MP before narrowing");
+    a.MaxHP = a.MaxMP = 32767;
+    a.CurrentHP = a.CurrentMP = a.PhyPower = 32766;
+    dos::Rest(a, a.Speed / 10, maximum);
+    check(a.CurrentHP == 32767 && a.CurrentMP == 32767 && a.PhyPower == 32767,
+        "DOS rest must clamp HP, MP and stamina before narrowing");
+
+    ini.load("[system]\nMODVersion=0\n[rules]\nmax_hp=32767\nmax_mp=32767\n");
+    auto r = role();
+    r.MaxHP = r.CurrentHP = r.MaxMP = r.CurrentMP = 32760;
+    r.IncLife = 10;
+    r.Exp = 65535;
+    check(AdvanceRoleLevels(r) == 1 && r.MaxHP == 32767 && r.MaxMP == 32767,
+        "Remake growth must also clamp resources before narrowing");
+    for (int mp : { 0, 9 })
+    {
+        setupBattle();
+        Rrole[0].CurrentMP = mp;
+        BattleRules().resolveMagic(0, 0, 8);
+        check(Rrole[0].CurrentMP == mp && Rrole[0].MaxMP == 1000
+                && Rrole[1].CurrentMP == 100 && Brole[0].ExpGot == 0,
+            "Zero-tier absorption must leave MP and experience unchanged");
+    }
+    setupBattle();
+    Rmagic[0].NeedMP = 0;
+    Rrole[0].CurrentMP = Rrole[0].MaxMP = 32767;
+    BattleRules().resolveMagic(0, 0, 1);
+    check(Rrole[0].CurrentMP == 32767 && Rrole[0].MaxMP == 32767,
+        "Remake absorption must clamp MP before narrowing");
+    ini.load("[system]\nMODVersion=12\n");
+}
+
 void hiddenPoison()
 {
     TItem item{ };
@@ -888,6 +976,7 @@ int main(int argc, char** argv)
                  { "native R save round trip", saveRoundTrip }, { "growth INI options", configOptions },
                  { "non-Dragon growth isolation", nonDragonIsolation },
                  { "preserved DOS drain benefits", dosDrainBenefits }, { "per-cast MP costs", magicCosts },
+                 { "resource bounds and zero-tier absorption", resourceBounds }, { "script mutation bounds", scriptMutationBounds },
                  { "hidden weapon poison", hiddenPoison }, { "knockout experience", knockoutExperience },
                  { "nonlethal round damage", roundDamage }, { "preserved DOS damage", dosDamage } })
         {
